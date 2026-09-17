@@ -9,7 +9,7 @@ from . import (
     slide_direction, slide_physics, slide_steering, sprint, wall_climb,
 )
 
-__version__ = "0.11.3"
+__version__ = "1.0.0"
 __author__ = "kevin-hDev"
 
 frame.register("auto_sprint", settings.auto_sprint, sprint)

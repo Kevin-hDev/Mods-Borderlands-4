@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.11.3 — first public release
+## 1.0.0 — first public release
 
 The eight moves listed in the README, each with its own switch and settings:
 auto sprint, momentum slides, the Axle slide, a longer dash, air crouch, air
