@@ -1,0 +1,89 @@
+"""Tests the frame loop: player only, switches, a failing movement isolated, level change, stop."""
+
+import pathlib
+import sys
+import types
+
+HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+import sdk_stubs  # noqa: E402
+
+state = sdk_stubs.install()
+
+from apex_movement import frame, game, ownership  # noqa: E402
+
+fails: list[str] = []
+
+
+def check(label: str, condition: bool) -> None:
+    print(("OK   " if condition else "ECHEC") + " | " + label)
+    if not condition:
+        fails.append(label)
+
+
+class Movement:
+    def __init__(self, broken: bool = False) -> None:
+        self.updates, self.stops, self.resets, self.broken = 0, 0, 0, broken
+
+    def update(self, character: object, now_ns: int) -> None:
+        if self.broken:
+            raise ValueError("boom")
+        self.updates += 1
+
+    def stop(self, character: object) -> None:
+        self.stops += 1
+
+    def reset(self) -> None:
+        self.resets += 1
+
+
+S = 1_000_000_000
+player = sdk_stubs.FakeCharacter()
+sdk_stubs.use_character(state, player)
+good, bad, always = Movement(), Movement(broken=True), Movement()
+good_switch, bad_switch = types.SimpleNamespace(value=True), types.SimpleNamespace(value=True)
+frame.register("good", good_switch, good)
+frame.register("bad", bad_switch, bad)
+frame.register("always", None, always)
+
+frame.on_frame(player.anim, S)
+check("a switched-on movement runs on the player's frame", good.updates == 1)
+check("a movement without a switch runs", always.updates == 1)
+check("a failing movement is reported once", len(state["errors"]) == 1 and "bad switched off" in state["errors"][0])
+check("a failing movement is stopped", bad.stops == 1)
+frame.on_frame(player.anim, S + 1)
+check("the other movements keep running", good.updates == 2)
+check("a failed movement stays off", len(state["errors"]) == 1 and bad.stops == 1)
+
+frame.on_frame(object(), S + 2)
+check("another character's frame runs nothing", good.updates == 2)
+
+good_switch.value = False
+frame.on_frame(player.anim, S + 3)
+check("a switch turned off stops its movement once", good.stops == 1 and good.updates == 2)
+frame.on_frame(player.anim, S + 4)
+check("a stopped movement is not stopped again", good.stops == 1)
+good_switch.value = True
+
+ownership.write("floor", ownership.CHARACTER, lambda: 0.0, lambda value: None, 672.0)
+other = sdk_stubs.FakeCharacter()
+sdk_stubs.use_character(state, other)
+frame.on_frame(other.anim, 3 * S)
+# The first look at the player also counts as a change, hence two resets.
+check("a level change resets every movement", good.resets == 2 and bad.resets == 2)
+check("a level change forgets the old character's values", not ownership.is_owned("floor"))
+check("the new character's frame runs the movements", good.updates == 3)
+
+asset = types.SimpleNamespace(constant=720.0)
+ownership.write("slide", ownership.ASSET, lambda: asset.constant, lambda value: setattr(asset, "constant", value), 850.0)
+failures = frame.stop_all()
+check("stop_all stops the running movements", good.stops == 2 and always.stops == 1)
+check("stop_all puts the game's values back", asset.constant == 720.0 and failures == [])
+check("stop_all forgets the player", game.character() is None)
+
+frame.on_frame(other.anim, 3 * S + 1)
+check("after stop_all a failed movement gets another chance", bad.stops == 2)
+
+print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
+sys.exit(1 if fails else 0)
