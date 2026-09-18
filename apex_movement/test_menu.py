@@ -56,6 +56,10 @@ check("switching it back on shows too", menu.air_strafe.display_name == "Air / t
 check("other lines are left alone", menu.heavier_fall.display_name == "Heavier fall (On)")
 settings.axle_slide.value = True
 check("switching the Axle slide on shows on its line", menu.axle_slide.display_name == "Axle slide (On)")
+# The console menu draws the description title under the line's title when the two differ: a title left at the
+# default showed "Axle slide (Off)" under "Axle slide (On)" (Kevin, Vortex install test, 2026-09-18).
+check("the title drawn under it follows too, so the screen never says both On and Off",
+      menu.axle_slide.description_title == menu.axle_slide.display_name)
 settings.axle_slide.value = False
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")

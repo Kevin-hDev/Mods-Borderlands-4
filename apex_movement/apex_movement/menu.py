@@ -21,11 +21,14 @@ def _label(title: str, on: bool) -> str:
 
 
 def _group(identifier: str, title: str, description: str, switch: Any, *sliders: Any) -> Any:
-    group = NestedOption(identifier, [switch, *sliders], display_name=_label(title, bool(switch.value)),
+    label = _label(title, bool(switch.value))
+    group = NestedOption(identifier, [switch, *sliders], display_name=label, description_title=label,
                          description=description)
 
     def follow(_option: Any, value: bool) -> None:
-        group.display_name = _label(title, bool(value))
+        # Both titles: mods_base copies the description title from the display name once, and the console menu draws
+        # it under the title whenever they differ, which showed "Axle slide (Off)" under "Axle slide (On)" (2026-09-18).
+        group.display_name = group.description_title = _label(title, bool(value))
 
     switch.on_change_anytime = follow
     return group

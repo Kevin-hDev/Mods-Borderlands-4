@@ -32,6 +32,9 @@ class FakeNested:
     def __init__(self, identifier: str, children: list, **kwargs: Any) -> None:
         self.identifier, self.children, self.kwargs = identifier, children, kwargs
         self.display_name = kwargs.get("display_name", identifier)
+        # As mods_base (options.py, BaseOption.__post_init__): copied once from the display name, never followed again.
+        # The console menu draws it under the title whenever the two differ.
+        self.description_title = kwargs.get("description_title") or self.display_name
 
 
 class FakeHook:

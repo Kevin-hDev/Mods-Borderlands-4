@@ -15,7 +15,7 @@ from . import (
     report, settings, slide, slide_direction, slide_physics, slide_steering, sprint, wall_climb,
 )
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "kevin-hDev"
 
 
