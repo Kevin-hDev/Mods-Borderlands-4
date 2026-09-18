@@ -42,12 +42,12 @@ wall_climb = BoolOption(
 walk_speed = SliderOption(
     "walk_speed", 672, 300, 1500, step=1, is_integer=True,
     display_name="Walk speed",
-    description="Ground speed while walking.",
+    description="Ground speed while walking. The game's own value is 540.",
 )
 sprint_speed = SliderOption(
     "sprint_speed", 960, 300, 2000, step=1, is_integer=True,
     display_name="Sprint speed",
-    description="Ground speed while sprinting. Never slower than the walk speed.",
+    description="Ground speed while sprinting, never slower than the walk speed. The game's own value is 828.",
 )
 # 1130 after trying 1080 and 1150 in game (Kevin, 2026-09-17: "on se rapproche plus d'un apex legends").
 slide_speed = SliderOption(

@@ -5,13 +5,15 @@ import sys
 from mods_base import build_mod
 
 from . import (
-    air_crouch, air_strafe, dash, frame, heavier_fall, jump_report, menu, report, settings, slide,
+    air_crouch, air_strafe, dash, frame, ground_speed, heavier_fall, jump_report, menu, report, settings, slide,
     slide_direction, slide_physics, slide_steering, sprint, wall_climb,
 )
 
 __version__ = "1.0.0"
 __author__ = "kevin-hDev"
 
+# No switch: the raised walk and sprint speeds apply whether the auto sprint is on or off (Nexus page, 2026-09-18).
+frame.register("ground_speed", None, ground_speed)
 frame.register("auto_sprint", settings.auto_sprint, sprint)
 # Before the slide speed: at a slide's end it puts the speed curve back first, and the slide speed reads that curve.
 frame.register("slide_physics", None, slide_physics)

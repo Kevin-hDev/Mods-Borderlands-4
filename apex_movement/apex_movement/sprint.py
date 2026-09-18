@@ -1,17 +1,16 @@
-"""Auto sprint and ground speeds: sprints while the move stick is fully pushed, on the ground, without aiming.
+"""Auto sprint: sprints while the move stick is fully pushed, on the ground, without aiming.
 
-Ported from Auto Sprint 1.5.0, whose behaviour was verified in game on 2026-09-15. Ground speed goes through the
-MinAnalogWalkSpeed floor, which the game obeys over its own max speed; the game's 60 degree sprint limit is kept
-(design decision 11).
+Ported from Auto Sprint 1.5.0, whose behaviour was verified in game on 2026-09-15. The game's 60 degree sprint limit
+is kept (design decision 11). The ground speeds moved to ground_speed.py on 2026-09-18: they apply whether the auto
+sprint is on or off.
 """
 
 from typing import Any
 
-from . import game, ownership, report, settings
+from . import game, report
 
 # Not a slider (spec, section 3): nobody needed to change Auto Sprint's value, and each slider can break the feel.
 STICK_THRESHOLD = 0.95
-FLOOR_KEY = "movement.MinAnalogWalkSpeed"
 
 _requested = False
 _restarting = False
@@ -33,8 +32,9 @@ def _request(movement: Any, wanted: bool) -> None:
     _requested = wanted
 
 
-def _update_request(character: Any, movement: Any) -> None:
+def update(character: Any, now_ns: int) -> None:
     global _restarting
+    movement = character.CharacterMovement
     aiming = game.is_aiming(character)
     pushed = game.stick(character) >= STICK_THRESHOLD
     if movement.bIsSprinting:
@@ -53,27 +53,7 @@ def _update_request(character: Any, movement: Any) -> None:
         _request(movement, False)
 
 
-def _set_floor(movement: Any, speed: float) -> None:
-    if abs(float(movement.MinAnalogWalkSpeed) - speed) <= 0.5:
-        return
-    ownership.write(
-        FLOOR_KEY, ownership.CHARACTER,
-        lambda: movement.MinAnalogWalkSpeed,
-        lambda value: setattr(movement, "MinAnalogWalkSpeed", value),
-        speed,
-    )
-    report.note(f"ground speed {speed:.0f}")
-
-
-def update(character: Any, now_ns: int) -> None:
-    movement = character.CharacterMovement
-    _update_request(character, movement)
-    speeds = settings.speeds()
-    _set_floor(movement, speeds.sprint if movement.bIsSprinting else speeds.walk)
-
-
 def stop(character: Any) -> None:
     if character is not None and _requested:
         character.CharacterMovement.bWantsToSprint = False
     reset()
-    ownership.restore(FLOOR_KEY)

@@ -31,9 +31,16 @@ def _group(identifier: str, title: str, description: str, switch: Any, *sliders:
     return group
 
 
+# The names follow the game's own option screen (Sprint, Slide, Dash, Slam), so that a line of the menu and a line of
+# the Nexus page name the same move. "Air crouch" named nothing a Borderlands player would recognise (Kevin,
+# 2026-09-18).
+movement = NestedOption(
+    "movement_menu", [settings.walk_speed, settings.sprint_speed],
+    display_name="Movement", description="How fast you walk and sprint. These apply whether auto sprint is on or off.",
+)
 auto_sprint = _group(
-    "auto_sprint_menu", "Auto sprint", "Sprint on a fully pushed stick, and the walk and sprint speeds.",
-    settings.auto_sprint, settings.walk_speed, settings.sprint_speed,
+    "auto_sprint_menu", "Auto sprint", "Sprint on a fully pushed stick, without pressing anything.",
+    settings.auto_sprint,
 )
 slides = NestedOption(
     "slides_menu", [settings.momentum_slides, settings.slide_speed, settings.slide_distance, settings.slide_downhill_pull,
@@ -50,11 +57,12 @@ dash = NestedOption(
     display_name="Dash", description="How far a dash goes, at the game's own speed.",
 )
 air_crouch = _group(
-    "air_crouch_menu", "Air crouch", "Crouch in the air: dash, slide on landing, ground slam.",
+    "air_crouch_menu", "Slam and landing slide",
+    "Jump and crouch together to slam, and crouch held in the air to slide the moment you land.",
     settings.air_crouch, settings.landing_slide_min_speed,
 )
 air_strafe = _group(
-    "air_strafe_menu", "Air strafe", "Change direction in the air almost at once.",
+    "air_strafe_menu", "Air / tap strafe", "Change direction in the air almost at once.",
     settings.air_strafe, settings.air_acceleration,
 )
 heavier_fall = _group(
@@ -66,4 +74,4 @@ wall_climb = _group(
     settings.wall_climb, settings.climb_height, settings.climb_speed, settings.climb_lean, settings.reclimb_delay,
 )
 
-MENU = [auto_sprint, slides, axle_slide, dash, air_crouch, air_strafe, heavier_fall, wall_climb]
+MENU = [movement, auto_sprint, slides, axle_slide, dash, air_crouch, air_strafe, heavier_fall, wall_climb]
