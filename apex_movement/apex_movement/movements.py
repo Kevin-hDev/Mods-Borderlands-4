@@ -60,7 +60,7 @@ MOVEMENTS = (
     Movement("Heavier fall", ("heavier_fall", "jump_goals", "jump_report"), ("heavier_fall_menu",),
              "apex_heavier_fall", "Apex Heavier Fall"),
     Movement("Wall climb", ("wall_climb", "wall_sense", "climb_aim", "wall_choice", "climb_rules", "climb_refusal",
-                            "climb_animation", "jump_press", "air_jumps"), ("wall_climb_menu",),
+                            "climb_animation", "jump_press", "air_jumps", "move_watch"), ("wall_climb_menu",),
              "apex_wall_climb", "Apex Wall Climb"),
 )
 

@@ -215,7 +215,15 @@ def is_near_game_climb(movement: Any) -> bool:
 
 
 def in_controlled_move(movement: Any) -> bool:
-    return movement.ControlledMoveReplicationData.ControlledMove is not None
+    """Asked of the game, not read from its network copy: the copy keeps a ground slam after landing until a slide
+    replaces it (session 3, 2026-09-18), and every climb in between was refused."""
+    return bool(movement.IsPerformingControlledMove())
+
+
+def controlled_move_name(movement: Any) -> str:
+    """The game's current controlled move by name (Move_Slide, Move_GroundSlam...); empty when there is none."""
+    move = movement.ControlledMoveReplicationData.ControlledMove
+    return "" if move is None else str(getattr(move, "Name", "?"))
 
 
 def set_velocity(movement: Any, x: float, y: float, z: float) -> None:

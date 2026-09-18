@@ -138,8 +138,12 @@ movement.LadderState.OverlappingClimbables = [object()]
 check("an overlapping climbing wall is near", game.is_near_game_climb(movement))
 movement.LadderState.OverlappingClimbables = []
 check("no controlled move by default", not game.in_controlled_move(movement))
-movement.ControlledMoveReplicationData.ControlledMove = object()
-check("any controlled move counts", game.in_controlled_move(movement))
+movement.performing = True
+check("a move the game says it performs counts", game.in_controlled_move(movement))
+movement.performing = False
+movement.ControlledMoveReplicationData.ControlledMove = types.SimpleNamespace(Name="Move_GroundSlam")
+check("a ground slam left in the game's copy after landing does not count: the game is asked, not its copy",
+      not game.in_controlled_move(movement))
 movement.ControlledMoveReplicationData.ControlledMove = None
 game.set_velocity(movement, 1.0, 2.0, 3.0)
 check("a velocity is written whole", (movement.Velocity.X, movement.Velocity.Y, movement.Velocity.Z) == (1.0, 2.0, 3.0))

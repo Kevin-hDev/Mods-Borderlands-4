@@ -11,7 +11,7 @@ from typing import Any
 from mods_base import build_mod
 
 from . import (
-    air_crouch, air_strafe, dash, family, frame, ground_speed, heavier_fall, jump_report, menu, pack,
+    air_crouch, air_strafe, dash, family, frame, ground_speed, heavier_fall, jump_report, menu, move_watch, pack,
     report, settings, slide, slide_direction, slide_physics, slide_steering, sprint, wall_climb,
 )
 
@@ -41,6 +41,8 @@ _register("air_strafe", air_strafe, settings.air_strafe)
 _register("heavier_fall", heavier_fall, settings.heavier_fall)
 # Last: it writes the velocity in the air, and no movement registered before it does.
 _register("wall_climb", wall_climb, settings.wall_climb)
+# Diagnostic of the wall climb: writes the game's controlled move each time it changes (séance 2, 2026-09-18).
+_register("move_watch", move_watch, settings.wall_climb)
 # After every movement: it reports the jump that just left the ground, once the others have written their speeds.
 _register("jump_report", jump_report, settings.heavier_fall)
 

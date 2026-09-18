@@ -32,7 +32,7 @@ The mod turns itself on the first time the game launches with it installed.
 
 ## One file, or one file per move
 
-The full pack ships as `apex_movement.sdkmod`. Every move also ships on its own — `apex_wall_climb.sdkmod`,
+The full mod pack ships as `apex_movement.sdkmod`. Every move also ships on its own — `apex_wall_climb.sdkmod`,
 `apex_slides.sdkmod`, and so on — built from these same sources. A separate file carries the whole package under its
 own name and differs only by its `pack.py`: the moves it runs, and the name it wears in the mod list. Nothing is
 generated beyond those two lines, so a separate file runs the code that was tested.
@@ -56,11 +56,12 @@ named after it: `apex_dash.json`, `apex_wall_climb.json`, and so on.
 - `movements.py` states which modules and menu lines make up each move, with the reason for every exception; `test_movement_rules.py` holds the code to it: every move turns off on its own, and none reads another's settings or imports its modules.
 - `pack.py` says which moves a file carries; `family.py` keeps one move from running in two installed files at once.
 - `ground_speed.py` holds the walk and sprint speeds, apart from `sprint.py`, which only asks the game to sprint.
-- `game.py` is the only place that reads the game's own fields, so a field that moves in a game update is renamed in one file.
+- `game.py` finds the player and the move assets, and answers what several moves ask: on the ground, in the air, sliding, whether one of the game's own moves is running. It asks the game that last one (`IsPerformingControlledMove`) rather than reading the move's network copy, which keeps a ground slam after landing until the next slide. A field only one move touches is read in that move's module.
 - `ownership.py` remembers every game value a move overwrites, and puts it back when the move stops. Nothing is written to the save file.
 - `settings.py` holds every setting with its default and its bounds, and carries the reason each default was chosen.
 - `speed_order.py` keeps walk, sprint, slide and top slide speeds in order whatever the sliders say; a file without the movement speeds orders against the game's own.
 - The wall climb is split by responsibility: `wall_sense` measures the wall, `wall_choice` picks the surface among what the rays met, `climb_aim` does the geometry, `climb_rules` decides whether a climb starts and keeps going, `wall_climb` moves the character, `climb_refusal` writes why a climb was refused.
+- `jump_report.py` and `move_watch.py` write every jump and every change of the game's own moves to the SDK log, a few hundred lines at most: on a game version not tested here, those lines show what changed.
 
 ## Tests
 

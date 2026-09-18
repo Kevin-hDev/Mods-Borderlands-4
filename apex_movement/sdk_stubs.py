@@ -233,6 +233,8 @@ class FakeMovement:
         self.GravityScale, self.MaxAcceleration, self.AirControl = 1.0, 2048.0, 0.6
         self.ReplicatedMantleState = types.SimpleNamespace(ActionIndex=-1)
         self.mantle_allowed = False
+        # What the game answers when asked whether it performs a controlled move; the copy above can say otherwise.
+        self.performing = False
         self.LadderState = types.SimpleNamespace(OverlappingClimbables=[])
         self.goals = jump_goals()
         self.type_sets: list[str] = []
@@ -242,6 +244,9 @@ class FakeMovement:
 
     def CanStartPassiveMantle(self) -> bool:
         return self.mantle_allowed
+
+    def IsPerformingControlledMove(self) -> bool:
+        return self.performing
 
     def SetCurrentJumpType(self, tag: Any) -> None:
         self.type_sets.append(tag.TagName)
