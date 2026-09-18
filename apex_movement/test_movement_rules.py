@@ -114,7 +114,23 @@ for movement in movements.MOVEMENTS:
     if len(movement.menu_groups) > 1:
         check(f"{movement.name}: takes more than one menu line, and says why", bool(movement.two_lines_because))
 
-# 6. Nothing outside a movement may be registered with a switch: a switch belongs to a movement, never to the shared
+# 6. Two movements never write the same game value. Separate files can be installed side by side (Kevin, 2026-09-18),
+# and each carries its own copy of ownership: two of them writing one field would each believe they own it, and the
+# second to stop would put back what the first had already written.
+written_by: dict[str, str] = {}
+for movement in movements.MOVEMENTS:
+    for module in movement.modules:
+        for node in ast.walk(tree(module)):
+            if not (isinstance(node, ast.Assign) and isinstance(node.value, (ast.Constant, ast.JoinedStr))):
+                continue
+            for target in node.targets:
+                if not (isinstance(target, ast.Name) and target.id.endswith("_KEY")):
+                    continue
+                key = node.value.value if isinstance(node.value, ast.Constant) else f"{module}:{target.id}"
+                other = written_by.setdefault(key, movement.name)
+                check(f"{movement.name}: no other movement writes {key}", other == movement.name)
+
+# 7. Nothing outside a movement may be registered with a switch: a switch belongs to a movement, never to the shared
 # modules, or turning it off would take part of every movement with it.
 for name, switches, module in frame._movements:
     short = module.__name__.rsplit(".", 1)[-1]

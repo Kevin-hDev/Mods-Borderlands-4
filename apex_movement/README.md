@@ -26,6 +26,17 @@ hold, which would remove that dash, so it asks the game for it back.
 
 The mod turns itself on the first time the game launches with it installed.
 
+## One file, or one file per move
+
+The full pack ships as `apex_movement.sdkmod`. Every move also ships on its own — `apex_wall_climb.sdkmod`,
+`apex_slides.sdkmod`, and so on — built from these same sources by `build_movement_files.py`. A separate file carries
+the whole package under its own name and differs only by its `pack.py`: the moves it runs, and the name it wears in
+the mod list. Nothing is generated beyond those two lines, so a separate file runs the code that was tested.
+
+Several separate files can be installed side by side: no two moves write the same game value, which a test enforces.
+A file that finds one of its moves already running by another file says so and stays off, rather than fighting over
+the same field.
+
 ## Settings
 
 Console `~`, command `mods`, Apex Movement. One line per move; each line opens that move's switch and its settings. Every setting gives the game's own value where there is one.

@@ -72,6 +72,8 @@ def stop_all() -> list[str]:
     return failures
 
 
-@hook("/Script/Engine.AnimInstance:BlueprintUpdateAnimation", Type.POST, hook_identifier="apex_movement:frame")
+# The identifier carries the package's own name: two separate files installed side by side each hold their own hook,
+# and one registered under a name already taken would replace the other's (2026-09-18).
+@hook("/Script/Engine.AnimInstance:BlueprintUpdateAnimation", Type.POST, hook_identifier=f"{__package__}:frame")
 def tick(obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
     on_frame(obj, time.perf_counter_ns())

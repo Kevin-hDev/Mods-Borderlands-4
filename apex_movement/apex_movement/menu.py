@@ -13,7 +13,7 @@ from typing import Any
 
 from mods_base import NestedOption
 
-from . import settings
+from . import pack, settings
 
 
 def _label(title: str, on: bool) -> str:
@@ -76,4 +76,12 @@ wall_climb = _group(
     settings.wall_climb, settings.climb_height, settings.climb_speed, settings.climb_lean, settings.reclimb_delay,
 )
 
-MENU = [movement, auto_sprint, slides, axle_slide, dash, air_crouch, air_strafe, heavier_fall, wall_climb]
+ALL = [movement, auto_sprint, slides, axle_slide, dash, air_crouch, air_strafe, heavier_fall, wall_climb]
+
+
+def carried() -> list[Any]:
+    """Only the lines of the movements this file carries: a separate file shows its own settings and no others."""
+    return [group for group in ALL if pack.carries_group(group.identifier)]
+
+
+MENU = carried()
