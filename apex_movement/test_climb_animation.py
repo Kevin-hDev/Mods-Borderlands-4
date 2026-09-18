@@ -52,7 +52,7 @@ check("its end stops the slot by name with the same blend", arms.stops == [(0.2,
 climb_animation.stop()
 check("a second stop does nothing", len(arms.stops) == 1)
 climb_animation.start(744 / 100)
-check("the loops cover the longest climb the sliders allow (744 at 100 a second), plus one",
+check("the loops cover the longest climb they are given, 7.44 s in loops of 0.6 s, plus one",
       arms.plays[-1]["LoopCount"] == 14)
 check("a second climb does not log it again", sum("climb animation playing" in line for line in state["misc"]) == 1)
 climb_animation.reset()

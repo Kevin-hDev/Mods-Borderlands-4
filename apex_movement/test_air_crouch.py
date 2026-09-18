@@ -10,6 +10,8 @@ sys.path.insert(0, str(HERE))
 import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
+# Stands for unrealsdk.unreal.WeakPointer, which air_actions keeps the asking character in: no character dies here.
+sys.modules["unrealsdk.unreal"].WeakPointer = lambda obj=None: (lambda: obj)
 
 from apex_movement import air_bindings, air_crouch, air_keys, game, settings  # noqa: E402
 
@@ -142,15 +144,39 @@ check("stop forgets the held press", not air_keys.is_held())
 air_crouch.update(player, 23100 * MS)
 check("the next frame binds the keys again", pad in state["keybinds"])
 
+# A level change with the switch then turned off: the frame loop resets the movement and updates it no more.
+air_crouch.reset()
+if pad in state["keybinds"]:
+    key(pad, pressed, 23150 * MS)
+    key(pad, released, 23190 * MS)
+player.calls.clear()
+fly(900.0, 23200 * MS)
+check("switched back on, no tap made while it was off is played", player.calls == [])
+land(23250 * MS)
+
+game_mappings = list(state["mappings"])
+state["mappings"][:] = [sdk_stubs.mapping("Action_Crouch_Hold", "LeftShift"),
+                        sdk_stubs.mapping("Action_Jump_HoldToGlide", cross)]
+air_crouch.update(player, 23300 * MS)
+check("a key changed in the options is not read again mid-level", pad in state["keybinds"])
+air_crouch.reset()
+check("a level change gives the old key back to the game at once", pad not in state["keybinds"])
+air_crouch.update(player, 23400 * MS)
+check("the next frame binds the key now in the options",
+      "LeftShift" in state["keybinds"] and pad not in state["keybinds"])
+
 state["mappings"][:] = [sdk_stubs.mapping("Action_Jump_HoldToGlide", cross)]
 air_crouch.stop(player)
 air_crouch.update(player, 24000 * MS)
 air_crouch.update(player, 24001 * MS)
 check("a key list without crouch is reported once", sum("no crouch key" in line for line in state["errors"]) == 1)
 check("and binds nothing", state["keybinds"] == {})
-air_crouch.reset()
+state["mappings"][:] = game_mappings
 air_crouch.update(player, 24002 * MS)
-check("a level change tries the key list again", sum("no crouch key" in line for line in state["errors"]) == 1)
+check("a refused list is not read again every frame", state["keybinds"] == {})
+air_crouch.reset()
+air_crouch.update(player, 24003 * MS)
+check("a level change reads the key list again and binds the crouch key", pad in state["keybinds"])
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

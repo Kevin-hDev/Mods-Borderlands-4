@@ -15,7 +15,7 @@ and the line read "no stick" — hiding every frame of the real try.
 import math
 from typing import Any
 
-from . import climb_aim, climb_rules, report
+from . import climb_aim, climb_rules, report, wall_choice
 
 # The rules own the list, so a reason added there is told here without anything else to remember.
 ORDER = climb_rules.REFUSALS
@@ -63,5 +63,5 @@ def _measures(moment: climb_rules.Moment, limits: climb_rules.Limits) -> str:
     return (f"distance={wall.distance:.0f} flat={wall.flat:.2f} {stick} "
             f"stick_deg={climb_aim.angle_to_wall(moment.stick_x, moment.stick_y, wall):.0f} "
             f"view_deg={climb_aim.view_angle(moment.view_yaw, wall):.0f} "
-            f"needs distance<={climb_rules.REACH:.0f} flat>={climb_rules.MIN_WALL_FLAT:.2f} "
-            f"stick_deg<={climb_rules.start_angle(limits):.0f} view_deg<={climb_rules.START_VIEW_DEG:.0f}")
+            f"needs distance<={climb_rules.REACH:.0f} flat>={wall_choice.MIN_WALL_FLAT:.2f} "
+            f"stick_deg<={climb_rules.start_angle(limits):.0f} view_deg<={climb_rules.view_angle_allowed(limits):.0f}")

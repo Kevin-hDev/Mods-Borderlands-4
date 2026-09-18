@@ -49,19 +49,37 @@ class FakeHook:
 
 
 class FakeMod:
+    """Behaves as mods_base.Mod does wherever the mod depends on it, down to the order of each step (mod.py:260-308).
+
+    The fake used to skip the settings file, so no test ever saw a mod enabled from it while build_mod was still
+    running — which is how a guard calling the module's own `mod` from on_enable shipped (review, 2026-09-18).
+    """
+
     def __init__(self, state: dict, **kwargs: Any) -> None:
-        self.state, self.kwargs, self.enabled = state, kwargs, False
+        self.state, self.kwargs, self.is_enabled = state, kwargs, False
         self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
+        # What the settings file holds for "enabled" after the mod's last save; None while it never saved.
+        self.saved_enabled: bool | None = None
 
     def enable(self) -> None:
-        self.enabled = True
+        if self.is_enabled:
+            return
+        self.is_enabled = True
+        for hook in self.kwargs.get("hooks") or []:
+            hook.enable()
         if self.kwargs.get("on_enable"):
             self.kwargs["on_enable"]()
+        self.saved_enabled = self.is_enabled
 
     def disable(self) -> None:
-        self.enabled = False
+        if not self.is_enabled:
+            return
+        self.is_enabled = False
+        for hook in self.kwargs.get("hooks") or []:
+            hook.disable()
         if self.kwargs.get("on_disable"):
             self.kwargs["on_disable"]()
+        self.saved_enabled = False
 
 
 def vector(x: float, y: float, z: float = 0.0) -> Any:
@@ -321,7 +339,8 @@ class FakeKismet:
 
 def install() -> dict:
     """Registers the fake modules and returns the state the tests read and drive."""
-    state: dict = {"misc": [], "warnings": [], "errors": [], "pc": None, "settings_exists": True, "mods": []}
+    state: dict = {"misc": [], "warnings": [], "errors": [], "pc": None, "settings_exists": True,
+                   "settings_enabled": False, "mods": []}
     state["objects"] = {("OakControlledMove", SLIDE_PATH): FakeSlideAsset(), ("OakControlledMove", DASH_PATH): FakeDashAsset(),
                         ("AnimSequence", CLIMB_ANIMATION_PATH): FakeSequence(0.6)}
     state["anim_instances"] = []
@@ -378,8 +397,19 @@ def install() -> dict:
     logging_module.error = lambda text: state["errors"].append(text)
     logging_module.info = lambda text: state["misc"].append(text)
 
+    class WeakPointer:
+        """As pyunrealsdk's (sdk_mods/.stubs/unrealsdk/unreal/_weak_pointer.pyi): calling it gives the object back, or
+        None once the game destroyed it. A test destroys one by clearing `obj`."""
+
+        def __init__(self, obj: Any = None) -> None:
+            self.obj = obj
+
+        def __call__(self) -> Any:
+            return self.obj
+
     unreal_module = types.ModuleType("unrealsdk.unreal")
     unreal_module.BoundFunction = BoundFunction
+    unreal_module.WeakPointer = WeakPointer
 
     hooks_module = types.ModuleType("unrealsdk.hooks")
     hooks_module.Type = types.SimpleNamespace(POST="POST", PRE="PRE")
@@ -401,11 +431,18 @@ def install() -> dict:
     mods_base.get_pc = lambda **kwargs: state["pc"]
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, hook_identifier))
 
-    def build_mod(**kwargs: Any) -> FakeMod:
-        made = FakeMod(state, **kwargs)
+    def build_mod(cls: type = FakeMod, **kwargs: Any) -> FakeMod:
+        # As mods_base: registered, then its settings loaded, and a file that says enabled enables it right here,
+        # before build_mod returns (mod_factory.py:149, mod_list.py:47, settings.py:71).
+        made = cls(state, **kwargs)
         state["mods"].append(made)
+        # True or False for every mod, or the names of the mods whose own settings file says enabled.
+        wanted = state["settings_enabled"]
+        if state["settings_exists"] and (wanted is True or (not isinstance(wanted, bool) and kwargs.get("name") in wanted)):
+            made.enable()
         return made
 
+    mods_base.Mod = FakeMod
     mods_base.build_mod = build_mod
     mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(
         state, identifier, key, callback, kwargs,

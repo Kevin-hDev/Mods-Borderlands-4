@@ -96,10 +96,14 @@ speed = keys[0].Value * PER_UNIT
 frames(2050, 3000)
 check("a steep slope ahead cancels the friction and speeds the slide up",
       near(keys[0].Value * PER_UNIT, speed + 2200.0 * 0.25 - slowdown, 0.01))
+# The top speed is ordered above the slide speed (speed_order.ordered, 2026-09-18): to see it cap a running slide at 700,
+# the slide speed and the speeds it is ordered above come down with it. A running slide keeps the start it was given.
 settings.slide_max_speed.value = 700
+settings.walk_speed.value, settings.sprint_speed.value, settings.slide_speed.value = 400, 400, 400
 P.update(player, 3050 * MS)
 check("the top speed caps it", near(keys[0].Value * PER_UNIT, 700.0))
 settings.slide_max_speed.value = 2000
+settings.walk_speed.value, settings.sprint_speed.value, settings.slide_speed.value = 672, 960, 1130
 movement.CurrentFloor.HitResult.ImpactNormal = at(0.0, 0.0, 1.0)
 
 movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
@@ -179,6 +183,20 @@ P.update(player, 7000 * MS)
 check("after a level change the slide data is prepared again", notes("slide physics on") == 2
       and ownership.original(P.DURATION_KEY) == 1.35 and ownership.original(P.CURVE_KEY).values[1] == 0.9728)
 
+speed_curve = asset.SpeedScaleCurve
+asset.SpeedScaleCurve = None
+stop_error = ""
+try:
+    P.stop(player)
+except RuntimeError as exc:
+    stop_error = str(exc)
+check("a speed curve that cannot be put back does not keep the timer and slope curve from it",
+      asset.Duration.constant == 1.35 and [key.Value for key in slope_keys] == [0.5, 1.0, 2.0, 2.0])
+check("its failure is raised for the frame loop to report", P.CURVE_KEY in stop_error)
+check("and the game's speed curve is kept to put back later", ownership.original(P.CURVE_KEY).values[1] == 0.9728)
+check("a stop that failed does not say the curves are back", notes("slide physics off") == 0)
+asset.SpeedScaleCurve = speed_curve
+
 P.stop(player)
 check("stop puts the game's timer, slope curve and speed curve back", asset.Duration.constant == 1.35
       and [key.Value for key in slope_keys] == [0.5, 1.0, 2.0, 2.0] and slope_keys[1].LeaveTangent == 1.4
@@ -187,6 +205,42 @@ check("stop puts the game's timer, slope curve and speed curve back", asset.Dura
 check("the restore is logged", notes("slide physics off") == 1)
 P.stop(player)
 check("a stop with nothing written logs nothing", notes("slide physics off") == 1)
+
+# Slides switched off and on again during one slide: the frame loop calls stop, then update on the same slide.
+GAME_CURVE = [1.1017, 0.9728, 0.7737, 0.3722]
+P.update(player, 7100 * MS)
+data.ControlledMove = asset
+movement.Velocity = at(1130.0, 0.0)
+frames(7150, 7500)
+P.stop(player)
+frames(7550, 7700)
+check("switched off and on during one slide, that slide is left to the game's own timer and curve",
+      curve_values() == GAME_CURVE and asset.Duration.constant == 1.35 and not ownership.is_owned(P.CURVE_KEY))
+data.ControlledMove = None
+P.update(player, 7750 * MS)
+check("the slide data is prepared once that slide has ended", asset.Duration.constant == settings.LONGEST_SLIDE_S
+      and curve_values() == [1.1017] * 4)
+data.ControlledMove = asset
+movement.Velocity = at(1130.0, 0.0)
+frames(7800, 8300)
+check("the next slide gets the model from its start", near(keys[0].Value * PER_UNIT, 1130.0 - slowdown * 0.5, 0.01))
+data.ControlledMove = None
+P.update(player, 8350 * MS)
+P.stop(player)
+
+# A top speed slider set under the slide speed is raised to it: the slide no longer drops to it on its first frame,
+# against the promise of its own description (review, 2026-09-18).
+settings.slide_max_speed.value = 700
+P.update(player, 8400 * MS)
+data.ControlledMove = asset
+movement.Velocity = at(1130.0, 0.0)
+frames(8450, 8500)
+check("a top speed set under the slide speed does not cut a slide at its start",
+      near(keys[0].Value * PER_UNIT, 1130.0 - slowdown * 0.05, 0.01))
+data.ControlledMove = None
+P.update(player, 8550 * MS)
+P.stop(player)
+settings.slide_max_speed.value = 2000
 
 del state["objects"][("OakControlledMove", sdk_stubs.SLIDE_PATH)]
 game.forget()

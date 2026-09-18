@@ -31,7 +31,9 @@ check("a separate file carries its own movement", pack.carries("Wall climb"))
 check("and no other", not pack.carries("Slides") and not pack.carries("Auto sprint"))
 check("its modules come with it", pack.carries_module("climb_aim") and pack.carries_module("wall_sense"))
 check("another movement's modules do not", not pack.carries_module("slide_physics"))
-check("shared modules are in every file", pack.carries_module("game") and pack.carries_module("jump_report"))
+check("shared modules are in every file", pack.carries_module("game") and pack.carries_module("frame"))
+check("the jump lines come only with the heavier fall, so two files never write a jump twice",
+      not pack.carries_module("jump_report"))
 
 lines = [group.identifier for group in menu.carried()]
 check("it shows its own menu line", lines == ["wall_climb_menu"])

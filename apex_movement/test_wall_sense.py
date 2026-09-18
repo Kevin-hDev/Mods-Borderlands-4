@@ -1,5 +1,6 @@
-"""Tests feeling the wall: the three traces, their start and direction, what they report of the surfaces they met, and
-the library looked up once. Judging a surface climbable belongs to climb_rules, so nothing is thrown away here."""
+"""Tests feeling the wall: one trace per height, their start and direction, what they report of the surfaces they met,
+and the library looked up once. Judging a surface climbable belongs to climb_rules: only what lies behind the
+character's back is thrown away here."""
 
 import pathlib
 import sys
@@ -47,6 +48,13 @@ check("a wall gives its distance from the character, not from where the ray star
       == [climb_aim.Wall(distance=0.0, into_x=1.0, into_y=0.0, flat=1.0)] * len(climb_aim.TRACE_HEIGHTS))
 kismet.hit = (150.0, sdk_stubs.vector(-1.0, 0.0, 0.0))
 check("a wall the ray meets at 150 is 90 from the character", wall_sense.walls_ahead(player, 0.0, HALF)[0].distance == 90.0)
+# The ray starts 60 behind the centre and the character is 40 wide: what it meets in its first 20 is behind the back.
+kismet.hit = (19.0, sdk_stubs.vector(-1.0, 0.0, 0.0))
+check("a thin thing behind the character's back, seen from behind, is no wall in front",
+      wall_sense.walls_ahead(player, 0.0, HALF) == [])
+kismet.hit = (20.0, sdk_stubs.vector(-1.0, 0.0, 0.0))
+check("a surface right at the character's back still counts, at distance 0",
+      [wall.distance for wall in wall_sense.walls_ahead(player, 0.0, HALF)] == [0.0] * len(climb_aim.TRACE_HEIGHTS))
 kismet.hit = (60.0, sdk_stubs.vector(-1.0, 0.0, 0.0))
 kismet.hits_by_z = {100: (60.0, sdk_stubs.vector(-1.0, 0.0, 0.0))}
 check("a face only the middle trace meets still comes back, alone",

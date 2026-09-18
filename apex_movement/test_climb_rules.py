@@ -1,5 +1,6 @@
 """Tests the wall climb's rules: every start condition and the reason it gives, every end, the wait and what
-clears it. The angles and the direction of a climb are climb_aim's, tested next to it."""
+clears it. The angles and the direction of a climb are climb_aim's, and the choice of a surface wall_choice's, each
+tested next to its module."""
 
 import math
 import pathlib
@@ -26,7 +27,7 @@ def check(label: str, condition: bool) -> None:
 
 MS = 1_000_000
 WALL = Wall(distance=60.0, into_x=1.0, into_y=0.0, flat=1.0)
-LIMITS = rules.Limits(height=372.0, delay_ns=1500 * MS, lean_deg=60.0)
+LIMITS = rules.Limits(height=372.0, delay_ns=1500 * MS, lean_deg=60.0, speed=370.0)
 
 
 def moment(now_ms: int, **changes: object) -> rules.Moment:
@@ -108,13 +109,9 @@ check("a camera and stick turned together are told as the camera, which forgives
       after(view_yaw=80.0, **turned(80.0)).event == rules.CAMERA)
 ended = rules.Rules()
 ended.step(moment(0), LIMITS)
-ended.step(moment(100, z=50.0, view_yaw=80.0), LIMITS)
-check("an end gives the rise and the time", (ended.start is None
-      and rules.Rules().step(moment(0), LIMITS).climbing))
-ended_step = rules.Rules()
-ended_step.step(moment(0), LIMITS)
-step = ended_step.step(moment(100, z=50.0, view_yaw=80.0), LIMITS)
-check("with its rise and its time", (step.rise, step.ms) == (50.0, 100))
+step = ended.step(moment(100, z=50.0, view_yaw=80.0), LIMITS)
+check("an end gives the rise and the time, and leaves no climb under way",
+      (step.climbing, step.rise, step.ms) == (False, 50.0, 100) and ended.start is None)
 
 high = rules.Rules()
 high.step(moment(0, z=1000.0), LIMITS)
@@ -128,6 +125,16 @@ check("less than 0.2 s without rising keeps it", stuck.step(moment(250, z=38.0),
 check("0.2 s without rising 10, stuck under something, ends it", stuck.step(moment(300, z=40.0), LIMITS).event == rules.BLOCKED)
 check("and blocks the next climb", stuck.step(moment(400, z=40.0), LIMITS).event == "")
 
+# A climb held back by the wall rises slower than its speed and still goes on: the longest it can live is the rules'.
+slow = rules.Rules()
+slow.step(moment(0), LIMITS)
+for n in range(1, 100):
+    slow_step = slow.step(moment(n * 200, z=n * rules.MIN_PROGRESS), LIMITS)
+    if not slow_step.climbing:
+        break
+check("a climb rising only 10 every 0.2 s reaches its height, lasting just as long as the rules allow",
+      slow_step.event == rules.HEIGHT and slow_step.ms * MS == rules.longest_climb_ns(LIMITS) == 7_600_000_000)
+
 settle = rules.Rules()
 settle.step(moment(0, jumps=0), LIMITS)
 check("the jump count catching up just after the take-off is no new jump", settle.step(moment(20, jumps=1), LIMITS).climbing)
@@ -139,12 +146,15 @@ wait.step(moment(100, view_yaw=80.0), LIMITS)
 check("a climb that ended short blocks the next one", wait.step(moment(200), LIMITS).event == "")
 check("until the 1.5 s wait is over", wait.step(moment(1600), LIMITS).event == "start")
 
-for reason, changes in ((rules.GAME_MOVE, {"game_move": True}), (rules.JUMP, {"jumps": 2}),
-                        (rules.WALL_LOST, {"wall": None}), (rules.CAMERA, {"view_yaw": 80.0}), (rules.HEIGHT, {"z": 400.0})):
+# The stick ends a climb only once its grace is over, hence a second frame.
+for reason, changes, frames in ((rules.GAME_MOVE, {"game_move": True}, (100,)), (rules.JUMP, {"jumps": 2}, (100,)),
+                                (rules.WALL_LOST, {"wall": None}, (100,)), (rules.CAMERA, {"view_yaw": 80.0}, (100,)),
+                                (rules.HEIGHT, {"z": 400.0}, (100,)), (rules.STICK, {"stick_x": 0.1}, (100, 400))):
     one = rules.Rules()
     one.step(moment(0), LIMITS)
-    one.step(moment(100, **changes), LIMITS)
-    check(f"an end by {reason} blocks the next climb too", one.step(moment(200), LIMITS).event == "")
+    ending = [one.step(moment(ms, **changes), LIMITS) for ms in frames][-1]
+    check(f"an end by {reason} blocks the next climb too",
+          ending.event == reason and one.step(moment(500), LIMITS).event == "")
 
 landed = rules.Rules()
 landed.step(moment(0), LIMITS)
@@ -159,7 +169,7 @@ check("a climb the game finished with a mantle blocks nothing", over.step(moment
 
 free = rules.Rules()
 free.step(moment(0), LIMITS)
-free.step(moment(100, view_yaw=80.0), rules.Limits(height=372.0, delay_ns=0, lean_deg=60.0))
+free.step(moment(100, view_yaw=80.0), rules.Limits(height=372.0, delay_ns=0, lean_deg=60.0, speed=370.0))
 check("with no wait set, a new climb may start at once", free.step(moment(101), LIMITS).event == "start")
 
 count = 0
@@ -172,8 +182,8 @@ check("no limit on the number of climbs, one wait apart", count == 5)
 
 
 # The one angle that rules the stick: the diagonal of the slider, never under 45 degrees at the start.
-STRAIGHT = rules.Limits(height=372.0, delay_ns=0, lean_deg=0.0)
-WIDE = rules.Limits(height=372.0, delay_ns=0, lean_deg=75.0)
+STRAIGHT = rules.Limits(height=372.0, delay_ns=0, lean_deg=0.0, speed=370.0)
+WIDE = rules.Limits(height=372.0, delay_ns=0, lean_deg=75.0, speed=370.0)
 check("a climb may start on a stick within the diagonal, never under 45 degrees",
       rules.start_angle(STRAIGHT) == 45.0 and rules.start_angle(LIMITS) == 60.0 and rules.start_angle(WIDE) == 75.0)
 check("with no diagonal a stick 40 degrees off starts and 50 does not",
@@ -209,31 +219,6 @@ waited.step(moment(100, view_yaw=80.0), LIMITS)
 check("during the wait that follows a short climb", waited.start_refusal(moment(200), LIMITS) == rules.WAITING)
 check("a leaning face also ends a climb under way",
       after(wall=Wall(distance=60.0, into_x=1.0, into_y=0.0, flat=0.5)).event == rules.WALL_LOST)
-
-# Which surface a climb judges itself on, out of what the traces met.
-def pick(*walls: rules.Wall) -> rules.Wall | None:
-    return rules.best_wall(list(walls))
-
-
-PANEL = Wall(distance=98.0, into_x=1.0, into_y=0.0, flat=1.0)
-BEVEL = Wall(distance=2.0, into_x=1.0, into_y=0.0, flat=0.53)
-NEARER = Wall(distance=60.0, into_x=1.0, into_y=0.0, flat=0.80)
-
-check("nothing met, nothing picked", pick() is None)
-check("a bevel at arm's length does not hide the panel behind it: it is not upright enough to be a wall",
-      pick(BEVEL, PANEL) is PANEL)
-merged = pick(PANEL, NEARER)
-check("two heights seeing the same wall are merged: its nearest distance, its best uprightness",
-      merged.distance == 60.0 and merged.flat == 1.0)
-SIDE = Wall(distance=70.0, into_x=0.0, into_y=1.0, flat=1.0)
-check("a wall facing another way is not merged in: the nearest one alone is taken",
-      pick(NEARER, SIDE) is NEARER)
-bar = Wall(distance=50.0, into_x=0.94, into_y=0.34, flat=0.9)
-smoothed = pick(bar, NEARER)
-check("a bar standing proud of the face is smoothed into it, not followed on its own",
-      round(smoothed.into_x, 2) == 0.98 and round(smoothed.into_y, 2) == 0.17)
-check("with no upright surface at all, the nearest is picked so a refusal can describe it",
-      pick(BEVEL, Wall(distance=9.0, into_x=1.0, into_y=0.0, flat=0.2)) is BEVEL)
 
 # Every refusal the rules can give has to be in REFUSALS: one missing is a refusal no log line can ever name.
 names = {value for name, value in vars(rules).items()

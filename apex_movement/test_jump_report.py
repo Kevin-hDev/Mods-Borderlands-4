@@ -83,5 +83,37 @@ air(vz=420.0)
 jump_report.update(player, 9)
 check("after a reset the next jump is reported again", len(lines()) == 1)
 
+
+def jumps(count: int, start: int) -> None:
+    for i in range(count):
+        ground()
+        jump_report.update(player, start + 2 * i)
+        air(vz=420.0)
+        jump_report.update(player, start + 2 * i + 1)
+    ground()
+    jump_report.update(player, start + 2 * count)
+
+
+# The bound counts every line, landings included, and a level load does not lift it (review, 2026-09-18).
+jump_report.stop(player)
+state["misc"].clear()
+jumps(jump_report.MAX_LINES // 2, 100)
+check("a session writes at most the bound, landings counted", len(lines()) == jump_report.MAX_LINES)
+jump_report.reset()
+jumps(3, 10_000)
+check("a level load does not lift the bound", len(lines()) == jump_report.MAX_LINES)
+jump_report.stop(player)
+jumps(1, 20_000)
+check("switching the mod off and on starts a new count", len(lines()) == jump_report.MAX_LINES + 2)
+
+# An odd bound puts the limit between a take-off and its landing: the take-off must wait for room for both.
+state["misc"].clear()
+jump_report.stop(player)
+bound = jump_report.MAX_LINES
+jump_report.MAX_LINES = 5
+jumps(3, 30_000)
+check("the bound never splits a jump in half", len(lines()) == 4 and lines()[-1].startswith("[Apex Movement] jump landed"))
+jump_report.MAX_LINES = bound
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

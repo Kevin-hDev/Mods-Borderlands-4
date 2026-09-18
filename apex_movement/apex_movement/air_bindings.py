@@ -1,6 +1,8 @@
 """Binds the game's own crouch and jump keys through the SDK, so the air rule sees each press before the game.
 
 The keys come from the game's input list rather than fixed names, so the rule follows the player's own key choices.
+The list is read when the keys are bound, again after every level load (air_crouch.reset): a key changed in the
+game's options mid-level is followed from the next load only.
 Verified in session 4 (2026-09-16): a press blocked here never reaches the game, and nothing can send a fake release.
 """
 
@@ -61,10 +63,12 @@ def bind(mappings: list[Any]) -> bool:
     jump_keys = keys_for(mappings, JUMP_ACTIONS) - crouch_keys
     if not crouch_keys:
         return False
+    # Named after the package, like frame.py's hook, so an identifier names the file that bound it: each separate file
+    # has its own package name. The SDK binds by key alone, so two files never clash through these names.
     for key in sorted(crouch_keys):
-        _binds.append(keybind(f"apex_movement:crouch:{key}", key, _on_crouch(key), is_hidden=True, event_filter=None))
+        _binds.append(keybind(f"{__package__}:crouch:{key}", key, _on_crouch(key), is_hidden=True, event_filter=None))
     for key in sorted(jump_keys):
-        _binds.append(keybind(f"apex_movement:jump:{key}", key, _on_jump, is_hidden=True, event_filter=None))
+        _binds.append(keybind(f"{__package__}:jump:{key}", key, _on_jump, is_hidden=True, event_filter=None))
     for bound in _binds:
         bound.enable()
     report.note(f"air crouch keys crouch={sorted(crouch_keys)} jump={sorted(jump_keys)}")

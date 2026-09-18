@@ -4,8 +4,6 @@ Speeds are real speeds, the ones the SDK log measures (design decision 8). The d
 between walk and sprint (828 - 540 = 288) and put the slide clearly above the sprint.
 """
 
-from dataclasses import dataclass
-
 from mods_base import BoolOption, SliderOption
 
 auto_sprint = BoolOption(
@@ -64,9 +62,11 @@ sprint_speed = SliderOption(
     display_name="Sprint speed",
     description="Ground speed while sprinting, never slower than the walk speed. The game's own value is 828.",
 )
-# 1130 after trying 1080 and 1150 in game (Kevin, 2026-09-17: "on se rapproche plus d'un apex legends").
+# 1130 after trying 1080 and 1150 in game (Kevin, 2026-09-17: "on se rapproche plus d'un apex legends"). The floor
+# stays above slide_physics.STOP_SPEED (350): a slide started at or under it was ended on its first frame (review,
+# 2026-09-18). test_settings holds that relation, since this file cannot import slide_physics.
 slide_speed = SliderOption(
-    "slide_speed", 1130, 300, 2500, step=1, is_integer=True,
+    "slide_speed", 1130, 400, 2500, step=1, is_integer=True,
     display_name="Slide speed",
     description="Speed a slide starts at. Never slower than the sprint speed.",
 )
@@ -86,7 +86,7 @@ slide_downhill_pull = SliderOption(
 slide_max_speed = SliderOption(
     "slide_max_speed", 2000, 500, 4000, step=50, is_integer=True,
     display_name="Max slide speed",
-    description="A slide never goes faster than this, however steep the slope.",
+    description="A slide never goes faster than this, however steep the slope. Never below the slide speed.",
 )
 # Kevin, 2026-09-17: further at the game's own speed ("il faut juste qu'il aille plus loin, pas qu'il aille plus vite");
 # 130 then 200 tried with the whole curve stretched, not enough, so up to 300; once only the full-speed part was
@@ -186,27 +186,3 @@ reclimb_delay = SliderOption(
 # here rather than in slide_physics because the landing slide's own safety net has to outlast it, and that belongs to
 # another movement (2026-09-18): one value, one place, read by both.
 LONGEST_SLIDE_S = 30.0
-
-
-@dataclass(frozen=True)
-class Speeds:
-    walk: float
-    sprint: float
-    slide: float
-    landing_slide_min: float
-
-
-def ordered(walk: float, sprint: float, slide: float, landing_slide_min: float) -> Speeds:
-    """Keeps walk <= sprint <= slide and the landing slide minimum <= sprint, whatever the sliders say.
-
-    A slider cannot take another slider as its bound, so the order Kevin set (design decision 9) is enforced here.
-    """
-    sprint = max(sprint, walk)
-    return Speeds(walk=walk, sprint=sprint, slide=max(slide, sprint), landing_slide_min=min(landing_slide_min, sprint))
-
-
-def speeds() -> Speeds:
-    return ordered(
-        float(walk_speed.value), float(sprint_speed.value), float(slide_speed.value),
-        float(landing_slide_min_speed.value),
-    )

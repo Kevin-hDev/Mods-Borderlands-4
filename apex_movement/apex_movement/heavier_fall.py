@@ -65,11 +65,16 @@ def update(character: Any, now_ns: int) -> None:
 
 
 def stop(character: Any) -> None:
+    # Known limit: switched off in mid-air, the jump under way left with its speed x sqrt(scale) and finishes under the
+    # game's gravity, so it rises higher once (the review's estimate: up to `scale` times; not measured in game).
+    # Putting the gravity back at the next landing instead would need frames after stop, and the frame loop no longer
+    # updates a stopped movement: the heavier gravity would then stay with the switch off, worse than one high jump.
     reset()
     owned = ownership.is_owned(GRAVITY_KEY)
-    for jump_type in jump_goals.JUMP_TYPES:
-        for field in FIELDS:
-            ownership.restore(_key(jump_type, field))
-    ownership.restore(GRAVITY_KEY)
+    keys = [_key(jump_type, field) for jump_type in jump_goals.JUMP_TYPES for field in FIELDS]
+    failures = ownership.restore_each([*keys, GRAVITY_KEY])
+    if failures:
+        # Raised once every key was tried: the frame loop reports it, and ownership keeps what is not back yet.
+        raise RuntimeError("; ".join(failures))
     if owned:
         report.note("heavier fall off, game gravity and jumps restored")

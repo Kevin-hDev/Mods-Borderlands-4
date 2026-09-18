@@ -16,31 +16,31 @@ import math
 from dataclasses import dataclass
 
 from .climb_aim import Wall, angle_to_wall, view_angle
+from .wall_choice import MIN_WALL_FLAT
 
 # The character's radius (40, measured on 2026-09-17) plus 50: all thirteen pushes of the measure started within it,
 # none by mistake.
 REACH = 90.0
 # The climb leans into the wall, which kept it within 90 during the measure: past this, the wall has ended.
 LOST_REACH = 135.0
+# Pushed at least halfway (phase 2 spec, 2.1, condition 3): chosen, not measured, to tune in game if needed.
 MIN_STICK = 0.5
+# Within 45 degrees of the wall (spec 2.1, condition 4; Kevin: "il faut regarder le mur"): chosen, not measured.
 START_VIEW_DEG = 45.0
 # A stick let go for less than this keeps the climb: in play the stick crosses its centre between two pushes, and
 # séance Y ended 14 climbs out of 73 on the stick alone. Long enough to forgive a flick, short enough that letting go
 # still stops a climb when the player means it.
 STICK_GRACE_NS = 250_000_000
-# A face leaning more than about 45 degrees off upright is a slope to walk on, not a wall to climb.
-MIN_WALL_FLAT = 0.7
 # Wider than at the start, so that a small camera move does not cut a climb (spec, end 12). The stick gets the same:
 # pushed forward it turns with the camera, and at 45 it cut climbs before the camera rule (0.8.0 test, no camera end).
 KEEP_MARGIN_DEG = 15.0
-# A climb may lean along the wall as far as the stick asks, up to the lean limit (Kevin, 2026-09-17: "que la grimpe ne
-# fonctionne pas que tout droit, qu'elle puisse fonctionner en diagonale jusqu'à 60 degrés"). That one angle rules the
-# stick everywhere: a climb starts on a stick within it, and ends past it plus the margin. Three separate angles could
-# disagree — a lean the start refuses, or an end before the fullest diagonal.
+# The stick's tolerance at a start before the diagonal existed (spec 2.1, condition 3: "à 45° près"). start_angle
+# takes the larger of this and the lean limit, and the end rule allows that same angle plus KEEP_MARGIN_DEG.
 MIN_START_DEG = 45.0
 # A climb rises about 70 in 0.2 s. Under an overhang it rose nothing and hung there while the stick was pushed (0.8.0
 # test, three climbs of 2.1 to 4.3 s; Kevin: "le personnage ne chute pas, il reste en haut").
 STALL_NS = 200_000_000
+# Chosen, not measured (spec, end 12 bis): a seventh of that normal rise.
 MIN_PROGRESS = 10.0
 # The jump count may update a frame after take-off (apex_jump_track): a rise this early is still the same jump.
 JUMP_SETTLE_NS = 50_000_000
@@ -87,8 +87,8 @@ class Moment:
     stick_x: float
     stick_y: float
     view_yaw: float | None
-    # The surface the climb judges itself on, and how many of the traces met anything at all: a refusal that says
-    # 0 of 3 points at the structure being invisible to the trace, one that says 3 points at the rules.
+    # The surface the climb judges itself on, and how many of the traces met anything at all: a refusal where none did
+    # points at a structure the traces go through, one where they all did points at the rules.
     wall: Wall | None
     hits: int
     # Whether a wall was seen at the character's own height or above. A step, a kerb or a stair tread is only seen by
@@ -103,6 +103,8 @@ class Limits:
     # Degrees a climb may lean to a side. No default: the slider is its only authority, and a forgotten value here
     # would ignore it in silence.
     lean_deg: float
+    # Not read by the rules: it rides here so wall_climb._limits bounds every slider in one place. No default either.
+    speed: float
 
 
 @dataclass(frozen=True)
@@ -113,56 +115,9 @@ class Step:
     ms: int = 0
 
 
-# Two surfaces facing within this of each other are the same wall, seen at two heights: beyond it they are two walls,
-# and averaging them would point into neither.
-SAME_WALL_COS = 0.7
-
-
-def best_wall(walls: list[Wall]) -> Wall | None:
-    """The surface a climb should judge itself on, out of what the traces met: the nearest one upright enough to be a
-    wall, or else the nearest of all, so a refusal can say how far it was and how much it leaned.
-
-    Sorting by uprightness among those within reach cost séance U: rising past REACH left only a bevel two units away,
-    the most upright of what was left at 0.53, and the climb ended on a lost wall while the panel stood at 98. Leaning
-    surfaces are not candidates at all — that is what the threshold means.
-    """
-    if not walls:
-        return None
-    upright = [wall for wall in walls if wall.flat >= MIN_WALL_FLAT]
-    if not upright:
-        return min(walls, key=lambda wall: wall.distance)
-    nearest = min(upright, key=lambda wall: wall.distance)
-    # The face of a wall carries bars, bolts and corrugation. Each is upright enough to be picked on its own, and each
-    # points its own way, which turns a climb or ends it (Kevin, 2026-09-17: "c'est presque plat, ça devrait être
-    # considéré comme du plat"). Averaging the heights that see the same wall smooths them out.
-    same = [wall for wall in upright
-            if wall.into_x * nearest.into_x + wall.into_y * nearest.into_y >= SAME_WALL_COS]
-    return _merged(same)
-
-
-def _merged(walls: list[Wall]) -> Wall:
-    """One wall out of several views of it: the nearest distance, the average way in and way up."""
-    if len(walls) == 1:
-        return walls[0]
-    into_x, into_y = _unit(sum(w.into_x for w in walls), sum(w.into_y for w in walls))
-    up_x, up_y, up_z = _unit3(sum(w.up_x for w in walls), sum(w.up_y for w in walls), sum(w.up_z for w in walls))
-    return Wall(distance=min(w.distance for w in walls), into_x=into_x, into_y=into_y,
-                flat=max(w.flat for w in walls), up_x=up_x, up_y=up_y, up_z=up_z)
-
-
-def _unit(x: float, y: float) -> tuple[float, float]:
-    length = math.hypot(x, y)
-    return (x / length, y / length) if length > 1e-6 else (x, y)
-
-
-def _unit3(x: float, y: float, z: float) -> tuple[float, float, float]:
-    length = math.sqrt(x * x + y * y + z * z)
-    return (x / length, y / length, z / length) if length > 1e-6 else (0.0, 0.0, 1.0)
-
-
 def start_angle(limits: Limits) -> float:
-    """How far off the wall the stick may be for a climb to start: never under MIN_START_DEG, so that a jump with the
-    stick pushed sideways stays a jump even when no lean at all is allowed."""
+    """How far off the wall the stick may be for a climb to start: the lean limit, never under MIN_START_DEG, so that
+    with no lean allowed a stick roughly toward the wall still starts a straight climb."""
     return max(MIN_START_DEG, limits.lean_deg)
 
 
@@ -173,6 +128,11 @@ def view_angle_allowed(limits: Limits) -> float:
     at 45 while the stick reached 60 ended 21 climbs out of 73 on the camera alone (séance Y).
     """
     return max(START_VIEW_DEG, limits.lean_deg)
+
+
+def longest_climb_ns(limits: Limits) -> int:
+    """The longest a climb can live: its height at the slowest rise that escapes BLOCKED, whatever the climb speed."""
+    return math.ceil(limits.height / MIN_PROGRESS) * STALL_NS
 
 
 class Rules:

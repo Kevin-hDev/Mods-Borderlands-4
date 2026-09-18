@@ -52,8 +52,8 @@ player.input = sdk_stubs.vector(1.0, 0.0)
 player.JumpCurrentCount = 1
 wall_climb.update(player, 20 * MS)
 check("a jump at a wall, stick and camera toward it, starts a climb", notes("wall climb start distance=60 stick_deg=0 view_deg=0") == 1)
-check("the arms play the climb up for the longest climb, 372 at 370 a second leaning all the way", len(arms.plays) == 1
-      and arms.plays[0]["SlotNodeName"] == "FullBody" and arms.plays[0]["LoopCount"] == 5)
+check("the arms play the climb up as long as the rules let a climb live: 372 rising only 10 every 0.2 s, 7.6 s",
+      len(arms.plays) == 1 and arms.plays[0]["SlotNodeName"] == "FullBody" and arms.plays[0]["LoopCount"] == 14)
 check("the climb writes 370 up and leans into the wall",
       (movement.Velocity.X, movement.Velocity.Y, movement.Velocity.Z) == (100.0, 0.0, 370.0))
 check("no Croix while the game does not allow a mantle", state["injections"] == [])
@@ -109,6 +109,7 @@ settings.reclimb_delay.value = 0.0
 stops = len(arms.stops)
 wall_climb.stop(player)
 check("stop is logged", notes("wall climb off") == 1)
+check("stop outside a climb tells no climb's end", notes("reason=switched_off") == 0)
 check("stop outside a climb stops no animation", len(arms.stops) == stops)
 check("stop puts the game's mantle hold back", pc.MinPassiveMantleButtonHoldDuration == 0.075)
 wall_climb.update(player, 3100 * MS)
@@ -235,6 +236,41 @@ wall_climb.update(player, 25000 * MS)
 check("a beam grazed at one height does not hide the upright panel at another",
       notes("wall climb start distance=80") == 1)
 kismet.hits_by_z = None
+
+# Switched off in the middle of a climb: its end is told, and nothing the climb held outlives it.
+wall_climb.reset()
+state["misc"].clear()
+state["inject_function"] = types.SimpleNamespace(Name="InjectInputVectorForAction")
+movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
+movement.Velocity = sdk_stubs.vector(0.0, 0.0, 0.0)
+movement.mantle_allowed = True
+player.location = sdk_stubs.vector(0.0, 0.0, 0.0)
+player.JumpCurrentCount = 1
+wall_climb.update(player, 27000 * MS)
+check("a climb starts, pressing Croix", notes("wall climb start") == 1 and notes("wall climb hoist") == 1)
+wall_climb.stop(player)
+check("switched off in the middle of a climb, its end is told", notes("wall climb end reason=switched_off") == 1)
+scans = state["subsystem_scans"]
+jump_press.press()
+check("the jump input the climb pressed with is forgotten: it is looked up again", state["subsystem_scans"] == scans + 1)
+movement.mantle_allowed = False
+kismet.hit = None
+wall_climb.update(player, 27100 * MS)
+player.JumpCurrentCount = 2
+wall_climb.update(player, 27200 * MS)
+check("the jump the climb owed is forgotten: a jump after the switch-off is not given back",
+      player.JumpCurrentCount == 2 and notes("jump from the climb") == 0)
+
+# A settings file edited by hand skips the sliders' own bounds.
+settings.climb_speed.value, settings.climb_lean.value = 0, 90
+hand_edited = wall_climb._limits(player)
+check("a hand-edited climb speed of 0 is raised to 1, and a diagonal of 90 lowered to 89",
+      (hand_edited.speed, hand_edited.lean_deg) == (1.0, 89.0))
+settings.climb_lean.value = -30
+check("a negative diagonal climbs straight up", wall_climb._limits(player).lean_deg == 0.0)
+settings.climb_speed.value, settings.climb_lean.value = 370, 60
+from_sliders = wall_climb._limits(player)
+check("the sliders' own values pass untouched", (from_sliders.speed, from_sliders.lean_deg) == (370.0, 60.0))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

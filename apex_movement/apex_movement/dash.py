@@ -16,8 +16,6 @@ from . import game, ownership, report, settings
 TIMING_KEY = "Move_Dash.timing"
 # The game's dash on flat ground, measured on 2026-09-17 (00:59): the base the distance percentage applies to.
 GAME_DISTANCE = 508.0
-# Game floats are 32-bit: a value read back differs from the one written by less than this.
-TOLERANCE = 1e-4
 
 
 @dataclass(frozen=True)
@@ -27,12 +25,8 @@ class Timing:
     times: tuple[float, ...]
 
 
-_applied: float | None = None
-
-
 def reset() -> None:
-    global _applied
-    _applied = None
+    """Nothing of its own to forget: the game's timing belongs to ownership, which stop gives back."""
 
 
 def _keys(asset: Any) -> Any:
@@ -46,7 +40,7 @@ def read(asset: Any) -> Timing:
 def has_full_speed_start(asset: Any) -> bool:
     """The curve starts with two points at the same value: the full-speed part that gets lengthened."""
     keys = list(_keys(asset))
-    return len(keys) >= 2 and abs(float(keys[0].Value) - float(keys[1].Value)) <= TOLERANCE
+    return len(keys) >= 2 and abs(float(keys[0].Value) - float(keys[1].Value)) <= ownership.TOLERANCE
 
 
 def lengthened(timing: Timing, extra: float) -> Timing:
@@ -57,7 +51,7 @@ def lengthened(timing: Timing, extra: float) -> Timing:
 
 def close(a: Timing, b: Timing) -> bool:
     values_a, values_b = (a.duration, *a.times), (b.duration, *b.times)
-    return len(values_a) == len(values_b) and all(abs(x - y) <= TOLERANCE for x, y in zip(values_a, values_b))
+    return len(values_a) == len(values_b) and all(abs(x - y) <= ownership.TOLERANCE for x, y in zip(values_a, values_b))
 
 
 def _put(timing: Timing) -> None:
@@ -76,22 +70,19 @@ def _put(timing: Timing) -> None:
 
 
 def update(character: Any, now_ns: int) -> None:
-    global _applied
-    factor = float(settings.dash_distance.value) / 100.0
-    if _applied == factor:
-        return
     asset = game.dash_asset()
     if asset is None:
         report.error_once("dash_asset", "Move_Dash not found yet; dashes keep the game's own length meanwhile")
         return
-    _applied = factor
     if not has_full_speed_start(asset):
         # A game update changed the curve: lengthening another part would bring the double move back.
         report.error_once("dash_curve", "Move_Dash's speed curve changed shape; dashes keep the game's own length")
         return
+    factor = float(settings.dash_distance.value) / 100.0
     game_timing = ownership.original(TIMING_KEY) if ownership.is_owned(TIMING_KEY) else read(asset)
     extra = (factor - 1.0) * GAME_DISTANCE / max(float(asset.speed.constant), 1.0)
     wanted = lengthened(game_timing, extra)
+    # Read every frame rather than remembered: the game can put Move_Dash back without a character change.
     if not close(read(asset), wanted):
         ownership.write(TIMING_KEY, ownership.ASSET, lambda: read(game.dash_asset()), _put, wanted)
         report.note(f"dash distance {factor * 100:.0f}% lasting {wanted.duration * 1000:.0f} ms "

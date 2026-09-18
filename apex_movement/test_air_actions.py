@@ -10,6 +10,19 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
+
+class WeakPointer:
+    """Stands for unrealsdk.unreal.WeakPointer: gives None once the test marks the object destroyed."""
+
+    def __init__(self, obj: object = None) -> None:
+        self.obj = obj
+
+    def __call__(self) -> object:
+        return None if getattr(self.obj, "destroyed", False) else self.obj
+
+
+sys.modules["unrealsdk.unreal"].WeakPointer = WeakPointer
+
 from apex_movement import air_actions  # noqa: E402
 
 fails: list[str] = []
@@ -51,6 +64,20 @@ check("stick to +Y with the camera on +X dashes right", direction(0.0, 1.0, 0.0)
 check("stick to -Y with the camera on +X dashes left", direction(0.0, -1.0, 0.0) == A.LEFT)
 check("the camera turned 90 degrees turns the directions", direction(0.0, 1.0, 90.0) == A.FORWARD)
 check("a diagonal picks the larger part", direction(0.9, 0.3, 0.0) == A.FORWARD)
+
+
+def direction_without_controller() -> object:
+    """The direction chosen, or the error raised: an error here switches the whole movement off in game."""
+    controller, player.Controller, player.input = player.Controller, None, sdk_stubs.vector(0.0, 1.0)
+    try:
+        return A.dash_direction(player)
+    except Exception as exc:
+        return exc
+    finally:
+        player.Controller = controller
+
+
+check("without a controller for a frame, the dash goes forward", direction_without_controller() == A.FORWARD)
 
 player.input, player.yaw = sdk_stubs.vector(0.0, 1.0), 0.0
 A.start_dash(player, 0)
@@ -164,9 +191,44 @@ A.stop(player)
 check("a second stop calls nothing", len(player.calls) == calls)
 
 A.start_dash(player, 7000 * MS)
+A.start_slide(player, 7000 * MS, 900.0, 550.0)
 A.forget()
+check("forget releases a dash and a slide on the character they were asked on",
+      player.calls[calls + 2:] == [("SetWantsToDash", False, A.RIGHT), ("SetWantsToSlide", False)])
+calls = len(player.calls)
 A.stop(player)
-check("forget drops the watches without calling the game", len(player.calls) == calls + 1)
+check("and drops the watches: a stop after it calls nothing", len(player.calls) == calls)
+
+gone = sdk_stubs.FakeCharacter()
+A.start_dash(gone, 7500 * MS)
+A.start_slide(gone, 7500 * MS, 900.0, 550.0)
+gone.destroyed = True
+A.forget()
+check("a character destroyed by a level load is not called", len(gone.calls) == 2)
+A.stop(player)
+check("and its watches are dropped all the same", len(player.calls) == calls)
+
+
+class Refusing(sdk_stubs.FakeCharacter):
+    def SetWantsToSlide(self, wanted: bool) -> None:
+        if not wanted:
+            raise RuntimeError("pending kill")
+        super().SetWantsToSlide(wanted)
+
+
+refusing = Refusing()
+A.start_slide(refusing, 7600 * MS, 900.0, 550.0)
+errors = len(state["errors"])
+try:
+    A.forget()
+    raised = False
+except Exception:
+    raised = True
+check("a release the old character refuses does not raise out of a level change", not raised)
+check("it is reported", len(state["errors"]) == errors + 1 and "not released" in state["errors"][-1])
+A.stop(player)
+check("and the watch is dropped", len(player.calls) == calls)
+
 A.start_dash(player, 8000 * MS)
 data.ControlledMove = Move("Move_Dash")
 A.update(player, 8009 * MS)
@@ -178,6 +240,10 @@ check("forget also drops a dash waiting to be chained", len(player.calls) == cal
 data.ControlledMove = None
 A.stop(None)
 check("stop without a character does not raise", True)
+A.start_slide(player, 9000 * MS, 900.0, 550.0)
+A.stop(None)
+check("stop without a character releases on the one the request was asked on",
+      player.calls[-1] == ("SetWantsToSlide", False))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

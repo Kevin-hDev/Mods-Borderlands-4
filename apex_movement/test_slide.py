@@ -12,7 +12,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import game, ownership, settings, slide  # noqa: E402
+from apex_movement import game, ownership, settings, slide, slide_direction, slide_physics, slide_steering  # noqa: E402
 
 fails: list[str] = []
 
@@ -69,12 +69,11 @@ settings.axle_slide.value = False
 slide.update(player, 3600 * 1000)
 check("switched off, slides start at the slide speed again", abs(constant() * 1.15 * 1.1017 - 1130.0) < 0.01)
 
-movement.MaxGroundSpeedScale.Value = 1.0
+# The speed bonus stays at 1.15: at 1.0 dividing by it or not gives the same constant, and the check proves nothing.
 asset.bSpeedAffectedByMaxGroundSpeedScale = False
 slide.update(player, 4 * MS)
 check("an asset not scaled by the speed bonus divides by the curve only", abs(constant() * 1.1017 - 1130.0) < 0.01)
 asset.bSpeedAffectedByMaxGroundSpeedScale = True
-movement.MaxGroundSpeedScale.Value = 1.15
 slide.update(player, 5 * MS)
 
 settings.sprint_speed.value = 1500
@@ -91,6 +90,13 @@ speed = math.hypot(movement.Velocity.X, movement.Velocity.Y)
 check("early in a slide the velocity is raised to the slide speed", abs(speed - 1130.0) < 0.01)
 check("the raised velocity keeps its direction", abs(movement.Velocity.X - movement.Velocity.Y) < 1e-9)
 check("the raised velocity keeps its vertical part", movement.Velocity.Z == 50.0)
+
+settings.axle_slide.value = True
+movement.Velocity = sdk_stubs.vector(900.0, 0.0)
+slide.update(player, 120 * MS)
+check("the Axle slide switched on mid-slide leaves that slide at the speed it started with, as slide physics does",
+      movement.Velocity.X == 1130.0)
+settings.axle_slide.value = False
 
 written, logged = constant(), notes("slide start speed")
 asset.SpeedScaleCurve.EditorCurveData.keys[0].Value = 0.8
@@ -140,8 +146,29 @@ movement.bIsSprinting = True
 slide.update(player, 1100 * MS)
 slide.update(player, 1101 * MS)
 check("a slide asset not loaded yet skips the frame and is reported once", len(state["errors"]) == 1)
+for module in (slide_physics, slide_direction, slide_steering):
+    module.update(player, 1102 * MS)
+check("one line reports it for every module of the slides", len(state["errors"]) == 1)
+check("in words true of all of them, not of the slide speed only",
+      "Move_Slide not found yet" in state["errors"][0] and "speed" not in state["errors"][0])
 state["objects"][key] = asset
 movement.bIsSprinting = False
+
+# Slides switched off and on again during one slide: the frame loop calls stop, then update on the same slide.
+movement.ControlledMoveReplicationData.ControlledMove = asset
+movement.Velocity = sdk_stubs.vector(900.0, 0.0)
+slide.update(player, 1200 * MS)
+slide.stop(player)
+movement.Velocity = sdk_stubs.vector(900.0, 0.0)
+slide.update(player, 1250 * MS)
+check("switched off and on during one slide, that slide keeps the game's speed", movement.Velocity.X == 900.0)
+movement.ControlledMoveReplicationData.ControlledMove = None
+slide.update(player, 1300 * MS)
+movement.ControlledMoveReplicationData.ControlledMove = asset
+slide.update(player, 1350 * MS)
+check("the next slide is raised again", movement.Velocity.X == 1130.0)
+movement.ControlledMoveReplicationData.ControlledMove = None
+slide.update(player, 1400 * MS)
 
 slide.stop(player)
 check("stop puts the game's slide speed back", constant() == 720.0 and not ownership.is_owned(slide.SPEED_KEY))

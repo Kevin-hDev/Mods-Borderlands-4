@@ -11,7 +11,7 @@ from typing import Any
 from mods_base import build_mod
 
 from . import (
-    air_crouch, air_strafe, dash, family, frame, ground_speed, heavier_fall, jump_report, menu, movements, pack,
+    air_crouch, air_strafe, dash, family, frame, ground_speed, heavier_fall, jump_report, menu, pack,
     report, settings, slide, slide_direction, slide_physics, slide_steering, sprint, wall_climb,
 )
 
@@ -42,22 +42,11 @@ _register("heavier_fall", heavier_fall, settings.heavier_fall)
 # Last: it writes the velocity in the air, and no movement registered before it does.
 _register("wall_climb", wall_climb, settings.wall_climb)
 # After every movement: it reports the jump that just left the ground, once the others have written their speeds.
-_register("jump_report", jump_report)
-
-
-def _carried() -> list[str]:
-    return [movement.name for movement in movements.MOVEMENTS if pack.carries(movement.name)]
+_register("jump_report", jump_report, settings.heavier_fall)
 
 
 def _on_enable() -> None:
     report.reset()
-    # Two files running one movement would fight over the same game field, and the one stopping last would put back
-    # what the other had written. Staying off is the only safe answer; the player picks which file to keep.
-    clash = family.clash(__name__, _carried())
-    if clash:
-        report.warning(f"{clash}: this file stays off, remove one of the two")
-        mod.disable()
-        return
     # Tested with no other movement mod; Auto Sprint writes the same ground speed, so the last writer would win.
     if "auto_sprint" in sys.modules:
         report.warning("the Auto Sprint mod is also loaded; both set the ground speed, disable one of them")
@@ -70,7 +59,9 @@ def _on_disable() -> None:
     report.note("disabled, game values restored")
 
 
+# FamilyMod refuses to switch on while another installed file of this pack already runs one of these movements.
 mod = build_mod(
+    cls=family.FamilyMod,
     name=pack.NAME,
     options=menu.MENU,
     hooks=[frame.tick],

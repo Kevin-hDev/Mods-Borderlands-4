@@ -1,4 +1,4 @@
-"""Tests auto sprint: request, release while aiming or in the air, restart after a slide, release on stop."""
+"""Tests auto sprint: ground request, release while aiming, kept in the air, restart after a slide, release on stop."""
 
 import pathlib
 import sys
@@ -43,10 +43,15 @@ player.ZoomState.bWantsToZoom = False
 
 movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
 sprint.update(player, 4)
-check("in the air no sprint is asked", movement.bWantsToSprint is False)
+check("in the air no new sprint is asked", movement.bWantsToSprint is False)
 movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
 
 sprint.update(player, 5)
+movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
+sprint.update(player, 5)
+check("a sprint asked on the ground is kept in the air", movement.bWantsToSprint is True)
+movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
+
 movement.bWantsToStartSprinting = False
 movement.bIsSprinting = False
 sprint.update(player, 6)
@@ -59,7 +64,10 @@ check("no restart while crouched, so a slide is left alone", movement.bWantsToSt
 player.bIsCrouched = False
 
 # The ground speeds left this module on 2026-09-18: they live in ground_speed, with no switch of their own.
-check("auto sprint no longer touches the ground speed", not hasattr(sprint, "FLOOR_KEY"))
+movement.bIsSprinting = True
+sprint.update(player, 8)
+check("auto sprint no longer touches the ground speed, walking or sprinting", movement.MinAnalogWalkSpeed == 0.0)
+movement.bIsSprinting = False
 
 sprint.stop(player)
 check("stop releases the sprint the mod asked for", movement.bWantsToSprint is False)

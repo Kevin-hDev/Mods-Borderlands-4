@@ -59,11 +59,13 @@ def lean_degrees(x: float, y: float, wall: Wall, limit_deg: float) -> float:
     """How far the stick leans along the wall: 0 straight up, negative on one side and positive on the other.
 
     Bounded by the limit, so that between it and the end angle a climb keeps its fullest diagonal instead of ending.
+    A stick pointing no way into the wall asks for no side: pulled straight back, it gave an angle near 180 whose side,
+    and so the side of the fullest diagonal, a hair of noise decided.
     """
-    if math.hypot(x, y) < 1e-6:
+    into = x * wall.into_x + y * wall.into_y
+    if math.hypot(x, y) < 1e-6 or into <= 0.0:
         return 0.0
     along = x * -wall.into_y + y * wall.into_x
-    into = x * wall.into_x + y * wall.into_y
     return max(-limit_deg, min(limit_deg, math.degrees(math.atan2(along, into))))
 
 
@@ -78,8 +80,3 @@ def climb_direction(lean_deg: float, wall: Wall) -> tuple[float, float, float]:
     return (wall.up_x * rise - wall.into_y * sideways,
             wall.up_y * rise + wall.into_x * sideways,
             wall.up_z * rise)
-
-
-def longest_climb_s(height: float, speed: float, lean_deg: float) -> float:
-    """The longest a climb can last: leaning all the way rises the slowest, so it takes the longest to reach height."""
-    return height / (speed * math.cos(math.radians(lean_deg)))

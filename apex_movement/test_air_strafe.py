@@ -45,5 +45,30 @@ check("the restore is logged once", sum("air strafe off" in line for line in sta
 air_strafe.stop(player)
 check("a stop with nothing written logs nothing", sum("air strafe off" in line for line in state["misc"]) == 1)
 
+# One value that cannot be put back must not keep the next one from it (review, 2026-09-18): each is tried, and the
+# failure is raised once all were, for the frame loop to report.
+air_strafe.update(player, 3)
+entry = ownership._entries[air_strafe.ACCELERATION_KEY]
+put = entry["put"]
+
+
+def refuse(value: float) -> None:
+    raise AttributeError("the movement component is gone")
+
+
+entry["put"] = refuse
+stop_error = ""
+try:
+    air_strafe.stop(player)
+except Exception as exc:
+    stop_error = str(exc)
+check("an acceleration that cannot be put back does not keep the air control from it", movement.AirControl == 0.6)
+check("its failure is raised for the frame loop to report", air_strafe.ACCELERATION_KEY in stop_error)
+check("and the game's acceleration is kept to put back later",
+      ownership.original(air_strafe.ACCELERATION_KEY) == 2048.0)
+entry["put"] = put
+air_strafe.stop(player)
+check("the next stop puts it back", movement.MaxAcceleration == 2048.0)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

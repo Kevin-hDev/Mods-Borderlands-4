@@ -97,5 +97,24 @@ check("stop_all forgets the player", game.character() is None)
 frame.on_frame(other.anim, 3 * S + 1)
 check("after stop_all a failed movement gets another chance", bad.stops == 2)
 
+# A switch turned off while there is no character — at the main menu, between two games — must still stop its
+# movement once a character is back: what a movement writes outlives the character (review, 2026-09-18).
+sdk_stubs.use_character(state, None)
+frame.on_frame(other.anim, 5 * S)
+stops = good.stops
+good_switch.value = False
+third = sdk_stubs.FakeCharacter()
+sdk_stubs.use_character(state, third)
+frame.on_frame(third.anim, 6 * S)
+check("a switch turned off with no character stops its movement once one is back", good.stops == stops + 1)
+good_switch.value = True
+frame.on_frame(third.anim, 6 * S + 1)
+
+sdk_stubs.use_character(state, None)
+frame.on_frame(third.anim, 7 * S)
+stops = good.stops
+frame.stop_all()
+check("disabling the mod with no character still stops what was running", good.stops == stops + 1)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

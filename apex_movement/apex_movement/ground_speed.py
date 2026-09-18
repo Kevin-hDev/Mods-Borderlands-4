@@ -9,7 +9,7 @@ Speed goes through MinAnalogWalkSpeed, the floor the game obeys over its own max
 
 from typing import Any
 
-from . import ownership, report, settings
+from . import ownership, report, speed_order
 
 FLOOR_KEY = "movement.MinAnalogWalkSpeed"
 
@@ -19,7 +19,7 @@ def reset() -> None:
 
 
 def _set_floor(movement: Any, speed: float) -> None:
-    if abs(float(movement.MinAnalogWalkSpeed) - speed) <= 0.5:
+    if abs(float(movement.MinAnalogWalkSpeed) - speed) <= ownership.SPEED_TOLERANCE:
         return
     ownership.write(
         FLOOR_KEY, ownership.CHARACTER,
@@ -32,7 +32,7 @@ def _set_floor(movement: Any, speed: float) -> None:
 
 def update(character: Any, now_ns: int) -> None:
     movement = character.CharacterMovement
-    speeds = settings.speeds()
+    speeds = speed_order.speeds()
     _set_floor(movement, speeds.sprint if movement.bIsSprinting else speeds.walk)
 
 

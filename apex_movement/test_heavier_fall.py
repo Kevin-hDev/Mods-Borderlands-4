@@ -75,5 +75,44 @@ check("nothing stays owned", not any(key.startswith("JumpGoal_") for key in owne
       and not ownership.is_owned(heavier_fall.GRAVITY_KEY))
 settings.fall_weight.value, settings.jump_height_bonus.value = 1.6, 20
 
+# One jump field that cannot be put back must not keep the other jumps and the gravity from it (review, 2026-09-18):
+# each is tried, and the failure is raised once all were, for the frame loop to report.
+heavier_fall.update(player, 6)
+first_key = heavier_fall._key("DefaultJump", "GoalHeight")
+entry = ownership._entries[first_key]
+put = entry["put"]
+
+
+def refuse(value: float) -> None:
+    raise AttributeError("the jump definition is gone")
+
+
+entry["put"] = refuse
+stop_error = ""
+try:
+    heavier_fall.stop(player)
+except Exception as exc:
+    stop_error = str(exc)
+check("a jump field that cannot be put back does not keep the others and the gravity from it",
+      goals["DoubleJump"].GoalHeight == 225.0 and goals["SprintJump"].InitialZVelocity == 735.0
+      and movement.GravityScale == 1.0)
+check("its failure is raised for the frame loop to report", first_key in stop_error)
+check("and the game's value is kept to put back later", ownership.original(first_key) == 198.0)
+entry["put"] = put
+heavier_fall.stop(player)
+check("the next stop puts it back", goals["DefaultJump"].GoalHeight == 198.0)
+
+shared = sdk_stubs.FakeCharacter()
+shared_goals = shared.CharacterMovement.goals
+shared_goals["SlideJump"] = shared_goals["SprintJump"]
+heavier_fall.reset()
+try:
+    heavier_fall.update(shared, 5)
+    raised = False
+except ValueError:
+    raised = True
+check("a definition given for two jump types stops heavier fall before its height is added twice",
+      raised and shared_goals["SprintJump"].GoalHeight == 198.0 and shared.CharacterMovement.GravityScale == 1.0)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

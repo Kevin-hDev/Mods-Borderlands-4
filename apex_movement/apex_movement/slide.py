@@ -12,14 +12,33 @@ from . import axle_slide, game, ownership, report
 SPEED_KEY = "Move_Slide.speed.constant"
 # Auto Sprint 1.5.0's window, whose feel Kevin approved: a jump later in the slide launches at the slowed slide speed.
 BOOST_NS = 700_000_000
+# The real divisor is about 1.27 (1.15 x 1.1017): one this small means the speed bonus or the curve reads zero, and
+# dividing by it would write a constant a hundred times too large or more.
+MIN_DIVISOR = 0.01
+# A slide less than this below its target is left alone: a raise that small shows in no jump, and would only add a
+# velocity write every frame.
+TARGET_MARGIN = 1.0
+# Every module of the slides needs Move_Slide, so one line, under one key, says it is missing for all of them.
+MISSING_ASSET = "Move_Slide not found yet; slides stay the game's own meanwhile"
 
 _started_ns: int | None = None
+_target = 0.0
 _top_speed = 0.0
+# Set by a frame without a slide: only a slide begun after it is raised.
+_armed = False
 
 
 def reset() -> None:
-    global _started_ns
-    _started_ns = None
+    global _started_ns, _armed
+    _started_ns, _armed = None, False
+
+
+def find_asset() -> Any:
+    """Move_Slide, or None after reporting once, for every module of the slides, that the game has not loaded it."""
+    asset = game.slide_asset()
+    if asset is None:
+        report.error_once("slide_asset", MISSING_ASSET)
+    return asset
 
 
 def _put_constant(value: float) -> None:
@@ -41,20 +60,21 @@ def _set_start_speed(movement: Any, target: float) -> None:
     keys = asset.SpeedScaleCurve.EditorCurveData.keys
     curve_start = float(keys[0].Value) if len(keys) > 0 else 1.0
     divisor = scale * curve_start
-    if divisor < 0.01:
+    if divisor < MIN_DIVISOR:
         return
     # Start speed = constant x speed bonus x curve at time 0 (720 x 1.15 x 1.1017 = 912, verified in game).
     wanted = target / divisor
-    if abs(float(asset.speed.constant) - wanted) <= 0.5:
+    if abs(float(asset.speed.constant) - wanted) <= ownership.SPEED_TOLERANCE:
         return
     ownership.write(SPEED_KEY, ownership.ASSET, lambda: float(game.slide_asset().speed.constant), _put_constant, wanted)
     report.note(f"slide start speed {target:.0f} (constant {wanted:.0f})")
 
 
 def _track(movement: Any, now_ns: int, target: float) -> None:
-    global _started_ns, _top_speed
+    global _started_ns, _target, _top_speed, _armed
     speed = game.horizontal_speed(movement)
     if not game.is_sliding(movement):
+        _armed = True
         if _started_ns is not None:
             ended = "ground" if game.is_on_ground(movement) else "air"
             report.note(f"slide end on={ended} ms={(now_ns - _started_ns) // 1_000_000} "
@@ -62,16 +82,21 @@ def _track(movement: Any, now_ns: int, target: float) -> None:
         _started_ns = None
         return
     if _started_ns is None:
-        _started_ns, _top_speed = now_ns, 0.0
+        if not _armed:
+            # Begun before this module ran, such as with Slides switched off and on mid-slide: raised now, the slowed
+            # slide would jump back to its start speed.
+            return
+        # Kept for the whole slide, as slide_physics keeps its boost: an Axle slide switched on mid-slide would
+        # otherwise be raised to the boosted speed while its model stays at the normal one.
+        _started_ns, _target, _top_speed = now_ns, target, 0.0
     # Read before this frame's write: the speed the game itself gave the slide.
     _top_speed = max(_top_speed, speed)
-    if now_ns - _started_ns <= BOOST_NS and speed < target - 1.0:
-        game.set_horizontal_speed(movement, target)
+    if now_ns - _started_ns <= BOOST_NS and speed < _target - TARGET_MARGIN:
+        game.set_horizontal_speed(movement, _target)
 
 
 def update(character: Any, now_ns: int) -> None:
-    if game.slide_asset() is None:
-        report.error_once("slide_asset", "Move_Slide not found yet; slides keep the game's own speed meanwhile")
+    if find_asset() is None:
         return
     movement = character.CharacterMovement
     target = axle_slide.start_speed()

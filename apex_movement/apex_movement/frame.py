@@ -1,7 +1,8 @@
 """Runs each switched-on movement once per frame, on the player only.
 
 A movement that raises is switched off alone and reported once: one broken movement must not take the others down.
-A switch turned off in the menu stops its movement at the next frame, which puts its values back.
+A switch turned off in the menu stops its movement at the next frame the player has a character, which puts its
+values back; turned off at the main menu, that is the first frame of the next game.
 """
 
 import time
@@ -37,11 +38,13 @@ def _stop(name: str, movement: Any, character: Any) -> None:
 
 def on_frame(obj: Any, now_ns: int) -> None:
     if game.refresh(now_ns):
-        # The old character's values went with it; only the movements' own memory needs clearing.
+        # The old character's values went with it; only the movements' own memory needs clearing. The running set
+        # is kept on purpose: the slide and dash assets, the jump definitions and the key binds outlive the
+        # character, so a switch turned off before the next character arrives must still stop its movement then.
+        # Clearing it here left them written for good (review, 2026-09-18).
         ownership.forget_character()
         for _, _, movement in _movements:
             movement.reset()
-        _active.clear()
     character = game.character()
     if character is None or obj != game.anim():
         return

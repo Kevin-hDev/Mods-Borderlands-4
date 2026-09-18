@@ -2,8 +2,9 @@
 
 In Unreal the acceleration in the air is MaxAcceleration x AirControl (engine knowledge, not verified in BL4), so both
 come from the Player Movement settings file Kevin played with: AirControl 20 against the game's 0.6, and
-MaxAcceleration from the slider, 24000 by default (Kevin, 2026-09-17: "pour conserver quelques millisecondes
-d'accélération"). MaxAcceleration also sets how fast walking and sprinting start and stop on the ground.
+MaxAcceleration from its slider, settings.air_acceleration, whose default is the value Kevin kept (2026-09-17: "pour
+conserver quelques millisecondes d'accélération"). MaxAcceleration also sets how fast walking and sprinting start and
+stop on the ground.
 """
 
 from typing import Any
@@ -38,7 +39,9 @@ def update(character: Any, now_ns: int) -> None:
 
 def stop(character: Any) -> None:
     owned = ownership.is_owned(ACCELERATION_KEY) or ownership.is_owned(AIR_CONTROL_KEY)
-    ownership.restore(ACCELERATION_KEY)
-    ownership.restore(AIR_CONTROL_KEY)
+    failures = ownership.restore_each((ACCELERATION_KEY, AIR_CONTROL_KEY))
+    if failures:
+        # Raised once both were tried: the frame loop reports it, and ownership keeps what is not back yet.
+        raise RuntimeError("; ".join(failures))
     if owned:
         report.note("air strafe off, game acceleration and air control restored")

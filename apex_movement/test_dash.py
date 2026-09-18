@@ -61,6 +61,13 @@ written = asset._duration
 dash.update(player, 1)
 check("an unchanged setting writes and logs nothing", asset._duration is written and notes("dash distance") == 1)
 
+asset.Duration = type(asset.Duration)(constant=0.33)
+for key, time in zip(asset._keys, game_timing.times):
+    key.time = time
+dash.update(player, 1)
+check("a dash the game put back to its own timing, same character, is lengthened again",
+      near(asset.Duration.constant, 0.33 + extra) and near(asset._keys[1].time, 0.15 + extra))
+
 settings.dash_distance.value = 300
 dash.update(player, 2)
 check("a new setting is computed from the game's timing, not the written one",
@@ -86,7 +93,8 @@ dash.update(player, 5)
 check("a curve without a full-speed start is left alone and reported", reshaped.Duration.constant == 0.33
       and any("changed shape" in line for line in state["errors"]))
 dash.update(player, 6)
-check("and not checked again every frame", sum("changed shape" in line for line in state["errors"]) == 1)
+check("and reported once", sum("changed shape" in line for line in state["errors"]) == 1
+      and reshaped.Duration.constant == 0.33)
 
 copying = sdk_stubs.FakeDashAsset(copy_keys=True)
 state["objects"][("OakControlledMove", sdk_stubs.DASH_PATH)] = copying

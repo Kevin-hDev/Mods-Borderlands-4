@@ -117,6 +117,9 @@ for movement in movements.MOVEMENTS:
 # 6. Two movements never write the same game value. Separate files can be installed side by side (Kevin, 2026-09-18),
 # and each carries its own copy of ownership: two of them writing one field would each believe they own it, and the
 # second to stop would put back what the first had already written.
+# What this sees: the keys named by a *_KEY constant. It does not see keys built at run time (heavier_fall's jump
+# fields, written by that movement alone today) nor the velocity, which the slide and the climb both write every
+# frame they run but never keep or put back: they cannot run in the same frame, one on the ground, one in the air.
 written_by: dict[str, str] = {}
 for movement in movements.MOVEMENTS:
     for module in movement.modules:

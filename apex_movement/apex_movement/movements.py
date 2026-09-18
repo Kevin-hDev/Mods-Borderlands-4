@@ -10,14 +10,14 @@ This file states it. test_movement_rules.py checks the code against it, and the 
 
 from dataclasses import dataclass
 
-# Read by every movement and owned by none: the game's fields, the settings, the frame loop, the menu. jump_report
-# writes diagnostic lines about any jump, whichever movement produced it.
-SHARED = ("__init__", "family", "frame", "game", "jump_report", "menu", "movements", "ownership", "pack", "report",
-          "settings")
+# Read by every movement and owned by none: the game's fields, the settings, the frame loop, the menu.
+# speed_order ties sliders of several movements together on purpose (design decision 9), and every file needs it.
+SHARED = ("__init__", "family", "frame", "game", "menu", "movements", "ownership", "pack", "report", "settings",
+          "speed_order")
 
-# Settings any movement may read: they describe how the character moves, not another movement's behaviour.
-# LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net, which belong to two movements.
-SHARED_SETTINGS = ("speeds", "LONGEST_SLIDE_S")
+# Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,
+# which belong to two movements. The speeds every movement reads come from speed_order, not from settings.
+SHARED_SETTINGS = ("LONGEST_SLIDE_S",)
 
 
 @dataclass(frozen=True)
@@ -56,9 +56,10 @@ MOVEMENTS = (
                                 "the player asked for neither, losing them the held-crouch slam with no way to tell "
                                 "why (Kevin, 2026-09-18)"),
     Movement("Air / tap strafe", ("air_strafe",), ("air_strafe_menu",), "apex_air_strafe", "Apex Air Strafe"),
-    Movement("Heavier fall", ("heavier_fall", "jump_goals"), ("heavier_fall_menu",), "apex_heavier_fall",
-             "Apex Heavier Fall"),
-    Movement("Wall climb", ("wall_climb", "wall_sense", "climb_aim", "climb_rules", "climb_refusal",
+    # jump_report writes the jumps this movement shapes: under its switch it runs in one installed file, not in each.
+    Movement("Heavier fall", ("heavier_fall", "jump_goals", "jump_report"), ("heavier_fall_menu",),
+             "apex_heavier_fall", "Apex Heavier Fall"),
+    Movement("Wall climb", ("wall_climb", "wall_sense", "climb_aim", "wall_choice", "climb_rules", "climb_refusal",
                             "climb_animation", "jump_press", "air_jumps"), ("wall_climb_menu",),
              "apex_wall_climb", "Apex Wall Climb"),
 )

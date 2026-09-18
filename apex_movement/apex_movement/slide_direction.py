@@ -6,7 +6,7 @@ nine landing slides left in the jump's direction within 1 degree, camera turned 
 
 from typing import Any
 
-from . import game, ownership, report
+from . import game, ownership, report, slide
 
 DIRECTION_KEY = "Move_Slide.LaunchDirection.RelativeDirection"
 MOMENTUM = "ParentVelocity2D"
@@ -29,8 +29,7 @@ def _put(value: Any) -> None:
 
 
 def update(character: Any, now_ns: int) -> None:
-    if game.slide_asset() is None:
-        report.error_once("slide_asset", "Move_Slide not found yet; slides keep the game's own speed meanwhile")
+    if slide.find_asset() is None:
         return
     current = _read()
     if current.name == MOMENTUM:

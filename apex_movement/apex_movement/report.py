@@ -2,7 +2,10 @@
 
 from unrealsdk import logging
 
-PREFIX = "[Apex Movement]"
+from . import pack
+
+# Signed with the name of the file that writes: with two separate files installed, a line must say which one wrote it.
+PREFIX = f"[{pack.NAME}]"
 # Bounded: the keys are failure kinds, a handful in practice; past this, new kinds are dropped rather than stored.
 MAX_REPORTED = 200
 

@@ -38,6 +38,14 @@ ground_speed.update(player, 2)
 check("an unchanged speed is not written again",
       len([line for line in state["misc"] if "ground speed" in line]) == written)
 
+movement.MinAnalogWalkSpeed = 960.25
+ground_speed.update(player, 2)
+check("a speed less than half a unit off is the same speed, left as it is", movement.MinAnalogWalkSpeed == 960.25)
+settings.sprint_speed.value = 961
+ground_speed.update(player, 2)
+check("one step of a speed slider is written", movement.MinAnalogWalkSpeed == 961.0)
+settings.sprint_speed.value = 960
+
 settings.sprint_speed.value = 1100
 ground_speed.update(player, 3)
 check("the sprint slider applies at once", movement.MinAnalogWalkSpeed == 1100.0)

@@ -26,7 +26,7 @@ def lines() -> list[str]:
     return [line for line in state["misc"] if "wall climb refused" in line]
 
 
-LIMITS = climb_rules.Limits(height=372.0, delay_ns=0, lean_deg=60.0)
+LIMITS = climb_rules.Limits(height=372.0, delay_ns=0, lean_deg=60.0, speed=370.0)
 WALL = Wall(distance=104.0, into_x=1.0, into_y=0.0, flat=0.99)
 
 
@@ -44,9 +44,9 @@ climb_refusal.note(climb_rules.NO_WALL, moment(wall=None), LIMITS)
 climb_refusal.note(climb_rules.ON_GROUND, moment(in_air=False, on_ground=True), LIMITS)
 check("landing writes one line, the furthest reason of the flight, not the last one seen",
       len(lines()) == 1 and "reason=too_far" in lines()[0])
-check("with the measures of that moment and what was needed",
+check("with the measures of that moment and what was needed, the camera's limit following the diagonal like the rule",
       "distance=104 flat=0.99 hits=5/5 stick=1.00 stick_deg=0 view_deg=0" in lines()[0]
-      and "needs distance<=90 flat>=0.70 stick_deg<=60 view_deg<=45" in lines()[0])
+      and "needs distance<=90 flat>=0.70 stick_deg<=60 view_deg<=60" in lines()[0])
 
 state["misc"].clear()
 climb_refusal.note(climb_rules.ON_GROUND, moment(in_air=False, on_ground=True), LIMITS)

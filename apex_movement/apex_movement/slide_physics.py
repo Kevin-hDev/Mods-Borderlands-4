@@ -21,7 +21,7 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
-from . import axle_slide, game, ownership, report, settings
+from . import axle_slide, game, ownership, report, settings, slide, speed_order
 
 DURATION_KEY = "Move_Slide.Duration.constant"
 CURVE_KEY = "Move_Slide.SpeedScaleCurve"
@@ -30,7 +30,6 @@ SLOPE_CURVE_KEY = "Move_Slide.SpeedSlopeScaleCurve"
 STOP_SPEED = 350.0
 # A frame longer than this, such as a hitch while loading, is counted as this long.
 MAX_STEP_S = 0.1
-TOLERANCE = 1e-4
 
 
 @dataclass(frozen=True)
@@ -42,11 +41,13 @@ class Curve:
 
 _prepared: Any = None
 _slide: dict[str, Any] | None = None
+# Set by a frame without a slide: only a slide begun after it gets the model.
+_armed = False
 
 
 def reset() -> None:
-    global _prepared, _slide
-    _prepared, _slide = None, None
+    global _prepared, _slide, _armed
+    _prepared, _slide, _armed = None, None, False
 
 
 def friction(start_speed: float, distance: float) -> float:
@@ -132,12 +133,12 @@ def _prepare(asset: Any) -> None:
 def _start(now_ns: int) -> dict[str, Any]:
     # Read once: an Axle slide switched on or off mid-slide keeps the boost it started with, like its start speed.
     boost = axle_slide.current()
-    normal_start = settings.speeds().slide
+    normal_start = speed_order.speeds().slide
     start_speed = normal_start * boost.speed
     # slide.py sets the speed constant so that the curve's first value gives the slide speed (892 x 1.15 x 1.1017 =
     # 1130, verified): the speed per unit of curve is that ratio, read without the ground speed bonus, which is only
     # known to be right while standing.
-    per_unit = start_speed / max(ownership.original(CURVE_KEY).values[0], TOLERANCE)
+    per_unit = start_speed / max(ownership.original(CURVE_KEY).values[0], ownership.TOLERANCE)
     return {"start_ns": now_ns, "last_ns": now_ns, "per_unit": per_unit,
             "speed": start_speed, "top": start_speed, "slope_sum": 0.0, "ground_frames": 0, "ended": False,
             "ratio_sum": 0.0, "ratio_frames": 0, "boost": boost, "gain": speed_gain(normal_start, boost),
@@ -146,60 +147,68 @@ def _start(now_ns: int) -> dict[str, Any]:
 
 def _finish(asset: Any, movement: Any, now_ns: int) -> None:
     global _slide
-    slide, _slide = _slide, None
+    done, _slide = _slide, None
     _set_flat(asset, ownership.original(CURVE_KEY).values[0])
-    slope = slide["slope_sum"] / slide["ground_frames"] if slide["ground_frames"] else 0.0
-    ratio = f"{slide['ratio_sum'] / slide['ratio_frames']:.2f}" if slide["ratio_frames"] else "-"
-    boost = slide["boost"]
-    report.note(f"slide physics end ms={(now_ns - slide['start_ns']) // 1_000_000} by={'mod' if slide['ended'] else 'game'} "
-                f"model_speed={slide['speed']:.0f} game_speed={game.horizontal_speed(movement):.0f} "
-                f"game_to_model={ratio} top={slide['top']:.0f} slope_avg={slope:+.2f} "
+    slope = done["slope_sum"] / done["ground_frames"] if done["ground_frames"] else 0.0
+    ratio = f"{done['ratio_sum'] / done['ratio_frames']:.2f}" if done["ratio_frames"] else "-"
+    boost = done["boost"]
+    report.note(f"slide physics end ms={(now_ns - done['start_ns']) // 1_000_000} by={'mod' if done['ended'] else 'game'} "
+                f"model_speed={done['speed']:.0f} game_speed={game.horizontal_speed(movement):.0f} "
+                f"game_to_model={ratio} top={done['top']:.0f} slope_avg={slope:+.2f} "
                 f"axle={boost.speed:.2f}/{boost.flat:.2f}/{boost.slope:.2f}")
 
 
 def update(character: Any, now_ns: int) -> None:
-    global _slide
-    asset = game.slide_asset()
+    global _slide, _armed
+    asset = slide.find_asset()
     if asset is None:
-        report.error_once("slide_asset", "Move_Slide not found yet; slides keep the game's own speed meanwhile")
         return
+    movement = character.CharacterMovement
+    sliding = game.is_sliding(movement)
+    if not _armed:
+        if sliding:
+            # Begun before the model ran, such as with Slides switched off and on mid-slide: started now, the model
+            # would take it back to the full slide speed. It keeps the game's own timer and curve until it ends.
+            return
+        _armed = True
     if _prepared is not asset:
         _prepare(asset)
-    movement = character.CharacterMovement
-    if not game.is_sliding(movement):
+    if not sliding:
         if _slide is not None:
             _finish(asset, movement, now_ns)
         return
     if _slide is None:
         _slide = _start(now_ns)
-    slide = _slide
-    step_s = min((now_ns - slide["last_ns"]) / 1e9, MAX_STEP_S)
-    slide["last_ns"] = now_ns
+    current = _slide
+    step_s = min((now_ns - current["last_ns"]) / 1e9, MAX_STEP_S)
+    current["last_ns"] = now_ns
     # In the air, off a ramp, the game keeps the slide going: nothing rubs and no slope pulls.
     if game.is_on_ground(movement):
-        if slide["ground_frames"] > 0 and not slide["ended"]:
+        if current["ground_frames"] > 0 and not current["ended"]:
             # The game's speed this frame came from last frame's curve: compared with the model speed written then.
-            slide["ratio_sum"] += game.horizontal_speed(movement) / max(slide["speed"], 1.0)
-            slide["ratio_frames"] += 1
+            current["ratio_sum"] += game.horizontal_speed(movement) / max(current["speed"], 1.0)
+            current["ratio_frames"] += 1
         hit = movement.CurrentFloor.HitResult
         slope = downhill(hit.ImpactNormal, movement.Velocity)
-        slide["slope_sum"] += slope
-        slide["ground_frames"] += 1
-        slide["speed"] = next_speed(slide["speed"], step_s, slope, slide["slowdown"],
-                                    float(settings.slide_downhill_pull.value),
-                                    float(settings.slide_max_speed.value) * slide["boost"].speed,
-                                    slide["gain"] / axle_slide.distance(slide["boost"], slope))
-        slide["top"] = max(slide["top"], slide["speed"])
-    if slide["speed"] <= STOP_SPEED and not slide["ended"]:
-        slide["ended"] = True
+        current["slope_sum"] += slope
+        current["ground_frames"] += 1
+        current["speed"] = next_speed(current["speed"], step_s, slope, current["slowdown"],
+                                      float(settings.slide_downhill_pull.value),
+                                      speed_order.speeds().slide_max * current["boost"].speed,
+                                      current["gain"] / axle_slide.distance(current["boost"], slope))
+        current["top"] = max(current["top"], current["speed"])
+    if current["speed"] <= STOP_SPEED and not current["ended"]:
+        current["ended"] = True
         character.SetWantsToSlide(False)
-    _set_flat(asset, slide["speed"] / slide["per_unit"])
+    _set_flat(asset, current["speed"] / current["per_unit"])
 
 
 def stop(character: Any) -> None:
     owned = ownership.is_owned(CURVE_KEY)
     reset()
-    for key in (CURVE_KEY, SLOPE_CURVE_KEY, DURATION_KEY):
-        ownership.restore(key)
+    failures = ownership.restore_each((CURVE_KEY, SLOPE_CURVE_KEY, DURATION_KEY))
+    if failures:
+        # Raised once every key was tried: the frame loop reports it, and ownership keeps what is not back yet.
+        raise RuntimeError("; ".join(failures))
     if owned:
         report.note("slide physics off, game slide timer and curves restored")

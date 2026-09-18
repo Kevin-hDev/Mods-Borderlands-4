@@ -8,7 +8,7 @@ them and slide_steering.py steers.
 
 from dataclasses import dataclass
 
-from . import settings
+from . import settings, speed_order
 
 # Flat slides read slopes of -0.06 to +0.04 and the slopes Kevin tried averaged 0.11 to 0.28 (2026-09-17, 03:09-03:13):
 # the flat boost holds up to FLAT_SLOPE and has given way to the slope boost by FULL_SLOPE.
@@ -35,7 +35,7 @@ def current() -> Boost:
 
 
 def start_speed() -> float:
-    return settings.speeds().slide * current().speed
+    return speed_order.speeds().slide * current().speed
 
 
 def distance(boost: Boost, slope: float) -> float:

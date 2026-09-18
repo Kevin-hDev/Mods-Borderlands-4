@@ -1,5 +1,6 @@
 """Tests the key bindings: keys found in the game's list, air presses blocked, errors and loading let presses through."""
 
+import importlib
 import pathlib
 import sys
 import types
@@ -75,6 +76,17 @@ check("a second unbind logs nothing", len(state["misc"]) == lines)
 
 check("bind refuses a list without a crouch key", not air_bindings.bind([sdk_stubs.mapping("Action_Jump_HoldToGlide", cross)]))
 check("a refused bind binds nothing", state["keybinds"] == {})
+
+# A separate file ships the same code under another package name, as build_movement_files.py does.
+separate_package = types.ModuleType("apex_ground_slam")
+separate_package.__path__ = [str(HERE / "apex_movement")]
+sys.modules["apex_ground_slam"] = separate_package
+separate = importlib.import_module("apex_ground_slam.air_bindings")
+separate.bind(state["mappings"])
+identifiers = [bound.identifier for bound in separate._binds]
+check("a separate file's keybinds carry its own package name",
+      identifiers and all(identifier.startswith("apex_ground_slam:") for identifier in identifiers))
+separate.unbind()
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

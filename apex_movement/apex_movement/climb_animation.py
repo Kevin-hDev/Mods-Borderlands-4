@@ -5,7 +5,8 @@ climbing walls (Kevin), in FullBody, Upperbody, Arms and DefaultSlot alike, whil
 arms' graph never showed anything (sessions C to G). FullBody, because the game's own climb lets go of the weapon
 entirely and that slot covers the whole arms rig. The montage the game returns is not kept: once ended the game may
 free it, and a freed object handed back to the game can crash it. So a climb's end stops the slot by name, and the loop
-count ends the montage by itself soon after the longest climb the sliders allow. A failure is reported once and turns
+count ends the montage by itself soon after the longest climb the rules let live (climb_rules.longest_climb_ns): held
+back against the wall, a climb lasts well past what its speed alone would take. A failure is reported once and turns
 the animation alone off until the next character or switch-on, so the climb itself goes on.
 """
 

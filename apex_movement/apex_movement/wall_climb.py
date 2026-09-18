@@ -14,26 +14,28 @@ a ledge still did not mantle without Croix (session D); pressing Croix for one f
 6 times out of 6 (session H), so a climb presses it there (jump_press). Kevin's choice: at the top, the player hoists by
 itself.
 
-A jump from the wall during a climb used the double jump: the climb starts from a jump, which stays counted, so the jump
-off the wall was the second of JumpMaxCount 2 and none was left (Kevin, 0.8.4). Kevin wants climb, jump, double jump,
-so when a climb ends by a jump the count goes back to what it was when the climb started, leaving the double jump.
-
 A climb also counts as a landing for the jumps: air_jumps gives both back when it starts, so the player jumps from the
 wall and still has the double jump, in the climb or in the fall that follows (Kevin, 0.8.6 session).
 
 A climb is not only straight up (Kevin, 2026-09-17): it follows the move stick along the wall, up to the lean of the
-slider. The speed written stays the climb speed, shared between rising and going sideways, so the fullest diagonal
-rises half as fast and takes twice as long to reach the height.
+slider. The speed written stays the climb speed, shared between rising and going sideways, so a climb leaning at an
+angle rises at cos(angle) of that speed: half as fast at 60 degrees, taking twice as long to reach the height.
 """
 
 from typing import Any
 
 from . import (air_jumps, climb_aim, climb_animation, climb_refusal, climb_rules, game, jump_press,
-               ownership, report, settings, wall_sense)
+               ownership, report, settings, wall_choice, wall_sense)
 
 # The measure's lean into the wall, which kept the character touching it all the way up.
 INTO_WALL = 100.0
 NS_PER_S = 1_000_000_000
+# mods_base loads a slider from the settings file without clamping it, so a file edited by hand passes the sliders' own
+# bounds (100 to 2000, 0 to 75 degrees). Under 1 a climb has no speed to rise with. From 90 degrees on it leans flat
+# along the wall with nothing left to rise, and past 90 the start angle opens behind the wall; a negative lean flips
+# the bound and tips every climb to one side.
+MIN_SPEED = 1.0
+MAX_LEAN_DEG = 89.0
 HOLD_FIELD = "MinPassiveMantleButtonHoldDuration"
 HOLD_KEY = f"controller.{HOLD_FIELD}"
 # One line per climb that presses Croix, not one per frame of the window.
@@ -67,7 +69,8 @@ def _mantle_without_jump_key() -> None:
 def _limits(character: Any) -> climb_rules.Limits:
     height = 2.0 * game.half_height(character) * float(settings.climb_height.value) / 100.0
     return climb_rules.Limits(height=height, delay_ns=int(float(settings.reclimb_delay.value) * NS_PER_S),
-                              lean_deg=float(settings.climb_lean.value))
+                              lean_deg=min(MAX_LEAN_DEG, max(0.0, float(settings.climb_lean.value))),
+                              speed=max(MIN_SPEED, float(settings.climb_speed.value)))
 
 
 def _moment(character: Any, now_ns: int) -> climb_rules.Moment:
@@ -84,8 +87,8 @@ def _moment(character: Any, now_ns: int) -> climb_rules.Moment:
         game_move=game.in_controlled_move(movement), mantling=game.is_mantling(movement),
         near_game_climb=game.is_near_game_climb(movement), z=game.altitude(character),
         jumps=game.jump_count(character), stick_x=stick_x, stick_y=stick_y, view_yaw=yaw,
-        wall=climb_rules.best_wall(walls), hits=len(walls),
-        high_wall=climb_rules.best_wall(high) is not None,
+        wall=wall_choice.best_wall(walls), hits=len(walls),
+        high_wall=wall_choice.best_wall(high) is not None,
     )
 
 
@@ -96,7 +99,7 @@ def update(character: Any, now_ns: int) -> None:
     limits = _limits(character)
     step = _rules.step(moment, limits)
     wall = moment.wall
-    speed = float(settings.climb_speed.value)
+    speed = limits.speed
     if step.event == "start":
         _pressed, _max_lean = False, 0.0
         climb_refusal.started()
@@ -104,7 +107,7 @@ def update(character: Any, now_ns: int) -> None:
         report.note(f"wall climb start distance={wall.distance:.0f} "
                     f"stick_deg={climb_aim.angle_to_wall(moment.stick_x, moment.stick_y, wall):.0f} "
                     f"view_deg={climb_aim.view_angle(moment.view_yaw, wall):.0f}")
-        climb_animation.start(climb_aim.longest_climb_s(limits.height, speed, limits.lean_deg))
+        climb_animation.start(climb_rules.longest_climb_ns(limits) / NS_PER_S)
     elif step.event:
         report.note(f"wall climb end reason={step.event} rise={step.rise:.0f} ms={step.ms} lean={_max_lean:.0f}")
         climb_animation.stop()
@@ -145,6 +148,9 @@ def _hoist(movement: Any) -> None:
 
 
 def stop(character: Any) -> None:
+    if _rules.start is not None:
+        # Without it, a climb switched off halfway has a start line and no end in the log.
+        report.note("wall climb end reason=switched_off")
     climb_animation.stop()
     jump_press.forget()
     reset()

@@ -1,7 +1,8 @@
 """The ground slam and the landing slide (spec, section 2.3): a tap dashes, a hold slides at landing above the minimum
 speed, crouch and jump together slam.
 
-Each frame binds the keys if needed, turns the requests of air_keys into game calls, and watches for the landing.
+Each frame binds the keys when they are not bound, turns the requests of air_keys into game calls, and watches for the
+landing. The keys are released at every character change and bound again from the game's key list the next frame.
 Switched off, the keys are released and the game gets its own crouch back, hold slam included.
 
 One switch for both, deliberately (Kevin, 2026-09-18). Every mod of this pack is one movement, but these two share the
@@ -12,7 +13,7 @@ have no way to tell why. Turned off, the key goes back to the game and the game'
 
 from typing import Any
 
-from . import air_actions, air_bindings, air_keys, game, report, settings
+from . import air_actions, air_bindings, air_keys, game, report, speed_order
 
 _was_in_air = False
 _air_speed = 0.0
@@ -21,6 +22,8 @@ _bind_refused = False
 
 def reset() -> None:
     global _was_in_air, _air_speed, _bind_refused
+    # So that the next frame reads the key list again: a crouch key changed in the game's options replaces the old one.
+    air_bindings.unbind()
     air_keys.reset()
     air_actions.forget()
     _was_in_air, _air_speed, _bind_refused = False, 0.0, False
@@ -38,7 +41,7 @@ def _bind() -> None:
 def _landed(character: Any, now_ns: int) -> None:
     if not air_keys.is_held():
         return
-    minimum = settings.speeds().landing_slide_min
+    minimum = speed_order.speeds().landing_slide_min
     if _air_speed < minimum:
         report.note(f"landing held speed_in={_air_speed:.0f} below min={minimum:.0f}: no slide")
         return
@@ -70,6 +73,5 @@ def update(character: Any, now_ns: int) -> None:
 
 
 def stop(character: Any) -> None:
-    air_bindings.unbind()
     air_actions.stop(character)
     reset()

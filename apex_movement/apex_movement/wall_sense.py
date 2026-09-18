@@ -1,4 +1,4 @@
-"""Feels the wall in front of the player for the wall climb: three traces along the camera, at three heights.
+"""Feels the wall in front of the player for the wall climb: one trace along the camera per height of TRACE_HEIGHTS.
 
 Recipe verified in game (question 1, 2026-09-16): KismetSystemLibrary.LineTraceSingle called on the class default
 object, the character as world context, every output and drawing parameter passed. On 2026-09-17 (M4) the same trace
@@ -7,15 +7,16 @@ visibility channel, which several scrap walls ignore entirely.
 
 One trace at the centre was not enough (Kevin, 2026-09-17, séance O): at the foot of a sheet-metal structure seven
 tries in a row reported no wall at all, and three climbs that did start lost the wall after rising 11, 23 and 51. A
-single line at one height slips through the gaps of an uneven face. Three traces, at the feet, the centre and the head,
-cover the character's own height instead.
+single line at one height slips through the gaps of an uneven face. Traces at several heights, from under the feet to
+over the head (climb_aim.TRACE_HEIGHTS), cover the character's own height instead.
 
 The range is far longer than a climb needs: the rules turn a wall down past REACH anyway, and a trace that reaches
 further turns "nothing in front" into "a wall, this far", which is the difference between a log that explains a refusal
 and one that does not.
 
-Whatever the traces touch comes back, slopes and floors included: how upright a surface stands is measured here and
-judged in climb_rules, so a refused climb can say the surface leaned instead of saying nothing at all.
+Whatever the traces touch in front of the character comes back, slopes and floors included: how upright a surface
+stands is measured here and judged in climb_rules, so a refused climb can say the surface leaned instead of saying
+nothing at all.
 """
 
 import math
@@ -31,6 +32,11 @@ TRACE_RANGE = 300.0
 # killed 13 climbs out of 42 within one or two frames in séance Z, each ending as a lost wall after rising 7 to 15.
 # Backing the start off puts it outside the wall again; the distance reported takes the offset back out.
 BACK_OFF = 60.0
+# The character's radius, measured on 2026-09-17 (M3). A hit nearer the ray's start than BACK_OFF - CAPSULE_RADIUS is
+# behind the character's back, not in front of it. A thin thing there is met from behind: its face turned to the rear
+# points the way in straight ahead, and a climb started on it would rise against nothing (code review, 2026-09-18; not
+# seen in game). The ray stops at that first hit, so this height sees nothing; the other heights still can.
+CAPSULE_RADIUS = 40.0
 # Channel 2, not the visibility channel 0 the mod used until 0.9.5. Measured on 2026-09-17 (séance T,
 # apex_probe_ways): on six walls, channel 2 met the panel every time, from 28 to 76 away and 72 to 90 degrees upright,
 # while channel 0 met nothing at all on three of them and, on a fourth, the slope 259 behind the wall. These panels
@@ -85,7 +91,7 @@ def _trace(character: Any, x: float, y: float, z: float, reach_x: float, reach_y
         character, start, end, TRACE_CHANNEL, False, [], 0, unrealsdk.make_struct("HitResult"), True,
         unrealsdk.make_struct("LinearColor"), unrealsdk.make_struct("LinearColor"), 0.0,
     )
-    if not hit:
+    if not hit or float(result.Distance) < BACK_OFF - CAPSULE_RADIUS:
         return None
     normal_x, normal_y, normal_z = float(result.Normal.X), float(result.Normal.Y), float(result.Normal.Z)
     flat = math.hypot(normal_x, normal_y)

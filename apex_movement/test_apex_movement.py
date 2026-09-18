@@ -30,7 +30,7 @@ check("the mod is named Apex Movement", mod.kwargs["name"] == "Apex Movement")
 check("the menu is registered", mod.kwargs["options"] == menu.MENU)
 check("the frame hook is registered", mod.kwargs["hooks"] == [frame.tick])
 check("the frame hook listens to the animation update", frame.tick.path == "/Script/Engine.AnimInstance:BlueprintUpdateAnimation")
-check("a fresh install enables the mod", mod.enabled)
+check("a fresh install enables the mod", mod.is_enabled)
 check("enabling with Auto Sprint loaded warns about it", any("Auto Sprint" in line for line in state["warnings"]))
 
 S = 1_000_000_000
@@ -71,6 +71,7 @@ frame.tick(player.anim, None, None, None)
 check("a frame in the air at a wall runs the wall climb", movement.Velocity.Z == 370.0)
 movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
 
+errors_before = list(state["errors"])
 mod.disable()
 check("disabling releases the sprint", movement.bWantsToSprint is False)
 check("disabling puts the game's ground speed back", movement.MinAnalogWalkSpeed == 0.0)
@@ -89,6 +90,10 @@ check("disabling puts every jump height back", movement.goals["DefaultJump"].Goa
       and movement.goals["SprintJump"].InitialZVelocity == 735.0)
 check("disabling puts the game's mantle hold back", state["pc"].MinPassiveMantleButtonHoldDuration == 0.075)
 check("disabling is logged", any("disabled" in line for line in state["misc"]))
+# Every movement registered has a stop: one without it wrote an error at every disable since 0.10.2 (review,
+# 2026-09-18), and no test looked at the errors a disable writes.
+new_errors = state["errors"][len(errors_before):]
+check("disabling writes no error" + (f" (found {new_errors})" if new_errors else ""), new_errors == [])
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -7,7 +7,7 @@ is not steered (Kevin, 2026-09-17). The default and its slider are in settings.p
 
 from typing import Any
 
-from . import game, ownership, report, settings
+from . import game, ownership, report, settings, slide
 
 RATE_KEY = "Move_Slide.MoveLRRate.constant"
 
@@ -29,11 +29,10 @@ def _put(value: float) -> None:
 
 
 def update(character: Any, now_ns: int) -> None:
-    if game.slide_asset() is None:
-        report.error_once("slide_asset", "Move_Slide not found yet; slides keep the game's own speed meanwhile")
+    if slide.find_asset() is None:
         return
     rate = float(settings.axle_steering.value)
-    if abs(_read() - rate) <= 0.01:
+    if abs(_read() - rate) <= ownership.TOLERANCE:
         return
     ownership.write(RATE_KEY, ownership.ASSET, _read, _put, rate)
     report.note(f"axle slide steering {rate:.0f} degrees a second")

@@ -48,6 +48,7 @@ del state["objects"][key]
 game.forget()
 slide_direction.update(player, 3)
 check("a slide asset not loaded yet skips the frame and is reported", len(state["errors"]) == 1)
+check("in words true of the slide's direction, not of its speed", "speed" not in state["errors"][0])
 state["objects"][key] = asset
 
 slide_direction.stop(player)

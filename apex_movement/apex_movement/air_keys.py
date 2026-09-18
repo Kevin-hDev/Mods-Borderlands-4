@@ -15,7 +15,8 @@ COMBO_WINDOW_NS = 80_000_000
 TAP_MAX_NS = 200_000_000
 # The game's own slam starts 0.2 s after crouch; the double jump also needs that time to give the height.
 SLAM_DELAY_NS = 200_000_000
-# Bounded: requests are drained every frame, so more than this means the frame loop stopped; new ones are dropped.
+# Bounded: requests are drained every frame, so more than this means the frame loop stopped; new ones are dropped and
+# the first drop is logged. reset() empties the list, so a request never waits for the movement to be switched on again.
 MAX_REQUESTS = 20
 
 # A hold released after this long is logged: it tells a chain the player let go of from one the mod dropped.
@@ -40,8 +41,11 @@ def reset() -> None:
 
 
 def _request(kind: str, due_ns: int) -> None:
-    if len(_requests) < MAX_REQUESTS:
-        _requests.append((kind, due_ns))
+    if len(_requests) >= MAX_REQUESTS:
+        report.error_once("air_keys:requests", f"air {kind} request dropped: {MAX_REQUESTS} already waiting, "
+                                               "the frame loop is not playing them")
+        return
+    _requests.append((kind, due_ns))
 
 
 def crouch_event(key: str, event: str, now_ns: int, in_air: bool) -> bool:
@@ -58,6 +62,10 @@ def crouch_event(key: str, event: str, now_ns: int, in_air: bool) -> bool:
             if not press["combo"] and in_air and now_ns - press["press_ns"] < TAP_MAX_NS:
                 _request("dash", now_ns)
         return True
+    # A new press proves the last one ended, even when its release never came (a menu opened with the key down). Kept,
+    # its entry would slide at landing without crouch held, and block this press's release after the game saw it.
+    _held.pop(key, None)
+    _ground_held.pop(key, None)
     if not in_air:
         _ground_held[key] = now_ns
         return False

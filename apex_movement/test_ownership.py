@@ -40,6 +40,43 @@ check("restore puts the game's value back", movement.MinAnalogWalkSpeed == 0.0 a
 ownership.restore("floor")
 check("restoring a value not owned does nothing", movement.MinAnalogWalkSpeed == 0.0)
 
+steering = types.SimpleNamespace(constant=55.0, loaded=True)
+duration = types.SimpleNamespace(constant=1.35)
+
+
+def put_steering(value: float) -> None:
+    # As a put through game.slide_asset() while the game has unloaded the asset.
+    if not steering.loaded:
+        raise AttributeError("asset not loaded")
+    steering.constant = value
+
+
+ownership.write("steering", ownership.ASSET, lambda: steering.constant, put_steering, 350.0)
+steering.loaded = False
+raised = False
+try:
+    ownership.restore("steering")
+except AttributeError:
+    raised = True
+check("a value that cannot be put back raises", raised)
+check("and stays owned with the game's value, to put back later",
+      ownership.is_owned("steering") and ownership.original("steering") == 55.0)
+steering.loaded = True
+ownership.restore("steering")
+check("the next restore puts the game's value back", steering.constant == 55.0 and not ownership.is_owned("steering"))
+
+ownership.write("steering", ownership.ASSET, lambda: steering.constant, put_steering, 350.0)
+ownership.write("duration", ownership.ASSET, *accessors(duration, "constant"), 30.0)
+steering.loaded = False
+failures = ownership.restore_each(["steering", "duration"])
+check("restore_each puts the next values back after one fails",
+      duration.constant == 1.35 and not ownership.is_owned("duration"))
+check("and returns the failure, the value still owned",
+      failures == ["could not restore steering: AttributeError('asset not loaded')"]
+      and ownership.original("steering") == 55.0)
+steering.loaded = True
+ownership.restore("steering")
+
 ownership.write("floor", ownership.CHARACTER, *accessors(movement, "MinAnalogWalkSpeed"), 672.0)
 ownership.write("slide", ownership.ASSET, *accessors(asset, "constant"), 850.0)
 ownership.forget_character()
@@ -60,7 +97,12 @@ ownership._entries["broken"]["put"] = broken_put
 failures = ownership.restore_all()
 check("restore_all puts every value back", new_movement.MinAnalogWalkSpeed == 0.0 and asset.constant == 720.0)
 check("a value that cannot be put back is reported, not raised", failures == ["could not restore broken: RuntimeError('object gone')"])
-check("nothing is owned after restore_all", not ownership._entries)
+check("every value put back is forgotten", list(ownership._entries) == ["broken"])
+# Kept, not forgotten (2026-09-18): forgotten, the next enable would read the mod's value still in the game and take it
+# for the game's own, and never put the real one back.
+check("a value that could not be put back stays owned, with the game's own value", ownership.original("broken") == 1.0)
+ownership.write("broken", ownership.ASSET, lambda: 2.0, lambda value: None, 3.0)
+check("so a later write does not take the mod's value for the game's", ownership.original("broken") == 1.0)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)
