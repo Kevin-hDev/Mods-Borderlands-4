@@ -36,17 +36,17 @@ check("nothing is read or written in the air", movement.type_sets == [] and move
 movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
 
 heavier_fall.update(player, 1)
-check("the gravity scale follows the slider", near(movement.GravityScale, 1.6))
-check("the standing jump gets its extra height, times the scale", near(goals["DefaultJump"].GoalHeight, 218.0 * 1.6))
+check("the gravity scale follows the slider", near(movement.GravityScale, 2.0))
+check("the standing jump gets its extra height, times the scale", near(goals["DefaultJump"].GoalHeight, 218.0 * 2.0))
 check("a height-only jump keeps its launch speed", goals["DefaultJump"].InitialZVelocity == 840.0)
-check("the double jump gets its extra height, times the scale", near(goals["DoubleJump"].GoalHeight, 245.0 * 1.6))
-check("the sprint jump gets its extra height, times the scale", near(goals["SprintJump"].GoalHeight, 218.0 * 1.6))
+check("the double jump gets its extra height, times the scale", near(goals["DoubleJump"].GoalHeight, 245.0 * 2.0))
+check("the sprint jump gets its extra height, times the scale", near(goals["SprintJump"].GoalHeight, 218.0 * 2.0))
 check("a jump with a launch speed gets it times the root of the scale",
-      near(goals["SprintJump"].InitialZVelocity, 735.0 * math.sqrt(1.6)))
-check("slide and ladder jumps get it too", near(goals["SlideJump"].GoalHeight, 210.0 * 1.6)
-      and near(goals["UpwardLadderJump"].GoalHeight, 195.0 * 1.6)
-      and near(goals["UpwardLadderJump"].InitialZVelocity, 700.0 * math.sqrt(1.6)))
-check("the change is logged once", sum("fall weight 1.60" in line for line in state["misc"]) == 1)
+      near(goals["SprintJump"].InitialZVelocity, 735.0 * math.sqrt(2.0)))
+check("slide and ladder jumps get it too", near(goals["SlideJump"].GoalHeight, 210.0 * 2.0)
+      and near(goals["UpwardLadderJump"].GoalHeight, 195.0 * 2.0)
+      and near(goals["UpwardLadderJump"].InitialZVelocity, 700.0 * math.sqrt(2.0)))
+check("the change is logged once", sum("fall weight 2.00" in line for line in state["misc"]) == 1)
 
 sets = len(movement.type_sets)
 heavier_fall.update(player, 2)
@@ -73,7 +73,7 @@ check("stop puts the gravity back", movement.GravityScale == 1.0)
 check("the restore is logged", any("heavier fall off" in line for line in state["misc"]))
 check("nothing stays owned", not any(key.startswith("JumpGoal_") for key in ownership._entries)
       and not ownership.is_owned(heavier_fall.GRAVITY_KEY))
-settings.fall_weight.value, settings.jump_height_bonus.value = 1.6, 20
+settings.fall_weight.value, settings.jump_height_bonus.value = 2.0, 20
 
 # One jump field that cannot be put back must not keep the other jumps and the gravity from it (review, 2026-09-18):
 # each is tried, and the failure is raised once all were, for the frame loop to report.

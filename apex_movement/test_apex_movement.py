@@ -62,7 +62,7 @@ check("switching the Axle slide off puts the game's slide steering back", asset.
 settings.axle_slide.value = True
 frame.tick(player.anim, None, None, None)
 check("a frame runs air strafe and heavier fall", movement.MaxAcceleration == 24000.0
-      and abs(movement.GravityScale - 1.6) < 1e-9 and movement.goals["DefaultJump"].GoalHeight > 198.0)
+      and abs(movement.GravityScale - 2.0) < 1e-9 and movement.goals["DefaultJump"].GoalHeight > 198.0)
 
 movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
 state["kismet"].hit = (60.0, sdk_stubs.vector(-1.0, 0.0, 0.0))

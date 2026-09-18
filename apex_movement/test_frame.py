@@ -87,6 +87,14 @@ check("a level change resets every movement", good.resets == 2 and bad.resets ==
 check("a level change forgets the old character's values", not ownership.is_owned("floor"))
 check("the new character's frame runs the movements", good.updates == 5)
 
+
+def changes() -> list[str]:
+    return [line for line in state["misc"] if " changed, character=" in line]
+
+
+check("each change of player is written, so a silent session shows whether the player was ever found (2026-09-18)",
+      len(changes()) == 2 and changes()[-1].endswith("player character changed, character=? animation=?"))
+
 asset = types.SimpleNamespace(constant=720.0)
 ownership.write("slide", ownership.ASSET, lambda: asset.constant, lambda value: setattr(asset, "constant", value), 850.0)
 failures = frame.stop_all()
@@ -115,6 +123,13 @@ frame.on_frame(third.anim, 7 * S)
 stops = good.stops
 frame.stop_all()
 check("disabling the mod with no character still stops what was running", good.stops == stops + 1)
+
+frame.MAX_PLAYER_LINES, bound = 0, frame.MAX_PLAYER_LINES
+written = len(changes())
+sdk_stubs.use_character(state, other)
+frame.on_frame(other.anim, 9 * S)
+check("those lines are bounded", len(changes()) == written and game.character() is other)
+frame.MAX_PLAYER_LINES = bound
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

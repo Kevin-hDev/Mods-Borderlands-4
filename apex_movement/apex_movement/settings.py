@@ -134,15 +134,17 @@ landing_slide_min_speed = SliderOption(
     description="Arrival speed needed to slide when landing with crouch held. Never above the sprint speed.",
 )
 
-# Tuned in game by Kevin on 2026-09-17: fall weight 1.3, 1.5, 1.7 then 1.6 kept ("1.6 c'est la bonne avec la hauteur
-# actuelle"), air acceleration 24000 kept ("fonctionne nickel"), +20 jump height kept.
+# Tuned in game by Kevin on 2026-09-17: air acceleration 24000 kept ("fonctionne nickel"), +20 jump height kept. Fall
+# weight 1.6 then, raised to 2.0 on 2026-09-18 after trying 1.6, 2.0 and 2.1 in session 5 and reading Apex's own
+# setting: "il faut dans les 2 pour être quasiment pareil". The top of its slider went from 2.0 to 3.0 with it, or the
+# new default would sit at the top and only lighten.
 air_acceleration = SliderOption(
     "air_acceleration", 24000, 2048, 32000, step=100, is_integer=True,
     display_name="Air acceleration",
     description="How fast you change direction, in the air and on the ground. The game's own value is 2048.",
 )
 fall_weight = SliderOption(
-    "fall_weight", 1.6, 1.0, 2.0, step=0.05, is_integer=False,
+    "fall_weight", 2.0, 1.0, 3.0, step=0.05, is_integer=False,
     display_name="Fall weight",
     description="Gravity multiplier. Jumps keep their height; only the time in the air gets shorter. 1.0 is the game.",
 )
@@ -171,12 +173,16 @@ climb_lean = SliderOption(
     display_name="Climb diagonal",
     description="How far a climb follows the move stick to a side, in degrees. At 0 you only climb straight up.",
 )
-# Kevin asked for a shorter wait on 2026-09-17, closer to Apex, and kept 1.2 after trying it in game. It also stays
-# above the point where a wall can be gone up for ever: a default climb rises 372, keeps 44 more of its own speed, and
-# needs 0.96 s to fall back to where it started (gravity 1570 a second squared, from the 218 high jump falling in
-# 0.527 s at fall weight 1.6, measured 2026-09-16). Under that the next climb starts higher than the last one began.
+# A wait in seconds, Kevin's rule (2026-09-18): it lets a climb, then a double jump to go higher, grab the wall again
+# once it is over, wherever the player is; a height rule tried that day broke that. Kevin kept 1.2 on 2026-09-17 at
+# fall weight 1.6; at 1.4 and fall weight 2 he fell "beaucoup trop", where Apex grabs again "juste en dessous du niveau
+# où la grimpe avait commencé". So the wait ends just after a full climb has fallen back to its start: a default climb
+# rises 372 and keeps rising on its own speed, and falls back in 0.83 s at fall weight 2 (gravity 981 a second squared
+# per unit of fall weight, from the 218 high jump falling in 0.527 s at 1.6, measured 2026-09-16); at 0.9 s it is about
+# 90 under it, half the character. Under 0.83 the next climb starts higher and a wall is gone up for ever; at the game's
+# own gravity, which Heavier Fall switched off or Apex Wall Climb alone leave, that takes 1.33 s.
 reclimb_delay = SliderOption(
-    "reclimb_delay", 1.2, 0.0, 3.0, step=0.1, is_integer=False,
+    "reclimb_delay", 0.9, 0.0, 3.0, step=0.1, is_integer=False,
     display_name="Climb again after",
     description="Seconds before you can climb again after a climb that did not reach the top. Landing clears it.",
 )

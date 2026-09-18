@@ -6,45 +6,51 @@ load can also unload an asset, so the asset is dropped with the character and fo
 
 import math
 import re
-from itertools import islice
 from typing import Any
 
 import unrealsdk
 from mods_base import get_pc
+
+from . import arms
 
 REFRESH_NS = 1_000_000_000
 SLIDE_ASSET = ("OakControlledMove", "/Game/PlayerCharacters/_Shared/Tricks/ControlledMoves/Move_Slide.Move_Slide")
 DASH_ASSET = ("OakControlledMove", "/Game/PlayerCharacters/_Shared/Tricks/ControlledMoves/Move_Dash.Move_Dash")
 CLIMB_ANIMATION = ("AnimSequence",
                    "/Game/PlayerCharacters/_Shared/Animation/1st/SharedSkills/AS_Wall_Climb_U.AS_Wall_Climb_U")
-ANIM_INSTANCE = "/Script/Engine.AnimInstance"
-ARMS_MESH = "FirstPersonArms"
-# Bounded: a level held 202 to 322 animation instances in sessions F and G (2026-09-17).
-MAX_ANIM_INSTANCES = 20_000
+# What refresh found changed: a new character clears what the movements wrote on the old one, a new animation on the
+# same character clears nothing, since the character still carries every value written on it.
+CHARACTER = "character"
+ANIMATION = "animation"
 
 _character: Any = None
 _anim: Any = None
-_arms: Any = None
 # Keyed by the fixed asset names above only, so it never holds more than those.
 _assets: dict[tuple[str, str], Any] = {}
 _next_refresh_ns = 0
 
 
-def refresh(now_ns: int) -> bool:
-    """Looks the player up again when due; True when the character changed since the last look."""
-    global _character, _anim, _arms, _next_refresh_ns
+def refresh(now_ns: int) -> str:
+    """Looks the player up again when due; says what changed since the last look, CHARACTER, ANIMATION or ""."""
+    global _character, _anim, _next_refresh_ns
     if now_ns < _next_refresh_ns:
-        return False
+        return ""
     _next_refresh_ns = now_ns + REFRESH_NS
     pc = get_pc(possibly_loading=True)
     found = getattr(pc, "OakCharacter", None) if pc is not None else None
+    anim = found.Mesh.GetAnimInstance() if found is not None else None
     if found == _character:
-        return False
-    _character = found
-    _arms = None
+        if anim == _anim:
+            return ""
+        # Followed on the same character too: an animation kept from before is suspected of leaving the mod silent
+        # until it was switched off and on (session 6, 2026-09-18).
+        _anim = anim
+        arms.forget()
+        return ANIMATION
+    _character, _anim = found, anim
+    arms.forget()
     _assets.clear()
-    _anim = found.Mesh.GetAnimInstance() if found is not None else None
-    return True
+    return CHARACTER
 
 
 def character() -> Any:
@@ -58,24 +64,6 @@ def controller() -> Any:
 
 def anim() -> Any:
     return _anim
-
-
-def arms_anim() -> Any:
-    """The first-person arms' animation, what the player sees; None while it is not found.
-
-    character.FirstPersonArms is no Python attribute (session E, 2026-09-17): the arms are the animation instance whose
-    mesh is named FirstPersonArms, belongs to the character and answers with that instance (session F). Looked up once
-    per character, when first needed.
-    """
-    global _arms
-    if _arms is None and _character is not None:
-        for instance in islice(unrealsdk.find_all(ANIM_INSTANCE, exact=False), MAX_ANIM_INSTANCES):
-            mesh = instance.Outer
-            if (mesh is not None and str(mesh.Name) == ARMS_MESH and mesh.Outer == _character
-                    and mesh.GetAnimInstance() == instance):
-                _arms = instance
-                break
-    return _arms
 
 
 def _asset(name: tuple[str, str]) -> Any:
@@ -106,8 +94,9 @@ def climb_animation() -> Any:
 
 
 def forget() -> None:
-    global _character, _anim, _arms, _next_refresh_ns
-    _character = _anim = _arms = None
+    global _character, _anim, _next_refresh_ns
+    _character = _anim = None
+    arms.forget()
     _assets.clear()
     _next_refresh_ns = 0
 

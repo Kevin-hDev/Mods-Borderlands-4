@@ -106,7 +106,7 @@ def update(character: Any, now_ns: int) -> None:
         air_jumps.climb_started(character, now_ns)
         report.note(f"wall climb start distance={wall.distance:.0f} "
                     f"stick_deg={climb_aim.angle_to_wall(moment.stick_x, moment.stick_y, wall):.0f} "
-                    f"view_deg={climb_aim.view_angle(moment.view_yaw, wall):.0f}")
+                    f"view_deg={climb_aim.view_angle(moment.view_yaw, wall):.0f} z={moment.z:.0f}")
         climb_animation.start(climb_rules.longest_climb_ns(limits) / NS_PER_S)
     elif step.event:
         report.note(f"wall climb end reason={step.event} rise={step.rise:.0f} ms={step.ms} lean={_max_lean:.0f}")

@@ -52,6 +52,8 @@ player.input = sdk_stubs.vector(1.0, 0.0)
 player.JumpCurrentCount = 1
 wall_climb.update(player, 20 * MS)
 check("a jump at a wall, stick and camera toward it, starts a climb", notes("wall climb start distance=60 stick_deg=0 view_deg=0") == 1)
+check("the start tells the altitude, so chained climbs show whether each one began higher (2026-09-18)",
+      notes("wall climb start distance=60 stick_deg=0 view_deg=0 z=100") == 1)
 check("the arms play the climb up as long as the rules let a climb live: 372 rising only 10 every 0.2 s, 7.6 s",
       len(arms.plays) == 1 and arms.plays[0]["SlotNodeName"] == "FullBody" and arms.plays[0]["LoopCount"] == 14)
 check("the climb writes 370 up and leans into the wall",

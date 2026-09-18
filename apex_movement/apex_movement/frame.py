@@ -16,6 +16,14 @@ from . import game, ownership, report
 _movements: list[tuple[str, Any, Any]] = []
 _active: set[str] = set()
 _failed: set[str] = set()
+# A line each time the player changes, bounded per switch-on: session 6 (2026-09-18) stayed silent a whole game until
+# the mod was switched off and on, and no line said whether the player had been found at all.
+MAX_PLAYER_LINES = 100
+_player_lines = 0
+
+
+def _name(obj: Any) -> str:
+    return "none" if obj is None else str(getattr(obj, "Name", "?"))
 
 
 def register(name: str, movement: Any, *switches: Any) -> None:
@@ -36,8 +44,18 @@ def _stop(name: str, movement: Any, character: Any) -> None:
         report.error_once(f"{name}:stop", f"{name} could not stop cleanly: {exc!r}")
 
 
+def _tell_player(change: str) -> None:
+    global _player_lines
+    if _player_lines < MAX_PLAYER_LINES:
+        _player_lines += 1
+        report.note(f"player {change} changed, character={_name(game.character())} animation={_name(game.anim())}")
+
+
 def on_frame(obj: Any, now_ns: int) -> None:
-    if game.refresh(now_ns):
+    change = game.refresh(now_ns)
+    if change:
+        _tell_player(change)
+    if change == game.CHARACTER:
         # The old character's values went with it; only the movements' own memory needs clearing. The running set
         # is kept on purpose: the slide and dash assets, the jump definitions and the key binds outlive the
         # character, so a switch turned off before the next character arrives must still stop its movement then.
@@ -65,6 +83,8 @@ def on_frame(obj: Any, now_ns: int) -> None:
 
 
 def stop_all() -> list[str]:
+    global _player_lines
+    _player_lines = 0
     character = game.character()
     for name, _, movement in _movements:
         if name in _active:

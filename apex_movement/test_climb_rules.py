@@ -156,6 +156,15 @@ for reason, changes, frames in ((rules.GAME_MOVE, {"game_move": True}, (100,)), 
     check(f"an end by {reason} blocks the next climb too",
           ending.event == reason and one.step(moment(500), LIMITS).event == "")
 
+# Kevin, 2026-09-18: climbing, then a double jump to go higher, grabs the wall again once the wait is over, even above
+# where the last climb began. A height rule tried that day broke it: the player fell under that start first.
+higher = rules.Rules()
+higher.step(moment(0, z=100.0), LIMITS)
+check("a double jump from the wall ends the climb", higher.step(moment(200, z=250.0, jumps=2), LIMITS).event == rules.JUMP)
+check("it blocks the next climb for the wait only", higher.step(moment(1000, z=500.0, jumps=2), LIMITS).event == "")
+check("once the wait is over a climb starts again, above where the last one began",
+      higher.step(moment(1800, z=500.0, jumps=2), LIMITS).event == "start")
+
 landed = rules.Rules()
 landed.step(moment(0), LIMITS)
 landed.step(moment(100, view_yaw=80.0), LIMITS)

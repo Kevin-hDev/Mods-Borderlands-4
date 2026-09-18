@@ -12,7 +12,8 @@ from dataclasses import dataclass
 
 # Read by every movement and owned by none: the game's fields, the settings, the frame loop, the menu.
 # speed_order ties sliders of several movements together on purpose (design decision 9), and every file needs it.
-SHARED = ("__init__", "family", "frame", "game", "menu", "movements", "ownership", "pack", "report", "settings",
+# arms only serves the wall climb, but game drops it whenever the player changes, and game is shared.
+SHARED = ("__init__", "arms", "family", "frame", "game", "menu", "movements", "ownership", "pack", "report", "settings",
           "speed_order")
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,

@@ -11,7 +11,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import game  # noqa: E402
+from apex_movement import arms, game  # noqa: E402
 
 fails: list[str] = []
 
@@ -30,14 +30,19 @@ sdk_stubs.use_character(state, first)
 check("the player is not looked up again before a second", not game.refresh(S // 2))
 check("the player is found after a second", game.refresh(S) and game.character() is first and game.anim() is first.anim)
 check("the same player is no change", not game.refresh(2 * S))
+# Session 6 (2026-09-18): the mod stayed silent a whole game until switched off and on, the frame loop never matching
+# the player's animation. The same character given a new animation is a change, or the old one is waited for ever.
+first.anim = object()
+check("the same character with a new animation is followed, and told apart from a new character",
+      game.refresh(3 * S) == game.ANIMATION and game.anim() is first.anim and game.character() is first)
 
 second = sdk_stubs.FakeCharacter()
 sdk_stubs.use_character(state, second)
-check("a new character after a level load is a change", game.refresh(3 * S) and game.character() is second)
+check("a new character after a level load is a change", game.refresh(4 * S) == game.CHARACTER and game.character() is second)
 
 game.forget()
 check("forget drops the player", game.character() is None and game.anim() is None)
-check("forget makes the next look immediate", game.refresh(3 * S + 1) and game.character() is second)
+check("forget makes the next look immediate", game.refresh(4 * S + 1) and game.character() is second)
 
 movement = second.CharacterMovement
 check("walking is on the ground", game.movement_mode(movement) == "MOVE_Walking" and game.is_on_ground(movement))
@@ -148,28 +153,24 @@ movement.ControlledMoveReplicationData.ControlledMove = None
 game.set_velocity(movement, 1.0, 2.0, 3.0)
 check("a velocity is written whole", (movement.Velocity.X, movement.Velocity.Y, movement.Velocity.Z) == (1.0, 2.0, 3.0))
 
-game.forget()
-check("no arms without a character, and nothing scanned", game.arms_anim() is None and state["anim_scans"] == 0)
+# The arms themselves are arms.py's, tested next to it: here, only that each change of player drops them.
 owner = sdk_stubs.FakeCharacter()
 sdk_stubs.use_character(state, owner)
-game.refresh(20 * S)
-sdk_stubs.add_arms(state, sdk_stubs.FakeCharacter())
-sdk_stubs.add_arms(state, owner, mesh_name="FirstPersonLegs")
-arms = sdk_stubs.add_arms(state, owner)
-check("the arms are the instance on this character's FirstPersonArms mesh", game.arms_anim() is arms)
-game.arms_anim()
-check("looked up once per character", state["anim_scans"] == 1)
-arms.Outer.GetAnimInstance = lambda: None
 game.forget()
-game.refresh(30 * S)
-check("an instance its mesh does not answer with is not the arms", game.arms_anim() is None and state["anim_scans"] == 2)
-game.arms_anim()
-check("missing arms are looked up again", state["anim_scans"] == 3)
-arms.Outer.GetAnimInstance = lambda: arms
+game.refresh(20 * S)
+hands = sdk_stubs.add_arms(state, owner)
+arms.find(owner)
+owner.anim = object()
+game.refresh(21 * S)
+check("a new animation on the same character drops the arms, looked up again", arms._arms is None)
+arms.find(owner)
 other = sdk_stubs.FakeCharacter()
 sdk_stubs.use_character(state, other)
 game.refresh(40 * S)
-check("a character change forgets the arms", game.arms_anim() is None)
+check("a character change drops the arms", arms._arms is None)
+arms.find(owner)
+game.forget()
+check("forget drops them too", arms._arms is None)
 climb_up = state["objects"][("AnimSequence", sdk_stubs.CLIMB_ANIMATION_PATH)] = sdk_stubs.FakeSequence(0.6)
 check("the climb animation is the game's first-person climb up", game.climb_animation() is climb_up)
 

@@ -12,7 +12,7 @@ the animation alone off until the next character or switch-on, so the climb itse
 
 import math
 
-from . import game, report
+from . import arms, game, report
 
 SLOT = "FullBody"
 # The blend session G used: the hands eased in and out.
@@ -29,16 +29,16 @@ def start(longest_climb_s: float) -> None:
     if _broken:
         return
     try:
-        arms, sequence = game.arms_anim(), game.climb_animation()
-        if arms is None or sequence is None:
+        hands, sequence = arms.find(game.character()), game.climb_animation()
+        if hands is None or sequence is None:
             report.error_once("climb_animation:missing", "climb animation unavailable: the arms or the animation "
                                                          "were not found")
             return
         # One loop more than the longest climb needs, so a missed stop ends the hands within one loop.
         loops = math.ceil(longest_climb_s / float(sequence.GetPlayLength())) + 1
-        arms.PlaySlotAnimationAsDynamicMontage(Asset=sequence, SlotNodeName=SLOT, BlendInTime=BLEND_S,
-                                               BlendOutTime=BLEND_S, InPlayRate=1.0, LoopCount=loops,
-                                               BlendOutTriggerTime=-1.0, InTimeToStartMontageAt=0.0)
+        hands.PlaySlotAnimationAsDynamicMontage(Asset=sequence, SlotNodeName=SLOT, BlendInTime=BLEND_S,
+                                                BlendOutTime=BLEND_S, InPlayRate=1.0, LoopCount=loops,
+                                                BlendOutTriggerTime=-1.0, InTimeToStartMontageAt=0.0)
         _playing = True
         if not _announced:
             _announced = True
@@ -53,10 +53,10 @@ def stop() -> None:
         return
     _playing = False
     try:
-        arms = game.arms_anim()
-        if arms is not None:
+        hands = arms.find(game.character())
+        if hands is not None:
             # Stops only the montages this animation played on the slot, not the game's own (a mantle's).
-            arms.StopSlotAnimation(BLEND_S, SLOT)
+            hands.StopSlotAnimation(BLEND_S, SLOT)
     except Exception as exc:
         _fail(exc)
 
