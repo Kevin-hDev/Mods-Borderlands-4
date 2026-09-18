@@ -1,7 +1,13 @@
-"""Air crouch (spec, section 2.3): a tap dashes, a hold slides at landing from the minimum speed, crouch and jump slam.
+"""The ground slam and the landing slide (spec, section 2.3): a tap dashes, a hold slides at landing above the minimum
+speed, crouch and jump together slam.
 
 Each frame binds the keys if needed, turns the requests of air_keys into game calls, and watches for the landing.
 Switched off, the keys are released and the game gets its own crouch back, hold slam included.
+
+One switch for both, deliberately (Kevin, 2026-09-18). Every mod of this pack is one movement, but these two share the
+crouch key being blocked, and that block is what removes the game's own slam on a held crouch. Two switches would
+allow a state where the block stays on while the player asked for neither: they would lose the held-crouch slam and
+have no way to tell why. Turned off, the key goes back to the game and the game's own slam returns with it.
 """
 
 from typing import Any

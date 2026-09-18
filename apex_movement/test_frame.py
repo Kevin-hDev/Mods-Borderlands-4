@@ -41,11 +41,14 @@ class Movement:
 S = 1_000_000_000
 player = sdk_stubs.FakeCharacter()
 sdk_stubs.use_character(state, player)
-good, bad, always = Movement(), Movement(broken=True), Movement()
+good, bad, always, both = Movement(), Movement(broken=True), Movement(), Movement()
 good_switch, bad_switch = types.SimpleNamespace(value=True), types.SimpleNamespace(value=True)
-frame.register("good", good_switch, good)
-frame.register("bad", bad_switch, bad)
-frame.register("always", None, always)
+# A module of a movement that also has an option of its own runs behind both (2026-09-18).
+own_switch = types.SimpleNamespace(value=True)
+frame.register("good", good, good_switch)
+frame.register("bad", bad, bad_switch)
+frame.register("always", always)
+frame.register("both", both, good_switch, own_switch)
 
 frame.on_frame(player.anim, S)
 check("a switched-on movement runs on the player's frame", good.updates == 1)
@@ -64,7 +67,16 @@ frame.on_frame(player.anim, S + 3)
 check("a switch turned off stops its movement once", good.stops == 1 and good.updates == 2)
 frame.on_frame(player.anim, S + 4)
 check("a stopped movement is not stopped again", good.stops == 1)
+check("a movement behind two switches stops when the first goes off", both.stops == 1)
 good_switch.value = True
+
+frame.on_frame(player.anim, S + 5)
+check("it runs again once both switches are on", both.updates == 3)
+own_switch.value = False
+frame.on_frame(player.anim, S + 6)
+check("its own option turns it off without touching the movement it belongs to",
+      both.stops == 2 and good.updates == 4)
+own_switch.value = True
 
 ownership.write("floor", ownership.CHARACTER, lambda: 0.0, lambda value: None, 672.0)
 other = sdk_stubs.FakeCharacter()
@@ -73,7 +85,7 @@ frame.on_frame(other.anim, 3 * S)
 # The first look at the player also counts as a change, hence two resets.
 check("a level change resets every movement", good.resets == 2 and bad.resets == 2)
 check("a level change forgets the old character's values", not ownership.is_owned("floor"))
-check("the new character's frame runs the movements", good.updates == 3)
+check("the new character's frame runs the movements", good.updates == 5)
 
 asset = types.SimpleNamespace(constant=720.0)
 ownership.write("slide", ownership.ASSET, lambda: asset.constant, lambda value: setattr(asset, "constant", value), 850.0)

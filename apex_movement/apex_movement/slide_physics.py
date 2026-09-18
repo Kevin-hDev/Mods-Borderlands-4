@@ -26,8 +26,6 @@ from . import axle_slide, game, ownership, report, settings
 DURATION_KEY = "Move_Slide.Duration.constant"
 CURVE_KEY = "Move_Slide.SpeedScaleCurve"
 SLOPE_CURVE_KEY = "Move_Slide.SpeedSlopeScaleCurve"
-# Only a far safety net: slides end when the mod ends them.
-LONG_DURATION = 30.0
 # The game's own slides ended at 316 to 568 (2026-09-17, 02:05): below this a slide has run out of speed.
 STOP_SPEED = 350.0
 # A frame longer than this, such as a hitch while loading, is counted as this long.
@@ -125,9 +123,9 @@ def _prepare(asset: Any) -> None:
     ownership.write(SLOPE_CURVE_KEY, ownership.ASSET, lambda: _read_curve(game.slide_asset(), "SpeedSlopeScaleCurve"),
                     lambda curve: _put_curve("SpeedSlopeScaleCurve", curve), _flat(1.0, slope_points))
     ownership.write(DURATION_KEY, ownership.ASSET, lambda: float(game.slide_asset().Duration.constant), _put_duration,
-                    LONG_DURATION)
+                    settings.LONGEST_SLIDE_S)
     _prepared = asset
-    report.note(f"slide physics on: duration {LONG_DURATION:.0f} s, slope curve flat at 1, speed curve flat at "
+    report.note(f"slide physics on: duration {settings.LONGEST_SLIDE_S:.0f} s, slope curve flat at 1, speed curve flat at "
                 f"{game_curve.values[0]:.4f}")
 
 

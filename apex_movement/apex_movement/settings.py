@@ -13,15 +13,30 @@ auto_sprint = BoolOption(
     display_name="Enabled",
     description="Sprint as soon as the move stick is fully pushed, up to the game's own 60 degree limit.",
 )
+# The whole slide movement, on top of its own options below (Kevin's rule, 2026-09-18: every movement can be turned
+# off on its own; the slides and the dash had no switch at all).
+slides = BoolOption(
+    "slides", True,
+    display_name="Enabled",
+    description="Faster, longer slides. Turned off, slides are the game's own again.",
+)
 momentum_slides = BoolOption(
     "momentum_slides", True,
     display_name="Follow momentum",
     description="Slides follow the direction you move in, not the direction you aim.",
 )
+dash = BoolOption(
+    "dash", True,
+    display_name="Enabled",
+    description="A longer dash. Turned off, the dash is the game's own again.",
+)
+# One switch for both: they share the crouch key being blocked, which is what removes the game's own held-crouch slam
+# (air_crouch, 2026-09-18). The description says what comes back when it is turned off.
 air_crouch = BoolOption(
     "air_crouch", True,
     display_name="Enabled",
-    description="In the air: tap crouch to dash, hold it to slide on landing, press jump and crouch together to slam.",
+    description="Hold crouch in the air to slide the moment you land, press jump and crouch together to slam. "
+                "Turned off, the game's own crouch comes back, slam on a held crouch included.",
 )
 air_strafe = BoolOption(
     "air_strafe", True,
@@ -165,6 +180,12 @@ reclimb_delay = SliderOption(
     display_name="Climb again after",
     description="Seconds before you can climb again after a climb that did not reach the top. Landing clears it.",
 )
+
+
+# How long the game is told a slide may last: only a far safety net, since slides end when the mod ends them. It lives
+# here rather than in slide_physics because the landing slide's own safety net has to outlast it, and that belongs to
+# another movement (2026-09-18): one value, one place, read by both.
+LONGEST_SLIDE_S = 30.0
 
 
 @dataclass(frozen=True)

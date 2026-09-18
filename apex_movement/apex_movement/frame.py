@@ -17,12 +17,14 @@ _active: set[str] = set()
 _failed: set[str] = set()
 
 
-def register(name: str, option: Any, movement: Any) -> None:
+def register(name: str, movement: Any, *switches: Any) -> None:
     """A movement module offers update(character, now_ns), stop(character) and reset().
 
-    option None means always on: the slide speed has a slider but no switch (spec, section 3).
+    It runs while every one of its switches is on, and stops at the next frame as soon as one goes off. A module of a
+    movement that also has its own option takes both: the movement's switch, so turning the movement off turns it off
+    too, and its own (2026-09-18). No switch at all means always on, and movements.py carries the reason.
     """
-    _movements.append((name, option, movement))
+    _movements.append((name, switches, movement))
 
 
 def _stop(name: str, movement: Any, character: Any) -> None:
@@ -43,10 +45,10 @@ def on_frame(obj: Any, now_ns: int) -> None:
     character = game.character()
     if character is None or obj != game.anim():
         return
-    for name, option, movement in _movements:
+    for name, switches, movement in _movements:
         if name in _failed:
             continue
-        if option is not None and not option.value:
+        if not all(switch.value for switch in switches):
             if name in _active:
                 _stop(name, movement, character)
             continue

@@ -69,7 +69,7 @@ check("starting 25 % faster goes further by the ratio of squares above the stop 
       near(P.speed_gain(1130.0, axle_slide.Boost(1.25, 1.0, 1.0)), (1412.5 ** 2 - 350.0 ** 2) / (1130.0 ** 2 - 350.0 ** 2)))
 
 P.update(player, 0)
-check("the slide timer is made long", asset.Duration.constant == P.LONG_DURATION)
+check("the slide timer is made long", asset.Duration.constant == settings.LONGEST_SLIDE_S)
 slope_keys = asset.SpeedSlopeScaleCurve.EditorCurveData.keys
 check("the game's slope effect stays switched on, since off it ended every slide", asset.bUseSlopeCurve is True)
 check("but its curve is flat at 1, without tangents", [key.Value for key in slope_keys] == [1.0] * 4

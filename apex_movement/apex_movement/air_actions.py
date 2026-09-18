@@ -8,7 +8,7 @@ slam 7 ms later. The game keeps its own rules on top, such as the dash recharge.
 import math
 from typing import Any
 
-from . import game, report, slide_physics
+from . import game, report, settings
 
 # The game only knows four dash directions, counted from the camera (BL4 SuperDash, confirmed in session 5).
 FORWARD, LEFT, BACK, RIGHT = 0, 1, 2, 3
@@ -23,7 +23,7 @@ DASH_HOLD_MAX_NS = 1_000_000_000
 SLIDE_WATCH_NS = 400_000_000
 # Safety net only. With 1.6 s, five landing slides ended at 1600-1608 ms while still fast (0.3.0 test): releasing the
 # request ends the slide (verified on 2026-09-17), so it must outlast the longest slide slide_physics allows.
-SLIDE_MAX_NS = int((slide_physics.LONG_DURATION + 5.0) * 1_000_000_000)
+SLIDE_MAX_NS = int((settings.LONGEST_SLIDE_S + 5.0) * 1_000_000_000)
 
 _dash: dict[str, Any] = {}
 _slide: dict[str, Any] = {}

@@ -12,23 +12,25 @@ from . import (
 __version__ = "1.0.0"
 __author__ = "kevin-hDev"
 
-# No switch: the raised walk and sprint speeds apply whether the auto sprint is on or off (Nexus page, 2026-09-18).
-frame.register("ground_speed", None, ground_speed)
-frame.register("auto_sprint", settings.auto_sprint, sprint)
+# Which module belongs to which movement is stated in movements.py, and test_movement_rules.py checks this list
+# against it: every movement takes its own switch, and no module rides on a neighbour's.
+# No switch: a walking speed has no off state, and the game's own values are named in the sliders.
+frame.register("ground_speed", ground_speed)
+frame.register("auto_sprint", sprint, settings.auto_sprint)
 # Before the slide speed: at a slide's end it puts the speed curve back first, and the slide speed reads that curve.
-frame.register("slide_physics", None, slide_physics)
-frame.register("slide", None, slide)
-frame.register("momentum_slides", settings.momentum_slides, slide_direction)
+frame.register("slide_physics", slide_physics, settings.slides)
+frame.register("slide", slide, settings.slides)
+frame.register("momentum_slides", slide_direction, settings.slides, settings.momentum_slides)
 # The Axle slide's switch: off, the normal slide keeps the game's steering. Its boosts are read by slide and slide_physics.
-frame.register("slide_steering", settings.axle_slide, slide_steering)
-frame.register("dash", None, dash)
-frame.register("air_crouch", settings.air_crouch, air_crouch)
-frame.register("air_strafe", settings.air_strafe, air_strafe)
-frame.register("heavier_fall", settings.heavier_fall, heavier_fall)
+frame.register("slide_steering", slide_steering, settings.slides, settings.axle_slide)
+frame.register("dash", dash, settings.dash)
+frame.register("air_crouch", air_crouch, settings.air_crouch)
+frame.register("air_strafe", air_strafe, settings.air_strafe)
+frame.register("heavier_fall", heavier_fall, settings.heavier_fall)
 # Last: it writes the velocity in the air, and no movement registered before it does.
-frame.register("wall_climb", settings.wall_climb, wall_climb)
+frame.register("wall_climb", wall_climb, settings.wall_climb)
 # After every movement: it reports the jump that just left the ground, once the others have written their speeds.
-frame.register("jump_report", None, jump_report)
+frame.register("jump_report", jump_report)
 
 
 def _on_enable() -> None:

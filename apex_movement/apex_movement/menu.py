@@ -42,22 +42,24 @@ auto_sprint = _group(
     "auto_sprint_menu", "Auto sprint", "Sprint on a fully pushed stick, without pressing anything.",
     settings.auto_sprint,
 )
-slides = NestedOption(
-    "slides_menu", [settings.momentum_slides, settings.slide_speed, settings.slide_distance, settings.slide_downhill_pull,
-                    settings.slide_max_speed],
-    display_name="Slides", description="How slides start, go on, and slow down.",
+slides = _group(
+    "slides_menu", "Slides", "How slides start, go on, and slow down.",
+    settings.slides, settings.momentum_slides, settings.slide_speed, settings.slide_distance,
+    settings.slide_downhill_pull, settings.slide_max_speed,
 )
 axle_slide = _group(
     "axle_slide_menu", "Axle slide", "Steer your slides with the move stick, and boost every slide, as Axle does.",
     settings.axle_slide, settings.axle_steering, settings.axle_speed_boost, settings.axle_flat_distance_boost,
     settings.axle_slope_boost,
 )
-dash = NestedOption(
-    "dash_menu", [settings.dash_distance],
-    display_name="Dash", description="How far a dash goes, at the game's own speed.",
+dash = _group(
+    "dash_menu", "Dash", "How far a dash goes, at the game's own speed.",
+    settings.dash, settings.dash_distance,
 )
+# One line for both: they share the blocked crouch key, and that block is what removes the game's own held-crouch
+# slam, so they are turned on and off together (air_crouch, 2026-09-18).
 air_crouch = _group(
-    "air_crouch_menu", "Slam and landing slide",
+    "air_crouch_menu", "Ground slam and landing slide",
     "Jump and crouch together to slam, and crouch held in the air to slide the moment you land.",
     settings.air_crouch, settings.landing_slide_min_speed,
 )
