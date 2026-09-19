@@ -59,7 +59,8 @@ check("an unchanged speed is not written or logged again", notes("slide start sp
 
 settings.slide_speed.value = 1200
 slide.update(player, 3 * MS)
-check("the slide slider applies at the next sprint frame", abs(constant() * 1.15 * 1.1017 - 1200.0) < 0.01)
+check("the slide slider applies at the next frame standing on the ground",
+      abs(constant() * 1.15 * 1.1017 - 1200.0) < 0.01)
 settings.slide_speed.value = 1130
 
 settings.axle_slide.value = True
@@ -82,7 +83,6 @@ check("a slide slower than the sprint starts at the sprint speed", abs(constant(
 settings.sprint_speed.value = 960
 slide.update(player, 7 * MS)
 
-movement.bIsSprinting = False
 movement.ControlledMoveReplicationData.ControlledMove = asset
 movement.Velocity = sdk_stubs.vector(600.0, 600.0, 50.0)
 slide.update(player, 100 * MS)
@@ -142,7 +142,6 @@ check("after a reset no stale slide end is logged", notes("slide end") == 1)
 key = ("OakControlledMove", sdk_stubs.SLIDE_PATH)
 del state["objects"][key]
 game.forget()
-movement.bIsSprinting = True
 slide.update(player, 1100 * MS)
 slide.update(player, 1101 * MS)
 check("a slide asset not loaded yet skips the frame and is reported once", len(state["errors"]) == 1)
@@ -152,7 +151,6 @@ check("one line reports it for every module of the slides", len(state["errors"])
 check("in words true of all of them, not of the slide speed only",
       "Move_Slide not found yet" in state["errors"][0] and "speed" not in state["errors"][0])
 state["objects"][key] = asset
-movement.bIsSprinting = False
 
 # Slides switched off and on again during one slide: the frame loop calls stop, then update on the same slide.
 movement.ControlledMoveReplicationData.ControlledMove = asset

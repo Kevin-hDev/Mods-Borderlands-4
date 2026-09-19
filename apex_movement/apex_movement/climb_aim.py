@@ -12,8 +12,6 @@ a climb was refused because the surface leaned.
 import math
 from dataclasses import dataclass
 
-# What a surface's normal keeps flat when it stands straight up: 1 a vertical wall, 0 a floor or a ceiling.
-FLAT_UPRIGHT = 1.0
 # Where a climb looks for its wall, in shares of the character's half height from its centre: from just under the feet
 # to over the head. One height alone slipped through the gaps of an uneven face (Kevin, séance O), and three starting
 # at -0.7 still missed what blocked the player: the probe's profile found an upright face right at the feet, at -1.2,
@@ -30,7 +28,7 @@ class Wall:
     # The way into the wall, flat and one unit long; both zero when the surface faces straight up or down.
     into_x: float
     into_y: float
-    # How much of the surface's normal is horizontal: FLAT_UPRIGHT for a wall standing straight, 0 for a floor.
+    # How much of the surface's normal is horizontal: 1 for a wall standing straight, 0 for a floor or a ceiling.
     flat: float
     # The way up along the surface, one unit long. Straight up by default, which is what a wall standing straight
     # gives: a leaning wall tips it into itself, so climbing follows the face instead of drifting away from it.

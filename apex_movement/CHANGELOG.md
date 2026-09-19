@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.2
+
+Fixed:
+
+- After getting out of a vehicle, the controller's crouch button could stay out of the mod's reach until the next
+  area: no landing slide and no ground slam from the controller. The mod now reads the game's key list again every
+  second and follows it.
+- Switching the mod off at the title screen could write into game objects the game had already removed, and wrote
+  errors in the log. It now leaves them alone: the game loads its own values again with your next game.
+- Settings are now held to their slider's range. A value typed out of range in the console mod menu, or edited by
+  hand in the settings file, is brought back within it, and a value that is not a number goes back to its default.
+  The log says so.
+- A move whose switch-off failed is now tried again, instead of staying half on while the menu shows it off. When a
+  game value cannot be restored, the log now says how many, instead of saying they all were.
+
+Also: unused code and outdated comments removed. The moves feel the same as in 1.0.1.
+
 ## 1.0.1
 
 Fixed: the mod menu showed a move both on and off. Inside a move's line, the title said "(On)" and the line under

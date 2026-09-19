@@ -11,11 +11,11 @@ from typing import Any
 from mods_base import build_mod
 
 from . import (
-    air_crouch, air_strafe, dash, family, frame, ground_speed, heavier_fall, jump_report, menu, move_watch, pack,
-    report, settings, slide, slide_direction, slide_physics, slide_steering, sprint, wall_climb,
+    air_crouch, air_strafe, dash, family, frame, ground_speed, heavier_fall, jump_report, menu, move_watch, ownership,
+    pack, report, settings, slide, slide_direction, slide_physics, slide_steering, sprint, wall_climb,
 )
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "kevin-hDev"
 
 
@@ -52,13 +52,24 @@ def _on_enable() -> None:
     # Tested with no other movement mod; Auto Sprint writes the same ground speed, so the last writer would win.
     if "auto_sprint" in sys.modules:
         report.warning("the Auto Sprint mod is also loaded; both set the ground speed, disable one of them")
+    for line in settings.keep_in_bounds():
+        report.warning(line)
     report.note(f"enabled, version {__version__}")
 
 
 def _on_disable() -> None:
-    for failure in frame.stop_all():
+    failures = frame.stop_all()
+    for failure in failures:
         report.error_once(failure, failure)
-    report.note("disabled, game values restored")
+    # Said only when true: after a failure, "restored" read as if every value were back (review, 2026-09-19).
+    if failures:
+        plural = "s" if len(failures) > 1 else ""
+        report.note(f"disabled, {len(failures)} game value{plural} could not be restored")
+    else:
+        report.note("disabled, game values restored")
+    unloaded = ownership.unloaded_count()
+    if unloaded:
+        report.note(f"{unloaded} of them left to the game, which had unloaded their asset and loads it with its own")
 
 
 # FamilyMod refuses to switch on while another installed file of this pack already runs one of these movements.

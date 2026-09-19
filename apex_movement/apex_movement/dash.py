@@ -55,7 +55,7 @@ def close(a: Timing, b: Timing) -> bool:
 
 
 def _put(timing: Timing) -> None:
-    asset = game.dash_asset()
+    asset = ownership.loaded(game.dash_asset())
     duration = asset.Duration
     duration.constant = timing.duration
     # Assigned back whole: the SDK may hand out a copy of the struct, and a field written on a copy changes nothing.
@@ -90,7 +90,6 @@ def update(character: Any, now_ns: int) -> None:
 
 
 def stop(character: Any) -> None:
-    reset()
     if ownership.is_owned(TIMING_KEY):
         ownership.restore(TIMING_KEY)
         report.note("dash distance off, game dash restored")

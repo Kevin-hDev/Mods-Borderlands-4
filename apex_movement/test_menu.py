@@ -8,7 +8,7 @@ sys.path.insert(0, str(HERE))
 
 import sdk_stubs  # noqa: E402
 
-state = sdk_stubs.install()
+sdk_stubs.install()
 
 from apex_movement import menu, settings  # noqa: E402
 

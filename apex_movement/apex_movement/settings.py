@@ -4,6 +4,8 @@ Speeds are real speeds, the ones the SDK log measures (design decision 8). The d
 between walk and sprint (828 - 540 = 288) and put the slide clearly above the sprint.
 """
 
+import math
+
 from mods_base import BoolOption, SliderOption
 
 auto_sprint = BoolOption(
@@ -64,7 +66,7 @@ sprint_speed = SliderOption(
 )
 # 1130 after trying 1080 and 1150 in game (Kevin, 2026-09-17: "on se rapproche plus d'un apex legends"). The floor
 # stays above slide_physics.STOP_SPEED (350): a slide started at or under it was ended on its first frame (review,
-# 2026-09-18). test_settings holds that relation, since this file cannot import slide_physics.
+# 2026-09-18). test_speed_order holds that relation, since this file cannot import slide_physics.
 slide_speed = SliderOption(
     "slide_speed", 1130, 400, 2500, step=1, is_integer=True,
     display_name="Slide speed",
@@ -192,3 +194,24 @@ reclimb_delay = SliderOption(
 # here rather than in slide_physics because the landing slide's own safety net has to outlast it, and that belongs to
 # another movement (2026-09-18): one value, one place, read by both.
 LONGEST_SLIDE_S = 30.0
+
+
+def keep_in_bounds() -> list[str]:
+    """Brings every slider back within its own bounds, and a value that is not a number back to its default.
+
+    mods_base loads a slider from the settings file without its bounds, and keeps NaN (review, 2026-09-19): a file
+    edited by hand asked for a 20 s dash, no gravity, or a slide flung at 100000. Run when the mod is switched on,
+    once the file is loaded, and at every frame of the player: the console menu does not hold a slider to its bounds
+    either (Vehicle Driving, 2026-09-19: 250 typed for a slider shown [100-200] was taken).
+    """
+    told: list[str] = []
+    for option in list(globals().values()):
+        if not isinstance(option, SliderOption) or getattr(option, "min_value", None) is None:
+            continue
+        value = float(option.value)
+        kept = min(option.max_value, max(option.min_value, value)) if math.isfinite(value) else option.default_value
+        if kept != value:
+            told.append(f"setting {option.identifier}={option.value} outside {option.min_value}-{option.max_value}, "
+                        f"set to {kept}")
+            option.value = kept
+    return told

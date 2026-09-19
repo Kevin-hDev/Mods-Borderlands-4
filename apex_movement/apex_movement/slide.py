@@ -42,7 +42,7 @@ def find_asset() -> Any:
 
 
 def _put_constant(value: float) -> None:
-    asset = game.slide_asset()
+    asset = ownership.loaded(game.slide_asset())
     speed = asset.speed
     speed.constant = value
     # Assigned back whole: the SDK may hand out a copy of the struct, and a field written on a copy changes nothing.

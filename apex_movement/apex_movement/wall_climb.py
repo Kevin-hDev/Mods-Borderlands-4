@@ -24,18 +24,14 @@ angle rises at cos(angle) of that speed: half as fast at 60 degrees, taking twic
 
 from typing import Any
 
+from unrealsdk import unreal
+
 from . import (air_jumps, climb_aim, climb_animation, climb_refusal, climb_rules, game, jump_press,
                ownership, report, settings, wall_choice, wall_sense)
 
 # The measure's lean into the wall, which kept the character touching it all the way up.
 INTO_WALL = 100.0
 NS_PER_S = 1_000_000_000
-# mods_base loads a slider from the settings file without clamping it, so a file edited by hand passes the sliders' own
-# bounds (100 to 2000, 0 to 75 degrees). Under 1 a climb has no speed to rise with. From 90 degrees on it leans flat
-# along the wall with nothing left to rise, and past 90 the start angle opens behind the wall; a negative lean flips
-# the bound and tips every climb to one side.
-MIN_SPEED = 1.0
-MAX_LEAN_DEG = 89.0
 HOLD_FIELD = "MinPassiveMantleButtonHoldDuration"
 HOLD_KEY = f"controller.{HOLD_FIELD}"
 # One line per climb that presses Croix, not one per frame of the window.
@@ -56,21 +52,29 @@ def reset() -> None:
     air_jumps.reset()
 
 
+def _put_hold(pointer: Any, value: float) -> None:
+    # Gone after a return to the title screen: writing into it could bring the game down (review, 2026-09-19), and the
+    # next controller starts from the game's own hold anyway.
+    pc = pointer()
+    if pc is not None:
+        setattr(pc, HOLD_FIELD, value)
+
+
 def _mantle_without_jump_key() -> None:
     pc = game.controller()
     if pc is None or float(getattr(pc, HOLD_FIELD)) == 0.0:
         return
     # Asset scope: the controller outlives the character, so its value is put back even after a level change.
+    pointer = unreal.WeakPointer(pc)
     ownership.write(HOLD_KEY, ownership.ASSET, lambda: float(getattr(pc, HOLD_FIELD)),
-                    lambda value: setattr(pc, HOLD_FIELD, value), 0.0)
+                    lambda value: _put_hold(pointer, value), 0.0)
     report.note("mantle without the jump key on")
 
 
 def _limits(character: Any) -> climb_rules.Limits:
     height = 2.0 * game.half_height(character) * float(settings.climb_height.value) / 100.0
     return climb_rules.Limits(height=height, delay_ns=int(float(settings.reclimb_delay.value) * NS_PER_S),
-                              lean_deg=min(MAX_LEAN_DEG, max(0.0, float(settings.climb_lean.value))),
-                              speed=max(MIN_SPEED, float(settings.climb_speed.value)))
+                              lean_deg=float(settings.climb_lean.value), speed=float(settings.climb_speed.value))
 
 
 def _moment(character: Any, now_ns: int) -> climb_rules.Moment:

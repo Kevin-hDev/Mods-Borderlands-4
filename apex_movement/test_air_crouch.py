@@ -1,4 +1,5 @@
-"""Tests the air crouch movement: keys bound on the first frame, requests played, landing slide from the minimum."""
+"""Tests the air crouch movement: keys bound on the first frame and followed every second, requests played, landing
+slide from the minimum."""
 
 import pathlib
 import sys
@@ -13,7 +14,7 @@ state = sdk_stubs.install()
 # Stands for unrealsdk.unreal.WeakPointer, which air_actions keeps the asking character in: no character dies here.
 sys.modules["unrealsdk.unreal"].WeakPointer = lambda obj=None: (lambda: obj)
 
-from apex_movement import air_bindings, air_crouch, air_keys, game, settings  # noqa: E402
+from apex_movement import air_bindings, air_crouch, air_keys, game, report, settings  # noqa: E402
 
 fails: list[str] = []
 
@@ -158,25 +159,51 @@ game_mappings = list(state["mappings"])
 state["mappings"][:] = [sdk_stubs.mapping("Action_Crouch_Hold", "LeftShift"),
                         sdk_stubs.mapping("Action_Jump_HoldToGlide", cross)]
 air_crouch.update(player, 23300 * MS)
-check("a key changed in the options is not read again mid-level", pad in state["keybinds"])
-air_crouch.reset()
-check("a level change gives the old key back to the game at once", pad not in state["keybinds"])
-air_crouch.update(player, 23400 * MS)
-check("the next frame binds the key now in the options",
+check("the key list is not read again every frame", pad in state["keybinds"])
+air_crouch.update(player, 24300 * MS)
+check("a key changed in the options is followed within a second",
       "LeftShift" in state["keybinds"] and pad not in state["keybinds"])
+
+state["mappings"][:] = [mapped for mapped in game_mappings if mapped.Key.KeyName != pad]
+air_crouch.reset()
+air_crouch.update(player, 25000 * MS)
+check("read while the game does not list the gamepad's crouch yet, only the keyboard's is bound: the vehicle exit of "
+      "2026-09-18", "LeftControl" in state["keybinds"] and pad not in state["keybinds"])
+state["mappings"][:] = game_mappings
+air_crouch.update(player, 26000 * MS)
+check("once the game lists it again, the gamepad's crouch is bound within a second", pad in state["keybinds"])
+
+fly(900.0, 27000 * MS)
+key(pad, pressed, 27010 * MS)
+state["mappings"][:] = [sdk_stubs.mapping("Action_Crouch_Hold", "LeftShift"),
+                        sdk_stubs.mapping("Action_Jump_HoldToGlide", cross)]
+fly(900.0, 28100 * MS)
+check("never bound again while a blocked press is held: its release must reach the key that blocked it",
+      pad in state["keybinds"] and key(pad, released, 28150 * MS) is Block)
+land(29200 * MS)
+check("released, the new list is followed", "LeftShift" in state["keybinds"] and pad not in state["keybinds"])
 
 state["mappings"][:] = [sdk_stubs.mapping("Action_Jump_HoldToGlide", cross)]
 air_crouch.stop(player)
-air_crouch.update(player, 24000 * MS)
-air_crouch.update(player, 24001 * MS)
+air_crouch.update(player, 30000 * MS)
+air_crouch.update(player, 30001 * MS)
 check("a key list without crouch is reported once", sum("no crouch key" in line for line in state["errors"]) == 1)
 check("and binds nothing", state["keybinds"] == {})
 state["mappings"][:] = game_mappings
-air_crouch.update(player, 24002 * MS)
+air_crouch.update(player, 30002 * MS)
 check("a refused list is not read again every frame", state["keybinds"] == {})
-air_crouch.reset()
-air_crouch.update(player, 24003 * MS)
-check("a level change reads the key list again and binds the crouch key", pad in state["keybinds"])
+air_crouch.update(player, 31000 * MS)
+check("it is read again a second later, and the crouch key bound", pad in state["keybinds"])
+
+# Getting into a vehicle: the game lists the vehicle's keys a moment before the character leaves (2026-09-19, 06:20:50).
+report.reset()
+errors_before = len(state["errors"])
+state["mappings"][:] = [sdk_stubs.mapping("Action_Jump_HoldToGlide", cross)]
+air_crouch.update(player, 32000 * MS)
+check("a list without any crouch key while bound keeps the keys: the vehicle entry of 2026-09-19",
+      pad in state["keybinds"] and cross in state["keybinds"])
+check("and reports no error", not any("no crouch key" in line for line in state["errors"][errors_before:]))
+state["mappings"][:] = game_mappings
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

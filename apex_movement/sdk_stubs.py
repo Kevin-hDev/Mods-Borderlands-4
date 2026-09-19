@@ -18,8 +18,11 @@ class FakeOption:
     def __init__(self, identifier: str, value: Any, *args: Any, **kwargs: Any) -> None:
         self.on_change_anytime = None
         # args holds a slider's bounds, in mods_base's order: min_value, max_value.
-        self.identifier, self.value, self.args, self.kwargs = identifier, value, args, kwargs
+        self.identifier, self.value, self.args = identifier, value, args
         self.display_name = kwargs.get("display_name", identifier)
+        # mods_base's names for a slider's bounds and first value; a switch has no bounds.
+        self.min_value, self.max_value = (args + (None, None))[:2]
+        self.default_value = value
 
     def __setattr__(self, name: str, value: Any) -> None:
         # Like mods_base: the change callback runs before a new value is stored, loading a settings file included.
@@ -30,7 +33,7 @@ class FakeOption:
 
 class FakeNested:
     def __init__(self, identifier: str, children: list, **kwargs: Any) -> None:
-        self.identifier, self.children, self.kwargs = identifier, children, kwargs
+        self.identifier, self.children = identifier, children
         self.display_name = kwargs.get("display_name", identifier)
         # As mods_base (options.py, BaseOption.__post_init__): copied once from the display name, never followed again.
         # The console menu draws it under the title whenever the two differ.
@@ -59,7 +62,7 @@ class FakeMod:
     """
 
     def __init__(self, state: dict, **kwargs: Any) -> None:
-        self.state, self.kwargs, self.is_enabled = state, kwargs, False
+        self.kwargs, self.is_enabled = kwargs, False
         self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
         # What the settings file holds for "enabled" after the mod's last save; None while it never saved.
         self.saved_enabled: bool | None = None
@@ -100,7 +103,6 @@ class Mode:
 class Direction(enum.Enum):
     """Stands for the game's ERelativeDirectionType, with the values read in game."""
 
-    Default = 0
     ParentVelocity2D = 5
     ParentAimDirection2D = 18
 
@@ -191,7 +193,7 @@ class FakeKeybind:
     """Stands in for mods_base.keybind: the tests fire key events by calling state["keybinds"][key]."""
 
     def __init__(self, state: dict, identifier: str, key: str, callback: Any, kwargs: dict) -> None:
-        self.state, self.identifier, self.key, self.callback, self.kwargs = state, identifier, key, callback, kwargs
+        self.state, self.identifier, self.key, self.callback = state, identifier, key, callback
 
     def enable(self) -> None:
         self.state["keybinds"][self.key] = self.callback
@@ -403,7 +405,6 @@ def install() -> dict:
     logging_module.misc = lambda text: state["misc"].append(text)
     logging_module.warning = lambda text: state["warnings"].append(text)
     logging_module.error = lambda text: state["errors"].append(text)
-    logging_module.info = lambda text: state["misc"].append(text)
 
     class WeakPointer:
         """As pyunrealsdk's (sdk_mods/.stubs/unrealsdk/unreal/_weak_pointer.pyi): calling it gives the object back, or
@@ -420,7 +421,7 @@ def install() -> dict:
     unreal_module.WeakPointer = WeakPointer
 
     hooks_module = types.ModuleType("unrealsdk.hooks")
-    hooks_module.Type = types.SimpleNamespace(POST="POST", PRE="PRE")
+    hooks_module.Type = types.SimpleNamespace(POST="POST")
     hooks_module.Block = type("Block", (), {})
 
     unrealsdk_module = types.ModuleType("unrealsdk")

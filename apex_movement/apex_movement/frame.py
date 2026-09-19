@@ -11,7 +11,7 @@ from typing import Any
 from mods_base import hook
 from unrealsdk.hooks import Type
 
-from . import game, ownership, report
+from . import game, ownership, report, settings
 
 _movements: list[tuple[str, Any, Any]] = []
 _active: set[str] = set()
@@ -37,11 +37,14 @@ def register(name: str, movement: Any, *switches: Any) -> None:
 
 
 def _stop(name: str, movement: Any, character: Any) -> None:
-    _active.discard(name)
     try:
         movement.stop(character)
     except Exception as exc:
+        # Left running, so that it is stopped again at the next frame or the next switch-off: a stop that failed could
+        # leave a key blocked while the menu shows the move off (review, 2026-09-19).
         report.error_once(f"{name}:stop", f"{name} could not stop cleanly: {exc!r}")
+        return
+    _active.discard(name)
 
 
 def _tell_player(change: str) -> None:
@@ -52,7 +55,12 @@ def _tell_player(change: str) -> None:
 
 
 def on_frame(obj: Any, now_ns: int) -> None:
-    change = game.refresh(now_ns)
+    try:
+        change = game.refresh(now_ns)
+    except Exception as exc:
+        # Skipped rather than raised out of the hook, which would repeat the error at every animation update.
+        report.error_once("frame:refresh", f"the player could not be looked up, frame skipped: {exc!r}")
+        return
     if change:
         _tell_player(change)
     if change == game.CHARACTER:
@@ -61,11 +69,16 @@ def on_frame(obj: Any, now_ns: int) -> None:
         # character, so a switch turned off before the next character arrives must still stop its movement then.
         # Clearing it here left them written for good (review, 2026-09-18).
         ownership.forget_character()
-        for _, _, movement in _movements:
-            movement.reset()
+        for name, _, movement in _movements:
+            try:
+                movement.reset()
+            except Exception as exc:
+                report.error_once(f"{name}:reset", f"{name} could not forget the old character: {exc!r}")
     character = game.character()
     if character is None or obj != game.anim():
         return
+    for line in settings.keep_in_bounds():
+        report.warning(line)
     for name, switches, movement in _movements:
         if name in _failed:
             continue
@@ -85,6 +98,10 @@ def on_frame(obj: Any, now_ns: int) -> None:
 def stop_all() -> list[str]:
     global _player_lines
     _player_lines = 0
+    # Looked up now rather than up to a second ago: switched off at the title screen, the character is gone, and its
+    # values are forgotten instead of written into it (review, 2026-09-19).
+    if game.refresh(time.perf_counter_ns(), at_once=True) == game.CHARACTER:
+        ownership.forget_character()
     character = game.character()
     for name, _, movement in _movements:
         if name in _active:

@@ -4,7 +4,7 @@ Movement mods for Borderlands 4, written in Python on the Borderlands 4 SDK.
 
 | Mod | What it does | Version |
 |---|---|---|
-| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing | 1.0.1 |
+| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing | 1.0.2 |
 
 ## Installing a mod
 

@@ -103,7 +103,7 @@ class Limits:
     # Degrees a climb may lean to a side. No default: the slider is its only authority, and a forgotten value here
     # would ignore it in silence.
     lean_deg: float
-    # Not read by the rules: it rides here so wall_climb._limits bounds every slider in one place. No default either.
+    # Not read by the rules: it rides here so the climb reads its sliders in one place (wall_climb._limits).
     speed: float
 
 

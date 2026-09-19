@@ -11,7 +11,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import frame, game, ownership  # noqa: E402
+from apex_movement import frame, game, ownership, settings  # noqa: E402
 
 fails: list[str] = []
 
@@ -130,6 +130,71 @@ sdk_stubs.use_character(state, other)
 frame.on_frame(other.anim, 9 * S)
 check("those lines are bounded", len(changes()) == written and game.character() is other)
 frame.MAX_PLAYER_LINES = bound
+
+holder = types.SimpleNamespace(value=1.0)
+sdk_stubs.use_character(state, player)
+frame.on_frame(player.anim, 50 * S)
+ownership.write("test.character_value", ownership.CHARACTER, lambda: holder.value,
+                lambda value: setattr(holder, "value", value), 2.0)
+state["pc"].OakCharacter = None
+frame.stop_all()
+check("switched off at the title screen, a value of the character the game destroyed is forgotten, not written into "
+      "it (review, 2026-09-19)", holder.value == 2.0 and not ownership.is_owned("test.character_value"))
+
+
+
+class Sticky(Movement):
+    """A movement whose first stop fails, as air crouch's would if its keys could not be released."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.stuck = True
+
+    def stop(self, character: object) -> None:
+        self.stops += 1
+        if self.stuck:
+            self.stuck = False
+            raise ValueError("keys still bound")
+
+
+class Unforgetful(Movement):
+    def reset(self) -> None:
+        raise ValueError("cannot forget")
+
+
+sticky, sticky_switch = Sticky(), types.SimpleNamespace(value=True)
+unforgetful = Unforgetful()
+frame.register("sticky", sticky, sticky_switch)
+frame.register("unforgetful", unforgetful)
+fresh = sdk_stubs.FakeCharacter()
+sdk_stubs.use_character(state, fresh)
+frame.on_frame(fresh.anim, 100 * S)
+check("a movement that cannot forget the old character is reported once, and the others still forget it",
+      sum("unforgetful could not forget the old character" in line for line in state["errors"]) == 1
+      and good.resets > 0)
+sticky_switch.value = False
+frame.on_frame(fresh.anim, 100 * S + 1)
+check("a stop that fails is reported", any("sticky could not stop cleanly" in line for line in state["errors"]))
+frame.on_frame(fresh.anim, 100 * S + 2)
+check("and tried again at the next frame: a failed stop could leave a key blocked while the menu shows the move off "
+      "(review, 2026-09-19)", sticky.stops == 2)
+frame.on_frame(fresh.anim, 100 * S + 3)
+check("once stopped, it is not stopped again", sticky.stops == 2)
+
+errors = len(state["errors"])
+looked_up = game.get_pc
+game.get_pc = lambda **kwargs: (_ for _ in ()).throw(RuntimeError("loading"))
+frame.on_frame(fresh.anim, 200 * S)
+frame.on_frame(fresh.anim, 300 * S)
+check("a player lookup that fails skips the frame and is reported once, instead of leaving the hook",
+      len(state["errors"]) == errors + 1 and "the player could not be looked up" in state["errors"][-1])
+game.get_pc = looked_up
+
+# The console menu does not hold a slider to its bounds (Vehicle Driving, 2026-09-19: 250 taken for [100-200]).
+settings.dash_distance.value = 10000
+frame.on_frame(fresh.anim, 400 * S)
+check("a slider typed out of its bounds in the menu is brought back at the next frame, and said so",
+      settings.dash_distance.value == 300 and any("dash_distance=10000" in line for line in state["warnings"]))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

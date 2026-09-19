@@ -88,7 +88,6 @@ reshaped = sdk_stubs.FakeDashAsset()
 reshaped._keys[1].Value = 0.9
 state["objects"][("OakControlledMove", sdk_stubs.DASH_PATH)] = reshaped
 game.forget()
-dash.reset()
 dash.update(player, 5)
 check("a curve without a full-speed start is left alone and reported", reshaped.Duration.constant == 0.33
       and any("changed shape" in line for line in state["errors"]))
@@ -99,7 +98,6 @@ check("and reported once", sum("changed shape" in line for line in state["errors
 copying = sdk_stubs.FakeDashAsset(copy_keys=True)
 state["objects"][("OakControlledMove", sdk_stubs.DASH_PATH)] = copying
 game.forget()
-dash.reset()
 failed = False
 try:
     dash.update(player, 7)
@@ -111,7 +109,6 @@ check("the duration written before the failure is put back", near(copying.Durati
 
 del state["objects"][("OakControlledMove", sdk_stubs.DASH_PATH)]
 game.forget()
-dash.reset()
 errors = len(state["errors"])
 dash.update(player, 8)
 check("a dash asset not loaded yet is reported once and skipped", len(state["errors"]) == errors + 1)

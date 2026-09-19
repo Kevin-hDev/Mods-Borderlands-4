@@ -9,7 +9,7 @@ sys.path.insert(0, str(HERE))
 
 import sdk_stubs  # noqa: E402
 
-state = sdk_stubs.install()
+sdk_stubs.install()
 
 from apex_movement import ownership  # noqa: E402
 
@@ -76,6 +76,27 @@ check("and returns the failure, the value still owned",
       and ownership.original("steering") == 55.0)
 steering.loaded = True
 ownership.restore("steering")
+
+# The title screen (2026-09-19, 06:40:34): the game has unloaded Move_Slide, and loads it again from its files.
+timer = types.SimpleNamespace(constant=1.35, loaded=True)
+
+
+def put_timer(value: float) -> None:
+    ownership.loaded(timer if timer.loaded else None).constant = value
+
+
+ownership.write("timer", ownership.ASSET, lambda: timer.constant, put_timer, 30.0)
+timer.loaded = False
+failures = ownership.restore_each(["timer"])
+check("a value whose asset the game unloaded is no failure: the game loads it again with its own value", failures == [])
+check("it stays owned with the game's value, and is counted",
+      ownership.original("timer") == 1.35 and ownership.unloaded_count() == 1)
+timer.loaded, timer.constant = True, 1.35
+ownership.write("timer", ownership.ASSET, lambda: timer.constant, put_timer, 30.0)
+check("written again once loaded, it keeps the game's value and is no longer counted",
+      ownership.original("timer") == 1.35 and ownership.unloaded_count() == 0)
+ownership.restore("timer")
+check("and is put back as any other", timer.constant == 1.35 and not ownership.is_owned("timer"))
 
 ownership.write("floor", ownership.CHARACTER, *accessors(movement, "MinAnalogWalkSpeed"), 672.0)
 ownership.write("slide", ownership.ASSET, *accessors(asset, "constant"), 850.0)

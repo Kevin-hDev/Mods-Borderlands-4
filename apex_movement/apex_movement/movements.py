@@ -33,8 +33,6 @@ class Movement:
     mod_name: str = ""
     # Why it cannot be switched off. Empty means it has a switch, which is what the rule expects.
     always_on_because: str = ""
-    # Why one switch carries two movements. Empty means it carries exactly one, which is what the rule expects.
-    one_switch_because: str = ""
     # Why it takes more than one menu line. Empty means it takes exactly one, which is what the rule expects.
     two_lines_because: str = ""
 
@@ -50,12 +48,12 @@ MOVEMENTS = (
                                "(2026-09-18): it keeps its own line because it is off by default and has five "
                                "settings of its own"),
     Movement("Dash", ("dash",), ("dash_menu",), "apex_dash", "Apex Dash"),
+    # Two moves under one switch: both need the crouch key blocked, and that block is what removes the game's own slam
+    # on a held crouch; two switches would allow a state where the block stays on while the player asked for neither,
+    # losing them the held-crouch slam with no way to tell why (Kevin, 2026-09-18). A comment rather than a field: no
+    # test can tell one movement from two, and a field nothing read looked like a checked rule (review, 2026-09-19).
     Movement("Ground slam and landing slide", ("air_crouch", "air_actions", "air_bindings", "air_keys"),
-             ("air_crouch_menu",), "apex_ground_slam", "Apex Ground Slam",
-             one_switch_because="both need the crouch key blocked, and that block is what removes the game's own slam "
-                                "on a held crouch; two switches would allow a state where the block stays on while "
-                                "the player asked for neither, losing them the held-crouch slam with no way to tell "
-                                "why (Kevin, 2026-09-18)"),
+             ("air_crouch_menu",), "apex_ground_slam", "Apex Ground Slam"),
     Movement("Air / tap strafe", ("air_strafe",), ("air_strafe_menu",), "apex_air_strafe", "Apex Air Strafe"),
     # jump_report writes the jumps this movement shapes: under its switch it runs in one installed file, not in each.
     Movement("Heavier fall", ("heavier_fall", "jump_goals", "jump_report"), ("heavier_fall_menu",),

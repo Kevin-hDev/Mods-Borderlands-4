@@ -1,7 +1,8 @@
 """Which movements this file carries, and the name it wears in the game's mod list.
 
-The sources build the full pack. The deploy tool writes a different pack.py into each separate file, so one movement
-can be downloaded on its own (conception, decision 2) and several installed side by side (Kevin, 2026-09-18).
+The sources build the full pack. The build tool (build_movement_files.py) writes a different pack.py into each
+separate file, so one movement can be downloaded on its own (conception, decision 2) and several installed side by
+side (Kevin, 2026-09-18).
 
 Side by side works because the files share nothing at runtime: each carries its own copy of the package under its own
 name, so its imports, its frame hook and its settings file are its own, and no two movements write the same game

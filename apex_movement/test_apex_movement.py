@@ -14,7 +14,7 @@ state["settings_exists"] = False
 sys.modules["auto_sprint"] = types.ModuleType("auto_sprint")
 
 import apex_movement  # noqa: E402
-from apex_movement import frame, menu, settings  # noqa: E402
+from apex_movement import frame, menu, ownership, settings  # noqa: E402
 
 fails: list[str] = []
 
@@ -30,10 +30,11 @@ check("the mod is named Apex Movement", mod.kwargs["name"] == "Apex Movement")
 check("the menu is registered", mod.kwargs["options"] == menu.MENU)
 check("the frame hook is registered", mod.kwargs["hooks"] == [frame.tick])
 check("the frame hook listens to the animation update", frame.tick.path == "/Script/Engine.AnimInstance:BlueprintUpdateAnimation")
+check("the frame hook carries the package's own name, so that a separate file never replaces it",
+      frame.tick.identifier == "apex_movement:frame")
 check("a fresh install enables the mod", mod.is_enabled)
 check("enabling with Auto Sprint loaded warns about it", any("Auto Sprint" in line for line in state["warnings"]))
 
-S = 1_000_000_000
 player = sdk_stubs.FakeCharacter()
 sdk_stubs.use_character(state, player)
 player.input = sdk_stubs.vector(1.0, 0.0)
@@ -90,10 +91,53 @@ check("disabling puts every jump height back", movement.goals["DefaultJump"].Goa
       and movement.goals["SprintJump"].InitialZVelocity == 735.0)
 check("disabling puts the game's mantle hold back", state["pc"].MinPassiveMantleButtonHoldDuration == 0.075)
 check("disabling is logged", any("disabled" in line for line in state["misc"]))
+check("disabling stops the frame hook", not frame.tick.enabled)
 # Every movement registered has a stop: one without it wrote an error at every disable since 0.10.2 (review,
 # 2026-09-18), and no test looked at the errors a disable writes.
 new_errors = state["errors"][len(errors_before):]
 check("disabling writes no error" + (f" (found {new_errors})" if new_errors else ""), new_errors == [])
+
+settings.dash_distance.value = 10000
+mod.enable()
+check("switching on brings a hand-edited setting back within its slider, and says so",
+      settings.dash_distance.value == 300 and any("dash_distance=10000" in line for line in state["warnings"]))
+
+# The title screen (2026-09-19, 06:40:34): switched off with the character gone and Move_Slide unloaded by the game.
+frame.tick(player.anim, None, None, None)
+check("switched back on, the mod writes the slide again", asset.Duration.constant == 30.0)
+del state["objects"][("OakControlledMove", sdk_stubs.SLIDE_PATH)]
+sdk_stubs.use_character(state, None)
+errors_before = list(state["errors"])
+mod.disable()
+new_errors = state["errors"][len(errors_before):]
+check("switched off at the title screen, it writes no error" + (f" (found {new_errors})" if new_errors else ""),
+      new_errors == [])
+check("and says the game values are restored, the unloaded slide's left to the game",
+      "[Apex Movement] disabled, game values restored" in state["misc"][-2:]
+      and any("unloaded" in line for line in state["misc"][-2:]))
+reloaded = sdk_stubs.FakeSlideAsset()
+state["objects"][("OakControlledMove", sdk_stubs.SLIDE_PATH)] = reloaded
+sdk_stubs.use_character(state, player)
+mod.enable()
+frame.tick(player.anim, None, None, None)
+check("the next game, the slide the game loaded again is written", reloaded.Duration.constant == 30.0
+      and reloaded.MoveLRRate.constant == 350.0)
+mod.disable()
+check("and switched off, it gets the game's own values back", reloaded.Duration.constant == 1.35
+      and reloaded.MoveLRRate.constant == 55.0)
+mod.enable()
+
+
+
+def stuck_put(value: float) -> None:
+    if value == 1.0:
+        raise RuntimeError("the game refused it")
+
+
+ownership.write("test.stuck", ownership.ASSET, lambda: 1.0, stuck_put, 2.0)
+mod.disable()
+check("a switch-off that could not put a value back does not claim it did",
+      state["misc"][-1] == "[Apex Movement] disabled, 1 game value could not be restored")
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

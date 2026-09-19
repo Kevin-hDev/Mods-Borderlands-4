@@ -81,7 +81,7 @@ def walls_ahead(character: Any, yaw: float, half_height: float) -> list[Wall]:
 
 def hit_heights(walls: list[Wall]) -> list[float]:
     """The height each of the last walls_ahead surfaces was met at, in the same order."""
-    return list(_heights) if len(_heights) == len(walls) else [TRACE_HEIGHTS[0]] * len(walls)
+    return list(_heights) if len(_heights) == len(walls) else []
 
 
 def _trace(character: Any, x: float, y: float, z: float, reach_x: float, reach_y: float) -> Wall | None:

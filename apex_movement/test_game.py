@@ -174,5 +174,14 @@ check("forget drops them too", arms._arms is None)
 climb_up = state["objects"][("AnimSequence", sdk_stubs.CLIMB_ANIMATION_PATH)] = sdk_stubs.FakeSequence(0.6)
 check("the climb animation is the game's first-person climb up", game.climb_animation() is climb_up)
 
+sdk_stubs.use_character(state, first)
+game.refresh(50 * S)
+game._character_pointer.obj = None
+check("a character the game destroyed reads as none at once, before the next look: a key press can come first "
+      "(review, 2026-09-19)", game.character() is None)
+sdk_stubs.use_character(state, other)
+check("within the second, the player is not looked up again", game.refresh(50 * S + 1) == "")
+check("unless asked at once", game.refresh(50 * S + 2, at_once=True) == game.CHARACTER and game.character() is other)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

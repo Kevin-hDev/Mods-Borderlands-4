@@ -36,6 +36,9 @@ check("nothing is bound before bind", not air_bindings.is_bound())
 check("bind succeeds with a crouch key", air_bindings.bind(state["mappings"]))
 check("every crouch and jump key gets a keybind", set(state["keybinds"]) == {"LeftControl", pad, cross, "SpaceBar"})
 check("the bound keys are logged", any("air crouch keys" in line for line in state["misc"]))
+check("the keys bound match the game's list", air_bindings.matches(state["mappings"]))
+check("a list without the gamepad's crouch no longer matches: read at a vehicle exit, it lacked it (2026-09-18)",
+      not air_bindings.matches([m for m in state["mappings"] if m.Key.KeyName != pad]))
 
 player = sdk_stubs.FakeCharacter()
 sdk_stubs.use_character(state, player)
@@ -81,6 +84,8 @@ check("a refused bind binds nothing", state["keybinds"] == {})
 separate_package = types.ModuleType("apex_ground_slam")
 separate_package.__path__ = [str(HERE / "apex_movement")]
 sys.modules["apex_ground_slam"] = separate_package
+air_bindings.unbind()
+check("released, the keys match no list any more", not air_bindings.matches(state["mappings"]))
 separate = importlib.import_module("apex_ground_slam.air_bindings")
 separate.bind(state["mappings"])
 identifiers = [bound.identifier for bound in separate._binds]

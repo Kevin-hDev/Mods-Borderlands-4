@@ -8,7 +8,7 @@ sys.path.insert(0, str(HERE))
 
 import sdk_stubs  # noqa: E402
 
-state = sdk_stubs.install()
+sdk_stubs.install()
 
 from apex_movement import menu, movements, pack  # noqa: E402
 
@@ -25,7 +25,7 @@ check("the sources build the full pack", pack.CARRIES == () and pack.NAME == "Ap
 check("the full pack carries every movement", all(pack.carries(m.name) for m in movements.MOVEMENTS))
 check("and shows every menu line", len(menu.carried()) == len(menu.ALL))
 
-# A separate file, as the deploy tool writes it.
+# A separate file, as the build tool writes it.
 pack.CARRIES = ("Wall climb",)
 check("a separate file carries its own movement", pack.carries("Wall climb"))
 check("and no other", not pack.carries("Slides") and not pack.carries("Auto sprint"))

@@ -21,7 +21,7 @@ def _read() -> Any:
 
 
 def _put(value: Any) -> None:
-    asset = game.slide_asset()
+    asset = ownership.loaded(game.slide_asset())
     launch = asset.LaunchDirection
     launch.RelativeDirection = value
     # Assigned back whole: the SDK may hand out a copy of the struct, and a field written on a copy changes nothing.

@@ -21,7 +21,7 @@ def _read() -> float:
 
 
 def _put(value: float) -> None:
-    asset = game.slide_asset()
+    asset = ownership.loaded(game.slide_asset())
     rate = asset.MoveLRRate
     rate.constant = value
     # Assigned back whole: the SDK may hand out a copy of the struct, and a field written on a copy changes nothing.

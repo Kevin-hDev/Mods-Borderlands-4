@@ -2,7 +2,8 @@
 
 Design decision 4: the mod is the only authority on the values it writes, and restores all of them when it stops.
 Character values die with the character on a level change, so they are forgotten rather than written back into a
-destroyed object; asset values (Move_Slide, jump goals) outlive characters and are always restored.
+destroyed object; asset values (Move_Slide, jump goals) outlive characters and are always restored, unless the game
+has unloaded the asset: it then loads it again from its files, with its own values.
 """
 
 from typing import Any, Callable, Iterable
@@ -22,11 +23,23 @@ SPEED_TOLERANCE = 0.5
 _entries: dict[str, dict[str, Any]] = {}
 
 
+class Unloaded(Exception):
+    """Raised by a put whose asset the game has unloaded: Move_Slide at the title screen (2026-09-19)."""
+
+
+def loaded(asset: Any) -> Any:
+    """The asset a put writes into, as game.slide_asset() gives it; raises Unloaded when that is None."""
+    if asset is None:
+        raise Unloaded()
+    return asset
+
+
 def write(key: str, scope: str, get: Callable[[], Any], put: Callable[[Any], None], value: Any) -> None:
     if key not in _entries:
         _entries[key] = {"scope": scope, "put": put, "original": get()}
     else:
         _entries[key]["put"] = put
+        _entries[key].pop("unloaded", None)
     put(value)
 
 
@@ -42,9 +55,15 @@ def restore(key: str) -> None:
     entry = _entries.get(key)
     if entry is None:
         return
-    entry["put"](entry["original"])
-    # Forgotten only once put back: after a put that fails, such as while the game has unloaded the asset, the game's
-    # value is still here for the next try instead of lost for good.
+    try:
+        entry["put"](entry["original"])
+    except Unloaded:
+        # No failure: nothing holds the mod's value any more. Kept all the same, so that a write after the game loads
+        # the asset again keeps the game's value it already has; written as ten false errors until 2026-09-19.
+        entry["unloaded"] = True
+        return
+    # Forgotten only once put back: after a put that fails, the game's value is still here for the next try instead of
+    # lost for good.
     del _entries[key]
 
 
@@ -67,6 +86,11 @@ def restore_all() -> list[str]:
     back.
     """
     return restore_each(reversed(list(_entries)))
+
+
+def unloaded_count() -> int:
+    """Values the last restore left to the game, their asset being unloaded."""
+    return sum(1 for entry in _entries.values() if entry.get("unloaded"))
 
 
 def forget_character() -> None:

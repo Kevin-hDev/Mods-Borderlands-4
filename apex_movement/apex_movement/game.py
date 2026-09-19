@@ -10,6 +10,7 @@ from typing import Any
 
 import unrealsdk
 from mods_base import get_pc
+from unrealsdk import unreal
 
 from . import arms
 
@@ -24,16 +25,20 @@ CHARACTER = "character"
 ANIMATION = "animation"
 
 _character: Any = None
+# What character() gives: none as soon as the game destroys the character. Key presses reach the mod outside the frame
+# loop, up to REFRESH_NS after a level change, and must not read a destroyed character (review, 2026-09-19).
+_character_pointer: Any = None
 _anim: Any = None
 # Keyed by the fixed asset names above only, so it never holds more than those.
 _assets: dict[tuple[str, str], Any] = {}
 _next_refresh_ns = 0
 
 
-def refresh(now_ns: int) -> str:
-    """Looks the player up again when due; says what changed since the last look, CHARACTER, ANIMATION or ""."""
-    global _character, _anim, _next_refresh_ns
-    if now_ns < _next_refresh_ns:
+def refresh(now_ns: int, at_once: bool = False) -> str:
+    """Looks the player up again when due, or at once; says what changed since the last look, CHARACTER, ANIMATION
+    or ""."""
+    global _character, _character_pointer, _anim, _next_refresh_ns
+    if now_ns < _next_refresh_ns and not at_once:
         return ""
     _next_refresh_ns = now_ns + REFRESH_NS
     pc = get_pc(possibly_loading=True)
@@ -48,13 +53,14 @@ def refresh(now_ns: int) -> str:
         arms.forget()
         return ANIMATION
     _character, _anim = found, anim
+    _character_pointer = unreal.WeakPointer(found) if found is not None else None
     arms.forget()
     _assets.clear()
     return CHARACTER
 
 
 def character() -> Any:
-    return _character
+    return _character_pointer() if _character_pointer is not None else None
 
 
 def controller() -> Any:
@@ -94,8 +100,8 @@ def climb_animation() -> Any:
 
 
 def forget() -> None:
-    global _character, _anim, _next_refresh_ns
-    _character = _anim = None
+    global _character, _character_pointer, _anim, _next_refresh_ns
+    _character = _character_pointer = _anim = None
     arms.forget()
     _assets.clear()
     _next_refresh_ns = 0

@@ -86,7 +86,8 @@ def _read_curve(asset: Any, name: str) -> Curve:
 
 def _put_curve(name: str, curve: Curve) -> None:
     # Written in place through the array's views, verified in game on 2026-09-17 for the speed curve.
-    for key, value, arrive, leave in zip(_keys(game.slide_asset(), name), curve.values, curve.arrive, curve.leave):
+    keys = _keys(ownership.loaded(game.slide_asset()), name)
+    for key, value, arrive, leave in zip(keys, curve.values, curve.arrive, curve.leave):
         key.Value, key.ArriveTangent, key.LeaveTangent = value, arrive, leave
 
 
@@ -100,7 +101,7 @@ def _set_flat(asset: Any, value: float) -> None:
 
 
 def _put_duration(value: float) -> None:
-    asset = game.slide_asset()
+    asset = ownership.loaded(game.slide_asset())
     duration = asset.Duration
     duration.constant = value
     # Assigned back whole: the SDK may hand out a copy of the struct, and a field written on a copy changes nothing.

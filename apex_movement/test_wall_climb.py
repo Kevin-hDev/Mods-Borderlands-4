@@ -11,8 +11,19 @@ sys.path.insert(0, str(HERE))
 import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
+# Every weak pointer the mod makes, so that a test can stand for the game destroying what one points at.
+pointers: list = []
 
-from apex_movement import game, jump_press, settings, wall_climb  # noqa: E402
+
+class KeptPointer(sys.modules["unrealsdk.unreal"].WeakPointer):
+    def __init__(self, obj: object = None) -> None:
+        super().__init__(obj)
+        pointers.append(self)
+
+
+sys.modules["unrealsdk.unreal"].WeakPointer = KeptPointer
+
+from apex_movement import game, jump_press, ownership, settings, wall_climb  # noqa: E402
 
 fails: list[str] = []
 
@@ -263,13 +274,17 @@ wall_climb.update(player, 27200 * MS)
 check("the jump the climb owed is forgotten: a jump after the switch-off is not given back",
       player.JumpCurrentCount == 2 and notes("jump from the climb") == 0)
 
-# A settings file edited by hand skips the sliders' own bounds.
-settings.climb_speed.value, settings.climb_lean.value = 0, 90
-hand_edited = wall_climb._limits(player)
-check("a hand-edited climb speed of 0 is raised to 1, and a diagonal of 90 lowered to 89",
-      (hand_edited.speed, hand_edited.lean_deg) == (1.0, 89.0))
-settings.climb_lean.value = -30
-check("a negative diagonal climbs straight up", wall_climb._limits(player).lean_deg == 0.0)
+check("the mantle hold is written again after the switch-off", pc.MinPassiveMantleButtonHoldDuration == 0.0)
+for pointer in pointers:
+    if pointer.obj is pc:
+        pointer.obj = None
+wall_climb.stop(player)
+check("a controller the game destroyed is never written: back at the title screen, switching off wrote into it "
+      "(review, 2026-09-19)",
+      pc.MinPassiveMantleButtonHoldDuration == 0.0 and not ownership.is_owned(wall_climb.HOLD_KEY))
+
+# A settings file edited by hand is brought back within the sliders by settings.keep_in_bounds, when the mod
+# is switched on: the climb reads the sliders as they are.
 settings.climb_speed.value, settings.climb_lean.value = 370, 60
 from_sliders = wall_climb._limits(player)
 check("the sliders' own values pass untouched", (from_sliders.speed, from_sliders.lean_deg) == (370.0, 60.0))

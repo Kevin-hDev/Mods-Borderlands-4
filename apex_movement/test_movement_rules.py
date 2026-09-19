@@ -14,7 +14,7 @@ sys.path.insert(0, str(HERE))
 
 import sdk_stubs  # noqa: E402
 
-state = sdk_stubs.install()
+sdk_stubs.install()
 
 import apex_movement  # noqa: E402, registers every movement with the frame loop
 from apex_movement import frame, menu, movements  # noqa: E402
