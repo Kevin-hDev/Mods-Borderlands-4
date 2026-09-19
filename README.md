@@ -1,10 +1,11 @@
 # Mods Borderlands 4
 
-Movement mods for Borderlands 4, written in Python on the Borderlands 4 SDK.
+Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borderlands 4 SDK.
 
 | Mod | What it does | Version |
 |---|---|---|
 | [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing | 1.0.2 |
+| [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns | 1.0.0 |
 
 ## Installing a mod
 
@@ -38,4 +39,4 @@ Every test file prints a `RESULTAT:` line and exits with a non-zero code when so
 ## Credits
 
 - The [Borderlands 4 Python SDK](https://github.com/bl-sdk/oak2-mod-manager) team, without whom none of this would exist.
-- Respawn, for the Apex Legends movement these mods are built after.
+- Respawn, for the Apex Legends movement Apex Movement is built after.
