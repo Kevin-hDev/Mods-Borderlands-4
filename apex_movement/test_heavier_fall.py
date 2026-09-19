@@ -53,6 +53,11 @@ heavier_fall.update(player, 2)
 check("definitions are read once per character", len(movement.type_sets) == sets)
 check("an unchanged frame writes and logs nothing", sum("fall weight" in line for line in state["misc"]) == 1)
 
+settings.jump_height_bonus.value = 1000
+heavier_fall.update(player, 2)
+check("at the top of the slider, 1000, every jump gets it on top of the game's height",
+      near(goals["DefaultJump"].GoalHeight, (198.0 + 1000.0) * 2.0)
+      and near(goals["DoubleJump"].GoalHeight, (225.0 + 1000.0) * 2.0))
 settings.fall_weight.value = 1.5
 settings.jump_height_bonus.value = 0
 heavier_fall.update(player, 3)

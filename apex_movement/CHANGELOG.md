@@ -15,6 +15,13 @@ Fixed:
 - A move whose switch-off failed is now tried again, instead of staying half on while the menu shows it off. When a
   game value cannot be restored, the log now says how many, instead of saying they all were.
 
+Changed, as asked in the comments:
+
+- Dash distance now goes up to 1000 % (was 300 %), and Extra jump height up to 1000 (was 100). The defaults stay
+  200 % and 20.
+- Past 300 %, the dash lasts as long as a 300 % dash, so the game's dash animation plays only once, and starts
+  faster instead: a strong push that slows down to the game's dash speed, then ends as the game's dash does.
+
 Also: unused code and outdated comments removed. The moves feel the same as in 1.0.1.
 
 ## 1.0.1

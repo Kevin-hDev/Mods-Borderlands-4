@@ -194,7 +194,7 @@ game.get_pc = looked_up
 settings.dash_distance.value = 10000
 frame.on_frame(fresh.anim, 400 * S)
 check("a slider typed out of its bounds in the menu is brought back at the next frame, and said so",
-      settings.dash_distance.value == 300 and any("dash_distance=10000" in line for line in state["warnings"]))
+      settings.dash_distance.value == 1000 and any("dash_distance=10000" in line for line in state["warnings"]))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

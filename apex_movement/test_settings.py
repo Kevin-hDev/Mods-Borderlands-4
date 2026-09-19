@@ -26,6 +26,8 @@ switches = [settings.auto_sprint, settings.slides, settings.momentum_slides, set
 check("every switch is on by default", all(option.value is True for option in switches))
 check("the tuning sliders start at Kevin's values", (settings.air_acceleration.value, settings.fall_weight.value,
       settings.jump_height_bonus.value, settings.dash_distance.value) == (24000, 2.0, 20, 200))
+check("the dash distance and the extra jump height go up to 1000, asked in the Nexus comments (Kevin, 2026-09-19)",
+      settings.dash_distance.args[:2] == (100, 1000) and settings.jump_height_bonus.args[:2] == (0, 1000))
 check("the fall weight can still go heavier than its default: Kevin tried 2.1 in session 5",
       settings.fall_weight.args[1] > settings.fall_weight.value)
 check("the Axle slide is off by default", settings.axle_slide.value is False)
@@ -43,8 +45,8 @@ settings.fall_weight.value = 0.0
 settings.walk_speed.value = float("nan")
 settings.slide_speed.value = 1300
 lines = settings.keep_in_bounds()
-check("a hand-edited dash of 10000 percent goes back to the slider's 300: it made a 20 s dash",
-      settings.dash_distance.value == 300)
+check("a hand-edited dash of 10000 percent goes back to the slider's 1000: it made a 20 s dash",
+      settings.dash_distance.value == 1000)
 check("a fall weight of 0 goes back to the slider's 1: it took gravity and every jump away",
       settings.fall_weight.value == 1.0)
 check("a value that is not a number goes back to its default", settings.walk_speed.value == 672)

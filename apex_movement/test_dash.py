@@ -1,4 +1,5 @@
-"""Tests the longer dash: only the full-speed part lengthened, from the game's timing, checked, put back on stop."""
+"""Tests the longer dash: only the full-speed part lengthened up to 300 %, a faster push past it, from the game's own
+dash, checked, put back on stop."""
 
 import pathlib
 import sys
@@ -33,12 +34,23 @@ def notes(text: str) -> int:
     return sum(text in line for line in state["misc"])
 
 
+def distance(shape: dash.Shape) -> float:
+    """Speed x the curve's area, the curve read as the game reads a cubic one: Hermite between points, each tangent
+    times the gap between the two points."""
+    area = 0.0
+    for i in range(len(shape.times) - 1):
+        gap = shape.times[i + 1] - shape.times[i]
+        area += gap * ((shape.values[i] + shape.values[i + 1]) / 2 + gap * (shape.leave[i] - shape.arrive[i + 1]) / 12)
+    return shape.speed * area
+
+
 player = sdk_stubs.FakeCharacter()
 asset = sdk_stubs.dash_asset(state)
 game_timing = dash.read(asset)
-check("the game's timing is read from the duration and every curve point",
-      near(game_timing.duration, 0.33) and game_timing.times == (0.0, 0.15, 0.17, 0.33))
-check("the game's curve starts at full speed", dash.has_full_speed_start(asset))
+check("the game's dash is read: duration, speed and every curve point",
+      near(game_timing.duration, 0.33) and game_timing.speed == 2500.0 and game_timing.times == (0.0, 0.15, 0.17, 0.33)
+      and game_timing.values == (1.0, 1.0, 0.181, 0.48))
+check("the game's curve starts at full speed", dash.has_full_speed_start(game_timing))
 
 longer = dash.lengthened(game_timing, 0.2)
 check("lengthening moves the duration and every point after the first",
@@ -54,7 +66,8 @@ check("the curve points after full speed move by the same time", times(asset) ==
       round(0.17 + extra, 6), round(0.33 + extra, 6)])
 check("the curve's speeds and tangents are left as they are", [key.Value for key in asset._keys] == [1.0, 1.0, 0.181, 0.48]
       and [key.LeaveTangent for key in asset._keys] == [0.0, -2.0, 1.5, 0.0])
-check("the game's timing is kept to put back", dash.close(ownership.original(dash.TIMING_KEY), game_timing))
+check("the game's dash is kept to put back", dash.close(ownership.original(dash.SHAPE_KEY), game_timing))
+check("up to 300 % the speed is the game's", asset.speed.constant == 2500.0)
 check("the change is logged", notes("dash distance 200% lasting 533 ms (game 330 ms)") == 1)
 
 written = asset._duration
@@ -72,6 +85,28 @@ settings.dash_distance.value = 300
 dash.update(player, 2)
 check("a new setting is computed from the game's timing, not the written one",
       near(asset.Duration.constant, 0.33 + 2.0 * 508.0 / 2500.0) and near(asset._keys[1].time, 0.15 + 2.0 * 508.0 / 2500.0))
+at_300 = dash.read(asset)
+# Past 300 % the game's dash animation played again and again (Kevin, 2026-09-19, at 1000 %).
+settings.dash_distance.value = 1000
+dash.update(player, 2)
+pushed = dash.read(asset)
+check("past 300 %, the dash lasts no longer than at 300 %: the game's animation plays once",
+      near(pushed.duration, at_300.duration) and pushed.times == at_300.times)
+check("and goes as far as the setting says: 1000 % is seven game dashes more than 300 %",
+      abs(distance(pushed) - distance(at_300) - 7.0 * 508.0) < 1e-6)
+main = at_300.times[1]
+check("it starts faster than the game's dash", pushed.speed > 2500.0 and near(pushed.values[0], 1.0))
+check("and slows down in a straight line to the game's speed: a push, not a flat run (Kevin)",
+      near(pushed.values[1] * pushed.speed, 2500.0)
+      and near(pushed.leave[0], (pushed.values[1] - 1.0) / main) and near(pushed.arrive[1], pushed.leave[0]))
+check("then ends as the game's dash ends, at the game's speeds",
+      near(pushed.values[2] * pushed.speed, 0.181 * 2500.0) and near(pushed.values[3] * pushed.speed, 0.48 * 2500.0)
+      and near(pushed.leave[2] * pushed.speed, 1.5 * 2500.0))
+check("the log gives the start speed", notes("starting at") == 1)
+check("the game's dash is still the one kept to put back", ownership.original(dash.SHAPE_KEY).speed == 2500.0)
+settings.dash_distance.value = 300
+dash.update(player, 2)
+check("back to 300 %, the game's speed and curve come back", dash.close(dash.read(asset), at_300))
 settings.dash_distance.value = 100
 dash.update(player, 3)
 check("100 % gives the game's own timing", dash.close(dash.read(asset), game_timing))
@@ -79,10 +114,16 @@ settings.dash_distance.value = 200
 dash.update(player, 4)
 
 dash.stop(player)
-check("stop puts the game's timing back", dash.close(dash.read(asset), game_timing) and not ownership.is_owned(dash.TIMING_KEY))
+check("stop puts the game's dash back",
+      dash.close(dash.read(asset), game_timing) and not ownership.is_owned(dash.SHAPE_KEY))
 check("the restore is logged", notes("dash distance off, game dash restored") == 1)
 dash.stop(player)
 check("a stop with nothing written logs nothing", notes("dash distance off") == 1)
+settings.dash_distance.value = 1000
+dash.update(player, 4)
+dash.stop(player)
+check("its speed and curve too, after a push past 300 %", dash.close(dash.read(asset), game_timing))
+settings.dash_distance.value = 200
 
 reshaped = sdk_stubs.FakeDashAsset()
 reshaped._keys[1].Value = 0.9

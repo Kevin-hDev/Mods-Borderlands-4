@@ -92,11 +92,13 @@ slide_max_speed = SliderOption(
 )
 # Kevin, 2026-09-17: further at the game's own speed ("il faut juste qu'il aille plus loin, pas qu'il aille plus vite");
 # 130 then 200 tried with the whole curve stretched, not enough, so up to 300; once only the full-speed part was
-# lengthened (0.6.0), Kevin set 200 back ("on sent mieux le dash sans le bug"): 200 by default.
+# lengthened (0.6.0), Kevin set 200 back ("on sent mieux le dash sans le bug"): 200 by default. Up to 1000, default
+# kept, as players asked in the Nexus comments (Kevin, 2026-09-19); past 300 the dash goes faster, not longer (dash.py).
 dash_distance = SliderOption(
-    "dash_distance", 200, 100, 300, step=5, is_integer=True,
+    "dash_distance", 200, 100, 1000, step=5, is_integer=True,
     display_name="Dash distance",
-    description="Percent of the game's dash distance. The dash lasts longer at the game's own speed. 100 is the game.",
+    description="Percent of the game's dash distance. Up to 300 the dash lasts longer, at the game's own speed; past "
+                "300 it starts faster and slows down to it. 100 is the game.",
 )
 # Axle slide, off by default (Kevin, 2026-09-17: "c'est vraiment un move très spécifique"). Steering belongs to it
 # alone: the normal slide keeps the game's own steering (Kevin: "le mode par défaut n'est pas censé pouvoir se diriger").
@@ -150,10 +152,13 @@ fall_weight = SliderOption(
     display_name="Fall weight",
     description="Gravity multiplier. Jumps keep their height; only the time in the air gets shorter. 1.0 is the game.",
 )
+# Up to 1000, default kept, as players asked in the Nexus comments (Kevin, 2026-09-19). The description gives the scale:
+# nothing else in the menu says how high 1000 is.
 jump_height_bonus = SliderOption(
-    "jump_height_bonus", 20, 0, 100, step=1, is_integer=True,
+    "jump_height_bonus", 20, 0, 1000, step=1, is_integer=True,
     display_name="Extra jump height",
-    description="Added to every jump: standing, sprint, double, slide and ladder jumps.",
+    description="Added to every jump: standing, sprint, double, slide and ladder jumps. The game's standing jump "
+                "rises 198.",
 )
 # Kevin, 2026-09-17: "about twice the character's height" and a wait of "1.5 or 2 seconds" before climbing again after a
 # fall. 370 climbs those 372 (the character is 186 high, measured) in about a second: a starting point, not checked

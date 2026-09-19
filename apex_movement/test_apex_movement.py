@@ -100,7 +100,7 @@ check("disabling writes no error" + (f" (found {new_errors})" if new_errors else
 settings.dash_distance.value = 10000
 mod.enable()
 check("switching on brings a hand-edited setting back within its slider, and says so",
-      settings.dash_distance.value == 300 and any("dash_distance=10000" in line for line in state["warnings"]))
+      settings.dash_distance.value == 1000 and any("dash_distance=10000" in line for line in state["warnings"]))
 
 # The title screen (2026-09-19, 06:40:34): switched off with the character gone and Move_Slide unloaded by the game.
 frame.tick(player.anim, None, None, None)
