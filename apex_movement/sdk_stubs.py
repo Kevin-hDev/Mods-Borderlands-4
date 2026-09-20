@@ -236,6 +236,10 @@ class FakeMovement:
         self.ControlledMoveReplicationData = types.SimpleNamespace(ControlledMove=None, PackedDirection=vector(0.0, 0.0))
         self.CurrentFloor = types.SimpleNamespace(HitResult=types.SimpleNamespace(ImpactNormal=vector(0.0, 0.0, 1.0)))
         self.GravityScale, self.MaxAcceleration, self.AirControl = 1.0, 2048.0, 0.6
+        # Glide attributes, with the game's values read on 2026-09-20: a pair whose Value the game computes from
+        # its BaseValue, as the vehicle attributes do.
+        self.GlidingSpeed = types.SimpleNamespace(BaseValue=1200.0, Value=1200.0)
+        self.GlidingAcceleration = types.SimpleNamespace(BaseValue=400.0, Value=400.0)
         self.ReplicatedMantleState = types.SimpleNamespace(ActionIndex=-1)
         self.mantle_allowed = False
         # What the game answers when asked whether it performs a controlled move; the copy above can say otherwise.

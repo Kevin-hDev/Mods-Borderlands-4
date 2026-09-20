@@ -30,6 +30,11 @@ dash = BoolOption(
     display_name="Enabled",
     description="A longer dash. Turned off, the dash is the game's own again.",
 )
+glide = BoolOption(
+    "glide", True,
+    display_name="Enabled",
+    description="A faster glide. Turned off, the glide is the game's own again.",
+)
 # One switch for both: they share the crouch key being blocked, which is what removes the game's own held-crouch slam
 # (air_crouch, 2026-09-18). The description says what comes back when it is turned off.
 air_crouch = BoolOption(
@@ -94,6 +99,14 @@ slide_max_speed = SliderOption(
 # 130 then 200 tried with the whole curve stretched, not enough, so up to 300; once only the full-speed part was
 # lengthened (0.6.0), Kevin set 200 back ("on sent mieux le dash sans le bug"): 200 by default. Up to 1000, default
 # kept, as players asked in the Nexus comments (Kevin, 2026-09-19); past 300 the dash goes faster, not longer (dash.py).
+# The game's glide tops out at 1200 in every direction, measured on 2026-09-20. 130 % is Kevin's ask; the ceiling is
+# 250 %, which is 3000, the speed of the game's own "extended" glide profile: the mod stays inside what the game ships.
+glide_speed = SliderOption(
+    "glide_speed", 130, 100, 250, step=5, is_integer=True,
+    display_name="Glide speed",
+    description="Percent of the game's glide speed, in every direction. The acceleration rises with it, so a short "
+                "glide gains as much as a long one. The descent does not change, so a faster glide also goes further.",
+)
 dash_distance = SliderOption(
     "dash_distance", 200, 100, 1000, step=5, is_integer=True,
     display_name="Dash distance",

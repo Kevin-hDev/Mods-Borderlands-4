@@ -11,11 +11,11 @@ from typing import Any
 from mods_base import build_mod
 
 from . import (
-    air_crouch, air_strafe, dash, family, frame, ground_speed, heavier_fall, jump_report, menu, move_watch, ownership,
-    pack, report, settings, slide, slide_direction, slide_physics, slide_steering, sprint, wall_climb,
+    air_crouch, air_strafe, dash, family, frame, glide, ground_speed, heavier_fall, jump_report, menu, move_watch,
+    ownership, pack, report, settings, slide, slide_direction, slide_physics, slide_steering, sprint, wall_climb,
 )
 
-__version__ = "1.0.2"
+__version__ = "1.1.0"
 __author__ = "kevin-hDev"
 
 
@@ -36,6 +36,7 @@ _register("momentum_slides", slide_direction, settings.slides, settings.momentum
 # The Axle slide's switch: off, the normal slide keeps the game's steering. Its boosts are read by slide and slide_physics.
 _register("slide_steering", slide_steering, settings.slides, settings.axle_slide)
 _register("dash", dash, settings.dash)
+_register("glide", glide, settings.glide)
 _register("air_crouch", air_crouch, settings.air_crouch)
 _register("air_strafe", air_strafe, settings.air_strafe)
 _register("heavier_fall", heavier_fall, settings.heavier_fall)

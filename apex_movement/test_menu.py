@@ -22,7 +22,7 @@ def check(label: str, condition: bool) -> None:
 
 
 check("the menu holds one line per movement, named as the game names it", [group.display_name for group in menu.MENU]
-      == ["Movement", "Auto sprint (On)", "Slides (On)", "Axle slide (Off)", "Dash (On)",
+      == ["Movement", "Auto sprint (On)", "Slides (On)", "Axle slide (Off)", "Dash (On)", "Glide (On)",
           "Ground slam and landing slide (On)", "Air / tap strafe (On)", "Heavier fall (On)", "Wall climb (On)"])
 check("the speeds have their own line, apart from the auto sprint switch",
       menu.movement.children == [settings.walk_speed, settings.sprint_speed]
@@ -37,6 +37,7 @@ check("the Axle slide holds its switch, steering and three boosts", menu.axle_sl
     settings.axle_slope_boost,
 ])
 check("the dash holds its switch and its distance", menu.dash.children == [settings.dash, settings.dash_distance])
+check("the glide holds its switch and its speed", menu.glide.children == [settings.glide, settings.glide_speed])
 check("the slam line holds its landing minimum, since the same switch carries both",
       settings.landing_slide_min_speed in menu.air_crouch.children)
 check("air strafe holds its acceleration", settings.air_acceleration in menu.air_strafe.children)
@@ -45,7 +46,7 @@ check("the wall climb holds its switch, height, speed, diagonal and wait", menu.
 ])
 
 every_option = [option for group in menu.MENU for option in group.children]
-check("every setting appears exactly once", len(every_option) == len(set(map(id, every_option))) == 28)
+check("every setting appears exactly once", len(every_option) == len(set(map(id, every_option))) == 30)
 check("group identifiers differ from the old top-level ones, so old settings files load cleanly",
       {group.identifier for group in menu.MENU}.isdisjoint({option.identifier for option in every_option}))
 

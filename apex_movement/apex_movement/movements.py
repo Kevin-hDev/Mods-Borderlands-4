@@ -48,6 +48,7 @@ MOVEMENTS = (
                                "(2026-09-18): it keeps its own line because it is off by default and has five "
                                "settings of its own"),
     Movement("Dash", ("dash",), ("dash_menu",), "apex_dash", "Apex Dash"),
+    Movement("Glide", ("glide",), ("glide_menu",), "apex_glide", "Apex Glide"),
     # Two moves under one switch: both need the crouch key blocked, and that block is what removes the game's own slam
     # on a held crouch; two switches would allow a state where the block stays on while the player asked for neither,
     # losing them the held-crouch slam with no way to tell why (Kevin, 2026-09-18). A comment rather than a field: no

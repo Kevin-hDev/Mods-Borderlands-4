@@ -59,6 +59,10 @@ dash = _group(
     "dash_menu", "Dash", "How far a dash goes, at the game's own speed.",
     settings.dash, settings.dash_distance,
 )
+glide = _group(
+    "glide_menu", "Glide", "How fast you glide when you hold jump in the air.",
+    settings.glide, settings.glide_speed,
+)
 # One line for both: they share the blocked crouch key, and that block is what removes the game's own held-crouch
 # slam, so they are turned on and off together (air_crouch, 2026-09-18).
 air_crouch = _group(
@@ -79,7 +83,7 @@ wall_climb = _group(
     settings.wall_climb, settings.climb_height, settings.climb_speed, settings.climb_lean, settings.reclimb_delay,
 )
 
-ALL = [movement, auto_sprint, slides, axle_slide, dash, air_crouch, air_strafe, heavier_fall, wall_climb]
+ALL = [movement, auto_sprint, slides, axle_slide, dash, glide, air_crouch, air_strafe, heavier_fall, wall_climb]
 
 
 def carried() -> list[Any]:

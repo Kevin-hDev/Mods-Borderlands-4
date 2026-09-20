@@ -19,6 +19,7 @@ and a line of the Nexus page name the same move.
 | Slides | Follow the way you are going, not the way you are aiming; slowed uphill, carried downhill | yes |
 | Axle slide | Axle's slide from Apex: steered with the move stick, and boosted every time | no |
 | Dash | Goes further, at the game's own speed: its length changes, not its speed | yes |
+| Glide | Hold jump in the air and glide faster, in every direction; the descent is the game's own | yes |
 | Ground slam and landing slide | Jump + crouch together to slam, and crouch held in the air to slide the moment you land | yes |
 | Air / tap strafe | Change direction in the air almost at once, and start and stop faster on the ground | yes |
 | Heavier fall | Come down faster while every jump keeps its height, plus a little extra height | yes |
