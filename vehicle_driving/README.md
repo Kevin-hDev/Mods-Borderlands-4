@@ -4,7 +4,8 @@ Livelier vehicles for Borderlands 4: a higher top speed, a quicker pick-up, shar
 that keeps the vehicle going where it faces instead of sliding on through turns. Every effect has its own setting in
 the mod menu.
 
-Built and tested on game version **1.8.1-4709277**, single player, with a controller, on three different vehicles.
+Created and tested on game versions **1.8.1-4709277** through **1.10.2-4845623**, single player, with a controller,
+on three different vehicles. It has not been tested on versions older than 1.8.1-4709277 and may not work there.
 
 ## The settings
 
