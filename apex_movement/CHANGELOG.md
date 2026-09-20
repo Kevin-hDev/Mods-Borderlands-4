@@ -2,9 +2,10 @@
 
 ## 1.1.0
 
-Added: **Glide**, a new move. Hold jump in the air as you already do, and the glide goes faster — sideways and
-backwards too, since the game's own glide already allows every direction. Its line in the mod menu has its own
-switch and one setting, Glide speed, from 100 to 250 % of the game's speed, 130 % by default.
+Added: **Glide**, a new setting for the game's own glide — nothing new to learn, nothing new to press. Hold jump in
+the air as you already do, and the glide goes faster: sideways and backwards too, since the game's glide already
+allows every direction. Its line in the mod menu has its own switch and one setting, Glide speed, from 100 to
+250 % of the game's speed, 130 % by default.
 
 The game's glide tops out at 1200 in every direction; at 130 % it tops out at 1560, and the acceleration rises with
 it so a short glide gains as much as a long one. 250 % is 3000, the speed of the game's own extended glide.
