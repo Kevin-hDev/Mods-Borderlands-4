@@ -3,8 +3,9 @@
 Sprint in every direction in Borderlands 4: sideways, diagonally and backwards, while the camera stays free. It is the
 game's own sprint, at the game's own speed: the mod only lifts the angle limit that stops it.
 
-Built and tested on game version **1.8.1-4709277**, single player, with a controller and a keyboard, with two
-characters.
+Created and tested on game versions **1.8.1-4709277** through **1.10.2-4845623**, single player, with a controller
+and a keyboard, with two characters. It has not been tested on versions older than 1.8.1-4709277 and may not work
+there.
 
 ## What it does
 

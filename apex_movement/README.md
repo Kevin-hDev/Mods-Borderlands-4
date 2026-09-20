@@ -3,7 +3,9 @@
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.
 
-Built and tested on game version **1.8.1-4709277**, in the first area of the game, single player, with both a controller and mouse and keyboard.
+Created and tested on game versions **1.8.1-4709277** through **1.10.2-4845623**, in the first area of the game,
+single player, with both a controller and mouse and keyboard. It has not been tested on versions older than
+1.8.1-4709277 and may not work there.
 
 ## The moves
 
