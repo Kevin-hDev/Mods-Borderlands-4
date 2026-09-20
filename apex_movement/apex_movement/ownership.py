@@ -6,6 +6,7 @@ destroyed object; asset values (Move_Slide, jump goals) outlive characters and a
 has unloaded the asset: it then loads it again from its files, with its own values.
 """
 
+import enum
 from typing import Any, Callable, Iterable
 
 CHARACTER = "character"
@@ -34,12 +35,22 @@ def loaded(asset: Any) -> Any:
     return asset
 
 
-def write(key: str, scope: str, get: Callable[[], Any], put: Callable[[Any], None], value: Any) -> None:
-    if key not in _entries:
-        _entries[key] = {"scope": scope, "put": put, "original": get()}
-    else:
-        _entries[key]["put"] = put
+def claim(key: str, scope: str, get: Callable[[], Any], put: Callable[[Any], None]) -> None:
+    """Takes a value the mod holds without writing it again, the game already holding what the movement wants.
+
+    A value the mod does not own is a value it never gives back. Until 2026-09-20 a movement simply returned here,
+    so a value whose record had been lost stayed in the game for good: the movement never wrote it again, since it
+    already read right, and the mod had nothing left to put back.
+    """
+    if key in _entries:
+        _entries[key]["get"], _entries[key]["put"] = get, put
         _entries[key].pop("unloaded", None)
+        return
+    _entries[key] = {"scope": scope, "get": get, "put": put, "original": get()}
+
+
+def write(key: str, scope: str, get: Callable[[], Any], put: Callable[[Any], None], value: Any) -> None:
+    claim(key, scope, get, put)
     put(value)
 
 
@@ -49,6 +60,32 @@ def is_owned(key: str) -> bool:
 
 def original(key: str) -> Any:
     return _entries[key]["original"]
+
+
+def _checkable(value: Any) -> bool:
+    """Whether a value read back can be compared without guessing: numbers, flags, enums and tuples of those.
+
+    A curve or a game struct is left unchecked rather than called wrong on a comparison the SDK does not define.
+    """
+    if isinstance(value, tuple):
+        return bool(value) and all(_checkable(item) for item in value)
+    return isinstance(value, (bool, int, float, enum.Enum))
+
+
+def _left_behind(key: str, entry: dict[str, Any]) -> str | None:
+    """What the game still holds after a put that raised nothing, when that is not what was put back.
+
+    A put that changes nothing raises nothing either: on 2026-09-20 the mod announced every value restored while
+    the game kept the gravity it had been given.
+    """
+    original = entry["original"]
+    if not _checkable(original):
+        return None
+    try:
+        current = entry["get"]()
+    except Exception as exc:
+        return f"{key} was put back but cannot be read again: {exc!r}"
+    return None if current == original else f"{key} still reads {current!r} after putting {original!r} back"
 
 
 def restore(key: str) -> None:
@@ -62,6 +99,11 @@ def restore(key: str) -> None:
         # the asset again keeps the game's value it already has; written as ten false errors until 2026-09-19.
         entry["unloaded"] = True
         return
+    left = _left_behind(key, entry)
+    if left is not None:
+        # Kept owned, like a put that raised: the game's value is still here for the next try, and the mod says so
+        # instead of announcing a value it never put back.
+        raise RuntimeError(left)
     # Forgotten only once put back: after a put that fails, the game's value is still here for the next try instead of
     # lost for good.
     del _entries[key]

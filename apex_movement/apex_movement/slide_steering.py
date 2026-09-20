@@ -33,6 +33,7 @@ def update(character: Any, now_ns: int) -> None:
         return
     rate = float(settings.axle_steering.value)
     if abs(_read() - rate) <= ownership.TOLERANCE:
+        ownership.claim(RATE_KEY, ownership.ASSET, _read, _put)
         return
     ownership.write(RATE_KEY, ownership.ASSET, _read, _put, rate)
     report.note(f"axle slide steering {rate:.0f} degrees a second")

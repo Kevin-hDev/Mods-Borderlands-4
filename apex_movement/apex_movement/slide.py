@@ -41,6 +41,10 @@ def find_asset() -> Any:
     return asset
 
 
+def _speed_constant() -> float:
+    return float(ownership.loaded(game.slide_asset()).speed.constant)
+
+
 def _put_constant(value: float) -> None:
     asset = ownership.loaded(game.slide_asset())
     speed = asset.speed
@@ -65,8 +69,9 @@ def _set_start_speed(movement: Any, target: float) -> None:
     # Start speed = constant x speed bonus x curve at time 0 (720 x 1.15 x 1.1017 = 912, verified in game).
     wanted = target / divisor
     if abs(float(asset.speed.constant) - wanted) <= ownership.SPEED_TOLERANCE:
+        ownership.claim(SPEED_KEY, ownership.ASSET, _speed_constant, _put_constant)
         return
-    ownership.write(SPEED_KEY, ownership.ASSET, lambda: float(game.slide_asset().speed.constant), _put_constant, wanted)
+    ownership.write(SPEED_KEY, ownership.ASSET, _speed_constant, _put_constant, wanted)
     report.note(f"slide start speed {target:.0f} (constant {wanted:.0f})")
 
 

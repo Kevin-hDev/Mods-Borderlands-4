@@ -52,12 +52,15 @@ def reset() -> None:
     air_jumps.reset()
 
 
+def _hold_of(pointer: Any) -> float:
+    return float(getattr(ownership.loaded(pointer()), HOLD_FIELD))
+
+
 def _put_hold(pointer: Any, value: float) -> None:
     # Gone after a return to the title screen: writing into it could bring the game down (review, 2026-09-19), and the
-    # next controller starts from the game's own hold anyway.
-    pc = pointer()
-    if pc is not None:
-        setattr(pc, HOLD_FIELD, value)
+    # next controller starts from the game's own hold anyway. Said as unloaded rather than silently: a put that
+    # changes nothing must not read as a value given back (2026-09-20).
+    setattr(ownership.loaded(pointer()), HOLD_FIELD, value)
 
 
 def _mantle_without_jump_key() -> None:
@@ -66,7 +69,7 @@ def _mantle_without_jump_key() -> None:
         return
     # Asset scope: the controller outlives the character, so its value is put back even after a level change.
     pointer = unreal.WeakPointer(pc)
-    ownership.write(HOLD_KEY, ownership.ASSET, lambda: float(getattr(pc, HOLD_FIELD)),
+    ownership.write(HOLD_KEY, ownership.ASSET, lambda: _hold_of(pointer),
                     lambda value: _put_hold(pointer, value), 0.0)
     report.note("mantle without the jump key on")
 

@@ -32,9 +32,16 @@ def _game_value(key: str, goal: Any, field: str) -> float:
 
 
 def _write(key: str, scope: str, target: Any, field: str, value: float) -> bool:
-    if abs(float(getattr(target, field)) - value) <= 0.01:
+    def read() -> float:
+        return float(getattr(target, field))
+
+    def put(new: float) -> None:
+        setattr(target, field, new)
+
+    if abs(read() - value) <= 0.01:
+        ownership.claim(key, scope, read, put)
         return False
-    ownership.write(key, scope, lambda: float(getattr(target, field)), lambda v: setattr(target, field, v), value)
+    ownership.write(key, scope, read, put, value)
     return True
 
 

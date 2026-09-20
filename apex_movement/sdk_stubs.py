@@ -412,13 +412,13 @@ def install() -> dict:
 
     class WeakPointer:
         """As pyunrealsdk's (sdk_mods/.stubs/unrealsdk/unreal/_weak_pointer.pyi): calling it gives the object back, or
-        None once the game destroyed it. A test destroys one by clearing `obj`."""
+        None once the game destroyed it, which a test does with sdk_stubs.destroy."""
 
         def __init__(self, obj: Any = None) -> None:
             self.obj = obj
 
         def __call__(self) -> Any:
-            return self.obj
+            return None if getattr(self.obj, "destroyed", False) else self.obj
 
     unreal_module = types.ModuleType("unrealsdk.unreal")
     unreal_module.BoundFunction = BoundFunction
@@ -482,6 +482,12 @@ def dash_asset(state: dict) -> Any:
 
 class FakeLocalPlayer:
     """Compared by identity, as game objects are: each controller has its own local player."""
+
+
+def destroy(character: Any) -> None:
+    """The game destroys an object, as a level change destroys the player character: every weak pointer to it then
+    answers None, while the Python object stays in the test's hands."""
+    character.destroyed = True
 
 
 def use_character(state: dict, character: Any) -> None:

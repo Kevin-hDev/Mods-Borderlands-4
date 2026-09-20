@@ -53,11 +53,18 @@ def _hold(movement: Any, key: str, name: str, factor: float) -> None:
         # A game update that renames the field: the glide stays the game's own rather than the movement failing.
         report.error_once(key, f"the game has no {name} any more: the glide keeps the game's own speed")
         return
-    game = ownership.original(key) if ownership.is_owned(key) else _read(pair)
+    def read() -> tuple[float, float]:
+        return _read(_pair(movement, name))
+
+    def put(values: tuple[float, float]) -> None:
+        _put(movement, name, values)
+
+    game = ownership.original(key) if ownership.is_owned(key) else read()
     wanted = (game[0] * factor, game[1] * factor)
-    if all(abs(now - target) <= ownership.SPEED_TOLERANCE for now, target in zip(_read(pair), wanted)):
+    if all(abs(now - target) <= ownership.SPEED_TOLERANCE for now, target in zip(read(), wanted)):
+        ownership.claim(key, ownership.CHARACTER, read, put)
         return
-    ownership.write(key, ownership.CHARACTER, lambda: game, lambda values: _put(movement, name, values), wanted)
+    ownership.write(key, ownership.CHARACTER, read, put, wanted)
     report.note(f"glide {name} {wanted[0]:.0f} (game {game[0]:.0f})")
 
 

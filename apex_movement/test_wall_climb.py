@@ -280,8 +280,9 @@ for pointer in pointers:
         pointer.obj = None
 wall_climb.stop(player)
 check("a controller the game destroyed is never written: back at the title screen, switching off wrote into it "
-      "(review, 2026-09-19)",
-      pc.MinPassiveMantleButtonHoldDuration == 0.0 and not ownership.is_owned(wall_climb.HOLD_KEY))
+      "(review, 2026-09-19)", pc.MinPassiveMantleButtonHoldDuration == 0.0)
+check("and the mod says the value was left to the game rather than counting it as given back (2026-09-20)",
+      ownership.is_owned(wall_climb.HOLD_KEY) and ownership.unloaded_count() >= 1)
 
 # A settings file edited by hand is brought back within the sliders by settings.keep_in_bounds, when the mod
 # is switched on: the climb reads the sliders as they are.

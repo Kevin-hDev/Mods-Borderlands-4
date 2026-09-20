@@ -21,10 +21,16 @@ def reset() -> None:
 
 
 def _write(movement: Any, key: str, field: str, value: float) -> bool:
-    if abs(float(getattr(movement, field)) - value) <= 0.01:
+    def read() -> float:
+        return float(getattr(movement, field))
+
+    def put(new: float) -> None:
+        setattr(movement, field, new)
+
+    if abs(read() - value) <= 0.01:
+        ownership.claim(key, ownership.CHARACTER, read, put)
         return False
-    ownership.write(key, ownership.CHARACTER, lambda: float(getattr(movement, field)),
-                    lambda v: setattr(movement, field, v), value)
+    ownership.write(key, ownership.CHARACTER, read, put, value)
     return True
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.1
+
+Fixed: after riding a vehicle, turning a move off, or the whole mod, left its values in the game. The walk speed,
+the air strafe and the heavier gravity stayed until the next launch, and the log said every value had been put
+back. Getting into a vehicle takes your character away from you and gives the same one back when you get out; the
+mod read that return as a new game, and forgot what it had borrowed.
+
+The mod now keeps what it holds even when it has nothing to write, and reads the value back before saying the game
+has it again.
+
+The moves themselves are unchanged.
+
 ## 1.1.0
 
 Added: **Glide**, a new setting for the game's own glide — nothing new to learn, nothing new to press. Hold jump in

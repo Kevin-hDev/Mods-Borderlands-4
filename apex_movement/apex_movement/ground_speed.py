@@ -19,14 +19,16 @@ def reset() -> None:
 
 
 def _set_floor(movement: Any, speed: float) -> None:
-    if abs(float(movement.MinAnalogWalkSpeed) - speed) <= ownership.SPEED_TOLERANCE:
+    def read() -> float:
+        return float(movement.MinAnalogWalkSpeed)
+
+    def put(value: float) -> None:
+        movement.MinAnalogWalkSpeed = value
+
+    if abs(read() - speed) <= ownership.SPEED_TOLERANCE:
+        ownership.claim(FLOOR_KEY, ownership.CHARACTER, read, put)
         return
-    ownership.write(
-        FLOOR_KEY, ownership.CHARACTER,
-        lambda: movement.MinAnalogWalkSpeed,
-        lambda value: setattr(movement, "MinAnalogWalkSpeed", value),
-        speed,
-    )
+    ownership.write(FLOOR_KEY, ownership.CHARACTER, read, put, speed)
     report.note(f"ground speed {speed:.0f}")
 
 

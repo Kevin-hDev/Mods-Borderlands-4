@@ -136,10 +136,30 @@ sdk_stubs.use_character(state, player)
 frame.on_frame(player.anim, 50 * S)
 ownership.write("test.character_value", ownership.CHARACTER, lambda: holder.value,
                 lambda value: setattr(holder, "value", value), 2.0)
+sdk_stubs.destroy(player)
 state["pc"].OakCharacter = None
 frame.stop_all()
 check("switched off at the title screen, a value of the character the game destroyed is forgotten, not written into "
       "it (review, 2026-09-19)", holder.value == 2.0 and not ownership.is_owned("test.character_value"))
+
+# A vehicle takes the character away from the player and gives the same one back, alive, with everything the mod
+# wrote still on it. Forgetting then leaves those values in the game for good: the mod no longer owns them, so it
+# never writes them again — they already hold the wanted value — and switching it off puts nothing back. Kevin's
+# session of 2026-09-20 ended with the game's gravity at 2 and the mod saying every value was restored.
+rider = sdk_stubs.FakeCharacter()
+sdk_stubs.use_character(state, rider)
+frame.on_frame(rider.anim, 60 * S)
+gravity = types.SimpleNamespace(value=1.0)
+ownership.write("ride.gravity", ownership.CHARACTER, lambda: gravity.value,
+                lambda value: setattr(gravity, "value", value), 2.0)
+state["pc"].OakCharacter = None
+frame.on_frame(rider.anim, 61 * S)
+check("riding a vehicle does not forget what the mod wrote on the character", ownership.is_owned("ride.gravity"))
+sdk_stubs.use_character(state, rider)
+frame.on_frame(rider.anim, 62 * S)
+check("coming back to the same character is not a level change", ownership.is_owned("ride.gravity"))
+frame.stop_all()
+check("and the game's own value comes back when the mod is switched off after a ride", gravity.value == 1.0)
 
 
 

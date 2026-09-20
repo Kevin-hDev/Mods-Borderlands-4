@@ -19,15 +19,21 @@ SLIDE_ASSET = ("OakControlledMove", "/Game/PlayerCharacters/_Shared/Tricks/Contr
 DASH_ASSET = ("OakControlledMove", "/Game/PlayerCharacters/_Shared/Tricks/ControlledMoves/Move_Dash.Move_Dash")
 CLIMB_ANIMATION = ("AnimSequence",
                    "/Game/PlayerCharacters/_Shared/Animation/1st/SharedSkills/AS_Wall_Climb_U.AS_Wall_Climb_U")
-# What refresh found changed: a new character clears what the movements wrote on the old one, a new animation on the
-# same character clears nothing, since the character still carries every value written on it.
+# What refresh found changed. A new character clears what the movements wrote on the old one; a new animation on the
+# same character clears nothing, since the character still carries every value written on it. AWAY is the player
+# leaving their character for a vehicle, and coming back to that same character: nothing was lost, so nothing is
+# forgotten. Treating that as a new character left a gravity of 2 in the game for good (Kevin, 2026-09-20).
 CHARACTER = "character"
 ANIMATION = "animation"
+AWAY = "away"
 
 _character: Any = None
 # What character() gives: none as soon as the game destroys the character. Key presses reach the mod outside the frame
 # loop, up to REFRESH_NS after a level change, and must not read a destroyed character (review, 2026-09-19).
 _character_pointer: Any = None
+# The last character found, kept while the player rides a vehicle so that what was written on it can still be put
+# back; it answers None once the game has destroyed it, and only then are its values forgotten.
+_last_pointer: Any = None
 _anim: Any = None
 # Keyed by the fixed asset names above only, so it never holds more than those.
 _assets: dict[tuple[str, str], Any] = {}
@@ -37,7 +43,7 @@ _next_refresh_ns = 0
 def refresh(now_ns: int, at_once: bool = False) -> str:
     """Looks the player up again when due, or at once; says what changed since the last look, CHARACTER, ANIMATION
     or ""."""
-    global _character, _character_pointer, _anim, _next_refresh_ns
+    global _character, _character_pointer, _last_pointer, _anim, _next_refresh_ns
     if now_ns < _next_refresh_ns and not at_once:
         return ""
     _next_refresh_ns = now_ns + REFRESH_NS
@@ -52,15 +58,23 @@ def refresh(now_ns: int, at_once: bool = False) -> str:
         _anim = anim
         arms.forget()
         return ANIMATION
+    replaced = found is not None and found != last_character()
     _character, _anim = found, anim
     _character_pointer = unreal.WeakPointer(found) if found is not None else None
+    if found is not None:
+        _last_pointer = _character_pointer
     arms.forget()
     _assets.clear()
-    return CHARACTER
+    return CHARACTER if replaced else AWAY
 
 
 def character() -> Any:
     return _character_pointer() if _character_pointer is not None else None
+
+
+def last_character() -> Any:
+    """The character the mod last wrote on, even while the player rides a vehicle; None once the game destroyed it."""
+    return _last_pointer() if _last_pointer is not None else None
 
 
 def controller() -> Any:
@@ -100,8 +114,8 @@ def climb_animation() -> Any:
 
 
 def forget() -> None:
-    global _character, _character_pointer, _anim, _next_refresh_ns
-    _character = _character_pointer = _anim = None
+    global _character, _character_pointer, _last_pointer, _anim, _next_refresh_ns
+    _character = _character_pointer = _last_pointer = _anim = None
     arms.forget()
     _assets.clear()
     _next_refresh_ns = 0

@@ -125,5 +125,45 @@ check("a value that could not be put back stays owned, with the game's own value
 ownership.write("broken", ownership.ASSET, lambda: 2.0, lambda value: None, 3.0)
 check("so a later write does not take the mod's value for the game's", ownership.original("broken") == 1.0)
 
+# Owning without writing: the game already holds what the movement wants, and a value the mod does not own is a
+# value it never gives back (2026-09-20).
+kept = types.SimpleNamespace(value=5.0)
+ownership.claim("kept", ownership.CHARACTER, *accessors(kept, "value"))
+check("claiming a value writes nothing", kept.value == 5.0)
+check("but the mod owns it and knows the game's own value",
+      ownership.is_owned("kept") and ownership.original("kept") == 5.0)
+kept.value = 9.0
+ownership.restore("kept")
+check("so it is given back even though the mod never wrote it", kept.value == 5.0)
+
+twice = types.SimpleNamespace(value=1.0)
+ownership.write("twice", ownership.CHARACTER, *accessors(twice, "value"), 2.0)
+ownership.claim("twice", ownership.CHARACTER, *accessors(twice, "value"))
+check("claiming a value already owned keeps the game's value, not the mod's", ownership.original("twice") == 1.0)
+ownership.restore("twice")
+
+# A put that changes nothing raises nothing either: on 2026-09-20 the mod announced every value restored while the
+# game kept the gravity it had been given.
+stuck = types.SimpleNamespace(value=1.0)
+ownership.write("stuck", ownership.CHARACTER, *accessors(stuck, "value"), 2.0)
+ownership._entries["stuck"]["put"] = lambda value: None
+failures = ownership.restore_each(["stuck"])
+check("a value the game did not take back is reported instead of counted as given back",
+      len(failures) == 1 and "still reads 2.0 after putting 1.0 back" in failures[0])
+check("and it stays owned, with the game's own value",
+      ownership.is_owned("stuck") and ownership.original("stuck") == 1.0)
+
+unreadable = types.SimpleNamespace(value=1.0)
+ownership.write("unreadable", ownership.CHARACTER, *accessors(unreadable, "value"), 2.0)
+ownership._entries["unreadable"]["get"] = lambda: (_ for _ in ()).throw(RuntimeError("gone"))
+check("a value that cannot be read again is reported, not raised",
+      "cannot be read again" in ownership.restore_each(["unreadable"])[0])
+
+curve = types.SimpleNamespace(value=types.SimpleNamespace(keys=[1.0, 2.0]))
+ownership.write("curve", ownership.ASSET, *accessors(curve, "value"), "other")
+ownership._entries["curve"]["put"] = lambda value: None
+check("a value the mod cannot compare is left alone rather than called wrong",
+      ownership.restore_each(["curve"]) == [] and not ownership.is_owned("curve"))
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

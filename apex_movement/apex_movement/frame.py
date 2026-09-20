@@ -47,11 +47,19 @@ def _stop(name: str, movement: Any, character: Any) -> None:
     _active.discard(name)
 
 
+_CHANGE_TEXT = {
+    game.CHARACTER: "character changed",
+    game.ANIMATION: "animation changed",
+    game.AWAY: "left the character, or came back to the same one",
+}
+
+
 def _tell_player(change: str) -> None:
     global _player_lines
     if _player_lines < MAX_PLAYER_LINES:
         _player_lines += 1
-        report.note(f"player {change} changed, character={_name(game.character())} animation={_name(game.anim())}")
+        report.note(f"player {_CHANGE_TEXT[change]}, character={_name(game.character())}"
+                    f" animation={_name(game.anim())}")
 
 
 def on_frame(obj: Any, now_ns: int) -> None:
@@ -99,8 +107,10 @@ def stop_all() -> list[str]:
     global _player_lines
     _player_lines = 0
     # Looked up now rather than up to a second ago: switched off at the title screen, the character is gone, and its
-    # values are forgotten instead of written into it (review, 2026-09-19).
-    if game.refresh(time.perf_counter_ns(), at_once=True) == game.CHARACTER:
+    # values are forgotten instead of written into it (review, 2026-09-19). A character merely put aside by a
+    # vehicle is still alive, and its values are put back into it (2026-09-20).
+    game.refresh(time.perf_counter_ns(), at_once=True)
+    if game.last_character() is None:
         ownership.forget_character()
     character = game.character()
     for name, _, movement in _movements:
