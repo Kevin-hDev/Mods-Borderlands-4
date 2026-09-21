@@ -1,0 +1,41 @@
+{
+    "options": {
+        "shot_menu": {
+            "grapple_range": 3000,
+            "hook_speed": 5000,
+            "melee_wins": true,
+            "punch_range": 200,
+            "keep_game_grapple": true,
+            "show_rope": true
+        },
+        "pull_menu": {
+            "pull_strength": 1.7,
+            "pull_speed_cap": 2500,
+            "rope_carry": 100,
+            "steer_strength": 2.0,
+            "steer_speed_cap": 1000
+        },
+        "release_menu": {
+            "release_on_key_up": true,
+            "arrival_distance": 600,
+            "longest_pull": 4.0,
+            "takeoff_lift": 250,
+            "ground_grace": 0.35,
+            "release_on_landing": true,
+            "block_jump": true
+        },
+        "controls_menu": {
+            "keyboard_controls": {
+                "keyboard_mode": "One key",
+                "keyboard_first": "V",
+                "keyboard_second": null
+            },
+            "gamepad_controls": {
+                "gamepad_mode": "One key",
+                "gamepad_first": "Gamepad_RightThumbstick",
+                "gamepad_second": null
+            }
+        }
+    },
+    "enabled": true
+}

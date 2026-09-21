@@ -4,7 +4,8 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 
 | Mod | What it does | Version |
 |---|---|---|
-| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing | 1.0.2 |
+| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing | 1.1.2 |
+| [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.1 |
 | [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns | 1.0.0 |
 | [Omni Sprint](omni_sprint/) | Sprint in every direction, sideways and backwards, at the game's own sprint speed | 1.0.0 |
 
@@ -14,7 +15,7 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 2. Put the mod's `.sdkmod` file into `...\Borderlands 4\sdk_mods\`
 3. Launch the game, open the console with `~`, type `mods`.
 
-Ready-made `.sdkmod` files are on Nexus Mods. A `.sdkmod` is a zip archive of the mod's package folder with its extension changed, so you can also build one yourself from the sources here.
+See each mod's README for distribution and build instructions. A `.sdkmod` is a zip archive of the mod's package folder with its extension changed, so you can also build one yourself from the sources here.
 
 ## Reporting a problem
 
@@ -22,20 +23,20 @@ Open an issue, and say what you were doing when it happened, where you were, and
 
 ## Running the tests
 
-Each module has its test file next to it. They need nothing installed: they replace the game's SDK with stand-in objects.
+Tests are provided alongside each mod. Most replace the game's SDK with stand-in objects and run with Python alone. Apex Grapple also has two optional integration tests that read an installed console menu; see its README for setup.
 
 ```
 cd apex_movement
 python test_wall_climb.py
 ```
 
-Every test file prints a `RESULTAT:` line and exits with a non-zero code when something fails.
+Run each test script separately. A failing test exits with a non-zero code; optional integration tests print `SKIP` when their SDK input is not configured.
 
-## Permissions
+## License
 
-- Translations: allowed, tell me and I will link to yours.
-- Patches or mods built on these: allowed, as long as you make the original a requirement instead of copying its code into yours, and credit it with a link.
-- Reuploading these mods as they are, anywhere else: not allowed.
+The original code in this repository is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Kevin-hDev.
+
+Apex Grapple's bundled Anton and Barlow Condensed fonts retain their SIL Open Font License 1.1; their license files are included in its `assets` directory. Game assets and the Borderlands 4 SDK are not relicensed by this repository.
 
 ## Credits
 
