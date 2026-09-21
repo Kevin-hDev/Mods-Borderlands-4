@@ -12,14 +12,25 @@ Past 300 % the dash lasts no longer: through a longer dash the game's dash anima
 faster instead, then slows down in a straight line to the game's speed and ends as the game's dash ends (Kevin: "la
 poussée du début doit être puissante mais il doit y avoir une perte de vitesse du début à l'arrivée, ça doit rester
 une propulsion").
+
+That push lives in the speed curve alone, and speed.constant keeps the game's value. Loveless's dash,
+Move_Dash_Robodealer, follows its curve and its duration but not speed.constant: with 15282 written there, it ran
+2465 -> 407 -> 76 -> 196, the curve Apex wrote times the game's 2500, frame for frame (2026-09-21). Move_Dash
+multiplies the two, so the same curve gives the first four the same dash as before.
 """
 
 from dataclasses import dataclass, replace
 from typing import Any
 
-from . import game, ownership, report, settings
+from unrealsdk.unreal import WeakPointer
 
+from . import dash_lookup, game, ownership, report, settings
+
+# The key of the dash the first four characters share; every other dash is owned under its own name, so each one
+# gets its own values back — one key for two dashes would put one's values into the other.
 SHAPE_KEY = "Move_Dash.shape"
+# A few characters, a few dashes: the bound only guards against a surprise.
+MAX_DASHES = 8
 # The game's dash on flat ground, measured on 2026-09-17 (00:59): the base the distance percentage applies to.
 GAME_DISTANCE = 508.0
 # The longest dash, in game dashes, that still plays the game's animation once (Kevin, 2026-09-19).
@@ -39,8 +50,15 @@ class Shape:
     leave: tuple[float, ...]
 
 
+_written: set[str] = set()
+
+
 def reset() -> None:
     """Nothing of its own to forget: the game's dash belongs to ownership, which stop gives back."""
+
+
+def _key(asset: Any) -> str:
+    return f"{getattr(asset, 'Name', 'Move_Dash')}.shape"
 
 
 def _keys(asset: Any) -> Any:
@@ -69,17 +87,15 @@ def pushed(shape: Shape, extra_distance: float) -> Shape:
     """Starts faster and slows down in a straight line, over the full-speed part, to the game's speed; the points
     after it keep the game's speeds, so the dash ends as the game's does.
 
-    That part then averages (start + game speed) / 2 instead of the game speed, which gives the extra distance. The
-    curve's values are fractions of the speed: past the first point they shrink as the speed grows, and so do their
-    tangents, which are slopes of those fractions.
+    That part then averages (start + game speed) / 2 instead of the game speed, which gives the extra distance. Only
+    the curve's first point rises, and the speed stays the game's: a dash that never reads its speed still reads its
+    curve (see the top of this file).
     """
     main = shape.times[1] - shape.times[0]
-    start = shape.speed + 2.0 * extra_distance / main
-    scale = shape.speed / start
-    slope = (shape.values[1] * scale - shape.values[0]) / main
-    return replace(shape, speed=start, values=(shape.values[0], *(value * scale for value in shape.values[1:])),
-                   arrive=(shape.arrive[0], slope, *(tangent * scale for tangent in shape.arrive[2:])),
-                   leave=(slope, *(tangent * scale for tangent in shape.leave[1:])))
+    first = shape.values[0] * (1.0 + 2.0 * extra_distance / (main * shape.speed))
+    slope = (shape.values[1] - first) / main
+    return replace(shape, values=(first, *shape.values[1:]), arrive=(shape.arrive[0], slope, *shape.arrive[2:]),
+                   leave=(slope, *shape.leave[1:]))
 
 
 def wanted(game_shape: Shape, factor: float) -> Shape:
@@ -96,8 +112,9 @@ def close(a: Shape, b: Shape) -> bool:
     return len(values_a) == len(values_b) and all(abs(x - y) <= ownership.TOLERANCE for x, y in zip(values_a, values_b))
 
 
-def _put(shape: Shape) -> None:
-    asset = ownership.loaded(game.dash_asset())
+def _put(pointer: Any, shape: Shape) -> None:
+    # Written into the dash this key belongs to, not whichever the character plays now.
+    asset = ownership.loaded(pointer())
     # Structs assigned back whole: the SDK may hand out a copy, and a field written on a copy changes nothing.
     duration = asset.Duration
     duration.constant = shape.duration
@@ -115,12 +132,17 @@ def _put(shape: Shape) -> None:
 
 
 def update(character: Any, now_ns: int) -> None:
-    asset = game.dash_asset()
+    dash_lookup.note(character.CharacterMovement)
+    asset = game.dash_asset(now_ns)
     if asset is None:
-        report.error_once("dash_asset", "Move_Dash not found yet; dashes keep the game's own length meanwhile")
+        # A game before the Hoverpack has no dash loaded at all; two characters' dashes loaded at once wait for the
+        # first one played to say which is ours.
+        report.error_once("dash_asset", "no dash of this character found yet; dashes keep the game's own length "
+                                        "meanwhile")
         return
+    key = _key(asset)
     # The game's dash, not the one written: past 300 % the written curve no longer starts flat.
-    game_shape = ownership.original(SHAPE_KEY) if ownership.is_owned(SHAPE_KEY) else read(asset)
+    game_shape = ownership.original(key) if ownership.is_owned(key) else read(asset)
     if not has_full_speed_start(game_shape):
         # A game update changed the curve: lengthening another part would bring the double move back.
         report.error_once("dash_curve", "Move_Dash's speed curve changed shape; dashes keep the game's own length")
@@ -129,13 +151,25 @@ def update(character: Any, now_ns: int) -> None:
     target = wanted(game_shape, factor)
     # Read every frame rather than remembered: the game can put Move_Dash back without a character change.
     if not close(read(asset), target):
-        ownership.write(SHAPE_KEY, ownership.ASSET, lambda: read(game.dash_asset()), _put, target)
-        push = f", starting at {target.speed:.0f} (game {game_shape.speed:.0f})" if factor > LONGEST else ""
+        if key not in _written and len(_written) >= MAX_DASHES:
+            return
+        pointer = WeakPointer(asset)
+        ownership.write(key, ownership.ASSET, lambda: read(ownership.loaded(pointer())),
+                        lambda shape: _put(pointer, shape), target)
+        _written.add(key)
+        push = (f", starting at {target.values[0] * target.speed:.0f} "
+                f"(game {game_shape.values[0] * game_shape.speed:.0f})" if factor > LONGEST else "")
         report.note(f"dash distance {factor * 100:.0f}% lasting {target.duration * 1000:.0f} ms "
-                    f"(game {game_shape.duration * 1000:.0f} ms){push}")
+                    f"(game {game_shape.duration * 1000:.0f} ms){push} on {key[:-len('.shape')]}")
 
 
 def stop(character: Any) -> None:
-    if ownership.is_owned(SHAPE_KEY):
-        ownership.restore(SHAPE_KEY)
+    restored = False
+    for key in sorted(_written):
+        if ownership.is_owned(key):
+            # Raises when a value did not come back: the frame loop reports it and tries again, _written intact.
+            ownership.restore(key)
+            restored = True
+    _written.clear()
+    if restored:
         report.note("dash distance off, game dash restored")

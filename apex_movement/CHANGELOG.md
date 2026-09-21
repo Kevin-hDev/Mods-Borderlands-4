@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.2
+
+Fixed: the dash kept the game's own length on C4SH and Loveless, the two characters the latest game update added.
+Each of them has a dash of its own, where the first four share one, and the mod only looked for the shared one. It
+now finds the dash of the character you play as soon as you load in, and every Dash distance setting gives the same
+dash on every character.
+
+The first four characters' dash is unchanged.
+
+Tested on game version 1.10.2-4845623, with Vex, C4SH and Loveless.
+
 ## 1.1.1
 
 Fixed: after riding a vehicle, turning a move off, or the whole mod, left its values in the game. The walk speed,

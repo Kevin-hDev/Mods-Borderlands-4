@@ -168,7 +168,8 @@ class FakeDashAsset:
     """Move_Dash with the values read in game on 2026-09-16: Duration comes back as a copy, as the SDK may hand structs
     out; the curve points are live views, as SDK arrays of structs are, unless copy_keys makes them copies."""
 
-    def __init__(self, copy_keys: bool = False) -> None:
+    def __init__(self, copy_keys: bool = False, name: str = "Move_Dash") -> None:
+        self.Name = name
         self._duration = types.SimpleNamespace(constant=0.33)
         self.speed = types.SimpleNamespace(constant=2500.0)
         self.copy_keys = copy_keys
@@ -366,6 +367,8 @@ def install() -> dict:
     state["injections"] = []
 
     def find_all(class_name: str, exact: bool = True) -> Any:
+        if class_name == "OakControlledMove":
+            return iter(list(state.get("controlled_moves", [])))
         if class_name == "/Script/EnhancedInput.EnhancedInputLocalPlayerSubsystem":
             state["subsystem_scans"] += 1
             return iter(list(state["subsystems"]))

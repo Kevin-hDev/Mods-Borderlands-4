@@ -12,7 +12,7 @@ import unrealsdk
 from mods_base import get_pc
 from unrealsdk import unreal
 
-from . import arms
+from . import arms, dash_lookup
 
 REFRESH_NS = 1_000_000_000
 SLIDE_ASSET = ("OakControlledMove", "/Game/PlayerCharacters/_Shared/Tricks/ControlledMoves/Move_Slide.Move_Slide")
@@ -37,6 +37,7 @@ _last_pointer: Any = None
 _anim: Any = None
 # Keyed by the fixed asset names above only, so it never holds more than those.
 _assets: dict[tuple[str, str], Any] = {}
+
 _next_refresh_ns = 0
 
 
@@ -65,6 +66,8 @@ def refresh(now_ns: int, at_once: bool = False) -> str:
         _last_pointer = _character_pointer
     arms.forget()
     _assets.clear()
+    if replaced:
+        dash_lookup.forget()
     return CHARACTER if replaced else AWAY
 
 
@@ -103,9 +106,11 @@ def slide_asset() -> Any:
     return _asset(SLIDE_ASSET)
 
 
-def dash_asset() -> Any:
-    """Move_Dash, the dash's data shared by every player; None while the game has not loaded it."""
-    return _asset(DASH_ASSET)
+def dash_asset(now_ns: int | None = None) -> Any:
+    """The dash of the character being played: the one dash_lookup knows, else Move_Dash, which the first four
+    characters share. None while the game has loaded neither."""
+    found = dash_lookup.current(now_ns)
+    return found if found is not None else _asset(DASH_ASSET)
 
 
 def climb_animation() -> Any:
@@ -116,6 +121,7 @@ def climb_animation() -> Any:
 def forget() -> None:
     global _character, _character_pointer, _last_pointer, _anim, _next_refresh_ns
     _character = _character_pointer = _last_pointer = _anim = None
+    dash_lookup.forget()
     arms.forget()
     _assets.clear()
     _next_refresh_ns = 0

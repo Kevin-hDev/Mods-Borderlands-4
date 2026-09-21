@@ -18,7 +18,7 @@ and a line of the Nexus page name the same move.
 | Auto sprint | Sprint as soon as the move stick is fully pushed, up to the game's own 60 degree limit | yes |
 | Slides | Follow the way you are going, not the way you are aiming; slowed uphill, carried downhill | yes |
 | Axle slide | Axle's slide from Apex: steered with the move stick, and boosted every time | no |
-| Dash | Goes further, at the game's own speed: its length changes, not its speed | yes |
+| Dash | Goes further, at the game's own speed: its length changes, not its speed. Past 300 % it starts faster instead | yes |
 | Glide | Hold jump in the air and glide faster, in every direction; the descent is the game's own | yes |
 | Ground slam and landing slide | Jump + crouch together to slam, and crouch held in the air to slide the moment you land | yes |
 | Air / tap strafe | Change direction in the air almost at once, and start and stop faster on the ground | yes |
@@ -60,6 +60,7 @@ named after it: `apex_dash.json`, `apex_wall_climb.json`, and so on.
 - `pack.py` says which moves a file carries; `family.py` keeps one move from running in two installed files at once.
 - `ground_speed.py` holds the walk and sprint speeds, apart from `sprint.py`, which only asks the game to sprint.
 - `game.py` finds the player and the move assets, and answers what several moves ask: on the ground, in the air, sliding, whether one of the game's own moves is running. It asks the game that last one (`IsPerformingControlledMove`) rather than reading the move's network copy, which keeps a ground slam after landing until the next slide. A field only one move touches is read in that move's module.
+- `dash_lookup.py` finds the dash of the character being played: the first four share `Move_Dash`, while C4SH and Loveless each have their own. No field of the character points at it, so it is found by name. `dash.py` puts the extra speed in the dash's speed curve rather than in its speed, since Loveless's dash reads the first and not the second.
 - `ownership.py` remembers every game value a move overwrites, and puts it back when the move stops. Nothing is written to the save file.
 - `settings.py` holds every setting with its default and its bounds, and carries the reason each default was chosen.
 - `speed_order.py` keeps walk, sprint, slide and top slide speeds in order whatever the sliders say; a file without the movement speeds orders against the game's own.
@@ -79,5 +80,6 @@ is still being built. Each prints a `RESULTAT:` line and exits non-zero on failu
 ## Known limits
 
 - Never tried in co-op.
+- The dash is found by name (`Move_Dash…`): a character added later under another name would keep the game's dash. When two characters' dashes are loaded at once, as co-op might do, the mod knows yours only after your first dash.
 - Tested in the first area of the game only; other places will have surfaces the wall climb reacts to differently.
 - Do not run it alongside another movement mod: both write the character's speed every frame, and whichever writes last wins.
