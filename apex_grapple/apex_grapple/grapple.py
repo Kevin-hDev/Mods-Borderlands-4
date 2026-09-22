@@ -22,7 +22,7 @@ grapple is the speed you leave it with.
 import math
 from typing import Any
 
-from . import aim, coordination, game, native_interaction, pull, release, report, rope_effects, settings
+from . import aim, coordination, game, native_interaction, pull, release, report, rope_effects, settings, stamina
 
 IDLE = "idle"
 FLYING = "flying"
@@ -92,14 +92,15 @@ class Rope:
         if not aim.grapples(shot, float(settings.punch_range.value), bool(settings.melee_wins.value),
                             bool(settings.keep_game_grapple.value) and native_priority is not False, explain=True):
             return False
+        if not stamina.try_spend(character, float(settings.stamina_cost.value)):
+            return True
         self.anchor = shot.anchor
         self.state = FLYING
         self._pressed_ns = now_ns
         self._started_ns = now_ns
         flight_s = shot.distance / max(1.0, float(settings.hook_speed.value))
         self._contact_ns = now_ns + int(flight_s * NS_PER_S)
-        report.note(f"hook away, {shot.distance:.0f} away, aim {game.pitch_of(facing):+.0f} degrees, "
-                    f"flying {flight_s:.2f}s, at {shot.hit_name or 'a surface'}")
+        report.hook_away(shot.distance, game.pitch_of(facing), flight_s, shot.hit_name)
         rope_effects.start(character, self.anchor)
         return True
 
@@ -145,8 +146,7 @@ class Rope:
         # The rope's tilt says what the player really aimed at, which no other line does: a rope
         # near zero degrees drags him along the floor however high the wall looked.
         tilt = math.degrees(math.asin(max(-1.0, min(1.0, rope[2])))) if rope is not None else 0.0
-        report.note(f"hook set, pulling from {math.dist(self._from_spot, self.anchor):.0f} away, "
-                    f"rope {tilt:+.0f} degrees")
+        report.hook_set(math.dist(self._from_spot, self.anchor), tilt)
 
     def _leave_ground(self, movement: Any) -> None:
         """Puts the player in the air and gives him the speed to stay there for a moment.

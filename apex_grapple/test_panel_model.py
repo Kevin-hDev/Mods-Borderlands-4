@@ -7,7 +7,7 @@ from apex_grapple import panel_model as p, settings
 model = p.Model(f.mod)
 assert p.language.default_value == "EN" and model.language == "EN"
 before = tuple(option.value for option in settings.ALL)
-assert len(model.options) == 18 and len(model.groups) == 3
+assert len(model.options) == 19 and len(model.groups) == 3
 assert model.change_language("FR") and model.language == "FR"
 assert tuple(option.value for option in settings.ALL) == before
 assert not model.change_language("unknown") and model.language == "FR"

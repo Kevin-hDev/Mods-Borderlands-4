@@ -36,9 +36,9 @@ check("none of them twice", len({option.identifier for option in shown}) == len(
 check("and none of them missing",
       {option.identifier for option in shown} == {option.identifier for option in settings.ALL})
 
-check("the shot line holds the range and the punch rule",
+check("the shot line holds the range, the reserve cost and the punch rule",
       {option.identifier for option in menu.shot.children} ==
-      {"grapple_range", "hook_speed", "melee_wins", "punch_range", "keep_game_grapple",
+      {"grapple_range", "hook_speed", "stamina_cost", "melee_wins", "punch_range", "keep_game_grapple",
        "show_rope"})
 check("the pull line holds the two forces and their caps",
       {option.identifier for option in menu.pull.children} ==

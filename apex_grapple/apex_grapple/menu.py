@@ -9,11 +9,11 @@ from mods_base import NestedOption
 from . import control_menu, settings, panel_preferences
 
 shot = NestedOption(
-    "shot_menu", [settings.grapple_range, settings.hook_speed, settings.melee_wins, settings.punch_range,
-     settings.keep_game_grapple, settings.show_rope],
+    "shot_menu", [settings.grapple_range, settings.hook_speed, settings.stamina_cost, settings.melee_wins,
+     settings.punch_range, settings.keep_game_grapple, settings.show_rope],
     display_name="The shot",
-    description="How far the hook reaches, how fast it flies, when the key punches instead of grappling, "
-                "and whether the game's own grapple points still work.",
+    description="How far the hook reaches, how fast it flies, how much stamina it spends, when the key punches "
+                "instead of grappling, and whether the game's own grapple points still work.",
 )
 pull = NestedOption(
     "pull_menu", [settings.pull_strength, settings.pull_speed_cap, settings.rope_carry,

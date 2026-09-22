@@ -43,7 +43,7 @@ check("steering stays under the pull, as it was measured, though less far under 
       settings.steer_speed_cap.default_value < settings.pull_speed_cap.default_value)
 check("the range is the 30 metres Kevin asked for", settings.grapple_range.default_value == 3000)
 
-check("every setting is in the list the menu draws from", len(settings.ALL) == 18)
+check("every setting is in the list the menu draws from", len(settings.ALL) == 19)
 check("the take-off time is long enough to leave the ground, which 0.06 s was not",
       settings.ground_grace.default_value >= 0.2)
 check("the lift is under the game's own jump of 840: leaving the floor, not jumping",

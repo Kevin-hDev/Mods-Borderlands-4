@@ -139,11 +139,21 @@ punch_range = SliderOption(
                 "Known surfaces can still be grappled up close.",
 )
 
+# The reserve the dash and the glide already spend, measured on 2026-09-22: full at 100, a dash takes
+# half of it, and the game refills it 3.2 s later at about a quarter a second. Kevin set three shots
+# on a full bar (2026-09-22): "33% par defaut pour en avoir trois".
+stamina_cost = SliderOption(
+    "stamina_cost", 33, 0, 100, step=1, is_integer=True,
+    display_name="Stamina cost",
+    description="Share of the stamina bar a shot spends, the one the dash and the glide already use, as a "
+                "percentage. 33 gives three shots on a full bar. At 0 a shot costs nothing and never waits.",
+)
+
 ALL = (grapple_range, hook_speed, pull_strength, pull_speed_cap, steer_strength, steer_speed_cap,
        release_on_key_up, arrival_distance, longest_pull, rope_carry, takeoff_lift, ground_grace,
        release_on_landing,
        block_jump,
-       melee_wins, keep_game_grapple, punch_range, show_rope)
+       melee_wins, keep_game_grapple, punch_range, show_rope, stamina_cost)
 
 
 def summary() -> str:

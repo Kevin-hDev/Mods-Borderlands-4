@@ -73,9 +73,28 @@ def install() -> dict:
     hooks_module.Type = types.SimpleNamespace(POST="POST", PRE="PRE")
     hooks_module.Block = type("Block", (), {})
 
+    # The game's traversal reserve, which the grapple reads and spends at every shot (stamina.py, 2026-09-22).
+    # It stays full here and only records what was taken: a test about anything else fires as many shots as it
+    # likes without running dry. The tests of the reserve itself put their own in front of this one.
+    unreal_module.FGameDataHandle = lambda kind, pool: types.SimpleNamespace(_kind=kind, _pool=pool)
+    state["reserve"] = {"value": 100.0, "maximum": 100.0, "taken": []}
+
+    def adjust_reserve(_owner: Any, _handle: Any, amount: float) -> None:
+        state["reserve"]["taken"].append(amount)
+
+    pool_functions = types.SimpleNamespace(
+        GetResourcePoolValue=lambda owner, handle: state["reserve"]["value"],
+        GetResourcePoolPercent=lambda owner, handle: state["reserve"]["value"] / state["reserve"]["maximum"],
+        AdjustResourcePoolValue=adjust_reserve,
+    )
+    pool_reader = types.SimpleNamespace(_find=lambda name: types.SimpleNamespace(TypeHandle=11))
+    pool_library = types.SimpleNamespace(ClassDefaultObject=pool_functions, _find=lambda name: pool_reader)
+
     def find_class(name: str) -> Any:
         if name in state["extra_classes"]:
             return state["extra_classes"][name]
+        if name == "GameResourcePoolFunctionLibrary":
+            return pool_library
         if name == "NiagaraFunctionLibrary":
             return types.SimpleNamespace(ClassDefaultObject=state["niagara"])
         if name == "GbxAudioBlueprintFunctionLibrary":

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3 — 2026-09-22
+
+- Use the game's stamina bar for Apex grapple shots, sharing the reserve and native regeneration with dash and glide.
+- Add an adjustable stamina cost in The shot: 0–100%, default 33%; 0% disables consumption.
+- Refuse shots with insufficient stamina without triggering melee, including when the first shot encounters an empty bar.
+- Cancel the shot if stamina cannot be deducted, before movement, animation or sound starts. If the reserve cannot be read, keep the existing fallback that allows grappling.
+- Keep native contextual interactions and missed shots free of the Apex stamina cost, and preserve rope visuals, sounds and movement settings.
+
 ## 1.0.2 — 2026-09-22
 
 - Preserve the game's valid contextual grapple interactions, including carryable objects, instead of replacing them with an Apex shot. Keep the native targeting area aligned with the game's indicator.

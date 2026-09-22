@@ -42,6 +42,7 @@ current = snapshot(f.mod.options)
 assert current.pop("menu_language") == "EN", "Older settings gain English without a migration"
 assert current.pop("controller_icons") == "PS5", "Older settings gain Kevin's chosen icon default"
 assert current.pop("menu_last_page") == "shot", "Older settings start on the first tab without a migration"
+assert current["shot_menu"].pop("stamina_cost") == 33, "Older settings gain the reserve cost at its default"
 assert current == saved["options"], "Existing controls and gameplay settings must survive"
 for device, stored in zip(f.config.DEVICES, f.control_menu.STORAGE.children):
     assert stored.identifier == f"{device.name}_controls" and stored.is_hidden

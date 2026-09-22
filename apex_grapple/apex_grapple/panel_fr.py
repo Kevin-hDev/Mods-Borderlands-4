@@ -27,6 +27,7 @@ OPTIONS = {
     "grapple_range": ("Portée", "Distance maximale du crochet, en centimètres. 3000 correspond à 30 mètres."),
     "hook_speed": ("Vitesse du crochet", "Vitesse du crochet vers la surface. Tu peux encore te déplacer et sauter pendant son vol."),
     "melee_wins": ("Priorité au corps à corps", "Viser un ennemi donne un coup ; viser une surface lance le grappin. Désactivé, le grappin est prioritaire."),
+    "stamina_cost": ("Coût en endurance", "Part de la barre d'endurance qu'un tir dépense, celle que le dash et le vol plané utilisent déjà, en pourcentage. 33 donne trois tirs sur une barre pleine. À 0, un tir ne coûte rien et n'attend jamais."),
     "punch_range": ("Portée du corps à corps", "Les ennemis proches et les impacts non identifiés gardent le coup de poing. Les surfaces connues restent accrochables de près."),
     "keep_game_grapple": ("Garder le grappin du jeu", "Les points d’accroche natifs utilisent le grappin du jeu. Désactivé, le mod gère tous les tirs."),
     "show_rope": ("Afficher la corde", "Affiche la corde du jeu et son animation de bras. Désactiver cet effet ne retire pas la traction."),

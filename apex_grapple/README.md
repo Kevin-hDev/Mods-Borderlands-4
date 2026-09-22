@@ -1,10 +1,12 @@
 # Apex Grapple
 
-Version **1.0.2** — an Apex Legends inspired grapple for Borderlands 4.
+Version **1.0.3** — an Apex Legends inspired grapple for Borderlands 4.
 
 Aim at a surface and pull toward it while steering in the air. Let go to carry your momentum. The mod uses the game's grapple effects and hand animation with its own pulling movement.
 
 The grapple plays the game's launch, connection and pulling sounds. Valid contextual grapple interactions, including carryable objects, retain priority within the game's normal targeting area. Ordinary native grapple points follow the corresponding setting.
+
+Each Apex shot uses the game's existing stamina bar, shared with dash and glide. Set the cost in The shot from 0% to 100% (33% by default); 0% disables the cost. The game controls regeneration. Insufficient stamina refuses the shot without a punch. Native contextual interactions and missed shots do not pay this cost.
 
 ## Controls and settings
 
