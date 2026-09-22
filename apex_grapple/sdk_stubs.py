@@ -1,6 +1,7 @@
 """Installs the fake SDK; object families live separately to keep responsibilities small."""
 
 import types
+from collections import deque
 from typing import Any
 
 
@@ -19,6 +20,16 @@ def install() -> dict:
                    "classes": [], "by_class": {}, "classes_raise": False, "extra_classes": {},
                    "destroyed": []}
     state["niagara"] = FakeNiagara(state)
+    state["audio_calls"] = deque(maxlen=64)
+    state["audio_stops"] = deque(maxlen=64)
+
+    def audio_post(**kwargs):
+        handle = object()
+        state["audio_calls"].append((kwargs, handle))
+        return handle
+
+    audio_library = types.SimpleNamespace(PostWwiseEventOnActor=audio_post,
+        Stop=lambda **kwargs: state["audio_stops"].append(kwargs["PlaybackInstance"]))
     # The game's own grapple assets, at the paths its settings name.
     state["objects"] = {
         ("AnimSequence",
@@ -56,6 +67,7 @@ def install() -> dict:
 
     unreal_module = types.ModuleType("unrealsdk.unreal")
     unreal_module.WeakPointer = WeakPointer
+    unreal_module.FGbxDefPtr = lambda name, kind: types.SimpleNamespace(_name=name, _kind=kind)
 
     hooks_module = types.ModuleType("unrealsdk.hooks")
     hooks_module.Type = types.SimpleNamespace(POST="POST", PRE="PRE")
@@ -66,6 +78,8 @@ def install() -> dict:
             return state["extra_classes"][name]
         if name == "NiagaraFunctionLibrary":
             return types.SimpleNamespace(ClassDefaultObject=state["niagara"])
+        if name == "GbxAudioBlueprintFunctionLibrary":
+            return types.SimpleNamespace(ClassDefaultObject=audio_library)
         if name != "KismetSystemLibrary":
             raise ValueError(f"no class {name}")
         return types.SimpleNamespace(ClassDefaultObject=state["kismet"])

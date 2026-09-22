@@ -1,8 +1,10 @@
 # Apex Grapple
 
-Version **1.0.1** — an Apex Legends inspired grapple for Borderlands 4.
+Version **1.0.2** — an Apex Legends inspired grapple for Borderlands 4.
 
 Aim at a surface and pull toward it while steering in the air. Let go to carry your momentum. The mod uses the game's grapple effects and hand animation with its own pulling movement.
+
+The grapple plays the game's launch, connection and pulling sounds. Valid contextual grapple interactions, including carryable objects, retain priority within the game's normal targeting area. Ordinary native grapple points follow the corresponding setting.
 
 ## Controls and settings
 
@@ -41,7 +43,7 @@ with ZipFile("apex_grapple.sdkmod", "w", ZIP_DEFLATED) as archive:
 
 ## Tests
 
-There are 65 test scripts, run in separate Python processes. Most use SDK stand-ins and do not need the game running. Run them from this directory in PowerShell:
+Run the test scripts in separate Python processes. Most use SDK stand-ins and do not need the game running. Run them from this directory in PowerShell:
 
 ```powershell
 Get-ChildItem test_*.py | ForEach-Object {

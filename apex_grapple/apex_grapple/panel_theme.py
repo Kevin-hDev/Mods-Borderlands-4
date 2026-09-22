@@ -60,6 +60,10 @@ TILT_TITLE = -2
 HAZARD_ANGLE = -45
 HAZARD_STRIPE = 18
 HAZARD_HEIGHT = 14
+# Conflict warning, drawn in the mockup of 2026-09-22 and not in game yet: an orange square turned into a diamond
+# behind a "!", on a sidebar line and on the Conflicts tab. Its shape, not only its colour, sets it apart.
+TILT_WARNING = 45
+WARNING_SIZE = 18
 
 SPACE_1 = 4
 SPACE_2 = 8

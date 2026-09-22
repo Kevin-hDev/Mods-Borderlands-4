@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 — 2026-09-22
+
+- Preserve the game's valid contextual grapple interactions, including carryable objects, instead of replacing them with an Apex shot. Keep the native targeting area aligned with the game's indicator.
+- Restore the grapple's launch, connection and pulling sounds, with cleanup when a shot is released or cancelled.
+- Keep the existing hand animation, rope visuals, movement tuning and saved settings.
+
 ## 1.0.1 — 2026-09-22
 
 - Remember the last settings tab when closing and reopening the menu, including after a game restart.

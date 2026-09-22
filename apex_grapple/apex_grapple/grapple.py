@@ -22,7 +22,7 @@ grapple is the speed you leave it with.
 import math
 from typing import Any
 
-from . import aim, coordination, game, pull, release, report, rope_visuals, settings
+from . import aim, coordination, game, native_interaction, pull, release, report, rope_effects, settings
 
 IDLE = "idle"
 FLYING = "flying"
@@ -47,7 +47,7 @@ class Rope:
 
     def reset(self) -> None:
         """Releases the owned visuals and forgets the shot without changing momentum."""
-        rope_visuals.reset()
+        rope_effects.reset()
         self.state = IDLE
         self.anchor = (0.0, 0.0, 0.0)
         self.key_down = False
@@ -77,6 +77,9 @@ class Rope:
             # A second press during a shot calls it off rather than stacking a second rope.
             self.let_go("cancelled", now_ns)
             return True
+        native_priority = native_interaction.has_priority()
+        if native_priority:
+            return False
         for line in settings.keep_in_bounds():
             report.warning(line)
         if coordination.takeover(character) is not None:
@@ -87,7 +90,7 @@ class Rope:
         start, facing = looking
         shot = aim.look(character, start, facing, float(settings.grapple_range.value))
         if not aim.grapples(shot, float(settings.punch_range.value), bool(settings.melee_wins.value),
-                            bool(settings.keep_game_grapple.value), explain=True):
+                            bool(settings.keep_game_grapple.value) and native_priority is not False, explain=True):
             return False
         self.anchor = shot.anchor
         self.state = FLYING
@@ -97,7 +100,7 @@ class Rope:
         self._contact_ns = now_ns + int(flight_s * NS_PER_S)
         report.note(f"hook away, {shot.distance:.0f} away, aim {game.pitch_of(facing):+.0f} degrees, "
                     f"flying {flight_s:.2f}s, at {shot.hit_name or 'a surface'}")
-        rope_visuals.start(character, self.anchor)
+        rope_effects.start(character, self.anchor)
         return True
 
     def key_up(self, now_ns: int) -> None:
@@ -116,7 +119,7 @@ class Rope:
             self.let_go(reason, now_ns)
             return
         # The hand moves during flight too; a local beam must follow before the pull attaches.
-        rope_visuals.follow(character, self.anchor)
+        rope_effects.follow(character, self.anchor)
         movement = character.CharacterMovement
         if self.state == FLYING:
             if now_ns < self._contact_ns:
@@ -136,7 +139,7 @@ class Rope:
         self._pull_cap = carried + float(settings.pull_speed_cap.value)
         self._from_spot = self._at_spot = game.location(character)
         self._closest = math.dist(self._from_spot, self.anchor)
-        rope_visuals.hold()
+        rope_effects.hold()
         if game.is_on_ground(movement):
             self._leave_ground(movement)
         # The rope's tilt says what the player really aimed at, which no other line does: a rope
@@ -224,4 +227,4 @@ class Rope:
             report.note(f"shot called off: {why}")
         self.state = IDLE
         self._top_speed = 0.0
-        rope_visuals.stop()
+        rope_effects.stop()

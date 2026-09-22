@@ -17,7 +17,7 @@ from mods_base import build_mod
 from . import control_console_menu, control_menu, frame, menu, report, settings
 
 # Research observers are archived: their synchronous scans caused first-shot stalls.
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "kevin-hDev"
 
 
