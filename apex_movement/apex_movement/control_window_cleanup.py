@@ -4,7 +4,7 @@ import unrealsdk
 
 from .control_window_hooks import note, remove_listener
 
-COMMAND = "grapple_ui_close"
+COMMAND = "movement_ui_close"
 RETRY_NS = 250_000_000
 MAX_ATTEMPTS = 4
 STEPS = ("root", "input", "cursor", "shape", "command", "menu")

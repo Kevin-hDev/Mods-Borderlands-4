@@ -6,9 +6,7 @@ import time
 from mods_base import get_pc
 import unrealsdk
 
-from . import control_console_handoff, control_view, control_window_clock
-from .control_form import Form
-from .control_bindings import Bindings
+from . import control_console_handoff, control_window_clock
 from .control_window_hooks import install_listener, note, require_signature
 from .control_window_cleanup import COMMAND, Cleanup
 
@@ -42,7 +40,7 @@ class Session:
         self.pc, self.root, self.library = pc, root, library
         self.form, self.bindings, self.character = form, bindings, character
         self.frontend = character() is None
-        self.selector = getattr(form, "focus", form.widgets["first"])
+        self.selector = form.focus
         self.cursor_shape = pc().CurrentMouseCursor
         self.cursor_recoveries = 0
         self.cursor = cursor
@@ -133,7 +131,7 @@ class Session:
             self.close("error")
 
 
-def start(return_to_menu=False, two_keys=False, full_menu=False):
+def start(return_to_menu=False):
     global _active
     session = None
     stage = "preflight"
@@ -145,7 +143,7 @@ def start(return_to_menu=False, two_keys=False, full_menu=False):
                 note("cleanup_pending=true")
                 return
         if active() or unrealsdk.commands.has_command(COMMAND):
-            note("already_open=true use_grapple_ui_close=true")
+            note("already_open=true use_movement_ui_close=true")
             return
         pc = get_pc(possibly_loading=True)
         if pc is None or (pc.bShowMouseCursor and not return_to_menu):
@@ -154,9 +152,8 @@ def start(return_to_menu=False, two_keys=False, full_menu=False):
         handoff = None
         if return_to_menu:
             handoff = control_console_handoff.create(time.perf_counter_ns())
-        if full_menu:
-            from . import panel_factory
-        bindings = panel_factory.PanelBindings() if full_menu else Bindings()
+        from . import panel_factory
+        bindings = panel_factory.PanelBindings()
         if not bindings.prepare():
             note("mod_not_ready=true")
             return
@@ -180,12 +177,7 @@ def start(return_to_menu=False, two_keys=False, full_menu=False):
         claimed = True
         stage = "construct_selector"
         weak = unrealsdk.unreal.WeakPointer
-        if full_menu:
-            root, form = panel_factory.build(pc, bindings, return_to_menu)
-        else:
-            root, widgets = control_view.build_view(pc, bindings.summary(), return_to_menu)
-            widgets["two"].SetIsChecked(two_keys)
-            form = Form({name: weak(widget) for name, widget in widgets.items()}, bindings)
+        root, form = panel_factory.build(pc, bindings, return_to_menu)
         character = getattr(pc, "OakCharacter", None)
         character_ref = weak(character) if character is not None else lambda: None
         session = Session(weak(pc), weak(root), weak(library), pc.bShowMouseCursor, form, bindings, character_ref)
@@ -193,7 +185,7 @@ def start(return_to_menu=False, two_keys=False, full_menu=False):
         session.claimed = True
         _active = session
         stage = "layout"
-        slot = panel_factory.panel_view.viewport_slot() if full_menu else control_view.viewport_slot()
+        slot = panel_factory.panel_view.viewport_slot()
         stage = "add_to_viewport"
         if not viewport.AddWidget(root, slot):
             raise RuntimeError("Viewport rejected widget")

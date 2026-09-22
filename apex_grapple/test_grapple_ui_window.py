@@ -17,6 +17,8 @@ sys.modules["mods_base"] = base
 character = NS()
 pc = NS(bShowMouseCursor=True, CurrentMouseCursor=0, OakCharacter=character)
 base.get_pc = lambda **kwargs: pc
+import ui_clock_fixture
+ui_clock_fixture.install(sdk)
 window = load("control_window")
 
 

@@ -35,6 +35,8 @@ base = ModuleType("mods_base")
 state = NS(pc=None)
 base.get_pc = lambda **kwargs: state.pc
 sys.modules["mods_base"] = base
+import ui_clock_fixture
+ui_clock_fixture.install(sdk)
 window = load("control_window")
 window.Bindings = lambda: NS(prepare=lambda: True, summary=lambda: "Controls", ready=lambda: True)
 window.Form = lambda widgets, bindings: NS(widgets=widgets, poll=lambda: False, selecting=lambda: False)

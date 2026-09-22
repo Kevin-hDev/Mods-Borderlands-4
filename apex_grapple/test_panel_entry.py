@@ -45,4 +45,27 @@ assert screens.screen_stack == [home] and events[-1] == "home"
 assert namespace["handle_input"](home, "1")
 tuple(f.mod.iter_display_options())
 assert len(events) == 2  # Another mod is never intercepted.
+
+# A transient drawing failure after popping the page must be safe to retry.
+screens.screen_stack[:] = [home]
+draw_attempts = []
+original_draw = home.draw
+def draw_once_failed():
+    draw_attempts.append(1)
+    if len(draw_attempts) == 1:
+        raise RuntimeError("temporary drawing failure")
+    original_draw()
+home.draw = draw_once_failed
+assert namespace["handle_input"](home, "2")
+tuple(f.mod.iter_display_options())
+redraw = control_window._active.handoff.redraw
+try:
+    redraw()
+except RuntimeError:
+    pass
+else:
+    raise AssertionError("the first redraw should fail after popping")
+assert screens.screen_stack == [home]
+redraw()
+assert draw_attempts == [1, 1] and events[-1] == "home"
 print("OK | real console mod selection, one opening, return to list, other mods unchanged")

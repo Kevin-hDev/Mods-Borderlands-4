@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.4 — 2026-09-23
+
+- Add the same visual settings window as Apex Grapple, with English and French labels, controller navigation and saved section selection.
+- Keep the window responsive while the game is paused, including console handoff and Close.
+- Prevent the two Apex windows from taking input at the same time; if an old console page has changed, release it safely.
+- Movement settings and gameplay behavior are unchanged. Version 1.1.3 was a local menu trial and was not published in this repository.
+
 ## 1.1.2
 
 Fixed: the dash kept the game's own length on C4SH and Loveless, the two characters the latest game update added.

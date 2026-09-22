@@ -1,6 +1,6 @@
 """Open the full panel on this mod's page once; return to the original list on Close."""
 
-MARKER = "_apex_grapple_panel_opened"
+MARKER = "_apex_movement_panel_opened"
 MAX_STACK = 32
 
 
@@ -16,7 +16,7 @@ def open_page(mod):
         return
     setattr(page, MARKER, True)
     previous = control_window._active
-    control_window.start(return_to_menu=True, full_menu=True)
+    control_window.start(return_to_menu=True)
     session = control_window._active
     if session is None or session is previous or not getattr(session.form, "keep_when_disabled", False):
         return  # Keep the console settings available if native construction fails.

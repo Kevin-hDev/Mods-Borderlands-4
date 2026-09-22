@@ -12,10 +12,11 @@ from mods_base import build_mod
 
 from . import (
     air_crouch, air_strafe, dash, family, frame, glide, ground_speed, heavier_fall, jump_report, menu, move_watch,
-    ownership, pack, report, settings, slide, slide_direction, slide_physics, slide_steering, sprint, wall_climb,
+    ownership, pack, panel_open, panel_preferences, report, settings, slide, slide_direction, slide_physics,
+    slide_steering, sprint, wall_climb,
 )
 
-__version__ = "1.1.2"
+__version__ = "1.1.4"
 __author__ = "kevin-hDev"
 
 
@@ -77,11 +78,12 @@ def _on_disable() -> None:
 mod = build_mod(
     cls=family.FamilyMod,
     name=pack.NAME,
-    options=menu.MENU,
+    options=[*menu.MENU, *panel_preferences.ALL],
     hooks=[frame.tick],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )
+panel_open.install(mod)
 
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
 if mod.settings_file is not None and not mod.settings_file.exists():

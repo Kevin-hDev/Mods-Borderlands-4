@@ -14,8 +14,19 @@ from dataclasses import dataclass
 # speed_order ties sliders of several movements together on purpose (design decision 9), and every file needs it.
 # arms only serves the wall climb, but game drops it whenever the player changes, and game is shared. dash_lookup
 # only serves the dash, and is shared for the same reason: game forgets it when the character changes (2026-09-21).
+UI_SHARED = (
+    "control_timer_native", "control_window_clock",
+    "control_console_handoff", "control_console_keys", "control_reserved", "control_window",
+    "control_window_cleanup", "control_window_hooks", "panel_assets", "panel_buttons",
+    "panel_common_en", "panel_common_fr", "panel_en", "panel_entry", "panel_factory", "panel_fonts",
+    "panel_form", "panel_fr", "panel_header", "panel_i18n", "panel_labels", "panel_model",
+    "panel_open", "panel_pages", "panel_preferences", "panel_slider", "panel_text", "panel_theme",
+    "panel_view", "panel_widgets",
+)
+# Every separate movement must configure itself without another mod installed; hence the window is shared by
+# all movement archives. Its visual modules are generated from Apex Grapple's approved design source.
 SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", "movements", "ownership", "pack",
-          "report", "settings", "speed_order")
+          "report", "settings", "speed_order") + UI_SHARED
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,
 # which belong to two movements. The speeds every movement reads come from speed_order, not from settings.

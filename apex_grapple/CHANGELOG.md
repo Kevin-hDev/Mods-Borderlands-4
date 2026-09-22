@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.4 — 2026-09-23
+
+- Keep the settings window responsive when the game is paused. Console handoff and Close now proceed without waiting for player animation updates.
+- Close the previous Apex window before opening another one, and avoid returning to a console page that has already changed.
+- Preserve the existing controls, settings and grapple behavior.
+
 ## 1.0.3 — 2026-09-22
 
 - Use the game's stamina bar for Apex grapple shots, sharing the reserve and native regeneration with dash and glide.

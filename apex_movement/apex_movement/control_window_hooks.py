@@ -6,7 +6,7 @@ import unrealsdk
 
 from . import control_window_clock
 
-PREFIX = "[GrappleUIWindow]"
+PREFIX = "[MovementUIWindow]"
 MAX_PARAMS = 16
 
 

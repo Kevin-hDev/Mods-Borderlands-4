@@ -78,5 +78,5 @@ def create(now):
     key = select_console_key(configured)
     native = keys.WindowKeys()
     virtual_key, scan = native.mapping(key)
-    unrealsdk.logging.info(f"[GrappleUIWindow] console_key_mapping vk={virtual_key:#x} scan={scan:#x}")
+    unrealsdk.logging.info(f"[MovementUIWindow] console_key_mapping vk={virtual_key:#x} scan={scan:#x}")
     return Handoff(native, key, now, redraw)

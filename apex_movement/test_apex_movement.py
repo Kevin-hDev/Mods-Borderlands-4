@@ -27,7 +27,8 @@ def check(label: str, condition: bool) -> None:
 
 mod = state["mods"][0]
 check("the mod is named Apex Movement", mod.kwargs["name"] == "Apex Movement")
-check("the menu is registered", mod.kwargs["options"] == menu.MENU)
+check("the menu and its hidden preferences are registered",
+      mod.kwargs["options"] == [*menu.MENU, *apex_movement.panel_preferences.ALL])
 check("the frame hook is registered", mod.kwargs["hooks"] == [frame.tick])
 check("the frame hook listens to the animation update", frame.tick.path == "/Script/Engine.AnimInstance:BlueprintUpdateAnimation")
 check("the frame hook carries the package's own name, so that a separate file never replaces it",
