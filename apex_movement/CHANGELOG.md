@@ -1,16 +1,12 @@
 # Changelog
 
-## 1.1.5 - 2026-09-23
-
-- Shorter setting descriptions, in English and French: each one now says what you get in a single plain sentence.
-- Setting names, values and limits are unchanged.
-
-## 1.1.4 — 2026-09-23
+## 1.1.3 - 2026-09-23
 
 - Add the same visual settings window as Apex Grapple, with English and French labels, controller navigation and saved section selection.
 - Keep the window responsive while the game is paused, including console handoff and Close.
 - Prevent the two Apex windows from taking input at the same time; if an old console page has changed, release it safely.
-- Movement settings and gameplay behavior are unchanged. Version 1.1.3 was a local menu trial and was not published in this repository.
+- Shorter setting descriptions, in English and French: each one now says what you get in a single plain sentence.
+- Setting names, values, limits and gameplay behavior are unchanged.
 
 ## 1.1.2
 

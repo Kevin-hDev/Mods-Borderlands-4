@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.1.5**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened.
+Version **1.1.3**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened.
 
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.

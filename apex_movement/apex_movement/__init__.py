@@ -16,7 +16,7 @@ from . import (
     slide_steering, sprint, wall_climb,
 )
 
-__version__ = "1.1.5"
+__version__ = "1.1.3"
 __author__ = "kevin-hDev"
 
 
