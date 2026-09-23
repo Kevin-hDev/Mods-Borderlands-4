@@ -13,7 +13,7 @@ from typing import Any
 from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 
-from . import definition, limit, report
+from . import animation, definition, fov, limit, report
 
 HOOK_PATH = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 MS = 1_000_000
@@ -128,7 +128,20 @@ def stop() -> tuple[int, int]:
 # identifiers never replace each other, so the three mods run each frame.
 @hook(HOOK_PATH, Type.POST, hook_identifier=f"{__package__}:frame")
 def tick(_obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
+    now_ns = time.perf_counter_ns()
     try:
-        on_frame(time.perf_counter_ns())
+        animation.tick(_obj, now_ns)
+    except Exception:
+        report.error_once('animation', 'backward animation update failed')
+        try:
+            animation.stop()
+        except Exception:
+            report.error_once('animation_restore', 'backward animation restoration failed')
+    try:
+        on_frame(now_ns)
     except Exception as exc:
         report.error_once("frame", f"a check was skipped after an error: {exc!r}")
+    try:
+        fov.on_frame(now_ns)
+    except Exception as exc:
+        report.error_once("fov", f"a FOV check was skipped after an error: {exc!r}")

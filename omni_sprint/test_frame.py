@@ -19,7 +19,7 @@ def check(label: str, condition: bool) -> None:
 
 state = sdk_stubs.install()
 
-from omni_sprint import definition, frame, limit, memory, report  # noqa: E402
+from omni_sprint import animation, definition, fov, frame, limit, memory, report  # noqa: E402
 
 fake = sdk_stubs.FakeMemory()
 sdk_stubs.patch_memory(memory, fake)
@@ -134,6 +134,33 @@ state["pc"] = object()
 frame.tick(object(), None, None, None)
 check("a player without a character does nothing", state["errors"] == [] or all("skipped" not in e for e in state["errors"]))
 
+seen_animation = []
+original_animation_tick = animation.tick
+animation.tick = lambda obj, now: seen_animation.append(obj)
+frame.tick(object(), None, None, None)
+check("the clock also forwards body callbacks to the animation owner", len(seen_animation) == 1)
+animation.tick = original_animation_tick
+
+continued = []
+original_frame_check = frame.on_frame
+animation.tick = lambda obj, now: (_ for _ in ()).throw(RuntimeError('bad animation'))
+frame.on_frame = lambda now: continued.append(now)
+frame.tick(object(), None, None, None)
+check("an animation error does not interrupt the sprint limit", len(continued) == 1)
+animation.tick = original_animation_tick
+frame.on_frame = original_frame_check
+
+original_fov = fov.on_frame
+fov.on_frame = lambda now: (_ for _ in ()).throw(RuntimeError("bad fov"))
+continued.clear()
+frame.on_frame = lambda now: continued.append(now)
+frame.tick(object(), None, None, None)
+frame.tick(object(), None, None, None)
+check("a FOV error does not interrupt the sprint limit, and is written once",
+      len(continued) == 2 and len([line for line in state["errors"] if "FOV check was skipped" in line]) == 1)
+fov.on_frame = original_fov
+frame.on_frame = original_frame_check
+
 
 class Broken:
     @property
@@ -147,7 +174,7 @@ frame.tick(object(), None, None, None)
 frame.reset()
 frame.tick(object(), None, None, None)
 check("an error in a check is written once and the game goes on",
-      len([line for line in state["errors"] if "skipped" in line]) == 1)
+      len([line for line in state["errors"] if "] a check was skipped" in line]) == 1)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

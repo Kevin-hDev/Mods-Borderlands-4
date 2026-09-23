@@ -8,6 +8,7 @@ write it through omni_sprint.memory once patch_memory() has swapped the Windows 
 import struct
 import sys
 import types
+import weakref
 from typing import Any
 
 LIMIT_OFFSET = 580
@@ -66,10 +67,20 @@ def movement_type() -> Any:
     return types.SimpleNamespace(Name="OakCharacterMovementDef", _properties=lambda: iter(fields))
 
 
-def player(component: int) -> Any:
-    """A player controller whose character's movement component sits at this address."""
+class FakePlayer:
+    def __init__(self, fov: float) -> None:
+        self.BaseFOV = fov
+
+    def _get_address(self) -> int:
+        return id(self)
+
+
+def player(component: int, fov: float = 90.0) -> Any:
+    """A player controller whose character's movement component sits at this address, the menu's FOV in
+    Player.BaseFOV."""
     movement = types.SimpleNamespace(_get_address=lambda: component)
-    return types.SimpleNamespace(OakCharacter=types.SimpleNamespace(CharacterMovement=movement))
+    return types.SimpleNamespace(OakCharacter=types.SimpleNamespace(CharacterMovement=movement),
+                                 Player=FakePlayer(fov))
 
 
 class FakeHook:
@@ -86,12 +97,26 @@ class FakeHook:
         self.enabled = False
 
 
+class FakeOption:
+    """As mods_base's BoolOption and SliderOption where the mod reads them: an identifier, a value and its bounds."""
+
+    def __init__(self, identifier: str, value: Any, min_value: Any = None, max_value: Any = None,
+                 **kwargs: Any) -> None:
+        self.identifier, self.value, self.default_value = identifier, value, value
+        self.min_value, self.max_value, self.kwargs = min_value, max_value, kwargs
+
+
 class FakeMod:
     """As mods_base.Mod where this mod depends on it: hooks on before on_enable, off before on_disable."""
 
     def __init__(self, state: dict, **kwargs: Any) -> None:
         self.state, self.kwargs, self.is_enabled = state, kwargs, False
         self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
+        for option in kwargs.get("options") or []:
+            option.mod = self
+
+    def save_settings(self) -> None:
+        self.state["settings_saves"] += 1
 
     def enable(self) -> None:
         if self.is_enabled:
@@ -115,7 +140,8 @@ class FakeMod:
 def install() -> dict:
     """Registers the fake modules and returns the state the tests read and drive."""
     state: dict = {"misc": [], "warnings": [], "errors": [], "pc": None, "settings_exists": True,
-                   "settings_enabled": False, "mods": [], "keybinds": [], "types": [movement_type()], "type_finds": 0}
+                   "settings_enabled": False, "settings_saves": 0, "mods": [], "keybinds": [],
+                   "types": [movement_type()], "type_finds": 0}
 
     def find_all(cls: str, exact: bool = True) -> Any:
         state["type_finds"] += 1
@@ -134,9 +160,14 @@ def install() -> dict:
     unrealsdk_module.logging = logging_module
     unrealsdk_module.hooks = hooks_module
     unrealsdk_module.find_all = find_all
+    unreal_module = types.ModuleType("unrealsdk.unreal")
+    unreal_module.WeakPointer = weakref.ref
+    unrealsdk_module.unreal = unreal_module
 
     mods_base = types.ModuleType("mods_base")
     mods_base.get_pc = lambda **kwargs: state["pc"]
+    mods_base.BoolOption = FakeOption
+    mods_base.SliderOption = FakeOption
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, kind, hook_identifier))
     mods_base.keybind = lambda *args, **kwargs: state["keybinds"].append((args, kwargs))
 
@@ -154,6 +185,7 @@ def install() -> dict:
         "unrealsdk": unrealsdk_module,
         "unrealsdk.logging": logging_module,
         "unrealsdk.hooks": hooks_module,
+        "unrealsdk.unreal": unreal_module,
         "mods_base": mods_base,
     }.items():
         sys.modules[name] = module
