@@ -8,7 +8,7 @@ else.
 It writes the player's velocity and nothing else, so it changes no value another mod owns. Apex
 Movement's gravity, air control and jump counters are read, never written.
 
-The model is measured, not guessed: docs/spec-apex-grapple.md says what it does,
+The model is measured, not guessed: docs/apex_grapple/spec-apex-grapple.md says what it does,
 docs/candidats/grappin.md holds the numbers and where each came from.
 """
 
@@ -17,7 +17,7 @@ from mods_base import build_mod
 from . import control_console_menu, control_menu, frame, menu, report, settings
 
 # Research observers are archived: their synchronous scans caused first-shot stalls.
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 __author__ = "kevin-hDev"
 
 

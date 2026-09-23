@@ -40,7 +40,6 @@ ATTACHED = "attached"
 MOVE_FALLING = 3
 NS_PER_S = 1_000_000_000
 
-
 class Rope:
     def __init__(self) -> None:
         self.reset()
@@ -70,14 +69,14 @@ class Rope:
     def busy(self) -> bool:
         return self.state != IDLE
 
-    def fire(self, character: Any, now_ns: int) -> bool:
+    def fire(self, character: Any, now_ns: int, native_action: bool = True) -> bool:
         """Answers whether the mod takes the key. False leaves it to the game, which punches."""
         self.key_down = True
         if self.busy:
             # A second press during a shot calls it off rather than stacking a second rope.
             self.let_go("cancelled", now_ns)
             return True
-        native_priority = native_interaction.has_priority()
+        native_priority = native_interaction.has_priority() if native_action else False
         if native_priority:
             return False
         for line in settings.keep_in_bounds():
@@ -90,7 +89,8 @@ class Rope:
         start, facing = looking
         shot = aim.look(character, start, facing, float(settings.grapple_range.value))
         if not aim.grapples(shot, float(settings.punch_range.value), bool(settings.melee_wins.value),
-                            bool(settings.keep_game_grapple.value) and native_priority is not False, explain=True):
+                            bool(settings.keep_game_grapple.value) and native_priority is not False,
+                            keep_native_melee=native_action, explain=True):
             return False
         if not stamina.try_spend(character, float(settings.stamina_cost.value)):
             return True

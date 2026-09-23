@@ -1,6 +1,6 @@
 """The game's stamina, the bar the dash and the glide spend, opened to the grapple.
 
-Measured on 2026-09-22 (docs/investigations/endurance/2026-09-22-reserve-du-dash.md): the reserve is
+Measured on 2026-09-22 (docs/investigations/apex_grapple/endurance/2026-09-22-reserve-du-dash.md): the reserve is
 resourcepool'Vault_Power', full at 100, a dash costs 50, and the game refills it 3.2 s after the last
 spend at about 25 a second. The player's character owns it, and it is reached only through
 GameResourcePoolFunctionLibrary: the handle carries the type of the called function's own parameter,

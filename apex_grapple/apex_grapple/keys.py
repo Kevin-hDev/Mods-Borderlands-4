@@ -48,7 +48,7 @@ def _after_press(key: str, event_name: str) -> Any:
     return Block if blocked else None
 
 
-def _on_grapple(key: str) -> Any:
+def _on_grapple(key: str, native_action: bool) -> Any:
     epoch = _epoch
     def callback(event: Any) -> Any:
         if not _active or epoch is not _epoch:
@@ -75,7 +75,7 @@ def _on_grapple(key: str) -> Any:
                 # when that point is really there — otherwise the mod's own grapple runs as before.
                 _blocked.discard(key)
                 return None
-            if not _rope.fire(character, now_ns):
+            if not _rope.fire(character, now_ns, native_action=native_action):
                 _blocked.discard(key)
                 return None
             _blocked.add(key)
@@ -153,13 +153,14 @@ def bind(mappings: list[Any], rope: Any) -> bool:
     _rope = rope
     _groups = control_config.groups(mappings)
     _chords = Chords(_groups)
+    native_keys = input_list.grapple_keys(mappings)
     _epoch = object()
     epoch = _epoch
     # Named after the package, like the frame hook: the SDK binds by key, and the name says which
     # file bound it when two mods hold the same one.
     try:
         for key in sorted(grapple_keys):
-            _binds.append(keybind(f"{__package__}:grapple:{key}", key, _on_grapple(key),
+            _binds.append(keybind(f"{__package__}:grapple:{key}", key, _on_grapple(key, key in native_keys),
                                   is_hidden=True, event_filter=None))
         for key in sorted(jump_keys):
             _binds.append(keybind(f"{__package__}:jump:{key}", key, _on_jump(key), is_hidden=True, event_filter=None))

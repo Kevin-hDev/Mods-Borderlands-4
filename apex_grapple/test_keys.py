@@ -12,7 +12,7 @@ state = sdk_stubs.install()
 
 from unrealsdk.hooks import Block  # noqa: E402
 
-from apex_grapple import game_target, game_grapple, game, keys, settings  # noqa: E402
+from apex_grapple import control_config, game_target, game_grapple, game, keys, settings  # noqa: E402
 
 # These tests describe the mod's own grapple. The prototype that hands every press to the game is
 # switched off here and tested on its own at the end.
@@ -34,13 +34,15 @@ class FakeRope:
         self.takes_key = True
         self.holds = False
         self.fired = 0
+        self.native_actions = []
         self.released = 0
         self.raises = False
 
-    def fire(self, character, now_ns):
+    def fire(self, character, now_ns, native_action=True):
         if self.raises:
             raise RuntimeError("the trace failed")
         self.fired += 1
+        self.native_actions.append(native_action)
         return self.takes_key
 
     def key_up(self, now_ns):
@@ -74,6 +76,7 @@ check("and they match the game's list", keys.matches(state["mappings"]))
 
 check("a press that grapples is kept from the game", press("V") is Block)
 check("the rope was asked", rope.fired == 1)
+check("the game's native grapple key is identified", rope.native_actions[-1] is True)
 check("its release is kept too, so the game never sees half a press", release("V") is Block)
 check("and the rope was told the key came up", rope.released == 1)
 
@@ -106,6 +109,16 @@ check("a key that does both belongs to the grapple", press("V") is Block and rop
 release("V")
 
 keys.unbind()
+
+original_groups = control_config.groups
+control_config.groups = lambda mappings: (("G",), ("Gamepad_RightThumbstick",))
+keys.bind(state["mappings"], rope)
+check("a custom keyboard key still starts the mod's grapple", press("G") is Block)
+check("the custom key is not mistaken for the game's melee action", rope.native_actions[-1] is False)
+release("G")
+keys.unbind()
+control_config.groups = original_groups
+
 check("unbinding takes every key back", not state["keybinds"])
 check("and says so", not keys.is_bound())
 check("a game that names no grapple key binds nothing",

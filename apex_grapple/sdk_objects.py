@@ -85,10 +85,10 @@ class FakeCharacter:
 
 
 class FakeKismet:
-    """KismetSystemLibrary's class default object: every trace answers `hit`, a (distance, class name) pair."""
+    """Trace answers distance, class, and optionally the actor instance name."""
 
     def __init__(self) -> None:
-        self.hit: tuple[float, str] | None = None
+        self.hit: tuple[float, str] | tuple[float, str, str] | None = None
         self.calls: list[tuple] = []
 
     def LineTraceSingle(self, context: Any, start: Any, end: Any, channel: int, complex_trace: bool, ignored: list,
@@ -97,8 +97,9 @@ class FakeKismet:
         self.calls.append((start, end, channel))
         if self.hit is None:
             return False, [], types.SimpleNamespace()
-        distance, name = self.hit
-        actor = None if not name else types.SimpleNamespace(Class=types.SimpleNamespace(Name=name))
+        distance, name, *instance = self.hit
+        actor = None if not name else types.SimpleNamespace(
+            Class=types.SimpleNamespace(Name=name), Name=instance[0] if instance else name)
         return True, [], types.SimpleNamespace(Distance=distance, Actor=actor)
 
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5 — 2026-09-23
+
+- Preserve melee activation at purple boss shrines instead of firing the grapple.
+- Keep custom grapple bindings independent: a custom key still grapples while the game's melee input remains available for the shrine.
+- Leave ordinary lootable surfaces, movement, rope visuals, stamina and existing settings unchanged.
+
 ## 1.0.4 — 2026-09-23
 
 - Keep the settings window responsive when the game is paused. Console handoff and Close now proceed without waiting for player animation updates.

@@ -29,11 +29,16 @@ BEINGS = ("char", "vehicle", "enemy", "bpchar")
 # Still match a separate later Pawn, e.g. SpawnedAIPawn; never exempt all names containing Spawn.
 PAWN = re.compile(r"(?<!s)pawn")
 MAX_CLASS_NAME = 256
+MAX_OBJECT_NAME = 256
 MAX_REFUSALS = 200
 NO_SURFACE = "no surface in range"
 TOO_CLOSE = "too close"
 NATIVE_GRAPPLE = "native grapple"
 LIVING_TARGET = "living target"
+NATIVE_MELEE = "native melee interaction"
+# These shrine actors are activated with the melee action itself. Their measured class is the
+# generic LootableObject, so the instance family is required to avoid protecting every loot box.
+NATIVE_MELEE_OBJECTS = ("transhumanistshrine",)
 # The game's own grapple points, verified in game on 2026-09-20: the class is exactly GrapplePoint.
 # The ray rarely meets it, though — of 24 shots at the game's own pads, 13 met the level cell behind
 # it, 9 a static mesh and only 2 the point itself, which is why standing aside on the hit alone
@@ -62,6 +67,7 @@ class Shot:
     anchor: tuple[float, float, float]
     distance: float
     hit_name: str
+    hit_object_name: str = ""
 
 
 def reset() -> None:
@@ -96,11 +102,12 @@ def look(character: Any, start: tuple[float, float, float], facing: tuple[float,
     # Worked out from the distance rather than read from the hit's own Location: the distance is the
     # one field this trace is already known to answer (Apex Movement reads it and nothing else).
     anchor = tuple(start[axis] + facing[axis] * distance for axis in range(3))
-    return Shot(anchor=anchor, distance=distance, hit_name=_name_of(result))
+    hit_name, hit_object_name = _identity_of(result)
+    return Shot(anchor=anchor, distance=distance, hit_name=hit_name, hit_object_name=hit_object_name)
 
 
-def _name_of(result: Any) -> str:
-    """The class of what was hit, or "" when the game does not hand it over on this build.
+def _identity_of(result: Any) -> tuple[str, str]:
+    """The class and instance of what was hit, or empty names when this build will not say.
 
     Three ways in, because which of them a HitResult offers is not established in Borderlands 4.
     """
@@ -112,11 +119,12 @@ def _name_of(result: Any) -> str:
             continue
         if actor is None:
             continue
-        name = str(getattr(getattr(actor, "Class", None), "Name", "")) or str(getattr(actor, "Name", ""))
-        if name:
-            _tell_once(name)
-            return name
-    return ""
+        class_name = str(getattr(getattr(actor, "Class", None), "Name", ""))[:MAX_CLASS_NAME]
+        object_name = str(getattr(actor, "Name", ""))[:MAX_OBJECT_NAME]
+        if class_name or object_name:
+            _tell_once(class_name or object_name)
+            return class_name, object_name
+    return "", ""
 
 
 def _tell_once(name: str) -> None:
@@ -136,6 +144,14 @@ def is_game_grapple(hit_name: str) -> bool:
     """True when the name reads as one of the game's own grapple points."""
     lowered = hit_name.lower()
     return any(word in lowered for word in GAME_GRAPPLES)
+
+
+def is_native_melee(shot: Shot) -> bool:
+    """True only for measured object families whose interaction is the melee action itself."""
+    if shot.hit_name.lower() != "lootableobject":
+        return False
+    lowered = shot.hit_object_name[:MAX_OBJECT_NAME].lower()
+    return any(marker in lowered for marker in NATIVE_MELEE_OBJECTS)
 
 
 def game_point_near(anchor: tuple[float, float, float]) -> bool:
@@ -177,10 +193,13 @@ def _count_once(found: int) -> None:
     report.note(f"the level holds {found} of the game's grapple points")
 
 
-def refusal(shot: Shot | None, punch_range: float, melee_wins: bool, keep_game_grapple: bool) -> str | None:
+def refusal(shot: Shot | None, punch_range: float, melee_wins: bool, keep_game_grapple: bool,
+            keep_native_melee: bool = True) -> str | None:
     """The single authority for deciding whether this collision belongs to the mod."""
     if shot is None:
         return NO_SURFACE
+    if keep_native_melee and is_native_melee(shot):
+        return NATIVE_MELEE
     # Nearby known surfaces still grapple; melee keeps nearby beings and unidentified hits.
     if shot.distance < punch_range and (not shot.hit_name or is_being(shot.hit_name)):
         return TOO_CLOSE
@@ -190,13 +209,15 @@ def refusal(shot: Shot | None, punch_range: float, melee_wins: bool, keep_game_g
 
 
 def grapples(shot: Shot | None, punch_range: float, melee_wins: bool,
-             keep_game_grapple: bool = False, *, explain: bool = False) -> bool:
+             keep_game_grapple: bool = False, *, keep_native_melee: bool = True,
+             explain: bool = False) -> bool:
     """False leaves the key to the game. Only actual presses request bounded refusal logging."""
     global _refusals
-    reason = refusal(shot, punch_range, melee_wins, keep_game_grapple)
+    reason = refusal(shot, punch_range, melee_wins, keep_game_grapple, keep_native_melee)
     if reason is not None and explain and _refusals < MAX_REFUSALS:
         _refusals += 1
-        name = re.sub(r"[^a-zA-Z0-9_]", "?", shot.hit_name[:MAX_CLASS_NAME]) if shot else "none"
+        label = (shot.hit_object_name or shot.hit_name) if shot else "none"
+        name = re.sub(r"[^a-zA-Z0-9_]", "?", label[:MAX_OBJECT_NAME])
         distance = f"{shot.distance:.0f} cm" if shot else "unknown"
         report.note(f"grapple refused: {reason}, hit={name}, distance={distance}")
     return reason is None

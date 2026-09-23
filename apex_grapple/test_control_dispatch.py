@@ -10,7 +10,7 @@ class Rope:
     def __init__(self):
         self.fires = 0
         self.releases = 0
-    def fire(self, character, now):
+    def fire(self, character, now, native_action=True):
         self.fires += 1
         return True
     def key_up(self, now):

@@ -22,6 +22,17 @@ check("at contact the rope holds", rope.holds)
 check("a player already in the air is left alone: no lift, no mode written",
       player.CharacterMovement.modes == [])
 
+# The Sanctuaire des Augures is a LootableObject activated with the melee action itself. Its
+# measured instance family, rather than the generic class, decides whether the key belongs to it.
+shrine_player, shrine_rope = fresh(
+    on_ground=False, hit=(197.0, "LootableObject", "IO_TranshumanistShrine_UAID_123"))
+check("a Transhumanist shrine receives the melee key", not shrine_rope.fire(shrine_player, 0))
+check("standing aside for the shrine starts no rope", not shrine_rope.busy)
+check("a custom grapple key can still grapple the shrine surface",
+      shrine_rope.fire(shrine_player, 1, native_action=False))
+loot_player, loot_rope = fresh(on_ground=False, hit=(197.0, "LootableObject", "LootableObject_123"))
+check("an ordinary lootable surface still starts a rope", loot_rope.fire(loot_player, 0))
+
 rope.update(player, int(0.21 * SECOND))
 speed = game.velocity(player.CharacterMovement)
 # Strength x gravity x the frame, along the rope: read from the setting rather than written here, so

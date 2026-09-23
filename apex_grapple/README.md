@@ -1,6 +1,6 @@
 # Apex Grapple
 
-Version **1.0.4** — an Apex Legends inspired grapple for Borderlands 4.
+Version **1.0.5** — an Apex Legends inspired grapple for Borderlands 4.
 
 Aim at a surface and pull toward it while steering in the air. Let go to carry your momentum. The mod uses the game's grapple effects and hand animation with its own pulling movement.
 
@@ -11,6 +11,7 @@ Each Apex shot uses the game's existing stamina bar, shared with dash and glide.
 ## Controls and settings
 
 - By default, use the game's melee input, including R3 on a controller. Nearby enemies retain melee priority by default.
+- Purple boss shrines activated with melee retain priority on the game's own melee input. A custom grapple key continues to grapple normally.
 - Press the grapple input again, or press jump, to release. Release behavior and pull duration are configurable.
 - Open **Apex Grapple** in the SDK mods menu to access the custom settings window, in the main menu or during a game. The window also responds while the game is paused.
 - Adjust shooting, pulling and letting go, or restore the defaults. The window remembers your last tab when reopened, including after a game restart.

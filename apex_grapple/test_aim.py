@@ -32,6 +32,11 @@ check("it says what it met", shot.hit_name == "StaticMeshActor")
 check("the ray goes out to the full range", kismet.calls[-1][1].X == 3000.0)
 check("on the channel that sees the game's blocking panels", kismet.calls[-1][2] == aim.TRACE_CHANNEL)
 
+kismet.hit = (197.0, "LootableObject", "IO_TranshumanistShrine_UAID_123")
+identified = aim.look(player, (0.0, 0.0, 100.0), (1.0, 0.0, 0.0), 3000.0)
+check("the ray keeps the shrine instance family", identified is not None and
+      identified.hit_object_name == "IO_TranshumanistShrine_UAID_123")
+
 kismet.hit = None
 check("a ray that meets nothing gives nothing", aim.look(player, (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), 3000.0) is None)
 
@@ -54,6 +59,10 @@ check("the observed OakCharacter stays living", aim.is_being("OakCharacter"))
 surface = aim.Shot(anchor=(0.0, 0.0, 0.0), distance=800.0, hit_name="StaticMeshActor")
 enemy = aim.Shot(anchor=(0.0, 0.0, 0.0), distance=800.0, hit_name="BPChar_Enemy_Ripper")
 near_wall = aim.Shot(anchor=(0.0, 0.0, 0.0), distance=90.0, hit_name="StaticMeshActor")
+shrine = aim.Shot(anchor=(0.0, 0.0, 0.0), distance=197.0, hit_name="LootableObject",
+                  hit_object_name="IO_TranshumanistShrine_UAID_123")
+ordinary_loot = aim.Shot(anchor=(0.0, 0.0, 0.0), distance=197.0, hit_name="LootableObject",
+                         hit_object_name="LootableObject_123")
 
 check("a surface is grappled", aim.grapples(surface, 200.0, True))
 nest = aim.Shot(anchor=surface.anchor, distance=800.0, hit_name="OakSpawnPoint")
@@ -62,6 +71,8 @@ check("an enemy is punched", not aim.grapples(enemy, 200.0, True))
 check("an enemy is grappled when the punch is turned off", aim.grapples(enemy, 200.0, False))
 check("known nearby walls can be grappled", aim.grapples(near_wall, 200.0, True))
 check("nearby walls remain grappleable with melee priority disabled", aim.grapples(near_wall, 200.0, False))
+check("a Transhumanist shrine keeps its native melee interaction", not aim.grapples(shrine, 200.0, True))
+check("an ordinary lootable surface remains grappleable", aim.grapples(ordinary_loot, 200.0, True))
 check("nothing aimed at is punched, which is what the game does", not aim.grapples(None, 200.0, True))
 
 # The game's own grapple points: kept for the game when the player asked to keep them.
