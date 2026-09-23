@@ -11,14 +11,14 @@ from mods_base import BoolOption, SliderOption
 auto_sprint = BoolOption(
     "auto_sprint", True,
     display_name="Enabled",
-    description="Sprint as soon as the move stick is fully pushed, up to the game's own 60 degree limit.",
+    description="Sprint by pushing the move stick all the way.",
 )
 # The whole slide movement, on top of its own options below (Kevin's rule, 2026-09-18: every movement can be turned
 # off on its own; the slides and the dash had no switch at all).
 slides = BoolOption(
     "slides", True,
     display_name="Enabled",
-    description="Faster, longer slides. Turned off, slides are the game's own again.",
+    description="Faster, longer slides.",
 )
 momentum_slides = BoolOption(
     "momentum_slides", True,
@@ -28,12 +28,12 @@ momentum_slides = BoolOption(
 dash = BoolOption(
     "dash", True,
     display_name="Enabled",
-    description="A longer dash. Turned off, the dash is the game's own again.",
+    description="A longer dash.",
 )
 glide = BoolOption(
     "glide", True,
     display_name="Enabled",
-    description="A faster glide. Turned off, the glide is the game's own again.",
+    description="A faster glide.",
 )
 # One switch for both: they share the crouch key being blocked, which is what removes the game's own held-crouch slam
 # (air_crouch, 2026-09-18). The description says what comes back when it is turned off.
@@ -51,23 +51,23 @@ air_strafe = BoolOption(
 heavier_fall = BoolOption(
     "heavier_fall", True,
     display_name="Enabled",
-    description="Fall faster after a jump or a drop; every jump keeps its height.",
+    description="Fall faster without jumping any lower.",
 )
 # Wall climb (phase 2 spec, 2026-09-17): on by default like every Apex move but the Axle slide.
 wall_climb = BoolOption(
     "wall_climb", True,
     display_name="Enabled",
-    description="Jump at a wall with the move stick pushed toward it and look at it: you climb up it, straight or diagonally, and pull yourself over the top.",
+    description="Climb up walls.",
 )
 walk_speed = SliderOption(
     "walk_speed", 672, 300, 1500, step=1, is_integer=True,
     display_name="Walk speed",
-    description="Ground speed while walking. The game's own value is 540.",
+    description="The game's own value is 540.",
 )
 sprint_speed = SliderOption(
     "sprint_speed", 960, 300, 2000, step=1, is_integer=True,
     display_name="Sprint speed",
-    description="Ground speed while sprinting, never slower than the walk speed. The game's own value is 828.",
+    description="The game's own value is 828.",
 )
 # 1130 after trying 1080 and 1150 in game (Kevin, 2026-09-17: "on se rapproche plus d'un apex legends"). The floor
 # stays above slide_physics.STOP_SPEED (350): a slide started at or under it was ended on its first frame (review,
@@ -83,17 +83,17 @@ slide_speed = SliderOption(
 slide_distance = SliderOption(
     "slide_distance", 1300, 300, 6000, step=50, is_integer=True,
     display_name="Flat slide distance",
-    description="How far a slide goes on flat ground. Slopes add to it downhill and take from it uphill.",
+    description="How far a slide goes on flat ground.",
 )
 slide_downhill_pull = SliderOption(
     "slide_downhill_pull", 2200, 0, 6000, step=100, is_integer=True,
     display_name="Downhill pull",
-    description="How strongly slopes speed a slide up or slow it down. At 2200 a slope of about 12 degrees keeps its speed.",
+    description="Slopes speed a slide up or slow it down.",
 )
 slide_max_speed = SliderOption(
     "slide_max_speed", 2000, 500, 4000, step=50, is_integer=True,
     display_name="Max slide speed",
-    description="A slide never goes faster than this, however steep the slope. Never below the slide speed.",
+    description="A slide's top speed.",
 )
 # Kevin, 2026-09-17: further at the game's own speed ("il faut juste qu'il aille plus loin, pas qu'il aille plus vite");
 # 130 then 200 tried with the whole curve stretched, not enough, so up to 300; once only the full-speed part was
@@ -104,21 +104,19 @@ slide_max_speed = SliderOption(
 glide_speed = SliderOption(
     "glide_speed", 130, 100, 250, step=5, is_integer=True,
     display_name="Glide speed",
-    description="Percent of the game's glide speed, in every direction. The acceleration rises with it, so a short "
-                "glide gains as much as a long one. The descent does not change, so a faster glide also goes further.",
+    description="In percent. 100 is the game's speed.",
 )
 dash_distance = SliderOption(
     "dash_distance", 200, 100, 1000, step=5, is_integer=True,
     display_name="Dash distance",
-    description="Percent of the game's dash distance. Up to 300 the dash lasts longer, at the game's own speed; past "
-                "300 it starts faster and slows down to it. 100 is the game.",
+    description="In percent. 100 is the game's dash.",
 )
 # Axle slide, off by default (Kevin, 2026-09-17: "c'est vraiment un move très spécifique"). Steering belongs to it
 # alone: the normal slide keeps the game's own steering (Kevin: "le mode par défaut n'est pas censé pouvoir se diriger").
 axle_slide = BoolOption(
     "axle_slide", False,
     display_name="Enabled",
-    description="Slides as Axle's in Apex Legends: steered with the move stick, and boosted every time.",
+    description="Slides you steer, and faster, as Axle's.",
 )
 # 350 from the steering tries (the game's 55 goes almost straight, 220 not enough, 1000, 500 and 400 tried): Kevin kept
 # 350, then found it gave full control, which is the Axle slide.
@@ -132,18 +130,18 @@ axle_steering = SliderOption(
 axle_speed_boost = SliderOption(
     "axle_speed_boost", 25, 0, 50, step=1, is_integer=True,
     display_name="Speed boost",
-    description="Percent faster than a normal slide: its start and its top speed.",
+    description="Extra speed, in percent.",
 )
 # +50 %: about 1950 on flat ground, between the longer slides Kevin liked in the lever rounds (1536 and 2464).
 axle_flat_distance_boost = SliderOption(
     "axle_flat_distance_boost", 50, 0, 200, step=5, is_integer=True,
     display_name="Flat distance boost",
-    description="Percent further than a normal slide on flat ground.",
+    description="Extra distance on flat ground, in percent.",
 )
 axle_slope_boost = SliderOption(
     "axle_slope_boost", 25, 0, 50, step=1, is_integer=True,
     display_name="Slope boost",
-    description="Percent further than a normal slide on the same slope, uphill and downhill.",
+    description="Extra distance on slopes, in percent.",
 )
 landing_slide_min_speed = SliderOption(
     "landing_slide_min_speed", 550, 0, 2000, step=1, is_integer=True,
@@ -163,15 +161,14 @@ air_acceleration = SliderOption(
 fall_weight = SliderOption(
     "fall_weight", 2.0, 1.0, 3.0, step=0.05, is_integer=False,
     display_name="Fall weight",
-    description="Gravity multiplier. Jumps keep their height; only the time in the air gets shorter. 1.0 is the game.",
+    description="Strength of gravity. 1 is the game's.",
 )
-# Up to 1000, default kept, as players asked in the Nexus comments (Kevin, 2026-09-19). The description gives the scale:
-# nothing else in the menu says how high 1000 is.
+# Up to 1000, default kept, as players asked in the Nexus comments (Kevin, 2026-09-19). The game's standing jump rises
+# 198; the description no longer says so since Kevin cut every description to what a player needs (2026-09-23).
 jump_height_bonus = SliderOption(
     "jump_height_bonus", 20, 0, 1000, step=1, is_integer=True,
     display_name="Extra jump height",
-    description="Added to every jump: standing, sprint, double, slide and ladder jumps. The game's standing jump "
-                "rises 198.",
+    description="Extra height for every jump.",
 )
 # Kevin, 2026-09-17: "about twice the character's height" and a wait of "1.5 or 2 seconds" before climbing again after a
 # fall. 370 climbs those 372 (the character is 186 high, measured) in about a second: a starting point, not checked
@@ -179,19 +176,19 @@ jump_height_bonus = SliderOption(
 climb_height = SliderOption(
     "climb_height", 200, 100, 400, step=10, is_integer=True,
     display_name="Climb height",
-    description="How high a climb goes, in percent of your character's height.",
+    description="In percent of your character's height.",
 )
 climb_speed = SliderOption(
     "climb_speed", 370, 100, 2000, step=10, is_integer=True,
     display_name="Climb speed",
-    description="How fast you climb.",
+    description="How fast you go up.",
 )
 # Kevin, 2026-09-17: "que la grimpe ne fonctionne pas que tout droit, qu'elle puisse fonctionner en diagonale jusqu'à
 # 60 degrés". This one angle also opens the start and the end of a climb to the stick (climb_rules).
 climb_lean = SliderOption(
     "climb_lean", 60, 0, 75, step=5, is_integer=True,
     display_name="Climb diagonal",
-    description="How far a climb follows the move stick to a side, in degrees. At 0 you only climb straight up.",
+    description="How far a climb can go sideways.",
 )
 # A wait in seconds, Kevin's rule (2026-09-18): it lets a climb, then a double jump to go higher, grab the wall again
 # once it is over, wherever the player is; a height rule tried that day broke that. Kevin kept 1.2 on 2026-09-17 at
@@ -204,7 +201,7 @@ climb_lean = SliderOption(
 reclimb_delay = SliderOption(
     "reclimb_delay", 0.9, 0.0, 3.0, step=0.1, is_integer=False,
     display_name="Climb again after",
-    description="Seconds before you can climb again after a climb that did not reach the top. Landing clears it.",
+    description="Wait before you can climb again. Touching the ground clears it.",
 )
 
 

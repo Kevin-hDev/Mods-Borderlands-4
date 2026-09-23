@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.5 - 2026-09-23
+
+- Shorter setting descriptions, in English and French: each one now says what you get in a single plain sentence.
+- Setting names, values and limits are unchanged.
+
 ## 1.1.4 — 2026-09-23
 
 - Add the same visual settings window as Apex Grapple, with English and French labels, controller navigation and saved section selection.
