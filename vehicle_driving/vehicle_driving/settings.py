@@ -13,36 +13,32 @@ from mods_base import BoolOption, SliderOption
 max_speed = SliderOption(
     "max_speed", 125, 100, 300, step=1, is_integer=True,
     display_name="Max speed",
-    description="Top speed in percent of the game's, Hover Drive bonus included. 100 is the game's own.",
+    description="100% = the game's speed, boost included.",
 )
 acceleration = SliderOption(
     "acceleration", 250, 100, 500, step=1, is_integer=True,
     display_name="Acceleration",
-    description="How fast the vehicle picks up speed, after a turn too, in percent of the game's. "
-                "100 is the game's own.",
+    description="100% = the game's acceleration.",
 )
 turn_speed = SliderOption(
     "turn_speed", 250, 100, 500, step=1, is_integer=True,
     display_name="Turn speed",
-    description="How fast the vehicle turns toward your camera, in percent of the game's. 100 is the game's own.",
+    description="100% = game value.",
 )
 jump_height = SliderOption(
     "jump_height", 200, 100, 400, step=1, is_integer=True,
     display_name="Jump height",
-    description="How high the vehicle jumps, in percent of the game's. 100 is the game's own.",
+    description="100% = game value.",
 )
 grip = BoolOption(
     "grip", True,
     display_name="Grip",
-    description="The vehicle goes where it faces instead of sliding on in turns. Turned off, it slides as in the "
-                "game.",
+    description="The vehicle holds its line instead of sliding.",
 )
-# "degree" in words: the menu was never seen drawing a degree sign, and a missing glyph would show as a box.
 turn_loss = SliderOption(
     "turn_loss", 9, 0, 30, step=1, is_integer=True,
-    display_name="Speed lost in a 90 degree turn",
-    description="The share of speed the grip lets go in a 90 degree turn. The game's own braking adds to it, so a "
-                "turn at full throttle loses a little more.",
+    display_name="Speed lost in turns",
+    description="Share of speed lost in a right-angle turn.",
 )
 OPTIONS = [max_speed, acceleration, turn_speed, jump_height, grip, turn_loss]
 # The setting each lever of levers.py multiplies, by the name the levers give.

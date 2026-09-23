@@ -1,5 +1,7 @@
 # Vehicle Driving
 
+Version **1.0.1**. Open Vehicle Driving in the SDK mods menu for its English/French settings window. It works at the title screen, in a game, at the wheel and while the game is paused. The window remembers the last section you opened.
+
 Livelier vehicles for Borderlands 4: a higher top speed, a quicker pick-up, sharper turns, higher jumps, and a grip
 that keeps the vehicle going where it faces instead of sliding on through turns. Every effect has its own setting in
 the mod menu.
@@ -9,7 +11,8 @@ on three different vehicles. It has not been tested on versions older than 1.8.1
 
 ## The settings
 
-Console `~`, command `mods`, Vehicle Driving.
+Console `~`, command `mods`, Vehicle Driving. The window splits them into two pages: Driving (the first four) and
+Handling (the grip).
 
 | Setting | What it does | Default | Range |
 |---|---|---|---|
@@ -50,6 +53,8 @@ file, no key bound, and no game value in common.
   speed for each degree turned. It lets the game drive in the air, going fast up or down, during the game's
   powerslide, under 300 of speed, and for a gap under 2 or over 120 degrees.
 - `ground.py` checks there is ground under the vehicle, with one trace straight down.
+- `panel_*.py` and `control_*.py` draw the settings window and hand the controls back to the console menu when it
+  closes; `menu.py` groups the settings into its pages.
 - `settings.py` holds every setting with its default and its range; `report.py` writes the mod's lines in the SDK
   log, each failure once.
 

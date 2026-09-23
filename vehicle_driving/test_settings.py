@@ -28,13 +28,13 @@ check("the six settings of the menu, in order, with Kevin's defaults and bounds 
     ("turn_speed", "Turn speed", 250, (100, 500)),
     ("jump_height", "Jump height", 200, (100, 400)),
     ("grip", "Grip", True, ()),
-    ("turn_loss", "Speed lost in a 90 degree turn", 9, (0, 30)),
+    ("turn_loss", "Speed lost in turns", 9, (0, 30)),
 ])
 check("every slider moves by whole percents", all(
     option.kwargs.get("step") == 1 and option.kwargs.get("is_integer") for option in settings.OPTIONS if option.args))
 check("each multiplier's description names the game's own value",
-      all("100 is the game's own" in option.kwargs["description"] for option in settings.OPTIONS[:4]))
-check("the turn loss says the game's braking adds to it", "braking adds" in settings.turn_loss.kwargs["description"])
+      all(option.kwargs["description"].startswith("100% = ") for option in settings.OPTIONS[:4]))
+check("turn loss says which turn it is measured on", "right-angle turn" in settings.turn_loss.kwargs["description"])
 check("the factors are the sliders over 100",
       settings.factors() == {"max_speed": 1.25, "acceleration": 2.5, "turn_speed": 2.5, "jump_height": 2.0})
 loss = settings.loss_per_degree()

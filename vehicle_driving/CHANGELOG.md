@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 - 2026-09-23
+
+- Add the same visual settings window as Apex Movement and Apex Grapple, with English and French labels, controller
+  navigation, undo after a reset, and saved section selection. It stays responsive while the game is paused.
+- Shorter setting descriptions, in English and French: each one now says what you get in a single plain sentence.
+- Setting names, values, limits and driving behavior are unchanged.
+
 ## 1.0.0 — first public release
 
 Livelier vehicles, one setting per effect: max speed, acceleration, turn speed, jump height, and a grip that keeps

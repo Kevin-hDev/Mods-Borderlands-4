@@ -22,11 +22,13 @@ state = sdk_stubs.install()
 state["settings_exists"] = False
 
 import vehicle_driving  # noqa: E402
-from vehicle_driving import frame, settings  # noqa: E402
+from vehicle_driving import frame, menu, panel_preferences, settings  # noqa: E402
 
 mod = state["mods"][0]
-check("one mod, named Vehicle Driving, with its six settings",
-      len(state["mods"]) == 1 and mod.kwargs["name"] == "Vehicle Driving" and mod.kwargs["options"] == settings.OPTIONS)
+check("one mod with two visual pages and six original top-level settings",
+      len(state["mods"]) == 1 and mod.kwargs["name"] == "Vehicle Driving"
+      and mod.kwargs["options"] == [*settings.OPTIONS, *panel_preferences.ALL]
+      and [option for group in menu.MENU for option in group.children] == settings.OPTIONS)
 check("a fresh install switches it on and says its version",
       mod.is_enabled and state["misc"][-1] == f"[Vehicle Driving] enabled, version {vehicle_driving.__version__}")
 check("its one hook is the frame, under the mod's own identifier: Apex Movement's is apex_movement:frame on the same "

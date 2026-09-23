@@ -6,9 +6,9 @@ value in common (spec section 4, Kevin's requirement of 2026-09-18).
 
 from mods_base import build_mod
 
-from . import frame, report, settings
+from . import frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "kevin-hDev"
 
 
@@ -27,11 +27,13 @@ def _on_disable() -> None:
 
 mod = build_mod(
     name="Vehicle Driving",
-    options=settings.OPTIONS,
+    # Keep the six original top-level keys so existing players' saved values load unchanged.
+    options=[*settings.OPTIONS, *panel_preferences.ALL],
     hooks=[frame.tick],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )
+panel_open.install(mod)
 
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
 if mod.settings_file is not None and not mod.settings_file.exists():

@@ -15,9 +15,19 @@ class FakeOption:
         # args holds a slider's bounds, in mods_base's order: min_value, max_value.
         self.identifier, self.value, self.args, self.kwargs = identifier, value, args, kwargs
         self.display_name = kwargs.get("display_name", identifier)
+        self.description = kwargs.get("description", "")
+        self.step = kwargs.get("step", 1)
+        self.is_integer = kwargs.get("is_integer", True)
         # mods_base's names for a slider's bounds and first value; a switch has no bounds.
         self.min_value, self.max_value = (args + (None, None))[:2]
         self.default_value = value
+
+
+class FakeNestedOption:
+    def __init__(self, identifier: str, children: list, **kwargs: Any) -> None:
+        self.identifier, self.children = identifier, children
+        self.display_name = kwargs.get("display_name", identifier)
+        self.description = kwargs.get("description", "")
 
 
 class FakeHook:
@@ -58,6 +68,12 @@ class FakeMod:
             hook.disable()
         if self.kwargs.get("on_disable"):
             self.kwargs["on_disable"]()
+
+    def save_settings(self) -> None:
+        self.state["saves"] = self.state.get("saves", 0) + 1
+
+    def iter_display_options(self):
+        yield from self.kwargs.get("options", ())
 
 
 class WeakPointer:
@@ -192,6 +208,7 @@ def install() -> dict:
     mods_base = types.ModuleType("mods_base")
     mods_base.BoolOption = FakeOption
     mods_base.SliderOption = FakeOption
+    mods_base.NestedOption = FakeNestedOption
     mods_base.get_pc = lambda **kwargs: state["pc"]
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, kind, hook_identifier))
     mods_base.keybind = lambda *args, **kwargs: state["keybinds"].append((args, kwargs))
