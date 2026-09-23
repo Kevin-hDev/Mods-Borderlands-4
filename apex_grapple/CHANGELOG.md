@@ -4,6 +4,7 @@
 
 - Keep the settings window responsive when the game is paused. Console handoff and Close now proceed without waiting for player animation updates.
 - Close the previous Apex window before opening another one, and avoid returning to a console page that has already changed.
+- Shorten the setting descriptions in English and French; names, values and limits stay the same.
 - Preserve the existing controls, settings and grapple behavior.
 
 ## 1.0.3 — 2026-09-22

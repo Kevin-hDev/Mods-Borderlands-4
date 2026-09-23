@@ -20,13 +20,12 @@ from mods_base import BoolOption, SliderOption
 grapple_range = SliderOption(
     "grapple_range", 3000, 500, 10000, step=50, is_integer=True,
     display_name="Range",
-    description="How far the hook reaches, in centimetres. 3000 is 30 metres, the game's own outer grapple range.",
+    description="How far the hook reaches. 3000 is 30 metres.",
 )
 hook_speed = SliderOption(
     "hook_speed", 5000, 1000, 30000, step=100, is_integer=True,
     display_name="Hook speed",
-    description="How fast the hook flies to the surface before the pull starts. You keep full control while it flies, "
-                "so you can still jump: that is the jump grapple.",
+    description="How fast the hook flies to its target.",
 )
 # Titanfall 2 measures 1.8. Kevin settled on 1.7, and the two are not the same force: the pull is a
 # multiple of the gravity of the moment, and Apex Movement doubles it, so 1.7 here is 3332 units/s²
@@ -34,8 +33,7 @@ hook_speed = SliderOption(
 pull_strength = SliderOption(
     "pull_strength", 1.7, 0.2, 8.0, step=0.1, is_integer=False,
     display_name="Pull strength",
-    description="How hard the rope pulls, as a multiple of the gravity you are under. Under 2 the rope only lifts "
-                "you when you aim steeply upward; the higher it is, the flatter a shot can be and still fly you.",
+    description="How hard the rope pulls you.",
 )
 pull_speed_cap = SliderOption(
     # Titanfall 2 adds 830 to 890 units/s, which converts to 2100 to 2550 here. Kevin first set 2000,
@@ -43,7 +41,7 @@ pull_speed_cap = SliderOption(
     # trop de vitesse a 2000".
     "pull_speed_cap", 2500, 200, 8000, step=50, is_integer=True,
     display_name="Pull speed cap",
-    description="How much speed the pull may add along the rope. The speed you already had is kept on top of it.",
+    description="Top speed the rope gives. Your momentum adds to it.",
 )
 steer_strength = SliderOption(
     # Twice Titanfall 2's one gravity. The reading stands, and so does this: since the mod took
@@ -51,8 +49,7 @@ steer_strength = SliderOption(
     # whole job to do. Kevin doubled it and raised its cap by half again before the arc felt right.
     "steer_strength", 2.0, 0.0, 6.0, step=0.1, is_integer=False,
     display_name="Steering strength",
-    description="How hard the move stick pushes during the pull, as a multiple of gravity. This is what bends the "
-                "path: hold the stick one way and turn the camera the other to swing in an arc.",
+    description="How much the move stick bends your path.",
 )
 steer_speed_cap = SliderOption(
     "steer_speed_cap", 1000, 0, 3000, step=25, is_integer=True,
@@ -63,8 +60,7 @@ steer_speed_cap = SliderOption(
 release_on_key_up = BoolOption(
     "release_on_key_up", True,
     display_name="Hold to keep pulling",
-    description="A quick tap gives a whole pull, even up close. Release a held key after the hook has landed "
-                "to let go. Turned off, every pull runs to one of the other ends.",
+    description="Releasing the key lets go. A quick tap pulls all the way.",
 )
 arrival_distance = SliderOption(
     # 150 left 39 per cent of pulls running until the player hit the ground. At 600, over 380 pulls,
@@ -73,13 +69,12 @@ arrival_distance = SliderOption(
     # count as arriving.
     "arrival_distance", 600, 20, 2000, step=10, is_integer=True,
     display_name="Arrival distance",
-    description="How near the anchor the pull ends, in centimetres. Capped at half the starting distance for short pulls.",
+    description="The pull stops this far from the anchor.",
 )
 longest_pull = SliderOption(
     "longest_pull", 4.0, 0.0, 15.0, step=0.5, is_integer=False,
     display_name="Longest pull",
-    description="How long one pull may last, in seconds. 0 means no limit. Swinging around the anchor takes far "
-                "longer than flying straight at it, so a short limit cuts the swing.",
+    description="In seconds. 0 means no limit.",
 )
 rope_carry = SliderOption(
     "rope_carry", 100, 0, 100, step=5, is_integer=True,
@@ -91,16 +86,12 @@ rope_carry = SliderOption(
 takeoff_lift = SliderOption(
     "takeoff_lift", 250, 0, 1500, step=25, is_integer=True,
     display_name="Take-off lift",
-    description="The upward speed a pull gives you when it starts on your feet, just enough to leave the ground. "
-                "The game's own jump is 840. It buys the pull the time to take hold: too little and you are "
-                "back on the floor before the rope has done anything. At 0 a pull that begins standing drags you "
-                "along the floor.",
+    description="A small hop when a pull starts on the ground. At 0 you leave along the floor.",
 )
 ground_grace = SliderOption(
     "ground_grace", 0.35, 0.0, 2.0, step=0.05, is_integer=False,
     display_name="Take-off time",
-    description="How long a pull ignores the ground at its start, in seconds. A pull that begins on your feet needs "
-                "this much to lift you; without it the game puts you back down and the pull ends at once.",
+    description="The ground is ignored this long at the start, so you can take off.",
 )
 release_on_landing = BoolOption(
     "release_on_landing", True,
@@ -110,33 +101,27 @@ release_on_landing = BoolOption(
 block_jump = BoolOption(
     "block_jump", True,
     display_name="Preserve jump when detaching",
-    description="Jump releases an attached grapple. Consume that press so it spends no jump; press again to jump. "
-                "Turned off, the release press also goes to the game as a normal jump.",
+    description="Jumping to let go spends no jump.",
 )
 melee_wins = BoolOption(
     "melee_wins", True,
     display_name="Punch wins over grapple",
-    description="The grapple key is also the punch key. Aim at an enemy and you punch; aim at a surface and you "
-                "grapple. Turned off, the grapple always wins and you never punch with this key.",
+    description="On an enemy, the key punches instead of grappling.",
 )
 show_rope = BoolOption(
     "show_rope", True,
     display_name="Show the rope",
-    description="Draw the game's own grapple beam between your hand and what you hooked, and play its arm "
-                "animation. Turn it off if either of them misbehaves; the grapple itself is untouched.",
+    description="Show the rope and the arm animation.",
 )
 keep_game_grapple = BoolOption(
     "keep_game_grapple", False,
     display_name="Keep the game's grapple",
-    description="The game's own grapple points still work, and this mod stands aside on them. Off, the mod takes "
-                "every shot and the game's grapple never fires, which is what makes it feel like one grapple "
-                "instead of two.",
+    description="The game's grapple points keep the game's own grapple.",
 )
 punch_range = SliderOption(
     "punch_range", 200, 0, 1000, step=10, is_integer=True,
     display_name="Punch range",
-    description="Nearby enemies and unidentified hits within this distance keep the punch, in centimetres. "
-                "Known surfaces can still be grappled up close.",
+    description="An enemy closer than this gets punched.",
 )
 
 # The reserve the dash and the glide already spend, measured on 2026-09-22: full at 100, a dash takes
@@ -145,8 +130,7 @@ punch_range = SliderOption(
 stamina_cost = SliderOption(
     "stamina_cost", 33, 0, 100, step=1, is_integer=True,
     display_name="Stamina cost",
-    description="Share of the stamina bar a shot spends, the one the dash and the glide already use, as a "
-                "percentage. 33 gives three shots on a full bar. At 0 a shot costs nothing and never waits.",
+    description="Share of the stamina bar each shot spends. 33 is three shots, 0 is free.",
 )
 
 ALL = (grapple_range, hook_speed, pull_strength, pull_speed_cap, steer_strength, steer_speed_cap,
