@@ -21,7 +21,7 @@ def check(label: str, condition: bool) -> None:
 
 state = sdk_stubs.install()
 
-from omni_sprint import fov, settings  # noqa: E402
+from omni_sprint import camera, settings  # noqa: E402
 
 MS = 1_000_000
 now = 1_000 * MS
@@ -30,14 +30,15 @@ now = 1_000 * MS
 def step(ms: int = 500) -> None:
     global now
     now += ms * MS
-    fov.on_frame(now)
+    camera.on_frame(now)
 
 
 def notes() -> list[str]:
     return [line.removeprefix("[Omni Sprint] ") for line in state["misc"]]
 
 
-fov.reset()
+camera.stop()
+camera.start()
 step()
 check("without a player nothing happens", state["misc"] == [])
 
@@ -80,13 +81,15 @@ check("a slider equal to the game's writes nothing", pc.Player.BaseFOV == 90.0 a
 
 settings.fov.value = 130
 step()
-fov.stop()
+camera.stop()
 check("stopping gives the game its FOV back", pc.Player.BaseFOV == 90.0)
 step()
 check("stopping forgets the FOV: the next switch-on sets it again", pc.Player.BaseFOV == 130.0)
 settings.custom_fov.value = False
 
-fov.reset()
+camera.start()
+camera.stop()
+camera.start()
 pc = sdk_stubs.player(sdk_stubs.BASE, fov=90.0)
 state["pc"] = pc
 settings.custom_fov.value = True
@@ -97,7 +100,8 @@ settings.custom_fov.value = False
 step()
 check("switching off leaves a newer FOV from another owner alone", pc.Player.BaseFOV == 105.0)
 
-fov.reset()
+camera.stop()
+camera.start()
 first = sdk_stubs.player(sdk_stubs.BASE, fov=90.0)
 second = sdk_stubs.player(sdk_stubs.BASE + 0x1000, fov=100.0)
 state["pc"] = first
@@ -111,15 +115,17 @@ settings.custom_fov.value = False
 step()
 check("switching off restores only the second player's FOV", second.Player.BaseFOV == 100.0)
 
-fov.reset()
+camera.stop()
+camera.start()
 state["pc"] = first
 settings.custom_fov.value = True
 step()
 state["pc"] = None
-fov.stop()
+camera.stop()
 check("stopping at the title restores the still-live former player", first.Player.BaseFOV == 90.0)
 
-fov.reset()
+camera.stop()
+camera.start()
 state["pc"] = first
 settings.custom_fov.value = "False"
 step()
@@ -151,7 +157,8 @@ class RestoreFailurePlayer(sdk_stubs.FakePlayer):
         self._fov = value
 
 
-fov.reset()
+camera.stop()
+camera.start()
 pc = sdk_stubs.player(sdk_stubs.BASE)
 pc.Player = RestoreFailurePlayer()
 state["pc"] = pc

@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.4 - 2026-09-25
+
+- New Options page, opened by the gear at the top of the settings window: third person, its key, custom field of
+  view and the menu language.
+- On-foot third-person mode with an over-the-shoulder camera, off by default. Aiming switches to the game's own
+  first-person view.
+- A key turns third person on and off: P by default, changed on the Options page with a keyboard key or a mouse
+  button other than the left one.
+- Custom field of view from 70 to 150, off by default.
+- Wall climb can lean up to 90 degrees, along the wall, with the same maximum distance in every direction.
+- In third person, the character is animated while climbing.
+- Fixed: calling a vehicle during a slide could make the slide resume when getting out of the vehicle.
+- The camera comes from the shared [camera runtime](../camera_runtime/), which Omni Sprint carries too. If both
+  mods are installed, Apex Movement's camera settings are the ones used. The separate one-move files do not carry it.
+
 ## 1.1.3 - 2026-09-23
 
 - Add the same visual settings window as Apex Grapple, with English and French labels, controller navigation and saved section selection.

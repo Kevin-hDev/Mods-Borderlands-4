@@ -2,9 +2,11 @@
 
 from . import panel_fonts as fonts, panel_theme as t, panel_widgets as w
 
+# Movement's hero role lives here because Grapple is the generated menus' visual authority.
 # kind: (family, CSS weight, size in px, colour, letter spacing in px, ink outline and shadow)
 ROLES = {
     "logo": ("title", None, t.TEXT_LOGO, t.COLOR_GOLD, t.TRACKING_MD, True),
+    "hero": ("title", None, t.TEXT_HERO, t.COLOR_GOLD, t.TRACKING_MD, True),
     "plate": ("title", None, t.TEXT_LG, t.COLOR_INK, t.TRACKING_MD, False),
     "nav": ("title", None, t.TEXT_LG, t.COLOR_TEXT, t.TRACKING_SM, False),
     "value": ("title", None, t.TEXT_LG, t.COLOR_GOLD, t.TRACKING_MD, False),
@@ -22,7 +24,8 @@ ROLES = {
     "ends": ("body", t.WEIGHT_MEDIUM, t.TEXT_2XS, t.COLOR_TEXT_DIM, 0, False),
 }
 # The line heights the mockup's CSS gives Anton; Barlow keeps its own, as in the browser.
-LEADING = {"logo": t.LEADING_NONE, "plate": t.LEADING_SNUG, "nav": t.LEADING_SNUG, "value": t.LEADING_SNUG}
+LEADING = {"logo": t.LEADING_NONE, "hero": t.LEADING_TIGHT, "plate": t.LEADING_SNUG,
+           "nav": t.LEADING_SNUG, "value": t.LEADING_SNUG}
 _loaded = {}  # family -> font object, only while one window is being built
 
 

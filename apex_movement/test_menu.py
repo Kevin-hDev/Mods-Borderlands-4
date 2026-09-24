@@ -41,7 +41,7 @@ check("the glide holds its switch and its speed", menu.glide.children == [settin
 check("the slam line holds its landing minimum, since the same switch carries both",
       settings.landing_slide_min_speed in menu.air_crouch.children)
 check("air strafe holds its acceleration", settings.air_acceleration in menu.air_strafe.children)
-check("the wall climb holds its switch, height, speed, diagonal and wait", menu.wall_climb.children == [
+check("the wall climb holds its switch, distance, speed, diagonal and wait", menu.wall_climb.children == [
     settings.wall_climb, settings.climb_height, settings.climb_speed, settings.climb_lean, settings.reclimb_delay,
 ])
 

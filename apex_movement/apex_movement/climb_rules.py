@@ -15,7 +15,8 @@ tested without the game.
 import math
 from dataclasses import dataclass
 
-from .climb_aim import Wall, angle_to_wall, view_angle
+from .climb_aim import Wall, angle_to_wall, keep_angle, start_angle, view_angle, view_angle_allowed
+from .climb_progress import MIN_PROGRESS, STALL_NS, Tracker
 from .wall_choice import MIN_WALL_FLAT
 
 # The character's radius (40, measured on 2026-09-17) plus 50: all thirteen pushes of the measure started within it,
@@ -25,23 +26,10 @@ REACH = 90.0
 LOST_REACH = 135.0
 # Pushed at least halfway (phase 2 spec, 2.1, condition 3): chosen, not measured, to tune in game if needed.
 MIN_STICK = 0.5
-# Within 45 degrees of the wall (spec 2.1, condition 4; Kevin: "il faut regarder le mur"): chosen, not measured.
-START_VIEW_DEG = 45.0
 # A stick let go for less than this keeps the climb: in play the stick crosses its centre between two pushes, and
 # séance Y ended 14 climbs out of 73 on the stick alone. Long enough to forgive a flick, short enough that letting go
 # still stops a climb when the player means it.
-STICK_GRACE_NS = 250_000_000
-# Wider than at the start, so that a small camera move does not cut a climb (spec, end 12). The stick gets the same:
-# pushed forward it turns with the camera, and at 45 it cut climbs before the camera rule (0.8.0 test, no camera end).
-KEEP_MARGIN_DEG = 15.0
-# The stick's tolerance at a start before the diagonal existed (spec 2.1, condition 3: "à 45° près"). start_angle
-# takes the larger of this and the lean limit, and the end rule allows that same angle plus KEEP_MARGIN_DEG.
-MIN_START_DEG = 45.0
-# A climb rises about 70 in 0.2 s. Under an overhang it rose nothing and hung there while the stick was pushed (0.8.0
-# test, three climbs of 2.1 to 4.3 s; Kevin: "le personnage ne chute pas, il reste en haut").
-STALL_NS = 200_000_000
-# Chosen, not measured (spec, end 12 bis): a seventh of that normal rise.
-MIN_PROGRESS = 10.0
+STICK_GRACE_NS = 700_000_000
 # The jump count may update a frame after take-off (apex_jump_track): a rise this early is still the same jump.
 JUMP_SETTLE_NS = 50_000_000
 
@@ -52,11 +40,11 @@ JUMP = "jump"
 WALL_LOST = "wall_lost"
 STICK = "stick"
 CAMERA = "camera"
-HEIGHT = "height"
+DISTANCE = "distance"
 BLOCKED = "blocked"
 # Every end short of the top blocks the next climb: otherwise releasing and pushing the stick again, or a dash between
 # two climbs, would climb forever (spec, 2.4).
-DELAYED = frozenset({GAME_MOVE, JUMP, WALL_LOST, STICK, CAMERA, HEIGHT, BLOCKED})
+DELAYED = frozenset({GAME_MOVE, JUMP, WALL_LOST, STICK, CAMERA, DISTANCE, BLOCKED})
 
 # Why a climb did not start, in the order they are looked at. REFUSALS holds every one of them: a reason missing from
 # it would never be told, and séance Y spent a session on a refusal no line could name.
@@ -82,6 +70,8 @@ class Moment:
     game_move: bool
     mantling: bool
     near_game_climb: bool
+    x: float
+    y: float
     z: float
     jumps: int
     stick_x: float
@@ -98,7 +88,7 @@ class Moment:
 
 @dataclass(frozen=True)
 class Limits:
-    height: float
+    distance: float
     delay_ns: int
     # Degrees a climb may lean to a side. No default: the slider is its only authority, and a forgotten value here
     # would ignore it in silence.
@@ -112,35 +102,20 @@ class Step:
     climbing: bool
     event: str = ""
     rise: float = 0.0
+    distance: float = 0.0
     ms: int = 0
 
 
-def start_angle(limits: Limits) -> float:
-    """How far off the wall the stick may be for a climb to start: the lean limit, never under MIN_START_DEG, so that
-    with no lean allowed a stick roughly toward the wall still starts a straight climb."""
-    return max(MIN_START_DEG, limits.lean_deg)
-
-
-def view_angle_allowed(limits: Limits) -> float:
-    """How far off the wall the camera may be for a climb to start.
-
-    It follows the diagonal like the stick does: climbing to one side means looking that way, and a camera limit left
-    at 45 while the stick reached 60 ended 21 climbs out of 73 on the camera alone (séance Y).
-    """
-    return max(START_VIEW_DEG, limits.lean_deg)
-
-
 def longest_climb_ns(limits: Limits) -> int:
-    """The longest a climb can live: its height at the slowest rise that escapes BLOCKED, whatever the climb speed."""
-    return math.ceil(limits.height / MIN_PROGRESS) * STALL_NS
+    """The longest a climb can live: its distance at the slowest progress that escapes BLOCKED."""
+    return math.ceil(limits.distance / MIN_PROGRESS) * STALL_NS
 
 
 class Rules:
     def __init__(self) -> None:
         self.start: Moment | None = None
         self.jumps = 0
-        self.progress_z = 0.0
-        self.progress_ns = 0
+        self.progress = Tracker()
         self.blocked_until_ns = 0
         # When the stick first left, so a flick between two pushes does not end a climb.
         self.stick_lost_ns = 0
@@ -155,10 +130,11 @@ class Rules:
             start, self.start = self.start, None
             if reason in DELAYED:
                 self.blocked_until_ns = m.now_ns + limits.delay_ns
-            return Step(climbing=False, event=reason, rise=m.z - start.z, ms=(m.now_ns - start.now_ns) // 1_000_000)
+            return Step(climbing=False, event=reason, rise=m.z - start.z, distance=self.progress.distance,
+                        ms=(m.now_ns - start.now_ns) // 1_000_000)
         if not self.start_refusal(m, limits):
             self.start, self.jumps = m, m.jumps
-            self.progress_z, self.progress_ns = m.z, m.now_ns
+            self.progress.reset(m)
             self.stick_lost_ns = 0
             return Step(climbing=True, event="start")
         return Step(climbing=False)
@@ -191,9 +167,9 @@ class Rules:
             return LOW_ONLY
         if math.hypot(m.stick_x, m.stick_y) < MIN_STICK:
             return NO_STICK
-        if angle_to_wall(m.stick_x, m.stick_y, wall) > start_angle(limits):
+        if angle_to_wall(m.stick_x, m.stick_y, wall) > start_angle(limits.lean_deg):
             return STICK
-        if view_angle(m.view_yaw, wall) > view_angle_allowed(limits):
+        if view_angle(m.view_yaw, wall) > view_angle_allowed(limits.lean_deg):
             return CAMERA
         return ""
 
@@ -211,20 +187,19 @@ class Rules:
         wall = m.wall
         if wall is None or wall.distance > LOST_REACH or wall.flat < MIN_WALL_FLAT:
             return WALL_LOST
-        if view_angle(m.view_yaw, wall) > view_angle_allowed(limits) + KEEP_MARGIN_DEG:
+        if view_angle(m.view_yaw, wall) > keep_angle(limits.lean_deg):
             return CAMERA
         if (math.hypot(m.stick_x, m.stick_y) < MIN_STICK
-                or angle_to_wall(m.stick_x, m.stick_y, wall) > start_angle(limits) + KEEP_MARGIN_DEG):
+                or angle_to_wall(m.stick_x, m.stick_y, wall) > keep_angle(limits.lean_deg)):
             if self.stick_lost_ns == 0:
                 self.stick_lost_ns = m.now_ns
             if m.now_ns - self.stick_lost_ns >= STICK_GRACE_NS:
                 return STICK
         else:
             self.stick_lost_ns = 0
-        if m.z - self.start.z >= limits.height:
-            return HEIGHT
-        if m.z >= self.progress_z + MIN_PROGRESS:
-            self.progress_z, self.progress_ns = m.z, m.now_ns
-        elif m.now_ns - self.progress_ns >= STALL_NS:
+        blocked = self.progress.update(m)
+        if self.progress.distance >= limits.distance - 1e-6:
+            return DISTANCE
+        if blocked:
             return BLOCKED
         return ""

@@ -19,7 +19,7 @@ def check(label: str, condition: bool) -> None:
 
 state = sdk_stubs.install()
 
-from omni_sprint import animation, definition, fov, frame, limit, memory, report  # noqa: E402
+from omni_sprint import animation, camera, definition, frame, limit, memory, report  # noqa: E402
 
 fake = sdk_stubs.FakeMemory()
 sdk_stubs.patch_memory(memory, fake)
@@ -135,30 +135,58 @@ frame.tick(object(), None, None, None)
 check("a player without a character does nothing", state["errors"] == [] or all("skipped" not in e for e in state["errors"]))
 
 seen_animation = []
-original_animation_tick = animation.tick
-animation.tick = lambda obj, now: seen_animation.append(obj)
+original_animation_inspect = animation.inspect
+original_animation_update = animation.update
+animation.inspect = lambda obj: (False, object(), obj)
+animation.update = lambda current, _now: seen_animation.append(current[2])
 frame.tick(object(), None, None, None)
 check("the clock also forwards body callbacks to the animation owner", len(seen_animation) == 1)
-animation.tick = original_animation_tick
+animation.inspect = original_animation_inspect
+animation.update = original_animation_update
+
+player_body, camera_frames = object(), []
+original_camera = camera.on_frame
+animation.inspect = lambda obj: (obj is player_body, object(), obj)
+animation.update = lambda _current, _now: None
+camera.on_frame = lambda now: camera_frames.append(now)
+frame.tick(object(), None, None, None)
+frame.tick(player_body, None, None, None)
+frame.tick(None, None, None, None)
+frame.tick(None, None, None, None)
+check("enemy animation callbacks do not update the camera",
+      len(camera_frames) == 2)
+camera.on_frame = original_camera
+animation.inspect = original_animation_inspect
+animation.update = original_animation_update
 
 continued = []
 original_frame_check = frame.on_frame
-animation.tick = lambda obj, now: (_ for _ in ()).throw(RuntimeError('bad animation'))
+animation.inspect = lambda _obj: (True, object(), object())
+animation.update = lambda _frame, _now: (_ for _ in ()).throw(RuntimeError('bad animation'))
 frame.on_frame = lambda now: continued.append(now)
+camera_frames.clear()
+camera.on_frame = lambda value: camera_frames.append(value)
 frame.tick(object(), None, None, None)
-check("an animation error does not interrupt the sprint limit", len(continued) == 1)
-animation.tick = original_animation_tick
+check("an animation error does not interrupt the sprint limit or freeze the camera",
+      len(continued) == 1 and len(camera_frames) == 1)
+animation.inspect = original_animation_inspect
+animation.update = original_animation_update
+camera.on_frame = original_camera
 frame.on_frame = original_frame_check
 
-original_fov = fov.on_frame
-fov.on_frame = lambda now: (_ for _ in ()).throw(RuntimeError("bad fov"))
+original_camera = camera.on_frame
+camera.on_frame = lambda now: (_ for _ in ()).throw(RuntimeError("bad camera"))
 continued.clear()
 frame.on_frame = lambda now: continued.append(now)
+animation.inspect = lambda obj: (True, object(), obj)
+animation.update = lambda _current, _now: None
 frame.tick(object(), None, None, None)
 frame.tick(object(), None, None, None)
-check("a FOV error does not interrupt the sprint limit, and is written once",
-      len(continued) == 2 and len([line for line in state["errors"] if "FOV check was skipped" in line]) == 1)
-fov.on_frame = original_fov
+check("a camera error does not interrupt the sprint limit, and is written once",
+      len(continued) == 2 and len([line for line in state["errors"] if "camera check was skipped" in line]) == 1)
+camera.on_frame = original_camera
+animation.inspect = original_animation_inspect
+animation.update = original_animation_update
 frame.on_frame = original_frame_check
 
 

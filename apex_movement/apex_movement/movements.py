@@ -20,13 +20,16 @@ UI_SHARED = (
     "control_window_cleanup", "control_window_hooks", "panel_assets", "panel_buttons",
     "panel_common_en", "panel_common_fr", "panel_en", "panel_entry", "panel_factory", "panel_fonts",
     "panel_form", "panel_fr", "panel_header", "panel_i18n", "panel_labels", "panel_model",
-    "panel_open", "panel_pages", "panel_preferences", "panel_slider", "panel_text", "panel_theme",
-    "panel_view", "panel_widgets",
+    "panel_open", "panel_options", "panel_pages", "panel_preferences", "panel_shortcut", "panel_slider", "panel_text",
+    "panel_theme", "panel_view", "panel_widgets",
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.
 SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", "movements", "ownership", "pack",
           "report", "settings", "speed_order") + UI_SHARED
+# Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
+# its shared native runtime, so these modules belong only to the full pack.
+FULL_ONLY = ("camera", "camera_settings")
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,
 # which belong to two movements. The speeds every movement reads come from speed_order, not from settings.
@@ -72,7 +75,8 @@ MOVEMENTS = (
     Movement("Heavier fall", ("heavier_fall", "jump_goals", "jump_report"), ("heavier_fall_menu",),
              "apex_heavier_fall", "Apex Heavier Fall"),
     Movement("Wall climb", ("wall_climb", "wall_sense", "climb_aim", "wall_choice", "climb_rules", "climb_refusal",
-                            "climb_animation", "jump_press", "air_jumps", "move_watch"), ("wall_climb_menu",),
+                            "climb_animation", "climb_body", "climb_progress", "jump_press", "air_jumps", "move_watch"),
+             ("wall_climb_menu",),
              "apex_wall_climb", "Apex Wall Climb"),
 )
 

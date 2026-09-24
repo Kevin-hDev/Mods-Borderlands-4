@@ -22,11 +22,15 @@ def check(label: str, condition: bool) -> None:
 
 
 check("the sources build the full pack", pack.CARRIES == () and pack.NAME == "Apex Movement")
+check("only an empty carry list is the full pack", pack.is_full())
+check("the full pack carries its camera modules", pack.carries_module("camera"))
 check("the full pack carries every movement", all(pack.carries(m.name) for m in movements.MOVEMENTS))
 check("and shows every menu line", len(menu.carried()) == len(menu.ALL))
 
 # A separate file, as the build tool writes it.
 pack.CARRIES = ("Wall climb",)
+check("a separate movement file is not the full pack", not pack.is_full())
+check("a separate movement file does not carry camera modules", not pack.carries_module("camera"))
 check("a separate file carries its own movement", pack.carries("Wall climb"))
 check("and no other", not pack.carries("Slides") and not pack.carries("Auto sprint"))
 check("its modules come with it", pack.carries_module("climb_aim") and pack.carries_module("wall_sense"))

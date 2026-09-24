@@ -26,13 +26,14 @@ def lines() -> list[str]:
     return [line for line in state["misc"] if "wall climb refused" in line]
 
 
-LIMITS = climb_rules.Limits(height=372.0, delay_ns=0, lean_deg=60.0, speed=370.0)
+LIMITS = climb_rules.Limits(distance=372.0, delay_ns=0, lean_deg=60.0, speed=370.0)
 WALL = Wall(distance=104.0, into_x=1.0, into_y=0.0, flat=0.99)
 
 
 def moment(**changes: object) -> climb_rules.Moment:
     values: dict = dict(now_ns=0, in_air=True, on_ground=False, game_move=False, mantling=False, near_game_climb=False,
-                        z=0.0, jumps=1, stick_x=1.0, stick_y=0.0, view_yaw=0.0, wall=WALL, hits=5, high_wall=True)
+                        x=0.0, y=0.0, z=0.0, jumps=1, stick_x=1.0, stick_y=0.0, view_yaw=0.0,
+                        wall=WALL, hits=5, high_wall=True)
     values.update(changes)
     return climb_rules.Moment(**values)
 

@@ -17,9 +17,8 @@ itself.
 A climb also counts as a landing for the jumps: air_jumps gives both back when it starts, so the player jumps from the
 wall and still has the double jump, in the climb or in the fall that follows (Kevin, 0.8.6 session).
 
-A climb is not only straight up (Kevin, 2026-09-17): it follows the move stick along the wall, up to the lean of the
-slider. The speed written stays the climb speed, shared between rising and going sideways, so a climb leaning at an
-angle rises at cos(angle) of that speed: half as fast at 60 degrees, taking twice as long to reach the height.
+A climb follows the move stick along the wall, including fully sideways at 90 degrees (Kevin, 2026-09-24). Vertical,
+diagonal and horizontal climbs spend the same path-distance budget, so no direction grants more travel than another.
 """
 
 from typing import Any
@@ -75,8 +74,8 @@ def _mantle_without_jump_key() -> None:
 
 
 def _limits(character: Any) -> climb_rules.Limits:
-    height = 2.0 * game.half_height(character) * float(settings.climb_height.value) / 100.0
-    return climb_rules.Limits(height=height, delay_ns=int(float(settings.reclimb_delay.value) * NS_PER_S),
+    distance = 2.0 * game.half_height(character) * float(settings.climb_height.value) / 100.0
+    return climb_rules.Limits(distance=distance, delay_ns=int(float(settings.reclimb_delay.value) * NS_PER_S),
                               lean_deg=float(settings.climb_lean.value), speed=float(settings.climb_speed.value))
 
 
@@ -89,10 +88,12 @@ def _moment(character: Any, now_ns: int) -> climb_rules.Moment:
     walls = (wall_sense.walls_ahead(character, yaw, game.half_height(character))
              if in_air and yaw is not None else [])
     high = [wall for wall, share in zip(walls, wall_sense.hit_heights(walls)) if share >= climb_aim.HIGH_FROM]
+    location = character.K2_GetActorLocation()
     return climb_rules.Moment(
         now_ns=now_ns, in_air=in_air, on_ground=game.is_on_ground(movement),
         game_move=game.in_controlled_move(movement), mantling=game.is_mantling(movement),
-        near_game_climb=game.is_near_game_climb(movement), z=game.altitude(character),
+        near_game_climb=game.is_near_game_climb(movement),
+        x=float(location.X), y=float(location.Y), z=float(location.Z),
         jumps=game.jump_count(character), stick_x=stick_x, stick_y=stick_y, view_yaw=yaw,
         wall=wall_choice.best_wall(walls), hits=len(walls),
         high_wall=wall_choice.best_wall(high) is not None,
@@ -114,11 +115,14 @@ def update(character: Any, now_ns: int) -> None:
         report.note(f"wall climb start distance={wall.distance:.0f} "
                     f"stick_deg={climb_aim.angle_to_wall(moment.stick_x, moment.stick_y, wall):.0f} "
                     f"view_deg={climb_aim.view_angle(moment.view_yaw, wall):.0f} z={moment.z:.0f}")
-        climb_animation.start(climb_rules.longest_climb_ns(limits) / NS_PER_S)
+        climb_animation.start(climb_rules.longest_climb_ns(limits) / NS_PER_S, wall)
     elif step.event:
-        report.note(f"wall climb end reason={step.event} rise={step.rise:.0f} ms={step.ms} lean={_max_lean:.0f}")
+        report.note(f"wall climb end reason={step.event} rise={step.rise:.0f} distance={step.distance:.0f} "
+                    f"ms={step.ms} lean={_max_lean:.0f}")
         climb_animation.stop()
     if step.climbing:
+        # The trace can move to another face on an irregular wall; the body follows the wall used by this frame.
+        climb_animation.update_wall(wall)
         lean = climb_aim.lean_degrees(moment.stick_x, moment.stick_y, wall, limits.lean_deg)
         _max_lean = max(_max_lean, abs(lean))
         side_x, side_y, up = climb_aim.climb_direction(lean, wall)

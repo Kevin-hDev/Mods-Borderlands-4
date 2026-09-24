@@ -2,8 +2,8 @@
 
 import unrealsdk
 
-from . import panel_buttons as b, panel_fonts as fonts, panel_header as h, panel_i18n as i18n
-from . import panel_pages as p, panel_text as tx, panel_theme as t, panel_widgets as w, report
+from . import panel_buttons as b, panel_fonts as fonts, panel_header as h
+from . import panel_options as o, panel_pages as p, panel_text as tx, panel_theme as t, panel_widgets as w, report
 
 
 def _sidebar(owner, widgets, template):
@@ -57,6 +57,7 @@ def _window(root, world, model, widgets, template):
     widgets["pages"] = switcher
     for group, key in zip(model.groups, model.pages):
         switcher.AddChild(p.settings_page(switcher, group, key, widgets, template))
+    switcher.AddChild(o.options_page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))
     w.column(stack, _footer(stack, widgets, template))
@@ -82,7 +83,7 @@ def build_view(pc, model, _return_to_menu=True):
         avatar = _window(root, pc, model, widgets, template)
     finally:
         tx.use({})
-    widgets["focus"] = widgets[f"nav:{model.page}"]
+    widgets["focus"] = widgets["options" if model.page == "options" else f"nav:{model.page}"]
     report.note(f"settings window: fonts={'+'.join(sorted(loaded)) or 'engine'}, "
                 f"avatar={'shown' if avatar else 'hidden'}")
     return _held(pc, root), widgets

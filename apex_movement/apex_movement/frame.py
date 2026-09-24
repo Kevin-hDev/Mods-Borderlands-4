@@ -16,6 +16,8 @@ from . import game, ownership, report, settings
 _movements: list[tuple[str, Any, Any]] = []
 _active: set[str] = set()
 _failed: set[str] = set()
+_camera: Any = None
+_camera_in_game = False
 # A line each time the player changes, bounded per switch-on: session 6 (2026-09-18) stayed silent a whole game until
 # the mod was switched off and on, and no line said whether the player had been found at all.
 MAX_PLAYER_LINES = 100
@@ -34,6 +36,22 @@ def register(name: str, movement: Any, *switches: Any) -> None:
     too, and its own (2026-09-18). No switch at all means always on, and movements.py carries the reason.
     """
     _movements.append((name, switches, movement))
+
+
+def set_camera(camera: Any) -> None:
+    global _camera, _camera_in_game
+    _camera = camera
+    if camera is None:
+        _camera_in_game = False
+
+
+def _update_camera(now_ns: int) -> None:
+    if _camera is None:
+        return
+    try:
+        _camera.on_frame(now_ns)
+    except Exception as exc:
+        report.error_once("camera", f"camera update skipped after an error: {exc!r}")
 
 
 def _stop(name: str, movement: Any, character: Any) -> None:
@@ -63,6 +81,7 @@ def _tell_player(change: str) -> None:
 
 
 def on_frame(obj: Any, now_ns: int) -> None:
+    global _camera_in_game
     try:
         change = game.refresh(now_ns)
     except Exception as exc:
@@ -71,20 +90,26 @@ def on_frame(obj: Any, now_ns: int) -> None:
         return
     if change:
         _tell_player(change)
-    if change == game.CHARACTER:
-        # The old character's values went with it; only the movements' own memory needs clearing. The running set
-        # is kept on purpose: the slide and dash assets, the jump definitions and the key binds outlive the
-        # character, so a switch turned off before the next character arrives must still stop its movement then.
-        # Clearing it here left them written for good (review, 2026-09-18).
-        ownership.forget_character()
+    if change in (game.CHARACTER, game.AWAY):
+        # A vehicle keeps the same character and its written values, but no transient action may cross the time away:
+        # carrying a slide model through a ride resumed it with an old timer and zero speed (2026-09-23).
+        if change == game.CHARACTER:
+            ownership.forget_character()
         for name, _, movement in _movements:
             try:
                 movement.reset()
             except Exception as exc:
                 report.error_once(f"{name}:reset", f"{name} could not forget the old character: {exc!r}")
     character = game.character()
-    if character is None or obj != game.anim():
+    if character is None:
+        if _camera_in_game:
+            _camera_in_game = False
+            _update_camera(now_ns)
         return
+    if obj != game.anim():
+        return
+    _camera_in_game = True
+    _update_camera(now_ns)
     for line in settings.keep_in_bounds():
         report.warning(line)
     for name, switches, movement in _movements:
@@ -126,4 +151,5 @@ def stop_all() -> list[str]:
 # and one registered under a name already taken would replace the other's (2026-09-18).
 @hook("/Script/Engine.AnimInstance:BlueprintUpdateAnimation", Type.POST, hook_identifier=f"{__package__}:frame")
 def tick(obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
-    on_frame(obj, time.perf_counter_ns())
+    now_ns = time.perf_counter_ns()
+    on_frame(obj, now_ns)

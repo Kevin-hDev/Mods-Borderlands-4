@@ -17,12 +17,18 @@ NAME = "Apex Movement"
 CARRIES: tuple[str, ...] = ()
 
 
+def is_full() -> bool:
+    return CARRIES == ()
+
+
 def carries(movement_name: str) -> bool:
     return not CARRIES or movement_name in CARRIES
 
 
 def carries_module(module: str) -> bool:
     """Shared modules are in every file; a movement's modules only in the files that carry it."""
+    if module in movements.FULL_ONLY:
+        return is_full()
     owner = movements.owner(module)
     return owner is None or carries(owner.name)
 

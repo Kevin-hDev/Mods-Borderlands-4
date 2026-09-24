@@ -2,7 +2,7 @@
 
 import unrealsdk
 
-from . import panel_buttons as b, panel_fonts as fonts, panel_header as h, panel_i18n as i18n
+from . import panel_buttons as b, panel_fonts as fonts, panel_header as h
 from . import panel_pages as p, panel_text as tx, panel_theme as t, panel_widgets as w, report
 
 

@@ -2,7 +2,7 @@
 
 Sprint in every direction in Borderlands 4: sideways, diagonally and backwards, while the camera stays free. Omni
 Sprint keeps the game's sprint speed, supplies a backward running animation in third person, and offers an optional
-field-of-view setting.
+third-person camera and field-of-view setting.
 
 The original sprint was tested on game versions **1.8.1-4709277** through **1.10.2-4845623**. The backward animation
 and FOV setting were tested on **1.10.2-4845623**, in single player. Co-op has not been tested.
@@ -17,17 +17,20 @@ stops. Omni Sprint opens that limit to 180 degrees, so the sprint starts and hol
   The mod uses a private animation carrier and releases it when the sprint ends or the mod is disabled.
 - No extra sprint key: sprint as usual. The optional **Custom FOV** switch is off by default; its slider ranges from
   70 to 150. With the switch off, the game's FOV is used.
+- The optional **Third Person** switch, off by default, keeps an over-the-shoulder camera on foot; aiming switches to
+  the game's own first-person view. Its key, P by default, turns it on and off and can be changed in the mod menu.
 - Switched off in the mod menu, the game's 60 degree limit is back at once.
 
 The mod turns itself on the first time the game launches with it installed.
 
 ## With Apex Movement
 
-Omni Sprint installs beside [Apex Movement](../apex_movement/) and [Vehicle Driving](../vehicle_driving/). It binds
-no key. With Apex Movement:
+Omni Sprint installs beside [Apex Movement](../apex_movement/) and [Vehicle Driving](../vehicle_driving/). Its only
+key is the third-person one. With Apex Movement:
 
 - Apex's auto sprint runs in every direction too;
-- Apex's momentum slide follows your movement, so it goes sideways or backwards.
+- Apex's momentum slide follows your movement, so it goes sideways or backwards;
+- Apex Movement's camera settings are the ones used: both mods carry the same camera, and only one runs it.
 
 Without Apex Movement, the game's own slide always launches toward the camera, even out of a backward sprint.
 
@@ -50,8 +53,9 @@ it in the game's memory instead:
   misses is tried again, waiting twice as long each time, for about two minutes.
 - `animation.py` uses a matching backward running clip from the game for the current third-person character and
   weapon. It leaves the game's original sprint animation resource alone and restores the slot it used.
-- `fov.py` changes the local player's FOV only while Custom FOV is enabled. Before writing, it saves the player's
-  original game FOV in the mod's settings so it can restore that value after a menu transition or game restart.
+- `camera.py` hands the Third Person and Custom FOV settings to the shared [camera runtime](../camera_runtime/),
+  which owns the camera. It changes the FOV only while Custom FOV is enabled, and saves the player's original game
+  FOV in the mod's settings so it can restore that value after a menu transition or game restart.
 - `report.py` writes the mod's lines in the SDK log, each failure once.
 
 If a game update changes the movement definition, the mod leaves the sprint limit alone and reports it once in the
@@ -70,6 +74,8 @@ and its memory with a fake block. `test_memory.py` runs the real Windows calls o
 ## Known limits
 
 - Never tried in co-op.
+- The third-person camera was tried in play alongside Apex Movement, whose camera settings then apply. Omni Sprint's
+  own third person, without Apex Movement, has not been tried in play yet.
 - Windows only: the memory calls are Windows ones. Not tried on Linux or Steam Deck.
 - The original sprint was tested with Vex and Harlowe. The new backward animation and FOV behavior were verified in
   local play on the current Steam game build; they have not been checked on older builds.

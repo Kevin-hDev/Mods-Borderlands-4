@@ -1,0 +1,10 @@
+"""Values shared by every camera client."""
+
+PROTOCOL = 1
+MAX_CLIENTS = 8
+GAME_MENU_MAX_FOV = 110.0
+FOV_MIN = 70.0
+FOV_MAX = 150.0
+FOV_DEFAULT = 110.0
+THIRD_PERSON_RIGHT = 48.4
+THIRD_PERSON_UP = 5.0

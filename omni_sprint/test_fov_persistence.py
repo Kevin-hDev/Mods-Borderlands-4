@@ -10,7 +10,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from omni_sprint import fov, settings  # noqa: E402
+from omni_sprint import camera, settings  # noqa: E402
 
 failures: list[str] = []
 time_ns = 1_000_000_000
@@ -25,7 +25,7 @@ def check(label: str, condition: bool) -> None:
 def step() -> None:
     global time_ns
     time_ns += 500_000_000
-    fov.on_frame(time_ns)
+    camera.on_frame(time_ns)
 
 
 settings.custom_fov.value = True
@@ -38,7 +38,8 @@ check("the native value is recorded before the mod applies", first.Player.BaseFO
       and state["settings_saves"] > 0)
 
 # The game's profile may reintroduce the mod's angle before the new player loads.
-fov.reset()
+camera.stop()
+camera.start()
 state["pc"] = sdk_stubs.player(sdk_stubs.BASE + 0x1000, fov=140.0)
 step()
 settings.custom_fov.value = False
@@ -56,13 +57,15 @@ settings.custom_fov.value = False
 step()
 check("switching off returns the new native choice", state["pc"].Player.BaseFOV == 98.0)
 
-fov.reset()
+camera.stop()
+camera.start()
 state["pc"] = sdk_stubs.player(sdk_stubs.BASE + 0x2000, fov=140.0)
 step()
 check("an already disabled option recovers the saved native value on load",
       state["pc"].Player.BaseFOV == 98.0)
 
-fov.reset()
+camera.stop()
+camera.start()
 settings.custom_fov.value = True
 state["pc"] = sdk_stubs.player(sdk_stubs.BASE + 0x3000, fov=95.0)
 old_pair = settings.saved_fov_pair()
@@ -84,7 +87,8 @@ check("a failed backup blocks the FOV write", state["pc"].Player.BaseFOV == 95.0
 mod.save_settings = old_save
 settings.custom_fov.value = False
 
-fov.reset()
+camera.stop()
+camera.start()
 settings.native_fov.value = 90.0
 settings.applied_fov.value = 100.0
 settings.fov.value = 100.0

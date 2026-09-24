@@ -10,13 +10,24 @@ from typing import Any
 
 from mods_base import build_mod
 
+from . import pack
 from . import (
     air_crouch, air_strafe, dash, family, frame, glide, ground_speed, heavier_fall, jump_report, menu, move_watch,
-    ownership, pack, panel_open, panel_preferences, report, settings, slide, slide_direction, slide_physics,
+    ownership, panel_open, panel_preferences, report, settings, slide, slide_direction, slide_physics,
     slide_steering, sprint, wall_climb,
 )
 
-__version__ = "1.1.3"
+camera_adapter = None
+camera_options = []
+camera_keybinds = []
+if pack.is_full():
+    from . import camera as camera_adapter
+    from . import camera_settings
+    camera_options = camera_settings.ALL
+    camera_keybinds = [camera_settings.third_person_bind]
+    frame.set_camera(camera_adapter)
+
+__version__ = "1.1.4"
 __author__ = "kevin-hDev"
 
 
@@ -56,10 +67,17 @@ def _on_enable() -> None:
         report.warning("the Auto Sprint mod is also loaded; both set the ground speed, disable one of them")
     for line in settings.keep_in_bounds():
         report.warning(line)
+    if camera_adapter is not None:
+        camera_adapter.start()
     report.note(f"enabled, version {__version__}")
 
 
 def _on_disable() -> None:
+    if camera_adapter is not None:
+        try:
+            camera_adapter.stop()
+        except Exception as exc:
+            report.error_once("camera_restore", f"camera give back failed: {exc!r}")
     failures = frame.stop_all()
     for failure in failures:
         report.error_once(failure, failure)
@@ -78,7 +96,8 @@ def _on_disable() -> None:
 mod = build_mod(
     cls=family.FamilyMod,
     name=pack.NAME,
-    options=[*menu.MENU, *panel_preferences.ALL],
+    options=[*menu.MENU, *camera_options, *panel_preferences.ALL],
+    keybinds=camera_keybinds,
     hooks=[frame.tick],
     on_enable=_on_enable,
     on_disable=_on_disable,

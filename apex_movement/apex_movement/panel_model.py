@@ -2,7 +2,9 @@
 
 import math
 
-from . import menu, panel_preferences as prefs, report
+from mods_base import KeybindOption
+
+from . import menu, pack, panel_preferences as prefs, report
 
 
 class Model:
@@ -10,7 +12,13 @@ class Model:
         self.mod = mod
         self.groups = tuple(menu.MENU)
         self.pages = tuple(group.identifier.removesuffix("_menu") for group in self.groups)
-        self.options = {option.identifier: option for group in self.groups for option in group.children}
+        movement = {option.identifier: option for group in self.groups for option in group.children}
+        self.camera_options = {}
+        if pack.is_full():
+            # Camera belongs to the full pack; separate movement files must remain independent.
+            from . import camera_settings
+            self.camera_options = {option.identifier: option for option in camera_settings.VISIBLE}
+        self.options = {**movement, **self.camera_options}
         self._undo = ()
 
     @property
@@ -23,7 +31,7 @@ class Model:
         valid = (type(index) in (int, float) and math.isfinite(index) and int(index) == index
                  and 0 <= index < len(prefs.PAGE_KEYS))
         saved = prefs.PAGE_KEYS[int(index)] if valid else None
-        return saved if saved in self.pages else self.pages[0]
+        return saved if saved in (*self.pages, "options") else self.pages[0]
 
     @property
     def can_undo(self):
@@ -49,13 +57,17 @@ class Model:
         return value in prefs.LANGUAGES and self.save(((prefs.french, value == "FR"),))
 
     def change_page(self, value):
-        if type(value) is not str or value not in self.pages:
+        if type(value) is not str or value not in (*self.pages, "options"):
             return False
         wanted = prefs.PAGE_KEYS.index(value)
         return wanted == prefs.last_page.value or self.save(((prefs.last_page, wanted),))
 
     @staticmethod
     def normalize(option, value):
+        if isinstance(option, KeybindOption):
+            # Only the full pack has a shortcut, and only it ships camera_settings and the runtime behind it.
+            from .camera_settings import normalize_keyboard_key
+            return normalize_keyboard_key(value)
         if type(option.default_value) is bool:
             if type(value) is not bool:
                 raise ValueError("Invalid switch")

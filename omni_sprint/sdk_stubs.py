@@ -9,7 +9,18 @@ import struct
 import sys
 import types
 import weakref
+from pathlib import Path
 from typing import Any
+
+from sdk_stubs_keybinds import FakeKeybind
+
+# The camera runtime sits beside the mods: camera_runtime/source in the workshop, camera_runtime in the public copy.
+_HERE = Path(__file__).resolve().parent
+RUNTIME_SOURCE = next((path for path in (_HERE.parent.parent / "camera_runtime" / "source",
+                                         _HERE.parent / "camera_runtime") if path.is_dir()),
+                      _HERE.parent.parent / "camera_runtime" / "source")
+if str(RUNTIME_SOURCE) not in sys.path:
+    sys.path.insert(0, str(RUNTIME_SOURCE))
 
 LIMIT_OFFSET = 580
 # Case as the SDK gives the names; the mod lowers them. The limit sits at 580 as in the 2026-06-26 build.
@@ -106,6 +117,20 @@ class FakeOption:
         self.min_value, self.max_value, self.kwargs = min_value, max_value, kwargs
 
 
+class FakeKeybindOption(FakeOption):
+    @classmethod
+    def from_keybind(cls, bind: Any):
+        option = cls(bind.identifier, bind.key, display_name=bind.display_name,
+                     description=bind.description, is_rebindable=bind.is_rebindable)
+        option.on_change_anytime = lambda _option, key: setattr(bind, "key", key)
+        return option
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == "value" and getattr(self, "on_change_anytime", None) is not None:
+            self.on_change_anytime(self, value)
+        super().__setattr__(name, value)
+
+
 class FakeMod:
     """As mods_base.Mod where this mod depends on it: hooks on before on_enable, off before on_disable."""
 
@@ -124,6 +149,8 @@ class FakeMod:
         self.is_enabled = True
         for hook in self.kwargs.get("hooks") or []:
             hook.enable()
+        for bind in self.kwargs.get("keybinds") or []:
+            bind.enable()
         if self.kwargs.get("on_enable"):
             self.kwargs["on_enable"]()
 
@@ -133,6 +160,8 @@ class FakeMod:
         self.is_enabled = False
         for hook in self.kwargs.get("hooks") or []:
             hook.disable()
+        for bind in self.kwargs.get("keybinds") or []:
+            bind.disable()
         if self.kwargs.get("on_disable"):
             self.kwargs["on_disable"]()
 
@@ -140,7 +169,7 @@ class FakeMod:
 def install() -> dict:
     """Registers the fake modules and returns the state the tests read and drive."""
     state: dict = {"misc": [], "warnings": [], "errors": [], "pc": None, "settings_exists": True,
-                   "settings_enabled": False, "settings_saves": 0, "mods": [], "keybinds": [],
+                   "settings_enabled": False, "settings_saves": 0, "mods": [], "keybinds": {},
                    "types": [movement_type()], "type_finds": 0}
 
     def find_all(cls: str, exact: bool = True) -> Any:
@@ -167,9 +196,11 @@ def install() -> dict:
     mods_base = types.ModuleType("mods_base")
     mods_base.get_pc = lambda **kwargs: state["pc"]
     mods_base.BoolOption = FakeOption
+    mods_base.KeybindOption = FakeKeybindOption
     mods_base.SliderOption = FakeOption
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, kind, hook_identifier))
-    mods_base.keybind = lambda *args, **kwargs: state["keybinds"].append((args, kwargs))
+    mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(
+        state, identifier, key, callback, kwargs)
 
     def build_mod(cls: type = FakeMod, **kwargs: Any) -> FakeMod:
         # As mods_base: registered, then its settings loaded, and a file that says enabled enables it right here.

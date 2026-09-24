@@ -170,23 +170,21 @@ jump_height_bonus = SliderOption(
     display_name="Extra jump height",
     description="Extra height for every jump.",
 )
-# Kevin, 2026-09-17: "about twice the character's height" and a wait of "1.5 or 2 seconds" before climbing again after a
-# fall. 370 climbs those 372 (the character is 186 high, measured) in about a second: a starting point, not checked
-# against Apex, to tune in game.
+# The saved identifier stays climb_height for compatibility. Since 2026-09-24 it is a path-distance budget, so a
+# horizontal and a vertical climb cover the same distance instead of a horizontal climb lasting forever.
 climb_height = SliderOption(
     "climb_height", 200, 100, 400, step=10, is_integer=True,
-    display_name="Climb height",
+    display_name="Climb distance",
     description="In percent of your character's height.",
 )
 climb_speed = SliderOption(
     "climb_speed", 370, 100, 2000, step=10, is_integer=True,
     display_name="Climb speed",
-    description="How fast you go up.",
+    description="How fast you move on the wall.",
 )
-# Kevin, 2026-09-17: "que la grimpe ne fonctionne pas que tout droit, qu'elle puisse fonctionner en diagonale jusqu'à
-# 60 degrés". This one angle also opens the start and the end of a climb to the stick (climb_rules).
+# At 90 degrees the player may arrive parallel to the wall and travel fully sideways (Kevin, 2026-09-24).
 climb_lean = SliderOption(
-    "climb_lean", 60, 0, 75, step=5, is_integer=True,
+    "climb_lean", 90, 0, 90, step=5, is_integer=True,
     display_name="Climb diagonal",
     description="How far a climb can go sideways.",
 )

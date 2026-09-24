@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.1.3**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened.
+Version **1.1.4**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: third person, its key, a custom field of view and the menu language.
 
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.
@@ -25,7 +25,7 @@ and a line of the Nexus page name the same move.
 | Ground slam and landing slide | Jump + crouch together to slam, and crouch held in the air to slide the moment you land | yes |
 | Air / tap strafe | Change direction in the air almost at once, and start and stop faster on the ground | yes |
 | Heavier fall | Come down faster while every jump keeps its height, plus a little extra height | yes |
-| Wall climb | Climb up a wall, straight or diagonally, and pull yourself over the top | yes |
+| Wall climb | Climb up a wall, straight or leaning up to 90 degrees along it, and pull yourself over the top | yes |
 
 The ground slam and the landing slide share one switch on purpose: both need the crouch key blocked in the air, and
 that block is what removes the game's own slam on a held crouch. Turned off, the key goes back to the game.
@@ -34,6 +34,18 @@ Dashing in the air is the game's own move, not one this mod adds: the mod blocks
 hold, which would remove that dash, so it asks the game for it back.
 
 The mod turns itself on the first time the game launches with it installed.
+
+## Camera
+
+The full pack also carries an optional camera, on the Options page:
+
+- **Third person**: an over-the-shoulder camera on foot, off by default. Aiming switches to the game's own
+  first-person view. A key turns it on and off, P by default. It is changed right beside the switch: click CHANGE,
+  then press a keyboard key or a mouse button other than the left one, which fires and clicks through menus.
+- **Custom FOV**: a field of view from 70 to 150, off by default. Switched off, the game's own FOV is used.
+
+The camera is the shared [camera runtime](../camera_runtime/), which Omni Sprint carries too. When both mods are
+installed, Apex Movement's camera settings are the ones used. The separate one-move files do not carry the camera.
 
 ## One file, or one file per move
 
@@ -67,6 +79,7 @@ named after it: `apex_dash.json`, `apex_wall_climb.json`, and so on.
 - `settings.py` holds every setting with its default and its bounds, and carries the reason each default was chosen.
 - `speed_order.py` keeps walk, sprint, slide and top slide speeds in order whatever the sliders say; a file without the movement speeds orders against the game's own.
 - The wall climb is split by responsibility: `wall_sense` measures the wall, `wall_choice` picks the surface among what the rays met, `climb_aim` does the geometry, `climb_rules` decides whether a climb starts and keeps going, `wall_climb` moves the character, `climb_refusal` writes why a climb was refused, `climb_animation` plays the game's own climbing animation on the first-person arms `arms` finds.
+- `camera.py` and `camera_settings.py` connect the full pack to the shared camera runtime; `panel_options.py` draws the Options page and `panel_shortcut.py` the key fields beside the Third Person switch.
 - `jump_report.py` and `move_watch.py` write every jump and every change of the game's own moves to the SDK log, a few hundred lines at most: on a game version not tested here, those lines show what changed.
 
 ## Tests

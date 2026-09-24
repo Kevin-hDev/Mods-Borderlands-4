@@ -27,12 +27,13 @@ def check(label: str, condition: bool) -> None:
 
 MS = 1_000_000
 WALL = Wall(distance=60.0, into_x=1.0, into_y=0.0, flat=1.0)
-LIMITS = rules.Limits(height=372.0, delay_ns=1500 * MS, lean_deg=60.0, speed=370.0)
+LIMITS = rules.Limits(distance=372.0, delay_ns=1500 * MS, lean_deg=60.0, speed=370.0)
 
 
 def moment(now_ms: int, **changes: object) -> rules.Moment:
     values: dict = dict(now_ns=now_ms * MS, in_air=True, on_ground=False, game_move=False, mantling=False,
-                        near_game_climb=False, z=0.0, jumps=1, stick_x=1.0, stick_y=0.0, view_yaw=0.0, wall=WALL, hits=5, high_wall=True)
+                        near_game_climb=False, x=0.0, y=0.0, z=0.0, jumps=1, stick_x=1.0, stick_y=0.0,
+                        view_yaw=0.0, wall=WALL, hits=5, high_wall=True)
     values.update(changes)
     return rules.Moment(**values)
 
@@ -85,24 +86,13 @@ check("and a jump above it ends the climb", given_back.step(moment(200, jumps=2)
 check("no wall any more ends it", after(wall=None).event == rules.WALL_LOST)
 check("a wall past 135 ends it", after(wall=Wall(distance=136.0, into_x=1.0, into_y=0.0, flat=1.0)).event == rules.WALL_LOST)
 check("a wall at 135 keeps it", after(wall=Wall(distance=135.0, into_x=1.0, into_y=0.0, flat=1.0)).climbing)
-check("a stick let go for a moment keeps the climb", after(stick_x=0.1).climbing)
-let_go = rules.Rules()
-let_go.step(moment(0), LIMITS)
-let_go.step(moment(100, stick_x=0.1), LIMITS)
-check("still let go a quarter of a second later, it ends", let_go.step(moment(360, stick_x=0.1), LIMITS).event == rules.STICK)
-flicked = rules.Rules()
-flicked.step(moment(0), LIMITS)
-flicked.step(moment(100, z=40.0, stick_x=0.1), LIMITS)
-flicked.step(moment(200, z=80.0), LIMITS)
-check("pushed again in between, the count starts over",
-      flicked.step(moment(400, z=160.0, stick_x=0.1), LIMITS).climbing)
 check("a stick turned 50 degrees keeps it, as it follows a camera turned 50 degrees", after(**turned(50.0)).climbing)
 check("a stick turned 70 degrees keeps it: the 15 degree margin past the diagonal", after(**turned(70.0)).climbing)
 turned_away = rules.Rules()
 turned_away.step(moment(0), LIMITS)
 turned_away.step(moment(100, **turned(80.0)), LIMITS)
 check("a stick turned 80 degrees ends it once the grace is over",
-      turned_away.step(moment(400, **turned(80.0)), LIMITS).event == rules.STICK)
+      turned_away.step(moment(800, **turned(80.0)), LIMITS).event == rules.STICK)
 check("a camera turned 70 degrees keeps it: the same margin past the diagonal", after(view_yaw=70.0).climbing)
 check("a camera turned 80 degrees ends it", after(view_yaw=80.0).event == rules.CAMERA)
 check("a camera and stick turned together are told as the camera, which forgives nothing",
@@ -116,7 +106,7 @@ check("an end gives the rise and the time, and leaves no climb under way",
 high = rules.Rules()
 high.step(moment(0, z=1000.0), LIMITS)
 check("the height is counted from where the climb started", high.step(moment(100, z=1371.0), LIMITS).climbing)
-check("reaching it ends the climb", high.step(moment(200, z=1372.0), LIMITS).event == rules.HEIGHT)
+check("reaching the distance ends the climb", high.step(moment(200, z=1372.0), LIMITS).event == rules.DISTANCE)
 
 stuck = rules.Rules()
 stuck.step(moment(0), LIMITS)
@@ -133,7 +123,7 @@ for n in range(1, 100):
     if not slow_step.climbing:
         break
 check("a climb rising only 10 every 0.2 s reaches its height, lasting just as long as the rules allow",
-      slow_step.event == rules.HEIGHT and slow_step.ms * MS == rules.longest_climb_ns(LIMITS) == 7_600_000_000)
+      slow_step.event == rules.DISTANCE and slow_step.ms * MS == rules.longest_climb_ns(LIMITS) == 7_600_000_000)
 
 settle = rules.Rules()
 settle.step(moment(0, jumps=0), LIMITS)
@@ -149,7 +139,8 @@ check("until the 1.5 s wait is over", wait.step(moment(1600), LIMITS).event == "
 # The stick ends a climb only once its grace is over, hence a second frame.
 for reason, changes, frames in ((rules.GAME_MOVE, {"game_move": True}, (100,)), (rules.JUMP, {"jumps": 2}, (100,)),
                                 (rules.WALL_LOST, {"wall": None}, (100,)), (rules.CAMERA, {"view_yaw": 80.0}, (100,)),
-                                (rules.HEIGHT, {"z": 400.0}, (100,)), (rules.STICK, {"stick_x": 0.1}, (100, 400))):
+                                (rules.DISTANCE, {"z": 400.0}, (100,)),
+                                (rules.STICK, {"stick_x": 0.1}, (100, 800))):
     one = rules.Rules()
     one.step(moment(0), LIMITS)
     ending = [one.step(moment(ms, **changes), LIMITS) for ms in frames][-1]
@@ -178,7 +169,7 @@ check("a climb the game finished with a mantle blocks nothing", over.step(moment
 
 free = rules.Rules()
 free.step(moment(0), LIMITS)
-free.step(moment(100, view_yaw=80.0), rules.Limits(height=372.0, delay_ns=0, lean_deg=60.0, speed=370.0))
+free.step(moment(100, view_yaw=80.0), rules.Limits(distance=372.0, delay_ns=0, lean_deg=60.0, speed=370.0))
 check("with no wait set, a new climb may start at once", free.step(moment(101), LIMITS).event == "start")
 
 count = 0
@@ -188,17 +179,6 @@ for n in range(5):
         count += 1
     many.step(moment(n * 2000 + 100, view_yaw=80.0), LIMITS)
 check("no limit on the number of climbs, one wait apart", count == 5)
-
-
-# The one angle that rules the stick: the diagonal of the slider, never under 45 degrees at the start.
-STRAIGHT = rules.Limits(height=372.0, delay_ns=0, lean_deg=0.0, speed=370.0)
-WIDE = rules.Limits(height=372.0, delay_ns=0, lean_deg=75.0, speed=370.0)
-check("a climb may start on a stick within the diagonal, never under 45 degrees",
-      rules.start_angle(STRAIGHT) == 45.0 and rules.start_angle(LIMITS) == 60.0 and rules.start_angle(WIDE) == 75.0)
-check("with no diagonal a stick 40 degrees off starts and 50 does not",
-      rules.Rules().step(moment(0, **turned(40.0)), STRAIGHT).event == "start"
-      and rules.Rules().step(moment(0, **turned(50.0)), STRAIGHT).event == "")
-check("the widest diagonal starts on a stick 70 degrees off", rules.Rules().step(moment(0, **turned(70.0)), WIDE).event == "start")
 
 
 # Why a climb did not start: one name per refusal, the same conditions the start itself uses.
@@ -234,7 +214,7 @@ names = {value for name, value in vars(rules).items()
          if name.isupper() and isinstance(value, str) and not name.startswith("_")}
 told = set(rules.REFUSALS) | {rules.ON_GROUND}
 ends = {rules.MANTLE, rules.LANDED, rules.GAME_MOVE, rules.JUMP, rules.WALL_LOST, rules.STICK, rules.CAMERA,
-        rules.HEIGHT, rules.BLOCKED}
+        rules.DISTANCE, rules.BLOCKED}
 check("every refusal is ranked, so every refusal can be told", names - told - ends == set())
 check("and the ranking holds no duplicate", len(rules.REFUSALS) == len(set(rules.REFUSALS)))
 

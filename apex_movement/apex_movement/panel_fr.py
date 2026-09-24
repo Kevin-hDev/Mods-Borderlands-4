@@ -4,6 +4,10 @@ from .panel_common_fr import TEXT as COMMON
 
 TEXT = {
     **COMMON,
+    "options": "OPTIONS", "options_desc": "Caméra et langue du menu.", "options_desc_menu": "Langue du menu.",
+    "camera": "CAMÉRA", "camera_desc": "Vue et champ de vision.",
+    "change_key": "MODIFIER", "press_key": "APPUIE SUR UNE TOUCHE", "no_key": "AUCUNE",
+    "language": "LANGUE", "menu_language": "LANGUE DU MENU", "language_name": "FRANÇAIS",
     "movement": "DÉPLACEMENT", "auto_sprint": "COURSE AUTOMATIQUE", "slides": "GLISSADES",
     "axle_slide": "GLISSADE AXLE", "dash": "DASH", "glide": "VOL PLANÉ",
     "air_crouch": "FRAPPE AU SOL ET GLISSADE", "air_strafe": "DIRECTION AÉRIENNE",
@@ -24,6 +28,9 @@ GROUPS = {
 }
 
 OPTIONS = {
+    "third_person": ("Troisième personne", "Garde la caméra derrière le personnage à pied."),
+    "custom_fov": ("FOV personnalisé", "Utilise le FOV ci-dessous à la place de celui du jeu."),
+    "fov": ("FOV", "Champ de vision, jusqu'à 150."),
     "walk_speed": ("Vitesse de marche", "Valeur du jeu : 540."),
     "sprint_speed": ("Vitesse de course", "Valeur du jeu : 828."),
     "auto_sprint": ("Activé", "Courir en poussant le stick à fond."),
@@ -50,8 +57,8 @@ OPTIONS = {
     "fall_weight": ("Poids de chute", "Force de la gravité. 1 = celle du jeu."),
     "jump_height_bonus": ("Hauteur de saut ajoutée", "Hauteur en plus pour tous les sauts."),
     "wall_climb": ("Activé", "Grimper sur les murs."),
-    "climb_height": ("Hauteur de grimpe", "En pourcentage de la taille du personnage."),
-    "climb_speed": ("Vitesse de grimpe", "Vitesse de montée."),
+    "climb_height": ("Distance de grimpe", "En pourcentage de la taille du personnage."),
+    "climb_speed": ("Vitesse de grimpe", "Vitesse de déplacement sur le mur."),
     "climb_lean": ("Grimpe en diagonale", "Jusqu'où la grimpe peut partir en biais."),
     "reclimb_delay": ("Délai avant une nouvelle grimpe", "Attente avant de pouvoir regrimper. Toucher le sol l'annule."),
 }

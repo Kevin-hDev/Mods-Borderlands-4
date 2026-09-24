@@ -1,5 +1,9 @@
 """The complete pack's window components load without Apex Grapple installed."""
 
+from movement_test_result import Reporter
+
+result = Reporter("standalone Movement panel components import and expose their window actions")
+
 import movement_ui_fixture
 
 movement_ui_fixture.install()
@@ -13,4 +17,4 @@ assert callable(panel_labels.apply)
 assert callable(panel_pages.settings_page)
 assert callable(panel_view.build_view)
 assert callable(panel_view.viewport_slot)
-print("OK | standalone Movement panel components import and expose their window actions")
+result.success()

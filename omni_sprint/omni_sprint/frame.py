@@ -13,7 +13,7 @@ from typing import Any
 from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 
-from . import animation, definition, fov, limit, report
+from . import animation, camera, definition, limit, report
 
 HOOK_PATH = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 MS = 1_000_000
@@ -34,11 +34,14 @@ _tries = 0
 _next_search_ns = 0
 _given_up = False
 _next_ns = 0
+_player_present = False
+_camera_in_game = False
 
 
 def reset() -> None:
-    global _shape, _shape_read, _next_ns
+    global _shape, _shape_read, _next_ns, _player_present, _camera_in_game
     _shape, _shape_read, _next_ns = None, False, 0
+    _player_present = _camera_in_game = False
     _follow(0, 0)
 
 
@@ -86,12 +89,13 @@ def _look(shape: definition.Layout, now_ns: int) -> None:
 
 
 def on_frame(now_ns: int) -> None:
-    global _next_ns, _component, _given_up
+    global _next_ns, _component, _given_up, _player_present
     if now_ns < _next_ns:
         return
     _next_ns = now_ns + CHECK_NS
     shape = _layout()
     component = _component_address() if shape is not None else 0
+    _player_present = component != 0
     if component == 0:
         return
     if component != _component:
@@ -128,9 +132,13 @@ def stop() -> tuple[int, int]:
 # identifiers never replace each other, so the three mods run each frame.
 @hook(HOOK_PATH, Type.POST, hook_identifier=f"{__package__}:frame")
 def tick(_obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
+    global _camera_in_game
     now_ns = time.perf_counter_ns()
+    player_frame = False
     try:
-        animation.tick(_obj, now_ns)
+        animation_frame = animation.inspect(_obj)
+        player_frame = animation_frame[0]
+        animation.update(animation_frame, now_ns)
     except Exception:
         report.error_once('animation', 'backward animation update failed')
         try:
@@ -141,7 +149,14 @@ def tick(_obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
         on_frame(now_ns)
     except Exception as exc:
         report.error_once("frame", f"a check was skipped after an error: {exc!r}")
-    try:
-        fov.on_frame(now_ns)
-    except Exception as exc:
-        report.error_once("fov", f"a FOV check was skipped after an error: {exc!r}")
+    update_camera = player_frame is True
+    if update_camera:
+        _camera_in_game = True
+    elif _camera_in_game and not _player_present:
+        _camera_in_game = False
+        update_camera = True
+    if update_camera:
+        try:
+            camera.on_frame(now_ns)
+        except Exception as exc:
+            report.error_once("camera", f"a camera check was skipped after an error: {exc!r}")

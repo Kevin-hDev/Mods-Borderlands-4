@@ -52,8 +52,14 @@ check("no lean allowed keeps every stick straight up", lean(50.0, 0.0) == 0.0)
 check("no stick at all leans nothing", aim.lean_degrees(0.0, 0.0, WALL, 60.0) == 0.0)
 check("a stick pulled back leans nothing, on whichever side a hair of noise puts it",
       aim.lean_degrees(-1.0, 1e-9, WALL, 60.0) == 0.0 and aim.lean_degrees(-1.0, -1e-9, WALL, 60.0) == 0.0)
-check("nor does a stick pushed exactly along the wall, which points no way into it",
-      aim.lean_degrees(0.0, 1.0, WALL, 60.0) == 0.0)
+check("a stick pushed exactly along the wall reaches the configured diagonal",
+      aim.lean_degrees(0.0, 1.0, WALL, 90.0) == 90.0)
+one_degree = math.radians(1.0)
+wall_turned_in = aim.Wall(distance=60.0, into_x=math.cos(one_degree), into_y=math.sin(one_degree), flat=1.0)
+wall_turned_out = aim.Wall(distance=60.0, into_x=math.cos(one_degree), into_y=-math.sin(one_degree), flat=1.0)
+check("a sideways command stays sideways across tiny input or face variations",
+      aim.lean_degrees(0.0, 1.0, wall_turned_in, 60.0) >= 59.0
+      and aim.lean_degrees(0.0, 1.0, wall_turned_out, 60.0) >= 59.0)
 
 up = aim.climb_direction(0.0, WALL)
 check("no lean climbs straight up", (round(up[0], 6), round(up[1], 6), round(up[2], 6)) == (0.0, 0.0, 1.0))

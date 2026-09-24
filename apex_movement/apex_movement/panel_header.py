@@ -1,4 +1,4 @@
-"""The window's top: yellow and black hazard band, then avatar, title, author tag, languages and Close."""
+"""The window's top: hazard band, avatar, title, author tag, Options gear and Close."""
 
 import math
 
@@ -65,9 +65,7 @@ def header(owner, world, widgets, template):
     tag.SetContent(widgets["tag"])
     w.row(line, w.slant(tag), valign="Center")
     w.row(line, w.new("Spacer", line), fill=True)
-    for language in ("EN", "FR"):
-        w.row(line, b.button(line, widgets, language, "lang", template, "lang_off"),
-              padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")
+    w.row(line, b.gear(line, widgets, template), padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")
     w.row(line, b.button(line, widgets, "close", "action", template, "secondary"),
           padding=w.pad(0, 0, 0, t.SPACE_5), valign="Center")
     w.layer(stack, line, w.pad(0, t.SPACE_7), valign="Center")

@@ -21,7 +21,7 @@ state = sdk_stubs.install()
 state["settings_exists"] = False
 
 import omni_sprint  # noqa: E402
-from omni_sprint import animation, definition, fov, frame, memory  # noqa: E402
+from omni_sprint import animation, camera, definition, frame, memory  # noqa: E402
 
 mod = state["mods"][0]
 from omni_sprint import settings  # noqa: E402
@@ -34,7 +34,7 @@ check("a fresh install switches it on and says its version",
 check("its one hook is the clock, under the mod's own identifier: Apex Movement and Vehicle Driving use theirs on the "
       "same function, and two identifiers never replace each other",
       mod.kwargs["hooks"] == [frame.tick] and frame.tick.identifier == "omni_sprint:frame" and frame.tick.enabled)
-check("no key is bound", state["keybinds"] == [])
+check("P toggles third person by default", set(state["keybinds"]) == {"P"})
 source = pathlib.Path(omni_sprint.__file__).parent
 text = "\n".join(path.read_text(encoding="utf-8") for path in sorted(source.glob("*.py")))
 check("nothing Apex Movement or Vehicle Driving writes is named: sprint request, slide, speeds, vehicle",
@@ -49,16 +49,16 @@ fake.put_pointer(COMPONENT + 0x1CF0, SIREN)
 state["pc"] = sdk_stubs.player(COMPONENT)
 frame.tick(object(), None, None, None)
 check("in game the limit is opened", fake.get_float(SIREN + 580) == 180.0)
-fov_stops = []
-original_fov_stop = fov.stop
-fov.stop = lambda: fov_stops.append(True)
+camera_stops = []
+original_camera_stop = camera.stop
+camera.stop = lambda: camera_stops.append(True)
 animation_stops = []
 original_animation_stop = animation.stop
 animation.stop = lambda: animation_stops.append(True)
 mod.disable()
 check("switching off restores the private backward carrier", animation_stops == [True])
-check("switching off gives the FOV back", fov_stops == [True])
-fov.stop = original_fov_stop
+check("switching off gives the shared camera back", camera_stops == [True])
+camera.stop = original_camera_stop
 animation.stop = original_animation_stop
 check("switched off, the game's limit is back and it says so",
       fake.get_float(SIREN + 580) == 60.0

@@ -131,6 +131,15 @@ def paint_brush(brush, tint, alpha=1.0, outline=None, size=None):
     return brush
 
 
+def round_shape(widget):
+    """Draws a square Border as a disc: a RoundedBox brush whose corner radius is half its height."""
+    brush = widget.Background
+    brush.DrawAs = enum("ESlateBrushDrawType", "RoundedBox")
+    brush.OutlineSettings.Width = 0.0
+    brush.OutlineSettings.RoundingType = enum("ESlateBrushRoundingType", "HalfHeightRadius")
+    widget.SetBrush(brush)
+
+
 def style_brush(style, field, template, tint, **options):
     """Copies a proven solid brush into a style field, then recolours it; see panel_view for the template."""
     setattr(style, field, template)

@@ -12,7 +12,7 @@ the animation alone off until the next character or switch-on, so the climb itse
 
 import math
 
-from . import arms, game, report
+from . import arms, climb_body, game, report
 
 SLOT = "FullBody"
 # The blend session G used: the hands eased in and out.
@@ -24,8 +24,9 @@ _broken = False
 _announced = False
 
 
-def start(longest_climb_s: float) -> None:
+def start(longest_climb_s: float, wall: object | None = None) -> None:
     global _playing, _announced
+    climb_body.start(game.character(), wall, longest_climb_s)
     if _broken:
         return
     try:
@@ -49,6 +50,7 @@ def start(longest_climb_s: float) -> None:
 
 def stop() -> None:
     global _playing
+    climb_body.stop()
     if not _playing:
         return
     _playing = False
@@ -65,6 +67,11 @@ def reset() -> None:
     """The character changed or the climb was switched off: the old arms and their montage went with it."""
     global _playing, _broken, _announced
     _playing = _broken = _announced = False
+    climb_body.reset()
+
+
+def update_wall(wall: object) -> None:
+    climb_body.update_wall(wall)
 
 
 def _fail(exc: Exception) -> None:

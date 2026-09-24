@@ -8,7 +8,7 @@ from mods_base import build_mod
 
 from . import frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "kevin-hDev"
 
 

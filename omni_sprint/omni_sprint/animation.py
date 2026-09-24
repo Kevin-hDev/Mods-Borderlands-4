@@ -132,22 +132,30 @@ class Runtime:
 _runtime = None
 
 
-def tick(obj, now_ns):
-    global _runtime
+def inspect(obj):
+    """Resolve whether one global animation callback belongs to the played body."""
     body_callback = obj is not None and str(getattr(getattr(obj, 'Class', None), 'Name', '')) == BODY_CLASS
     if not body_callback and (_runtime is None or _runtime.owner is None):
-        return
+        return False, None, None
     from mods_base import get_pc
 
     pc = get_pc(possibly_loading=True)
     character = getattr(pc, 'OakCharacter', None) if pc is not None else None
     mesh = getattr(character, 'Mesh', None) if character is not None else None
     body = mesh.GetAnimInstance() if mesh is not None else None
+    played = body is not None and body_callback and animation_assets.same(body, obj)
+    return played, character, body
+
+
+def update(frame, now_ns):
+    """Update the animation owner from one already identified callback."""
+    global _runtime
+    played, character, body = frame
     if body is None:
         if _runtime is not None:
             _runtime.update(None, None, now_ns)
         return
-    if not body_callback or not animation_assets.same(body, obj):
+    if not played:
         if _runtime is not None and _runtime.owner is not None and int(body._get_address()) != _runtime.owner_id:
             _runtime.update(None, None, now_ns)
         return
@@ -159,7 +167,13 @@ def tick(obj, now_ns):
         _runtime = Runtime(WeakPointer,
                            lambda source, owner: animation_assets.build(source, owner, find_object, construct_object),
                            report.note)
-    _runtime.update(character, obj, now_ns)
+    _runtime.update(character, body, now_ns)
+
+
+def tick(obj, now_ns):
+    frame = inspect(obj)
+    update(frame, now_ns)
+    return frame[0]
 
 
 def stop():

@@ -12,7 +12,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import climb_animation, game  # noqa: E402
+from apex_movement import climb_animation, climb_body, game  # noqa: E402
 
 fails: list[str] = []
 
@@ -77,6 +77,20 @@ climb_animation.reset()
 climb_animation.start(1.0)
 check("a reset tries again, and logs it again", len(arms.plays) == 3
       and sum("climb animation playing" in line for line in state["misc"]) == 2)
+
+# The coordinator always sends the same climb lifetime and current wall to the independent third-person layer.
+body_calls = []
+climb_body.start = lambda character, wall, duration: body_calls.append(("start", character, wall, duration))
+climb_body.update_wall = lambda wall: body_calls.append(("wall", wall))
+climb_body.stop = lambda: body_calls.append(("stop",))
+climb_body.reset = lambda: body_calls.append(("reset",))
+wall = object()
+climb_animation.start(2.5, wall)
+climb_animation.update_wall(wall)
+climb_animation.stop()
+climb_animation.reset()
+check("the arms coordinator starts, updates, stops and resets the third-person layer",
+      body_calls == [("start", player, wall, 2.5), ("wall", wall), ("stop",), ("reset",)])
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

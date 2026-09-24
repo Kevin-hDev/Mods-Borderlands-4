@@ -64,4 +64,5 @@ def _measures(moment: climb_rules.Moment, limits: climb_rules.Limits) -> str:
             f"stick_deg={climb_aim.angle_to_wall(moment.stick_x, moment.stick_y, wall):.0f} "
             f"view_deg={climb_aim.view_angle(moment.view_yaw, wall):.0f} "
             f"needs distance<={climb_rules.REACH:.0f} flat>={wall_choice.MIN_WALL_FLAT:.2f} "
-            f"stick_deg<={climb_rules.start_angle(limits):.0f} view_deg<={climb_rules.view_angle_allowed(limits):.0f}")
+            f"stick_deg<={climb_aim.start_angle(limits.lean_deg):.0f} "
+            f"view_deg<={climb_aim.view_angle_allowed(limits.lean_deg):.0f}")

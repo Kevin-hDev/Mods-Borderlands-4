@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 - 2026-09-25
+
+- Internal update of the settings window shared with the Apex mods. Nothing changes in game.
+
 ## 1.0.1 - 2026-09-23
 
 - Add the same visual settings window as Apex Movement and Apex Grapple, with English and French labels, controller

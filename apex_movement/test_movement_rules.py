@@ -61,7 +61,7 @@ def switches_of(module_name: str) -> set[str] | None:
 on_disk = {path.stem for path in PACKAGE.glob("*.py")}
 placed = [module for movement in movements.MOVEMENTS for module in movement.modules]
 check("every module is either shared or in a movement",
-      on_disk == set(movements.SHARED) | set(placed))
+      on_disk == set(movements.SHARED) | set(movements.FULL_ONLY) | set(placed))
 check("no module is claimed by two movements", len(placed) == len(set(placed)))
 check("no movement claims a file that does not exist", set(placed) <= on_disk)
 

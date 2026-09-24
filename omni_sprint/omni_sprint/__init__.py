@@ -7,16 +7,16 @@ option is on, the FOV.
 
 from mods_base import build_mod
 
-from . import animation, fov, frame, report, settings
+from . import animation, camera, frame, report, settings
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "kevin-hDev"
 
 
 def _on_enable() -> None:
     report.reset()
     frame.reset()
-    # Keep a pending FOV restoration if the previous disable could not write it back.
+    camera.start()
     report.note(f"enabled, version {__version__}")
 
 
@@ -26,9 +26,9 @@ def _on_disable() -> None:
     except Exception:
         report.error_once('animation_restore', 'backward animation restoration failed')
     try:
-        fov.stop()
+        camera.stop()
     except Exception as exc:
-        report.error_once("fov_restore", f"FOV give back failed: {exc!r}")
+        report.error_once("camera_restore", f"camera give back failed: {exc!r}")
     restored, left = frame.stop()
     line = f"disabled, game sprint limit put back in {restored} movement definition(s)"
     if left:
@@ -39,6 +39,7 @@ def _on_disable() -> None:
 mod = build_mod(
     name="Omni Sprint",
     hooks=[frame.tick],
+    keybinds=[settings.third_person_bind],
     options=settings.OPTIONS,
     on_enable=_on_enable,
     on_disable=_on_disable,

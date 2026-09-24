@@ -152,9 +152,11 @@ frame.on_frame(rider.anim, 60 * S)
 gravity = types.SimpleNamespace(value=1.0)
 ownership.write("ride.gravity", ownership.CHARACTER, lambda: gravity.value,
                 lambda value: setattr(gravity, "value", value), 2.0)
+resets = good.resets
 state["pc"].OakCharacter = None
 frame.on_frame(rider.anim, 61 * S)
 check("riding a vehicle does not forget what the mod wrote on the character", ownership.is_owned("ride.gravity"))
+check("riding a vehicle clears transient movement state", good.resets == resets + 1)
 sdk_stubs.use_character(state, rider)
 frame.on_frame(rider.anim, 62 * S)
 check("coming back to the same character is not a level change", ownership.is_owned("ride.gravity"))
@@ -215,6 +217,5 @@ settings.dash_distance.value = 10000
 frame.on_frame(fresh.anim, 400 * S)
 check("a slider typed out of its bounds in the menu is brought back at the next frame, and said so",
       settings.dash_distance.value == 1000 and any("dash_distance=10000" in line for line in state["warnings"]))
-
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -14,7 +14,7 @@ state["settings_exists"] = False
 sys.modules["auto_sprint"] = types.ModuleType("auto_sprint")
 
 import apex_movement  # noqa: E402
-from apex_movement import frame, menu, ownership, settings  # noqa: E402
+from apex_movement import camera_settings, frame, menu, ownership, settings  # noqa: E402
 
 fails: list[str] = []
 
@@ -27,8 +27,10 @@ def check(label: str, condition: bool) -> None:
 
 mod = state["mods"][0]
 check("the mod is named Apex Movement", mod.kwargs["name"] == "Apex Movement")
-check("the menu and its hidden preferences are registered",
-      mod.kwargs["options"] == [*menu.MENU, *apex_movement.panel_preferences.ALL])
+check("the menu, camera settings and hidden preferences are registered",
+      mod.kwargs["options"] == [*menu.MENU, *camera_settings.ALL, *apex_movement.panel_preferences.ALL])
+check("camera features are off by default",
+      camera_settings.third_person.value is False and camera_settings.custom_fov.value is False)
 check("the frame hook is registered", mod.kwargs["hooks"] == [frame.tick])
 check("the frame hook listens to the animation update", frame.tick.path == "/Script/Engine.AnimInstance:BlueprintUpdateAnimation")
 check("the frame hook carries the package's own name, so that a separate file never replaces it",

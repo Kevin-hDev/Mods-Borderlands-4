@@ -1,5 +1,9 @@
 """The standalone Movement menu retries an interrupted console return."""
 
+from movement_test_result import Reporter
+
+result = Reporter("Movement retries a failed console redraw and returns to the menu")
+
 from types import SimpleNamespace as NS
 
 import movement_ui_fixture
@@ -43,4 +47,4 @@ assert cleanup.advance(handoff.next_step) is False
 assert events == [0x1B, "redraw"]
 assert cleanup.advance(cleanup.next_try) is True
 assert events == [0x1B, "redraw", "redraw", 0xC0, 0xC0]
-print("OK | Movement retries a failed console redraw and returns to the menu")
+result.success()

@@ -34,9 +34,10 @@ check("the Axle slide is off by default", settings.axle_slide.value is False)
 check("its sliders start at Kevin's values: steering 350, 25 % faster, 50 % further on flat ground, 25 % on slopes",
       (settings.axle_steering.value, settings.axle_speed_boost.value, settings.axle_flat_distance_boost.value,
        settings.axle_slope_boost.value) == (350, 25, 50, 25))
-check("the wall climb starts at Kevin's twice the height, 370 a second, a 60 degree diagonal and a 0.9 s wait",
+check("the wall climb starts at twice the character's height, 370 a second, a 90 degree diagonal and a 0.9 s wait",
       (settings.climb_height.value, settings.climb_speed.value, settings.climb_lean.value,
-       settings.reclimb_delay.value) == (200, 370, 60, 0.9))
+       settings.reclimb_delay.value) == (200, 370, 90, 0.9))
+check("the diagonal slider reaches a fully horizontal climb", settings.climb_lean.args[:2] == (0, 90))
 check("the slope boost cannot go far past Kevin's 25 %", settings.axle_slope_boost.args[:2] == (0, 50))
 
 # mods_base loads a slider from the file without its bounds and keeps NaN (review, 2026-09-19).

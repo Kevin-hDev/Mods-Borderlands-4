@@ -20,6 +20,11 @@ from dataclasses import dataclass
 TRACE_HEIGHTS = (-1.2, -0.6, 0.0, 0.6, 1.2)
 # From this height up, a hit means a wall the character's own body would meet, not a step it can be lifted over.
 HIGH_FROM = 0.0
+# A climb gets a forgiving start angle and a little more room once active, but never beyond tangent: past 90 degrees
+# the stick points away from the wall.
+MIN_START_DEG = 45.0
+START_VIEW_DEG = 45.0
+KEEP_MARGIN_DEG = 15.0
 
 
 @dataclass(frozen=True)
@@ -53,6 +58,18 @@ def view_angle(yaw: float | None, wall: Wall) -> float:
     return angle_to_wall(math.cos(angle), math.sin(angle), wall)
 
 
+def start_angle(lean_deg: float) -> float:
+    return min(90.0, max(MIN_START_DEG, lean_deg))
+
+
+def view_angle_allowed(lean_deg: float) -> float:
+    return min(90.0, max(START_VIEW_DEG, lean_deg))
+
+
+def keep_angle(lean_deg: float) -> float:
+    return min(90.0, start_angle(lean_deg) + KEEP_MARGIN_DEG)
+
+
 def lean_degrees(x: float, y: float, wall: Wall, limit_deg: float) -> float:
     """How far the stick leans along the wall: 0 straight up, negative on one side and positive on the other.
 
@@ -60,11 +77,16 @@ def lean_degrees(x: float, y: float, wall: Wall, limit_deg: float) -> float:
     A stick pointing no way into the wall asks for no side: pulled straight back, it gave an angle near 180 whose side,
     and so the side of the fullest diagonal, a hair of noise decided.
     """
-    into = x * wall.into_x + y * wall.into_y
-    if math.hypot(x, y) < 1e-6 or into <= 0.0:
+    if math.hypot(x, y) < 1e-6:
         return 0.0
+    into = x * wall.into_x + y * wall.into_y
     along = x * -wall.into_y + y * wall.into_x
-    return max(-limit_deg, min(limit_deg, math.degrees(math.atan2(along, into))))
+    # A tangent command must stay lateral. A tiny outward component may be analog noise around that tangent, so keep
+    # its side during the rules' grace instead of dropping abruptly to a vertical climb. Directly away stays vertical
+    # until the rules end the climb because its side has no stable sign.
+    if into < 0.0:
+        return 0.0 if abs(along) < 1e-6 else math.copysign(limit_deg, along)
+    return max(-limit_deg, min(limit_deg, math.degrees(math.atan2(along, max(0.0, into)))))
 
 
 def climb_direction(lean_deg: float, wall: Wall) -> tuple[float, float, float]:

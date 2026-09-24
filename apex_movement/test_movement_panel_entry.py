@@ -1,5 +1,9 @@
 """Movement opens once from its own SDK menu and keeps native options as fallback."""
 
+from movement_test_result import Reporter
+
+result = Reporter("Movement menu opens once, keeps SDK fallback and returns to mod list")
+
 import sys
 from types import ModuleType, SimpleNamespace as NS
 
@@ -72,4 +76,4 @@ else:
 assert screens.screen_stack == [home]
 redraw()
 assert draw_attempts == [1, 1] and events[-1] == "home"
-print("OK | Movement menu opens once, keeps SDK fallback and returns to mod list")
+result.success()
