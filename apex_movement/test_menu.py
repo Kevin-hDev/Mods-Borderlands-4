@@ -10,7 +10,7 @@ import sdk_stubs  # noqa: E402
 
 sdk_stubs.install()
 
-from apex_movement import menu, settings  # noqa: E402
+from apex_movement import menu, settings, walk_key  # noqa: E402
 
 fails: list[str] = []
 
@@ -26,7 +26,9 @@ check("the menu holds one line per movement, named as the game names it", [group
           "Ground slam and landing slide (On)", "Air / tap strafe (On)", "Heavier fall (On)", "Wall climb (On)"])
 check("the speeds have their own line, apart from the auto sprint switch",
       menu.movement.children == [settings.walk_speed, settings.sprint_speed]
-      and menu.auto_sprint.children == [settings.auto_sprint])
+      and menu.auto_sprint.children[0] is settings.auto_sprint)
+check("the auto sprint's line holds the walk key that stops it, and the key's speed",
+      menu.auto_sprint.children[1:] == [walk_key.switch, walk_key.key, walk_key.speed])
 check("each movement's line opens its switch and settings",
       menu.heavier_fall.children == [settings.heavier_fall, settings.fall_weight, settings.jump_height_bonus])
 check("slides hold their switch, the direction switch, speed, distance, downhill pull and top speed, and no steering",
@@ -46,7 +48,7 @@ check("the wall climb holds its switch, distance, speed, diagonal and wait", men
 ])
 
 every_option = [option for group in menu.MENU for option in group.children]
-check("every setting appears exactly once", len(every_option) == len(set(map(id, every_option))) == 30)
+check("every setting appears exactly once", len(every_option) == len(set(map(id, every_option))) == 33)
 check("group identifiers differ from the old top-level ones, so old settings files load cleanly",
       {group.identifier for group in menu.MENU}.isdisjoint({option.identifier for option in every_option}))
 

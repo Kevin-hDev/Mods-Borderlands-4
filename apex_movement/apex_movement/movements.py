@@ -25,8 +25,10 @@ UI_SHARED = (
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.
+# walk_key is written by the auto sprint and read by the ground speed, two movements; shortcut_key serves its option
+# and the menu's key capture in every file.
 SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", "movements", "ownership", "pack",
-          "report", "settings", "speed_order") + UI_SHARED
+          "report", "settings", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
 # Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
 # its shared native runtime, so these modules belong only to the full pack.
 FULL_ONLY = ("camera", "camera_settings")

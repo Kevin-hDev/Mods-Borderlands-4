@@ -76,7 +76,8 @@ panel_labels.value = lambda _widgets, option, current, _language: shown.__setite
 mod = Mod()
 model = panel_model.Model(mod)
 names = ["focus", "pages", "notice", "close", "options", "language:EN", "language:FR",
-         "restore", "undo", "enabled", "row:fov", "description:fov"]
+         "restore", "undo", "enabled", "row:fov", "description:fov",
+         "row:walk_key_speed", "description:walk_key_speed"]
 names += [f"nav:{page}" for page in model.pages]
 names += [f"setting:{key}" for key in model.options]
 widgets = {name: Widget() for name in names}
@@ -85,6 +86,13 @@ change = widgets["setting:third_person_key"]
 assert shown["third_person_key"] == "P" and change.SelectedKey.Key.KeyName == "None"
 assert widgets["setting:fov"].enabled is False
 assert widgets["row:fov"].opacity < 1 and widgets["description:fov"].opacity < 1
+# The walk key is on by default: its speed is live.
+assert widgets["setting:walk_key_speed"].enabled is True and widgets["row:walk_key_speed"].opacity == 1.0
+widgets["setting:walk"].checked = True
+assert not form.poll() and form.pending["walk"] is False
+assert widgets["setting:walk_key_speed"].enabled is False and widgets["row:walk_key_speed"].opacity < 1
+widgets["setting:walk"].checked = True
+assert not form.poll() and "walk" not in form.pending and widgets["row:walk_key_speed"].opacity == 1.0
 
 widgets["options"].checked = True
 assert not form.poll() and widgets["pages"].active == len(model.pages)

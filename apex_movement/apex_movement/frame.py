@@ -11,7 +11,7 @@ from typing import Any
 from mods_base import hook
 from unrealsdk.hooks import Type
 
-from . import game, ownership, report, settings
+from . import game, ownership, report, settings, walk_key
 
 _movements: list[tuple[str, Any, Any]] = []
 _active: set[str] = set()
@@ -110,7 +110,7 @@ def on_frame(obj: Any, now_ns: int) -> None:
         return
     _camera_in_game = True
     _update_camera(now_ns)
-    for line in settings.keep_in_bounds():
+    for line in settings.keep_in_bounds(walk_key.speed):
         report.warning(line)
     for name, switches, movement in _movements:
         if name in _failed:

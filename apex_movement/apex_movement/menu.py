@@ -13,7 +13,7 @@ from typing import Any
 
 from mods_base import NestedOption
 
-from . import pack, settings
+from . import pack, settings, walk_key
 
 
 def _label(title: str, on: bool) -> str:
@@ -41,9 +41,11 @@ movement = NestedOption(
     "movement_menu", [settings.walk_speed, settings.sprint_speed],
     display_name="Movement", description="How fast you walk and sprint. These apply whether auto sprint is on or off.",
 )
+# The walk key's speed goes through the ground speed: a file that does not carry it walks at the game's own walk, and
+# a slider there would change nothing.
 auto_sprint = _group(
     "auto_sprint_menu", "Auto sprint", "Sprint on a fully pushed stick, without pressing anything.",
-    settings.auto_sprint,
+    settings.auto_sprint, walk_key.switch, walk_key.key, *([walk_key.speed] if pack.carries("Movement") else []),
 )
 slides = _group(
     "slides_menu", "Slides", "How slides start, go on, and slow down.",

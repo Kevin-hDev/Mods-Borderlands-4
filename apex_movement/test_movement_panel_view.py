@@ -117,12 +117,28 @@ assert row.slots[3].calls["SetPadding"][0].Left == theme.SPACE_3
 fit = [node for node in walk(row.children[2]) if node.kind == "ScaleBox"]
 assert len(fit) == 1 and fit[0].calls["SetStretchDirection"] == ("EStretchDirection.DownOnly",)
 assert any(node.calls.get("SetMinDesiredWidth") == (float(theme.KEY_CHANGE_WIDTH),) for node in walk(row.children[3]))
+# The walk key sits the same way on its switch's row, on the auto sprint's page (Kevin, 2026-09-25).
+assert "row:walk_key" not in widgets and "label:walk_key" not in widgets
+walk_row = widgets["row:walk"]
+walk_shown, walk_change = widgets["key:walk_key"], widgets["setting:walk_key"]
+assert len(walk_row.children) == 4
+assert walk_shown in walk(walk_row.children[2]) and walk_change in walk(walk_row.children[3])
 
 # The form names the saved key in the key field; both selectors speak the menu's language.
 for group in model.groups:
     group.description = group.identifier  # The SDK fake has no group description.
 form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
 assert shown.calls["SetSelectedKey"][0].Key.KeyName == "P"
+assert walk_shown.calls["SetSelectedKey"][0].Key.KeyName == "CapsLock"
+# As the FOV under Custom FOV: the key's speed fades while the walk key is off, since it then changes nothing.
+speed_row = ("row:walk_key_speed", "description:walk_key_speed")
+assert all(widgets[name].calls["SetRenderOpacity"] == (1.0,) for name in speed_row)
+form.shown["walk"] = False
+form.refresh_dependency(form.resolve())
+assert widgets["setting:walk_key_speed"].calls["SetIsEnabled"] == (False,)
+assert all(widgets[name].calls["SetRenderOpacity"] == (theme.OPACITY_DISABLED,) for name in speed_row)
+form.shown["walk"] = True
+form.refresh_dependency(form.resolve())
 assert change.calls["SetNoKeySpecifiedText"] == ("CHANGE",) and change.calls["SetKeySelectionText"] == ("PRESS A KEY",)
 assert shown.calls["SetNoKeySpecifiedText"] == ("NONE",) and "SetSelectedKey" not in change.calls
 panel_preferences.french.value = True

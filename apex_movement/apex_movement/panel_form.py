@@ -4,6 +4,9 @@ import time
 
 from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
 
+# A setting that changes nothing while its switch is off: FOV under Custom FOV, the walk key's speed under the walk key.
+DEPENDS_ON = {"fov": "custom_fov", "walk_key_speed": "walk"}
+
 
 class PanelForm:
     keep_when_disabled = True
@@ -42,13 +45,14 @@ class PanelForm:
         self.refresh_labels(widgets)
 
     def refresh_dependency(self, widgets):
-        if "fov" not in self.model.camera_options:
-            return
-        active = self.shown["custom_fov"] is True
-        widgets["setting:fov"].SetIsEnabled(active)
-        # The whole row fades, label and value included, as the mockup's .row.muted does.
-        for name in ("row:fov", "description:fov"):
-            widgets[name].SetRenderOpacity(1.0 if active else t.OPACITY_DISABLED)
+        for name, switch in DEPENDS_ON.items():
+            if name not in self.model.options:
+                continue
+            active = self.shown[switch] is True
+            widgets[f"setting:{name}"].SetIsEnabled(active)
+            # The whole row fades, label and value included, as the mockup's .row.muted does.
+            for part in ("row", "description"):
+                widgets[f"{part}:{name}"].SetRenderOpacity(1.0 if active else t.OPACITY_DISABLED)
 
     def refresh_labels(self, widgets):
         labels.apply(self, widgets)

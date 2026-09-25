@@ -52,6 +52,23 @@ def claim(key: str, scope: str, get: Callable[[], Any], put: Callable[[Any], Non
 def write(key: str, scope: str, get: Callable[[], Any], put: Callable[[Any], None], value: Any) -> None:
     claim(key, scope, get, put)
     put(value)
+    _entries[key]["written"] = value
+
+
+def adopt_game_value(key: str, tolerance: float) -> bool:
+    """Takes the value the game holds as its own when it has computed one over the mod's since the last write.
+
+    For values the game computes again by itself, such as the speed scale when aiming: put back as read at the first
+    write, the walk key's release left the aiming scale on a character no longer aiming (audit, 2026-09-25).
+    """
+    entry = _entries.get(key)
+    if entry is None or "written" not in entry:
+        return False
+    current = entry["get"]()
+    if abs(current - entry["written"]) <= tolerance:
+        return False
+    entry["original"] = current
+    return True
 
 
 def is_owned(key: str) -> bool:

@@ -9,8 +9,8 @@ from . import panel_widgets as w
 # The selectors wear the menu buttons' hover and press veils; their colour comes from the Border behind them.
 _VEILS = (("Normal", None), ("Hovered", t.HOVER_OVERLAY), ("Pressed", t.PRESS_OVERLAY), ("Disabled", None))
 _MENU_CLICK = "LeftMouseButton"
-# A shortcut has no row of its own: its two fields sit right of the switch it toggles (Kevin, 2026-09-25).
-SHORTCUT_ROWS = {"third_person_key": "third_person"}
+# A shortcut has no row of its own: its two fields sit right of its switch (Kevin, 2026-09-25).
+SHORTCUT_ROWS = {"third_person_key": "third_person", "walk_key": "walk"}
 
 
 def is_shortcut(option):

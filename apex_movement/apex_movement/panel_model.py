@@ -65,8 +65,8 @@ class Model:
     @staticmethod
     def normalize(option, value):
         if isinstance(option, KeybindOption):
-            # Only the full pack has a shortcut, and only it ships camera_settings and the runtime behind it.
-            from .camera_settings import normalize_keyboard_key
+            # Every file ships shortcut_key: the walk key lives in the separate Apex Auto Sprint file too.
+            from .shortcut_key import normalize_keyboard_key
             return normalize_keyboard_key(value)
         if type(option.default_value) is bool:
             if type(value) is not bool:

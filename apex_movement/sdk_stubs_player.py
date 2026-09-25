@@ -61,6 +61,9 @@ class FakeCharacter:
         self.bPressedJump = False
         self.location = vector(0.0, 0.0, 100.0)
         self.CapsuleComponent = types.SimpleNamespace(GetScaledCapsuleHalfHeight=lambda: 93.0)
+        # The standing stance's own speed, a definition the game shares between characters (read in game 2026-09-15).
+        self.ReplicatedStance = types.SimpleNamespace(stance=types.SimpleNamespace(_name="Stance_Player_Default",
+                                                                                   speed=470.0))
 
     def SetWantsToDash(self, wanted: bool, direction: int) -> None:
         self.calls.append(("SetWantsToDash", wanted, direction))

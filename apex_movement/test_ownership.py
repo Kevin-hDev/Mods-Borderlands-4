@@ -165,5 +165,18 @@ ownership._entries["curve"]["put"] = lambda value: None
 check("a value the mod cannot compare is left alone rather than called wrong",
       ownership.restore_each(["curve"]) == [] and not ownership.is_owned("curve"))
 
+# The game computes some values again by itself, the speed scale when aiming: its latest is the one to put back.
+recomputed = types.SimpleNamespace(value=1.15)
+ownership.write("recomputed", ownership.CHARACTER, *accessors(recomputed, "value"), 0.6)
+check("a value still as the mod wrote it is not taken for the game's",
+      not ownership.adopt_game_value("recomputed", 1e-4) and ownership.original("recomputed") == 1.15)
+recomputed.value = 0.92
+check("one the game computed over the mod's becomes the game's own",
+      ownership.adopt_game_value("recomputed", 1e-4) and ownership.original("recomputed") == 0.92)
+ownership.write("recomputed", ownership.CHARACTER, *accessors(recomputed, "value"), 0.6)
+ownership.restore("recomputed")
+check("and is the one put back", recomputed.value == 0.92 and not ownership.is_owned("recomputed"))
+check("a key the mod does not hold adopts nothing", not ownership.adopt_game_value("recomputed", 1e-4))
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

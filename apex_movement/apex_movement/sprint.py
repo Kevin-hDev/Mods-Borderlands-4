@@ -7,7 +7,7 @@ sprint is on or off.
 
 from typing import Any
 
-from . import game, report
+from . import game, report, walk_key
 
 # Not a slider (spec, section 3): nobody needed to change Auto Sprint's value, and each slider can break the feel.
 STICK_THRESHOLD = 0.95
@@ -19,6 +19,7 @@ _restarting = False
 def reset() -> None:
     global _requested, _restarting
     _requested = _restarting = False
+    walk_key.ask(False)
 
 
 def _request(movement: Any, wanted: bool) -> None:
@@ -37,9 +38,13 @@ def update(character: Any, now_ns: int) -> None:
     movement = character.CharacterMovement
     aiming = game.is_aiming(character)
     pushed = game.stick(character) >= STICK_THRESHOLD
+    walking = walk_key.held()
+    if walking != walk_key.asked():
+        report.note(f"walk key {'held' if walking else 'released'}")
+    walk_key.ask(walking)
     if movement.bIsSprinting:
         _restarting = False
-    if not aiming and pushed and game.is_on_ground(movement):
+    if not aiming and pushed and not walking and game.is_on_ground(movement):
         if not movement.bWantsToSprint:
             _request(movement, True)
         elif not movement.bIsSprinting and not character.bIsCrouched:
@@ -49,11 +54,15 @@ def update(character: Any, now_ns: int) -> None:
             if not _restarting:
                 report.note("sprint restart")
             _restarting = True
-    elif _requested and (aiming or not pushed):
+    elif _requested and (aiming or not pushed or walking):
         _request(movement, False)
 
 
 def stop(character: Any) -> None:
-    if character is not None and _requested:
-        character.CharacterMovement.bWantsToSprint = False
-    reset()
+    # Forgotten even when the write fails: kept, the walk went on with the key up (audit, 2026-09-25).
+    try:
+        if character is not None and _requested:
+            character.CharacterMovement.bWantsToSprint = False
+    finally:
+        reset()
+        walk_key.forget()

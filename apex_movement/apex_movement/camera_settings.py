@@ -4,16 +4,14 @@ import math
 
 from mods_base import BoolOption, SliderOption, keybind
 
-# panel_model checks a new shortcut with normalize_keyboard_key from here: its window also ships in the separate
-# movement files, which carry no runtime.
+from .shortcut_key import KeyboardKeybindOption
+
 try:
     from .apex_camera_runtime.constants import FOV_DEFAULT, FOV_MAX, FOV_MIN
-    from .apex_camera_runtime.key_option import KeyboardKeybindOption, normalize_keyboard_key
 except ModuleNotFoundError as error:
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
     from apex_camera_runtime.constants import FOV_DEFAULT, FOV_MAX, FOV_MIN
-    from apex_camera_runtime.key_option import KeyboardKeybindOption, normalize_keyboard_key
 
 third_person = BoolOption(
     "third_person", False, display_name="Third Person",

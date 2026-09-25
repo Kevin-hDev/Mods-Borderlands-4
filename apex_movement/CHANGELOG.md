@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.5 - 2026-09-25
+
+- Added slow walk: hold Caps Lock to walk slowly instead of sprinting while auto sprint is on, on the ground and in
+  the air. The key can be changed, or turned off, on the Auto Sprint page, like the third-person key.
+- Walking speed with the key from 150 to 540, 300 by default. It never goes faster than the walking speed set on
+  the Movement page.
+- The separate Apex Auto Sprint file has the key too, at the game's own walking speed.
+
 ## 1.1.4 - 2026-09-25
 
 - New Options page, opened by the gear at the top of the settings window: third person, its key, custom field of

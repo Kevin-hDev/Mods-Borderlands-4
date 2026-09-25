@@ -209,8 +209,10 @@ reclimb_delay = SliderOption(
 LONGEST_SLIDE_S = 30.0
 
 
-def keep_in_bounds() -> list[str]:
+def keep_in_bounds(*others: SliderOption) -> list[str]:
     """Brings every slider back within its own bounds, and a value that is not a number back to its default.
+
+    others: sliders declared outside this file, such as the walk key's speed, which lives beside its key.
 
     mods_base loads a slider from the settings file without its bounds, and keeps NaN (review, 2026-09-19): a file
     edited by hand asked for a 20 s dash, no gravity, or a slide flung at 100000. Run when the mod is switched on,
@@ -218,7 +220,7 @@ def keep_in_bounds() -> list[str]:
     either (Vehicle Driving, 2026-09-19: 250 typed for a slider shown [100-200] was taken).
     """
     told: list[str] = []
-    for option in list(globals().values()):
+    for option in [*globals().values(), *others]:
         if not isinstance(option, SliderOption) or getattr(option, "min_value", None) is None:
             continue
         value = float(option.value)

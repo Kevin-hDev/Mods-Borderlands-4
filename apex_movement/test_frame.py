@@ -11,7 +11,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import frame, game, ownership, settings  # noqa: E402
+from apex_movement import frame, game, ownership, settings, walk_key  # noqa: E402
 
 fails: list[str] = []
 
@@ -217,5 +217,13 @@ settings.dash_distance.value = 10000
 frame.on_frame(fresh.anim, 400 * S)
 check("a slider typed out of its bounds in the menu is brought back at the next frame, and said so",
       settings.dash_distance.value == 1000 and any("dash_distance=10000" in line for line in state["warnings"]))
+# The walk key's speed is declared beside its key, outside settings.py: it is held to its bounds all the same.
+walk_key.speed.value = float("nan")
+frame.on_frame(fresh.anim, 500 * S)
+check("the walk key's speed, not a number in a hand-edited file, goes back to its default before the floor gets it",
+      walk_key.speed.value == 300 and any("walk_key_speed=nan" in line for line in state["warnings"]))
+walk_key.speed.value = 100
+frame.on_frame(fresh.anim, 600 * S)
+check("and under the slider's bottom, back to it", walk_key.speed.value == 150)
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

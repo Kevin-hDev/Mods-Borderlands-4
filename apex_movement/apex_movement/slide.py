@@ -7,7 +7,7 @@ game on the ground, but a jump launches from it (about 1.05 times the written sp
 
 from typing import Any
 
-from . import axle_slide, game, ownership, report
+from . import axle_slide, game, ownership, report, speed_order
 
 SPEED_KEY = "Move_Slide.speed.constant"
 # Auto Sprint 1.5.0's window, whose feel Kevin approved: a jump later in the slide launches at the slowed slide speed.
@@ -60,7 +60,8 @@ def _set_start_speed(movement: Any, target: float) -> None:
     walking jump starts at the set speed even before the first sprint.
     """
     asset = game.slide_asset()
-    scale = float(movement.MaxGroundSpeedScale.Value) if asset.bSpeedAffectedByMaxGroundSpeedScale else 1.0
+    # The game's scale, not the walk key's lower one: Move_Slide is shared by every character of the machine.
+    scale = speed_order.game_scale(movement) if asset.bSpeedAffectedByMaxGroundSpeedScale else 1.0
     keys = asset.SpeedScaleCurve.EditorCurveData.keys
     curve_start = float(keys[0].Value) if len(keys) > 0 else 1.0
     divisor = scale * curve_start

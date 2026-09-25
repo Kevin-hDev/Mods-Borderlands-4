@@ -34,6 +34,8 @@ OPTIONS = {
     "walk_speed": ("Vitesse de marche", "Valeur du jeu : 540."),
     "sprint_speed": ("Vitesse de course", "Valeur du jeu : 828."),
     "auto_sprint": ("Activé", "Courir en poussant le stick à fond."),
+    "walk": ("Touche de marche", "Maintiens la touche pour marcher au lieu de courir."),
+    "walk_key_speed": ("Vitesse avec la touche", "Jusqu'à 540, la marche du jeu."),
     "slides": ("Activé", "Des glissades plus rapides et plus longues."),
     "momentum_slides": ("Suivre l'élan", "La glissade suit ton déplacement au lieu du viseur."),
     "slide_speed": ("Vitesse de départ", "Vitesse au début d'une glissade."),

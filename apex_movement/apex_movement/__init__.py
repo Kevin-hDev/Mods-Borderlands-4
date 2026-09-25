@@ -14,7 +14,7 @@ from . import pack
 from . import (
     air_crouch, air_strafe, dash, family, frame, glide, ground_speed, heavier_fall, jump_report, menu, move_watch,
     ownership, panel_open, panel_preferences, report, settings, slide, slide_direction, slide_physics,
-    slide_steering, sprint, wall_climb,
+    slide_steering, sprint, walk_key, wall_climb,
 )
 
 camera_adapter = None
@@ -26,8 +26,10 @@ if pack.is_full():
     camera_options = camera_settings.ALL
     camera_keybinds = [camera_settings.third_person_bind]
     frame.set_camera(camera_adapter)
+# Only with the auto sprint, which the key stops: another separate file would hold Caps Lock for nothing.
+walk_keybinds = [walk_key.bind] if pack.carries("Auto sprint") else []
 
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 __author__ = "kevin-hDev"
 
 
@@ -65,7 +67,7 @@ def _on_enable() -> None:
     # Tested with no other movement mod; Auto Sprint writes the same ground speed, so the last writer would win.
     if "auto_sprint" in sys.modules:
         report.warning("the Auto Sprint mod is also loaded; both set the ground speed, disable one of them")
-    for line in settings.keep_in_bounds():
+    for line in settings.keep_in_bounds(walk_key.speed):
         report.warning(line)
     if camera_adapter is not None:
         camera_adapter.start()
@@ -97,7 +99,7 @@ mod = build_mod(
     cls=family.FamilyMod,
     name=pack.NAME,
     options=[*menu.MENU, *camera_options, *panel_preferences.ALL],
-    keybinds=camera_keybinds,
+    keybinds=[*camera_keybinds, *walk_keybinds],
     hooks=[frame.tick],
     on_enable=_on_enable,
     on_disable=_on_disable,

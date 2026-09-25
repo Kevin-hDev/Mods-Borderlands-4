@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.1.4**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: third person, its key, a custom field of view and the menu language.
+Version **1.1.5**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: third person, its key, a custom field of view and the menu language.
 
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.
@@ -17,7 +17,7 @@ and a line of the Nexus page name the same move.
 | Move | What it does | On by default |
 |---|---|---|
 | Movement | Walk and sprint speeds, raised a little. No switch: they apply whether auto sprint is on or off | — |
-| Auto sprint | Sprint as soon as the move stick is fully pushed, up to the game's own 60 degree limit | yes |
+| Auto sprint | Sprint as soon as the move stick is fully pushed, up to the game's own 60 degree limit. Hold the walk key (Caps Lock by default) to walk slowly instead, from 150 to 540, 300 by default | yes |
 | Slides | Follow the way you are going, not the way you are aiming; slowed uphill, carried downhill | yes |
 | Axle slide | Axle's slide from Apex: steered with the move stick, and boosted every time | no |
 | Dash | Goes further, at the game's own speed: its length changes, not its speed. Past 300 % it starts faster instead | yes |
@@ -72,14 +72,15 @@ named after it: `apex_dash.json`, `apex_wall_climb.json`, and so on.
 - `frame.py` runs every move once per frame, in a fixed order; each move is a module with `update`, `stop` and `reset`.
 - `movements.py` states which modules and menu lines make up each move, with the reason for every exception; `test_movement_rules.py` holds the code to it: every move turns off on its own, and none reads another's settings or imports its modules.
 - `pack.py` says which moves a file carries; `family.py` keeps one move from running in two installed files at once.
-- `ground_speed.py` holds the walk and sprint speeds, apart from `sprint.py`, which only asks the game to sprint.
+- `ground_speed.py` holds the walk and sprint speeds, apart from `sprint.py`, which only asks the game to sprint. The speed floor it writes can only raise the game's speed, so the walk key's slower walk also lowers the character's own speed scale while standing, and puts the game's back as soon as the key is released.
+- `walk_key.py` holds the walk key, its switch and its speed, and whether it is held: the auto sprint asks the walk, the ground speed applies it. `shortcut_key.py` gives every file, the separate ones included, the key option of the camera runtime.
 - `game.py` finds the player and the move assets, and answers what several moves ask: on the ground, in the air, sliding, whether one of the game's own moves is running. It asks the game that last one (`IsPerformingControlledMove`) rather than reading the move's network copy, which keeps a ground slam after landing until the next slide. A field only one move touches is read in that move's module.
 - `dash_lookup.py` finds the dash of the character being played: the first four share `Move_Dash`, while C4SH and Loveless each have their own. No field of the character points at it, so it is found by name. `dash.py` puts the extra speed in the dash's speed curve rather than in its speed, since Loveless's dash reads the first and not the second.
 - `ownership.py` remembers every game value a move overwrites, and puts it back when the move stops. Nothing is written to the save file.
 - `settings.py` holds every setting with its default and its bounds, and carries the reason each default was chosen.
 - `speed_order.py` keeps walk, sprint, slide and top slide speeds in order whatever the sliders say; a file without the movement speeds orders against the game's own.
 - The wall climb is split by responsibility: `wall_sense` measures the wall, `wall_choice` picks the surface among what the rays met, `climb_aim` does the geometry, `climb_rules` decides whether a climb starts and keeps going, `wall_climb` moves the character, `climb_refusal` writes why a climb was refused, `climb_animation` plays the game's own climbing animation on the first-person arms `arms` finds.
-- `camera.py` and `camera_settings.py` connect the full pack to the shared camera runtime; `panel_options.py` draws the Options page and `panel_shortcut.py` the key fields beside the Third Person switch.
+- `camera.py` and `camera_settings.py` connect the full pack to the shared camera runtime; `panel_options.py` draws the Options page and `panel_shortcut.py` the key fields beside the Third Person and Walk key switches.
 - `jump_report.py` and `move_watch.py` write every jump and every change of the game's own moves to the SDK log, a few hundred lines at most: on a game version not tested here, those lines show what changed.
 
 ## Tests

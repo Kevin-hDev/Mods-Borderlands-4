@@ -5,12 +5,13 @@ from movement_test_result import Reporter
 result = Reporter("Movement panel saves existing options, validates and restores without changing gameplay")
 
 import math
+import sys
 
 import movement_ui_fixture
 
 movement_ui_fixture.install()
 
-from apex_movement import settings
+from apex_movement import pack, settings, walk_key
 from apex_movement import panel_model, panel_preferences, panel_theme
 
 
@@ -37,7 +38,9 @@ model = panel_model.Model(mod)
 assert len(model.groups) == len(model.pages) == 10
 assert model.pages == panel_theme.PAGES
 assert tuple(model.camera_options) == ("third_person", "third_person_key", "custom_fov", "fov")
-assert len(model.options) == 34
+# 30 movement settings, the walk key's three (switch, key, speed) and the four camera rows.
+assert len(model.options) == 37
+assert [key for key in model.options if key.startswith("walk")] == ["walk_speed", "walk", "walk_key", "walk_key_speed"]
 assert "native_fov" not in model.options and "applied_fov" not in model.options
 assert model.language == "EN" and model.page == model.pages[0]
 assert panel_preferences.french.default_value is False
@@ -62,6 +65,18 @@ assert model.write({"third_person_key": "K"})
 assert model.camera_options["third_person_key"].value == "K"
 assert not model.write({"third_person_key": "Gamepad_FaceButton_Top"})
 assert model.camera_options["third_person_key"].value == "K"
+assert model.write({"walk_key": "LeftAlt"}) and walk_key.bind.key == "LeftAlt"
+assert not model.write({"walk_key": "LeftMouseButton"}) and walk_key.key.value == "LeftAlt"
+# A separate Apex Auto Sprint file ships no camera_settings: the key it captures must be checked without it.
+pack.CARRIES = ("Auto sprint",)
+sys.modules["apex_movement.camera_settings"] = None
+try:
+    alone = panel_model.Model(mod)
+    assert not alone.camera_options
+    assert alone.write({"walk_key": "CapsLock"}) and walk_key.bind.key == "CapsLock"
+finally:
+    del sys.modules["apex_movement.camera_settings"]
+    pack.CARRIES = ()
 mod.fail = True
 assert not model.write({"dash_distance": 240})
 assert settings.dash_distance.value == 220
