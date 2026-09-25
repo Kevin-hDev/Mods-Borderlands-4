@@ -23,6 +23,17 @@ def normalize_keyboard_key(value: Any) -> str | None:
 class KeyboardKeybindOption(KeybindOption):
     """KeybindOption which safely unbinds malformed or controller values loaded from disk."""
 
+    @classmethod
+    def sole_entry(cls, bind: Any) -> "KeyboardKeybindOption":
+        """The key's one entry in the SDK's menu, for a bind declared hidden.
+
+        A visible bind is listed a second time under "Keybinds", and a key changed there never reaches this option:
+        from_keybind copies option to bind, "though not in reverse" (Kevin, 2026-09-25: one entry only).
+        """
+        option = cls.from_keybind(bind)
+        option.is_hidden = False
+        return option
+
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "value":
             try:

@@ -7,14 +7,14 @@ from mods_base import get_pc
 try:
     from .apex_camera_runtime.bootstrap import ensure
     from .apex_camera_runtime.constants import PROTOCOL
-    from .apex_camera_runtime.shared import shared
+    from .apex_camera_runtime.shared import elected, shared
 except ModuleNotFoundError as error:
     # Source tests use the canonical sibling source; packaged builds carry it below the mod's only SDK root.
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
     from apex_camera_runtime.bootstrap import ensure
     from apex_camera_runtime.constants import PROTOCOL
-    from apex_camera_runtime.shared import shared
+    from apex_camera_runtime.shared import elected, shared
 
 from . import report, settings
 
@@ -78,6 +78,12 @@ def on_frame(now_ns: int) -> None:
 
 def toggle_third_person() -> bool:
     return bool(_registered and _runtime.toggle_third_person(OWNER))
+
+
+def elected_elsewhere() -> bool:
+    """True while another registered mod's higher-priority camera settings are applied."""
+    owner = elected()
+    return owner is not None and owner != OWNER
 
 
 def stop() -> None:

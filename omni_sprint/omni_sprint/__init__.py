@@ -1,13 +1,13 @@
 """Omni Sprint: sprint in every direction in Borderlands 4, at the game's own sprint speed.
 
-Installs beside Apex Movement and Vehicle Driving: its own package name, hook identifier and settings file, no key
-bound, and game values neither of them writes: the sprint angle limit, the body's backward run and, when its
-option is on, the FOV.
+Installs beside Apex Movement and Vehicle Driving: its own package name, hook identifier, settings file and window,
+and game values neither of them writes: the sprint angle limit and the body's backward run. Its camera settings
+apply while Apex Movement's are not in use.
 """
 
 from mods_base import build_mod
 
-from . import animation, camera, frame, report, settings
+from . import animation, camera, frame, panel_open, panel_preferences, report, settings
 
 __version__ = "1.0.2"
 __author__ = "kevin-hDev"
@@ -40,10 +40,12 @@ mod = build_mod(
     name="Omni Sprint",
     hooks=[frame.tick],
     keybinds=[settings.third_person_bind],
-    options=settings.OPTIONS,
+    # The window's language and page are hidden options: the SDK menu still lists only settings.OPTIONS.
+    options=[*settings.OPTIONS, *panel_preferences.ALL],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )
+panel_open.install(mod)
 
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
 if mod.settings_file is not None and not mod.settings_file.exists():

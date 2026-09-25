@@ -9,6 +9,7 @@ class FakeKeybind:
         self.display_name = kwargs.get("display_name", identifier)
         self.description = kwargs.get("description", "")
         self.is_rebindable = kwargs.get("is_rebindable", True)
+        self.is_hidden = kwargs.get("is_hidden", False)
         self.enabled = False
 
     @property

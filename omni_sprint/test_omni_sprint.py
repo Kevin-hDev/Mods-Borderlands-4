@@ -24,9 +24,11 @@ import omni_sprint  # noqa: E402
 from omni_sprint import animation, camera, definition, frame, memory  # noqa: E402
 
 mod = state["mods"][0]
-from omni_sprint import settings  # noqa: E402
-check("one mod, named Omni Sprint, with the FOV settings",
-      len(state["mods"]) == 1 and mod.kwargs["name"] == "Omni Sprint" and mod.kwargs["options"] == settings.OPTIONS)
+from omni_sprint import panel_preferences, settings  # noqa: E402
+check("one mod, named Omni Sprint, with the camera settings and its window's language and page, both hidden",
+      len(state["mods"]) == 1 and mod.kwargs["name"] == "Omni Sprint"
+      and mod.kwargs["options"] == [*settings.OPTIONS, *panel_preferences.ALL]
+      and all(option.is_hidden for option in panel_preferences.ALL))
 check("the FOV option is off by default, its slider from 70 to 150",
       settings.custom_fov.value is False and (settings.fov.min_value, settings.fov.max_value) == (70, 150))
 check("a fresh install switches it on and says its version",

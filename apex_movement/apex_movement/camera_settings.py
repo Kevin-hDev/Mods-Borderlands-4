@@ -31,8 +31,9 @@ third_person_bind = keybind(
     "third_person_key", "P", _toggle_third_person,
     display_name="Toggle Third Person",
     description="Turn the third-person camera on or off.",
+    is_hidden=True,
 )
-third_person_key = KeyboardKeybindOption.from_keybind(third_person_bind)
+third_person_key = KeyboardKeybindOption.sole_entry(third_person_bind)
 custom_fov = BoolOption(
     "custom_fov", False, display_name="Custom FOV",
     description="Use the FOV below instead of the game's.",

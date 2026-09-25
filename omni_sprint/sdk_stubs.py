@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from sdk_stubs_keybinds import FakeKeybind
+from sdk_stubs_options import FakeKeybindOption, FakeNestedOption, FakeOption
 
 # The camera runtime sits beside the mods: camera_runtime/source in the workshop, camera_runtime in the public copy.
 _HERE = Path(__file__).resolve().parent
@@ -108,29 +109,6 @@ class FakeHook:
         self.enabled = False
 
 
-class FakeOption:
-    """As mods_base's BoolOption and SliderOption where the mod reads them: an identifier, a value and its bounds."""
-
-    def __init__(self, identifier: str, value: Any, min_value: Any = None, max_value: Any = None,
-                 **kwargs: Any) -> None:
-        self.identifier, self.value, self.default_value = identifier, value, value
-        self.min_value, self.max_value, self.kwargs = min_value, max_value, kwargs
-
-
-class FakeKeybindOption(FakeOption):
-    @classmethod
-    def from_keybind(cls, bind: Any):
-        option = cls(bind.identifier, bind.key, display_name=bind.display_name,
-                     description=bind.description, is_rebindable=bind.is_rebindable)
-        option.on_change_anytime = lambda _option, key: setattr(bind, "key", key)
-        return option
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name == "value" and getattr(self, "on_change_anytime", None) is not None:
-            self.on_change_anytime(self, value)
-        super().__setattr__(name, value)
-
-
 class FakeMod:
     """As mods_base.Mod where this mod depends on it: hooks on before on_enable, off before on_disable."""
 
@@ -142,6 +120,9 @@ class FakeMod:
 
     def save_settings(self) -> None:
         self.state["settings_saves"] += 1
+
+    def iter_display_options(self):
+        yield from self.kwargs.get("options", ())
 
     def enable(self) -> None:
         if self.is_enabled:
@@ -189,6 +170,7 @@ def install() -> dict:
     unrealsdk_module.logging = logging_module
     unrealsdk_module.hooks = hooks_module
     unrealsdk_module.find_all = find_all
+    unrealsdk_module.make_struct = lambda name, **fields: types.SimpleNamespace(**fields)
     unreal_module = types.ModuleType("unrealsdk.unreal")
     unreal_module.WeakPointer = weakref.ref
     unrealsdk_module.unreal = unreal_module
@@ -197,6 +179,7 @@ def install() -> dict:
     mods_base.get_pc = lambda **kwargs: state["pc"]
     mods_base.BoolOption = FakeOption
     mods_base.KeybindOption = FakeKeybindOption
+    mods_base.NestedOption = FakeNestedOption
     mods_base.SliderOption = FakeOption
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, kind, hook_identifier))
     mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(

@@ -3,18 +3,6 @@
 from . import panel_buttons as b, panel_pages as p, panel_shortcut as sc
 from . import panel_text as tx, panel_theme as t, panel_widgets as w
 
-# A shortcut has no row of its own: its two fields sit right of the switch it toggles (Kevin, 2026-09-25).
-SHORTCUT_ROWS = {"third_person_key": "third_person"}
-
-
-def _camera_rows(rows, model, widgets, template):
-    options = model.camera_options.values()
-    p.setting_rows(rows, [option for option in options if not sc.is_shortcut(option)], widgets, template,
-                   expose_rows=True)
-    for option in options:
-        if sc.is_shortcut(option):
-            sc.fields(widgets[f"row:{SHORTCUT_ROWS[option.identifier]}"], widgets, option.identifier, template)
-
 
 def _language_card(body, widgets, template):
     rows = p.card(body, widgets, "language")
@@ -48,7 +36,6 @@ def options_page(owner, model, widgets, template):
     page, body = p.scrolling_body(owner, template)
     _heading(body, widgets)
     if model.camera_options:
-        rows = p.card(body, widgets, "camera")
-        _camera_rows(rows, model, widgets, template)
+        sc.rows(p.card(body, widgets, "camera"), model.camera_options.values(), widgets, template)
     _language_card(body, widgets, template)
     return page

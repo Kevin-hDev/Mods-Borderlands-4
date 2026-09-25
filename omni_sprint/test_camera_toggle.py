@@ -38,6 +38,8 @@ camera.shared = lambda: runtime
 
 ok = settings.third_person_key.default_value == "P"
 ok = ok and settings.third_person_bind in omni_sprint.mod.kwargs["keybinds"]
+# The SDK lists a visible bind again under "Keybinds": hidden, the key has the option as its one entry (Kevin).
+ok = ok and settings.third_person_bind.is_hidden is True and settings.third_person_key.is_hidden is False
 omni_sprint.mod.enable()
 state["keybinds"]["P"]()
 ok = ok and runtime.toggles == ["omni_sprint"]

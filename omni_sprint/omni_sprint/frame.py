@@ -13,7 +13,7 @@ from typing import Any
 from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 
-from . import animation, camera, definition, limit, report
+from . import animation, camera, definition, limit, report, settings
 
 HOOK_PATH = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 MS = 1_000_000
@@ -96,6 +96,9 @@ def on_frame(now_ns: int) -> None:
     shape = _layout()
     component = _component_address() if shape is not None else 0
     _player_present = component != 0
+    if not settings.sprint_enabled():
+        _give_back(shape)
+        return
     if component == 0:
         return
     if component != _component:
@@ -121,6 +124,14 @@ def on_frame(now_ns: int) -> None:
         report.note(line)
 
 
+def _give_back(shape: definition.Layout | None) -> None:
+    """The sprint's switch is off: every limit opened goes back to the game's value, and stays there."""
+    restored, left = limit.put_back(shape)
+    if restored or left:
+        line = f"sprint switched off, game sprint limit put back in {restored} movement definition(s)"
+        report.note(line + (f", {left} left alone: no longer recognised in memory" if left else ""))
+
+
 def stop() -> tuple[int, int]:
     """Puts back every limit opened: (put back, left alone)."""
     shape = _shape
@@ -138,7 +149,10 @@ def tick(_obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
     try:
         animation_frame = animation.inspect(_obj)
         player_frame = animation_frame[0]
-        animation.update(animation_frame, now_ns)
+        if settings.sprint_enabled():
+            animation.update(animation_frame, now_ns)
+        else:
+            animation.stop()
     except Exception:
         report.error_once('animation', 'backward animation update failed')
         try:

@@ -1,5 +1,6 @@
 """Tests the frame: the clock, taking and leaving a vehicle, following the settings, the grip, parts that fail."""
 
+import math
 import pathlib
 import sys
 import types
@@ -38,7 +39,7 @@ def seated(vehicle: sdk_stubs.Vehicle) -> types.SimpleNamespace:
 
 state = sdk_stubs.install()
 
-from vehicle_driving import frame, settings  # noqa: E402
+from vehicle_driving import frame, grip, settings  # noqa: E402
 
 MS = 1_000_000
 ON_FOOT = types.SimpleNamespace(Pawn=types.SimpleNamespace(Name="OakCharacter_1"))
@@ -123,6 +124,73 @@ lines = frame.stop_all()
 check("switching off puts back what was written before the failure",
       [spring.Stiffness for spring in third.OakVehicleMovement.HoverSetup.YawSpring_Hovering.Springs] == [3.0, 3.5, 4.0]
       and broken_driver.VehicleDriverComponent.VehicleAttributesState.maxspeed.BaseValue == 50.0 and lines == [])
+
+wreck = sdk_stubs.Vehicle("OakVehicle_4", driver, yaw=90.0)
+state["pc"] = seated(wreck)
+frame.on_frame(8000 * MS)
+sdk_stubs.destroy(wreck)
+count = len(state["misc"])
+for step in range(1, 6):
+    frame.on_frame(8000 * MS + step * 10 * MS)
+check("a vehicle destroyed while still the controller's pawn is let go once, not taken again every frame",
+      state["misc"][count:] == ["[Vehicle Driving] left the vehicle, game values back"]
+      and attributes.MaxAccel.BaseValue == 1000.0)
+
+
+def refuse(bone: str) -> None:
+    raise ValueError("no body")
+
+
+odd = sdk_stubs.Vehicle("OakVehicle_5", driver, yaw=90.0)
+odd.Mesh.GetPhysicsLinearVelocity = refuse
+state["pc"] = seated(odd)
+frame.on_frame(9000 * MS)
+check("another kind of failure on a later vehicle gets its own line",
+      any("grip stopped" in line and "ValueError" in line for line in state["errors"]))
+
+sixth = sdk_stubs.Vehicle("OakVehicle_6", driver, yaw=90.0)
+sixth.Mesh = sdk_stubs.Mesh(2290.0, 0.0)
+state["pc"] = seated(sixth)
+frame.on_frame(10_000 * MS)
+bounds_checks: list[int] = []
+checked_bounds = settings.keep_in_bounds
+settings.keep_in_bounds = lambda: bounds_checks.append(1) or checked_bounds()
+for step in range(1, 10):
+    frame.on_frame(10_000 * MS + step * 10 * MS)
+settings.keep_in_bounds = checked_bounds
+check("the bounds are checked twice a second with the other settings, not every frame", bounds_checks == [])
+settings.turn_loss.value = 500
+errors = len(state["errors"])
+frame.on_frame(10_100 * MS)
+check("a loss typed beyond its bounds between two checks never reaches the grip: its speed stays a real number",
+      len(state["errors"]) == errors and len(sixth.Mesh.sets) > 0
+      and all(isinstance(speed, float) for speed in (sixth.Mesh.velocity.X, sixth.Mesh.velocity.Y)))
+frame.on_frame(10_500 * MS)
+check("and it is brought back at the next check", settings.turn_loss.value == 30)
+settings.turn_loss.value = 9
+sixth.Mesh = sdk_stubs.Mesh(0.0, 2290.0)
+frame.on_frame(10_550 * MS)
+settings.grip.value = False
+frame.on_frame(10_600 * MS)
+sixth.Mesh = sdk_stubs.Mesh(2290.0, 0.0)
+settings.grip.value = True
+frame.on_frame(12_000 * MS)
+check("switched back on after the game stood still over a second, the grip turns nothing at its first frame",
+      sixth.Mesh.sets == [])
+frame.on_frame(12_050 * MS)
+check("then grips again", len(sixth.Mesh.sets) == 1)
+for off_ms in (100, 490):
+    settings.grip.value = False
+    start = frame._last_ns // MS
+    for step in range(10, off_ms + 1, 10):
+        frame.on_frame((start + step) * MS)
+    sixth.Mesh = sdk_stubs.Mesh(2290.0, 0.0)
+    settings.grip.value = True
+    frame.on_frame((start + off_ms + 10) * MS)
+    velocity = sixth.Mesh.velocity
+    check(f"the grip off for {off_ms} ms turns one frame's worth when switched back on, not the time it was off",
+          abs(math.degrees(math.atan2(velocity.Y, velocity.X)) - grip.GRIP_DEG_PER_S * 0.01) < 0.01)
+frame.stop_all()
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

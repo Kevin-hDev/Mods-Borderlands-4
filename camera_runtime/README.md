@@ -19,14 +19,16 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
 
 ## How it is put together
 
-- `shared.py` creates one runtime even when two installed mods carry this package, and `bootstrap.py` connects it to
-  the game's SDK once. `arbitration.py` decides which mod's settings it follows, the same way on every launch.
+- `shared.py` creates one runtime even when two installed mods carry this package, and tells a mod's menu whose
+  settings apply without creating it. `bootstrap.py` connects the runtime to the game's SDK once. `arbitration.py`
+  decides which mod's settings it follows, the same way on every launch.
 - `runtime.py` follows the chosen mod's settings. `third_person.py`, `transitions.py`, `aiming.py` and `collision.py`
   handle the camera, `fov.py` the field of view, and `lifetime.py` and `cleanup.py` let go of everything when the
   player or the mod goes away.
 - `native_bridge.py` loads the native library through a checked `ctypes` boundary, after comparing its SHA-256 with
   `assets/apex_camera_view_v4.sha256`.
-- `key_option.py` keeps a saved key valid: a key it refuses becomes unbound instead of reaching the game.
+- `key_option.py` keeps a saved key valid: a key it refuses becomes unbound instead of reaching the game. It also
+  gives the key a single entry in the SDK's menu.
 
 ## Native library
 

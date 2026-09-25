@@ -43,20 +43,23 @@ file, no key bound, and no game value in common.
 
 - `frame.py` runs the mod once per frame while you drive; the values and the grip each stop on their own after an
   error, so one broken part does not take the other down.
-- `seat.py` finds the vehicle you drive: at the wheel, the controller's pawn is the vehicle.
+- `seat.py` finds the vehicle you drive: at the wheel, the controller's pawn is the vehicle. A vehicle the game has
+  destroyed counts as none, even while it is still the pawn.
 - `levers.py` says which game values each setting multiplies: the driver's speed and acceleration attributes, the
   vehicle's turning springs and its jump height.
 - `tuning.py` keeps the game's own value of everything the mod writes, and puts it back when you get out or switch
   the mod off. A value is always written as the game's own times its setting, never as the value in the game times
-  it, so nothing is multiplied twice; a value the game rewrites, such as a new Hover Drive's bonus, is followed.
+  it, so nothing is multiplied twice; a value the game rewrites, such as a new Hover Drive's bonus, is followed. The
+  driver's values are looked for again twice a second while the driver is not seated yet.
 - `grip.py` turns the vehicle's speed toward where it faces, 360 degrees a second at most, losing the set share of
   speed for each degree turned. It lets the game drive in the air, going fast up or down, during the game's
-  powerslide, under 300 of speed, and for a gap under 2 or over 120 degrees.
+  powerslide, under 300 of speed, and for a gap under 2 or over 120 degrees. After a pause, or once switched back on,
+  it never turns more than one frame's worth at once.
 - `ground.py` checks there is ground under the vehicle, with one trace straight down.
 - `panel_*.py` and `control_*.py` draw the settings window and hand the controls back to the console menu when it
   closes; `menu.py` groups the settings into its pages.
 - `settings.py` holds every setting with its default and its range; `report.py` writes the mod's lines in the SDK
-  log, each failure once.
+  log, each kind of failure once.
 
 ## Tests
 

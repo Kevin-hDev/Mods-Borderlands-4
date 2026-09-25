@@ -28,6 +28,10 @@ on_foot = types.SimpleNamespace(Pawn=types.SimpleNamespace(Name="OakCharacter_1"
 check("on foot, no vehicle", seat.driven_vehicle(on_foot) is None)
 car = sdk_stubs.Vehicle()
 check("at the wheel, the vehicle", seat.driven_vehicle(types.SimpleNamespace(Pawn=car)) is car)
+wreck = sdk_stubs.Vehicle()
+sdk_stubs.destroy(wreck)
+check("a vehicle the game destroyed while still the controller's pawn reads as no vehicle",
+      seat.driven_vehicle(types.SimpleNamespace(Pawn=wreck)) is None)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -134,5 +134,31 @@ check("a value that cannot be put back is reported, and the others still go back
       lines == ["could not put back PowerslideJumpHeight: RuntimeError('locked')"]
       and attributes.MaxAccel.BaseValue == 1000.0 and not owner.holds())
 
+late = sdk_stubs.Vehicle("OakVehicle_5", driver)
+late.DriverPawn = None
+owner.take(late)
+owner.update(FACTORS)
+check("a driver not yet seated when the vehicle is taken: the vehicle's own levers are set at once",
+      late.OakVehicleMovement.HoverSetup.YawSpring_Hovering.Springs[0].Stiffness == 7.5
+      and attributes.MaxAccel.BaseValue == 1000.0)
+late.DriverPawn = driver
+lines = owner.update(FACTORS)
+check("the driver's speed and acceleration are set at the first check once the driver is seated",
+      attributes.MaxAccel.BaseValue == 2500.0 and near(attributes.maxspeed.Value, 51.3194 * 1.25))
+check("the log names what was found late", any("found on OakVehicle_5" in line for line in lines))
+check("the vehicle's levers written before are not written twice",
+      late.OakVehicleMovement.HoverSetup.YawSpring_Hovering.Springs[0].Stiffness == 7.5)
+owner.put_back()
+check("everything goes back at the descent, the late driver's values too",
+      attributes.MaxAccel.BaseValue == 1000.0 and attributes.maxspeed.BaseValue == 50.0
+      and late.OakVehicleMovement.HoverSetup.YawSpring_Hovering.Springs[0].Stiffness == 3.0)
+
+alone = sdk_stubs.Vehicle("OakVehicle_6", driver)
+alone.DriverPawn = None
+owner.take(alone)
+owner.update(FACTORS)
+check("a driver that never comes adds no line at each check", owner.update(FACTORS) == [])
+owner.put_back()
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

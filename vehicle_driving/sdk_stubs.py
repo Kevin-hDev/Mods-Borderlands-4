@@ -78,12 +78,14 @@ class FakeMod:
 
 class WeakPointer:
     """As pyunrealsdk's (sdk_mods/.stubs/unrealsdk/unreal/_weak_pointer.pyi): calling it gives the object back, or
-    None once the game destroyed it; destroy() stands for the game destroying an object."""
+    None once the game destroyed it, even for a pointer made afterwards; destroy() stands for the game destroying an
+    object."""
 
     made: list["WeakPointer"] = []
+    destroyed: list[Any] = []
 
     def __init__(self, obj: Any = None) -> None:
-        self.obj = obj
+        self.obj = None if any(obj is gone for gone in WeakPointer.destroyed) else obj
         WeakPointer.made.append(self)
 
     def __call__(self) -> Any:
@@ -91,6 +93,7 @@ class WeakPointer:
 
 
 def destroy(obj: Any) -> None:
+    WeakPointer.destroyed.append(obj)
     for pointer in WeakPointer.made:
         if pointer.obj is obj:
             pointer.obj = None

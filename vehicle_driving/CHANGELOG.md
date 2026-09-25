@@ -2,7 +2,8 @@
 
 ## 1.0.2 - 2026-09-25
 
-- Internal update of the settings window shared with the Apex mods. Nothing changes in game.
+- Grip: no more sudden jolt when it takes over again after a pause or when you switch it back on in the menu.
+- Internal update of the settings window shared with the Apex mods.
 
 ## 1.0.1 - 2026-09-23
 

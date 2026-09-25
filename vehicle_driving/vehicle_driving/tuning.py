@@ -16,6 +16,7 @@ from . import levers
 # Game floats are 32-bit: a value read back differs from the one written by about one part in ten million. One
 # further off than this share was written by the game.
 TOLERANCE = 1e-5
+DRIVER_ATTRIBUTES = {name for _, name in levers.ATTRIBUTES}
 
 
 def same(a: float, b: float) -> bool:
@@ -36,6 +37,9 @@ class Tuning:
         self._vehicle: Any = None
         self._driver: Any = None
         self._targets: list[levers.Target] = []
+        # The driver's attributes missing at take(): looked for again at each update, since the driver may sit down
+        # after the vehicle became the pawn (the order was never measured).
+        self._waiting: set[str] = set()
         self._entries: dict[str, Entry] = {}
 
     def vehicle(self) -> Any:
@@ -50,9 +54,8 @@ class Tuning:
         """Puts the vehicle held back first, then holds this one; nothing is written before update()."""
         lines = self.put_back()
         self._vehicle = WeakPointer(vehicle)
-        driver = getattr(vehicle, "DriverPawn", None)
-        self._driver = WeakPointer(driver) if driver is not None else None
-        self._targets, missing = levers.targets(vehicle)
+        missing = self._find_levers(vehicle)
+        self._waiting = set(missing) & DRIVER_ATTRIBUTES
         lines.append(f"driving {vehicle.Name}")
         return lines + [f"{name} not found on {vehicle.Name}: left to the game" for name in missing]
 
@@ -61,7 +64,7 @@ class Tuning:
 
         What was set goes in one line, from the original: the log's proof that nothing is multiplied twice.
         """
-        lines: list[str] = []
+        lines: list[str] = self._look_for_driver()
         written: list[str] = []
         rebased: set[str] = set()
         for target in self._targets:
@@ -107,8 +110,25 @@ class Tuning:
                 lines.append(f"could not put back {key}: {exc!r}")
         self._entries.clear()
         self._targets = []
+        self._waiting = set()
         self._vehicle = self._driver = None
         return lines
+
+    def _find_levers(self, vehicle: Any) -> list[str]:
+        driver = getattr(vehicle, "DriverPawn", None)
+        self._driver = WeakPointer(driver) if driver is not None else None
+        self._targets, missing = levers.targets(vehicle)
+        return missing
+
+    def _look_for_driver(self) -> list[str]:
+        vehicle = self.vehicle()
+        if not self._waiting or vehicle is None:
+            return []
+        # The levers written already keep their entries by key, so the vehicle's own are never taken twice.
+        still = self._waiting & set(self._find_levers(vehicle))
+        found = sorted(self._waiting - still)
+        self._waiting = still
+        return [f"{', '.join(found)} found on {vehicle.Name} once its driver was seated"] if found else []
 
     def _alive(self, owner: str) -> bool:
         pointer = self._vehicle if owner == levers.VEHICLE else self._driver

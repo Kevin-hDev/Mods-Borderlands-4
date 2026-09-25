@@ -2,7 +2,7 @@
 
 Sprint in every direction in Borderlands 4: sideways, diagonally and backwards, while the camera stays free. Omni
 Sprint keeps the game's sprint speed, supplies a backward running animation in third person, and offers an optional
-third-person camera and field-of-view setting.
+third-person camera and field-of-view setting, in an English and French settings window.
 
 The original sprint was tested on game versions **1.8.1-4709277** through **1.10.2-4845623**. The backward animation
 and FOV setting were tested on **1.10.2-4845623**, in single player. Co-op has not been tested.
@@ -56,6 +56,7 @@ it in the game's memory instead:
 - `camera.py` hands the Third Person and Custom FOV settings to the shared [camera runtime](../camera_runtime/),
   which owns the camera. It changes the FOV only while Custom FOV is enabled, and saves the player's original game
   FOV in the mod's settings so it can restore that value after a menu transition or game restart.
+- `panel_*.py` and `control_*.py` draw the settings window.
 - `report.py` writes the mod's lines in the SDK log, each failure once.
 
 If a game update changes the movement definition, the mod leaves the sprint limit alone and reports it once in the

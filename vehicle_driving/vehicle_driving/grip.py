@@ -29,6 +29,9 @@ MAX_ANGLE = 120.0
 MIN_GAP_DEG = 2.0
 # A hitch must not swing the whole velocity at once.
 MAX_STEP_S = 0.1
+# Longer than any frame a player drives through: the game stood still (paused), so nothing is owed. The grip switched
+# off is followed by rest() instead, however short the time off.
+PAUSE_NS = 500 * MS
 # Fast up or down means a jump, a fall or a slope: the game's own vertical speed must not be written over.
 MAX_VERTICAL = 300.0
 # The longest turn in sessions 2 to 9 lasted about a second; a write held longer is let go for REST_NS, the time for
@@ -49,6 +52,9 @@ def gripped(vx: float, vy: float, facing_deg: float, max_turn_deg: float, loss_p
     if abs(gap) < MIN_GAP_DEG or abs(gap) > MAX_ANGLE:
         return vx, vy
     turn = max(-max_turn_deg, min(max_turn_deg, gap))
+    if turn == 0.0:
+        # Rebuilt by cos and sin, the same velocity comes back a digit off and would be written for nothing.
+        return vx, vy
     heading = math.radians(moving + turn)
     kept = speed * (1.0 - loss_per_deg) ** abs(turn)
     return kept * math.cos(heading), kept * math.sin(heading)
@@ -64,7 +70,8 @@ class Grip:
         self.rest_until = started_ns
 
     def step(self, now_ns: int, vehicle: Any, loss_per_deg: float) -> list[str]:
-        seconds = min((now_ns - self.last_ns) / 1e9, MAX_STEP_S)
+        elapsed = now_ns - self.last_ns
+        seconds = 0.0 if elapsed > PAUSE_NS else min(elapsed / 1e9, MAX_STEP_S)
         self.last_ns = now_ns
         lines = self._report(now_ns)
         if getattr(vehicle.OakVehicleMovement.PowerslideInput, "name", "None") != "None":
@@ -82,6 +89,12 @@ class Grip:
         self.frames += 1
         self.largest = max(self.largest, turn)
         return lines
+
+    def rest(self, now_ns: int) -> None:
+        """A frame with the grip switched off: its clock keeps up, so that switched back on, even half a second later,
+        it never turns at once what the vehicle slid meanwhile (Kevin's review of 2026-09-25)."""
+        self.last_ns = now_ns
+        self.holding_since = None
 
     def _may_write(self, now_ns: int, wanted: bool) -> bool:
         """A write is let through unless one has been held MAX_HOLD_NS in a row, then paused REST_NS."""

@@ -2,6 +2,7 @@
 
 ## 1.0.2 - 2026-09-25
 
+- Adds a settings window.
 - Third-person mode with an over-the-shoulder camera on foot, off by default. Aiming switches to the game's own
   first-person view.
 - A key turns third person on and off: P by default, changed in the mod menu with a keyboard key or a mouse button

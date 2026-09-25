@@ -32,6 +32,7 @@ class FakeKeybindOption(FakeOption):
         option = cls(bind.identifier, bind.key, display_name=bind.display_name,
                      description=bind.description, is_rebindable=bind.is_rebindable)
         option.on_change_anytime = lambda _option, key: setattr(bind, "key", key)
+        option.is_hidden = bind.is_hidden  # As mods_base: the option inherits the bind's visibility.
         return option
 
 

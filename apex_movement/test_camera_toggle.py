@@ -39,6 +39,8 @@ camera.shared = lambda: runtime
 
 ok = camera_settings.third_person_key.default_value == "P"
 ok = ok and camera_settings.third_person_bind in apex_movement.mod.kwargs["keybinds"]
+# The SDK lists a visible bind again under "Keybinds": hidden, the key has the option as its one entry (Kevin).
+ok = ok and camera_settings.third_person_bind.is_hidden is True and camera_settings.third_person_key.is_hidden is False
 apex_movement.mod.enable()
 ok = ok and "P" in state["keybinds"]
 state["keybinds"]["P"]()

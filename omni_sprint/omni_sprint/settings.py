@@ -8,15 +8,23 @@ import math
 
 from mods_base import BoolOption, SliderOption, keybind
 
+# panel_model checks a new shortcut with normalize_keyboard_key from here.
 try:
     from .apex_camera_runtime.constants import FOV_DEFAULT, FOV_MAX, FOV_MIN
-    from .apex_camera_runtime.key_option import KeyboardKeybindOption
+    from .apex_camera_runtime.key_option import KeyboardKeybindOption, normalize_keyboard_key
 except ModuleNotFoundError as error:
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
     from apex_camera_runtime.constants import FOV_DEFAULT, FOV_MAX, FOV_MIN
-    from apex_camera_runtime.key_option import KeyboardKeybindOption
+    from apex_camera_runtime.key_option import KeyboardKeybindOption, normalize_keyboard_key
 
+# Its own switch, so a player can keep the camera without the sprint: the mod's ENABLED button turns off both
+# (Kevin, 2026-09-25).
+omni_sprint = BoolOption(
+    "omni_sprint", True,
+    display_name="Sprint in All Directions",
+    description="Also sprint sideways and backward.",
+)
 third_person = BoolOption(
     "third_person", False,
     display_name="Third Person",
@@ -34,8 +42,9 @@ third_person_bind = keybind(
     "third_person_key", "P", _toggle_third_person,
     display_name="Toggle Third Person",
     description="Turn the third-person camera on or off.",
+    is_hidden=True,
 )
-third_person_key = KeyboardKeybindOption.from_keybind(third_person_bind)
+third_person_key = KeyboardKeybindOption.sole_entry(third_person_bind)
 
 custom_fov = BoolOption(
     "custom_fov", False,
@@ -51,7 +60,12 @@ fov = SliderOption(
 # no choice has been captured yet; neither value is shown as a gameplay setting.
 native_fov = SliderOption("native_fov", 0, 0, 180, step=1, is_integer=False, is_hidden=True)
 applied_fov = SliderOption("applied_fov", 0, 0, 180, step=1, is_integer=False, is_hidden=True)
-OPTIONS = [third_person, third_person_key, custom_fov, fov, native_fov, applied_fov]
+OPTIONS = [omni_sprint, third_person, third_person_key, custom_fov, fov, native_fov, applied_fov]
+
+
+def sprint_enabled() -> bool:
+    """Only an explicit off turns the sprint off: it is what the mod is installed for."""
+    return omni_sprint.value is not False
 
 
 def third_person_enabled() -> bool:

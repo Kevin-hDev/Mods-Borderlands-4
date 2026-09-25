@@ -29,6 +29,16 @@ def shared(weak_ref: Callable | None = None, address_of: Callable | None = None)
     return state.runtime
 
 
+def elected() -> str | None:
+    """The mod whose camera settings apply, or None. Asking never creates the runtime: a menu opens before any
+    camera work starts, and while its mod is switched off."""
+    state = sys.modules.get(STATE)
+    if state is None or getattr(state, "protocol", None) != PROTOCOL:
+        return None
+    client = state.runtime.arbiter.active()
+    return None if client is None else client.owner
+
+
 def reset_for_tests() -> None:
     state = sys.modules.get(STATE)
     if state is not None:

@@ -51,6 +51,8 @@ x, y = grip.gripped(2290.0 * math.cos(math.radians(170.0)), 2290.0 * math.sin(ma
 check("the short way round, across half a turn: from 170 to -170", near(heading(x, y), -170.0))
 check("a slow vehicle is left alone", grip.gripped(200.0, 0.0, 90.0, 30.0, LOSS) == (200.0, 0.0))
 check("a vehicle going backward is left alone", grip.gripped(-1000.0, 0.0, 0.0, 30.0, LOSS) == (-1000.0, 0.0))
+check("with no time to turn, the velocity comes back exactly as it was, not rebuilt a digit off",
+      grip.gripped(1500.0, 1700.0, heading(1500.0, 1700.0) + 30.0, 0.0, LOSS) == (1500.0, 1700.0))
 
 car = moving(90.0, 2290.0, z=-50.0)
 session = grip.Grip(0)
@@ -81,10 +83,16 @@ climbing = moving(90.0, 2290.0, z=grip.MAX_VERTICAL + 1.0)
 session.step(250 * MS, climbing, LOSS)
 check("a vehicle rising or falling fast is left alone", climbing.Mesh.sets == [])
 hitch = moving(90.0, 2290.0)
-session.step(10_000 * MS, hitch, LOSS)
+session.step(650 * MS, hitch, LOSS)
 velocity = hitch.Mesh.velocity
-check("a long hitch turns no more than one tenth of a second's worth",
+check("a hitch turns no more than one tenth of a second's worth",
       near(heading(velocity.X, velocity.Y), grip.GRIP_DEG_PER_S * grip.MAX_STEP_S))
+resumed = grip.Grip(0)
+resumed.step(50 * MS, moving(90.0, 0.0, 2290.0), LOSS)
+paused = moving(90.0, 2290.0)
+resumed.step(10_000 * MS, paused, LOSS)
+check("after the game stood still, the first frame turns nothing: nobody drove during it",
+      paused.Mesh.sets == [])
 
 holding = grip.Grip(0)
 turning = moving(90.0, 2290.0)
