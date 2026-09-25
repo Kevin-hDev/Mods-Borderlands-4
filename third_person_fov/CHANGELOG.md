@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 - 2026-09-25
+## 1.0.0 - 2026-09-25
 
 - Initial public source release.
 - Native over-the-shoulder camera on foot, with first-person aiming.
