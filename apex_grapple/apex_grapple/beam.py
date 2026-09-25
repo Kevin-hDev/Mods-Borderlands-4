@@ -113,14 +113,15 @@ def _loose(system: Any, character: Any, hand: tuple[float, float, float],
     It starts facing the anchor. Rotation alone failed in 0.9.0; the local endpoint trial also
     follows the moving hand and feeds the length rather than the anchor's world coordinates.
 
-    `bAutoDestroy` is True here and False for the attached one: nothing attached outlives the
-    character, but a free component could pile up. stop() also tries the available destruction call.
+    The shot owns the component until stop(). Niagara must not auto-destroy it when the emitters
+    complete while a long hook is still flying or pulling; beam_cleanup is the single authority
+    that deactivates and removes it.
     """
     return _library().SpawnSystemAtLocation(
         character, system, rope_ends.vector(hand),
         unrealsdk.make_struct("Rotator", Pitch=facing[0], Yaw=facing[1], Roll=0.0),
         unrealsdk.make_struct("Vector", X=1.0, Y=1.0, Z=1.0),
-        True, False, 0, True,
+        False, False, 0, True,
     )
 
 

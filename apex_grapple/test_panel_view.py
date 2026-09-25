@@ -3,8 +3,8 @@
 import sys
 from types import SimpleNamespace as NS
 import panel_render_fixture as fixture
-from apex_grapple import (panel_model, panel_view, panel_form, panel_factory, panel_theme as t, panel_fonts,
-                          panel_widgets as w)
+from apex_grapple import (panel_buttons as b, panel_model, panel_view, panel_form, panel_factory, panel_theme as t,
+                          panel_fonts, panel_text as tx, panel_widgets as w)
 
 failures = []
 
@@ -105,6 +105,21 @@ next_form = panel_form.PanelForm(next_refs, panel_factory.PanelBindings(), model
 check(next_widgets["pages"].index == 2 and next_form.page == 2, "The saved tab's content is reopened")
 check(next_widgets["focus"] is next_widgets["nav:release"], "Controller focus follows the saved tab")
 check(next_widgets["nav:release_fill"].brush == gold, "The saved tab is visibly selected")
+
+# Grapple owns these visual primitives for generated Movement even though its own pages do not display them.
+shared = {}
+template = w.new("InputKeySelector", root.WidgetTree.RootWidget).WidgetStyle.Normal
+tx.use({"title": title_font, "body": body_font})
+shared_gear = b.gear(root.WidgetTree.RootWidget, shared, template)
+shared_hero = tx.text(root.WidgetTree.RootWidget, "OPTIONS", "hero")
+tx.use({})
+check(shared_gear is not None and shared_hero.Font.FontObject is title_font,
+      "Movement-only shared visual primitives construct from Grapple's authority")
+round_parts = [shared[f"options_icon:{index}"].icon_brush for index in (4, 5)]
+check(all(brush is not None and brush.DrawAs == "ESlateBrushDrawType.RoundedBox"
+          and brush.OutlineSettings.RoundingType == "ESlateBrushRoundingType.HalfHeightRadius"
+          for brush in round_parts), "The gear's ring and hole are discs, as in the mockup")
+check("choice" not in b.KINDS, "Language choices reuse the ON/OFF switch, as in the mockup")
 
 for message in failures:
     print("FAILED |", message)

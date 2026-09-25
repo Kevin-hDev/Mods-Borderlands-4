@@ -25,6 +25,12 @@ def retry() -> bool:
     if component is None:
         _pending = None
         return True
+    try:
+        # The shot disables this while it owns the beam. Hand ownership back only at release so
+        # Niagara may finish asynchronous destruction when reflected removal is unavailable.
+        component.bAutoDestroy = True
+    except Exception:
+        report.error_once("beam:auto_destroy", "the grapple beam could not enable automatic cleanup")
     deactivated = False
     try:
         component.Deactivate()
@@ -32,6 +38,9 @@ def retry() -> bool:
         report.error_once("beam:deactivate", "the grapple beam could not be deactivated; trying its removal")
     else:
         deactivated = True
+    if _pending() is None:
+        _pending = None
+        return True
     for name in DESTROY_NAMES:
         try:
             remove = getattr(component, name, None)

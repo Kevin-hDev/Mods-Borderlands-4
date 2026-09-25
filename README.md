@@ -5,7 +5,7 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 | Mod | What it does | Version |
 |---|---|---|
 | [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing, plus an optional third-person camera and field of view | 1.1.4 |
-| [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.5 |
+| [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.6 |
 | [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns | 1.0.2 |
 | [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person camera and FOV | 1.0.2 |
 | [Third Person & FOV](third_person_fov/) | Standalone over-the-shoulder camera, first-person aiming and adjustable FOV | 1.0.0 |

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.6 - 2026-09-25
+
+- Fix a possible crash on very long grapple shots: the game no longer removes the rope while the grapple still
+  uses it.
+
 ## 1.0.5 — 2026-09-23
 
 - Preserve melee activation at purple boss shrines instead of firing the grapple.

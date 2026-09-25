@@ -25,26 +25,42 @@ class FakeNiagara:
         """Free in the world, as the game spawns its own rope. Positional, as the game's function is."""
         if self.loose_fails:
             raise AttributeError("no SpawnSystemAtLocation on this build")
+        component = self._component()
+        component.bAutoDestroy = auto_destroy
         self.spawned.append({"how": "loose", "SystemTemplate": system, "Location": location,
                              "Rotation": rotation, "bAutoDestroy": auto_destroy,
-                             "bAutoActivate": auto_activate})
-        return self._component()
+                             "bAutoActivate": auto_activate, "component": component})
+        return component
 
     def SpawnSystemAttached(self, **kwargs: Any) -> Any:
-        self.spawned.append(dict(kwargs, how="attached", Rotation=kwargs.get("Rotation")))
-        return self._component()
+        component = self._component()
+        component.bAutoDestroy = bool(kwargs.get("bAutoDestroy"))
+        self.spawned.append(dict(kwargs, how="attached", Rotation=kwargs.get("Rotation"),
+                                 component=component))
+        return component
+
+    def complete_effect(self, component: Any) -> None:
+        """Model Niagara completing an effect while the owning gameplay action is still active."""
+        if component.bAutoDestroy:
+            component.DestroyComponent()
 
     def _component(self) -> Any:
         component = types.SimpleNamespace(alive=True)
         component.activations = 0
-        component.Deactivate = lambda: setattr(component, "alive", False)
         def destroy():
             self.state["destroyed"].append(component)
             component.destroyed = True
 
         component.DestroyComponent = destroy
 
+        def deactivate():
+            component.alive = False
+
+        component.Deactivate = deactivate
+
         def put(name: str, value: Any) -> None:
+            if getattr(component, "destroyed", False):
+                raise RuntimeError("native component expired")
             if name not in (self.end_name, self.source_name):
                 raise RuntimeError(f"no parameter {name}")
             self.set.append((name, value))

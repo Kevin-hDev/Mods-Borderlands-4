@@ -35,18 +35,17 @@ for still_active in (False, True):
                   component is not None and component.activations == 1)
             if component is None:
                 continue
-            component.bAutoDestroy = True
             component.IsActive = lambda: still_active
             component.IsBeingDestroyed = lambda: False
             component.GetOwner = lambda: player
             component.K2_DestroyComponent = unavailable if destroy_raises else lambda owner: None
             component.DestroyComponent = unavailable
             # Both snapshots occur in session_155332.log: active may remain true after return.
-            component.Deactivate = lambda: None
             if shot == 1:
                 beam.reset()
             else:
                 beam.stop()
+            check(f"release hands the beam to Niagara destruction: {label}", component.bAutoDestroy)
             check(f"accepted deactivation permits another shot: {label}", beam_cleanup.retry())
         check(f"three shots created three beams: active={still_active}, raises={destroy_raises}",
               len(state["niagara"].spawned) - before == 3)

@@ -97,7 +97,7 @@ SLIDER_THUMB_HEIGHT = 34
 
 # Game-only values, not design tokens: the exporter skips names that start with an underscore or are listed here.
 GAME_ONLY = ("ORDER", "SAVE_DELAY_NS", "PAGES", "BRAND", "AUTHOR", "PX_TO_POINTS", "SPARKS", "HOVER_OVERLAY",
-             "PRESS_OVERLAY", "SELECTOR_WIDTH", "FONT_LINE_HEIGHT", "GAME_ONLY")
+             "PRESS_OVERLAY", "SELECTOR_WIDTH", "KEY_CHANGE_WIDTH", "FONT_LINE_HEIGHT", "GAME_ONLY")
 ORDER = 10000
 SAVE_DELAY_NS = 300_000_000
 PAGES = ("shot", "pull", "release", "controls")
@@ -110,7 +110,16 @@ PX_TO_POINTS = 0.75
 FONT_LINE_HEIGHT = {"title": 1.505, "body": 1.2}
 # The key-capture buttons, absent from the mockup: wide enough for "2. CHOISIR LA DEUXIÈME TOUCHE".
 SELECTOR_WIDTH = 420
+# Movement's Change button beside a shortcut, absent from the mockup: its waiting text "APPUIE SUR UNE TOUCHE" measures
+# 210 px in the button font (read from the font file, 2026-09-25); with margins and frame it keeps one width.
+KEY_CHANGE_WIDTH = 248
 KEY_ICON_SIZE = 40
+# Movement's Options gear inside its KEY_ICON_SIZE button, sized like the mockup's (icon 70 %, teeth 22 % of it,
+# ring and hub inset 14 % and 36 %).
+GEAR_ICON_SIZE = 28
+GEAR_TOOTH_WIDTH = 6
+GEAR_RING_SIZE = 20
+GEAR_HUB_SIZE = 8
 # The mockup lightens a hovered button and darkens a pressed one; one veil does both for every button colour.
 HOVER_OVERLAY = ("ffffff", 0.12)
 PRESS_OVERLAY = ("000000", 0.2)

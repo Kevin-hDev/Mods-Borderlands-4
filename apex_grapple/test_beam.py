@@ -43,9 +43,9 @@ check("at the player's hand", (niagara.spawned[0]["Location"].X,
                                niagara.spawned[0]["Location"].Z) == hand)
 check("it is NS_Grapple_Beam, the effect the game's settings name",
       niagara.spawned[0]["SystemTemplate"] is game.beam_effect())
-# Nothing attached outlives the character; a free one would pile up, and this build offers no way
-# to destroy one by hand.
-check("and it takes itself away once deactivated", niagara.spawned[0]["bAutoDestroy"] is True)
+# The shot owns its beam until stop(): Niagara completing its emitters must not destroy the native
+# component while follow() still writes the moving rope ends.
+check("the shot keeps ownership until it stops", niagara.spawned[0]["bAutoDestroy"] is False)
 check("which way was used is written", any("spawned loose" in line for line in state["misc"]))
 # The one field of 173 that differed and was neither identity nor of the mod's own making: the game
 # places its rope facing its anchor, and the mod placed its own facing nothing at all.

@@ -1,6 +1,6 @@
 # Apex Grapple
 
-Version **1.0.5** — an Apex Legends inspired grapple for Borderlands 4.
+Version **1.0.6** — an Apex Legends inspired grapple for Borderlands 4.
 
 Aim at a surface and pull toward it while steering in the air. Let go to carry your momentum. The mod uses the game's grapple effects and hand animation with its own pulling movement.
 

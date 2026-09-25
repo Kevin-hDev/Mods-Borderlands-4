@@ -23,17 +23,19 @@ def _scrollbar(scroll, template):
     scroll.SetScrollbarPadding(w.pad(0))
 
 
-def _card(owner, widgets, key, template):
-    """Scrolling page holding one card: ink rim, hard shadow, orange plate title, then its rows.
-
-    The page's padding sits inside the scroll area, as in the mockup: the scrollbar runs along the window's edge.
-    """
+def scrolling_body(owner, template):
+    """One scroll area whose padding leaves its scrollbar against the window edge."""
     scroll = w.new("ScrollBox", owner)
     body = w.new("VerticalBox", scroll)
     scroll.AddChild(body).SetPadding(w.pad(t.SPACE_7, t.SPACE_8, t.SPACE_9))
     w.cosmetic("scrollbar", lambda: _scrollbar(scroll, template))
     # Depending on the engine version the bar's width is read from its style or from the setter above: both are set.
     w.cosmetic("scrollbar_width", lambda: setattr(scroll.WidgetBarStyle, "Thickness", float(t.SCROLLBAR_WIDTH)))
+    return scroll, body
+
+
+def card(body, widgets, key):
+    """Ink rim, hard shadow and orange title plate shared by every settings card."""
     frame, inner = w.framed(body, t.COLOR_CARD, t.STROKE, w.pad(t.SPACE_5, t.SPACE_6, t.SPACE_3))
     layers, _ = w.shadowed(body, frame, t.SHADOW_LG)
     w.column(body, layers, padding=w.pad(0, 0, t.SPACE_5))
@@ -45,7 +47,7 @@ def _card(owner, widgets, key, template):
     w.column(rows, w.slant(plate), padding=w.pad(0, 0, 0, t.SPACE_1), halign="Left")
     widgets[f"group:{key}"] = tx.text(rows, "", "desc", wrap=True)
     w.column(rows, widgets[f"group:{key}"], padding=w.pad(t.SPACE_3, 0, t.SPACE_1))
-    return scroll, rows
+    return rows
 
 
 def _row(rows, label, control, value=None):
@@ -56,20 +58,30 @@ def _row(rows, label, control, value=None):
     if value is not None:
         w.row(line, value, valign="Center")
     w.column(rows, line, padding=w.pad(t.SPACE_3, 0, 0))
+    return line
 
 
-def settings_page(owner, group, key, widgets, template):
-    page, rows = _card(owner, widgets, key, template)
-    for option in group.children:
+def setting_rows(rows, options, widgets, template, expose_rows=False):
+    """expose_rows registers each row as row:<name>, for a page that greys a whole row (mockup .row.muted)."""
+    for option in options:
         name = option.identifier
         widgets[f"label:{name}"] = tx.text(rows, "", "label", wrap=True)
         if type(option.default_value) is bool:
-            _row(rows, widgets[f"label:{name}"], b.button(rows, widgets, f"setting:{name}", "switch", template, "off"))
+            line = _row(rows, widgets[f"label:{name}"],
+                        b.button(rows, widgets, f"setting:{name}", "switch", template, "off"))
         else:
-            _row(rows, widgets[f"label:{name}"], s.slider(rows, widgets, option, template),
-                 s.value_box(rows, widgets, name))
+            line = _row(rows, widgets[f"label:{name}"], s.slider(rows, widgets, option, template),
+                        s.value_box(rows, widgets, name))
+        if expose_rows:
+            widgets[f"row:{name}"] = line
         widgets[f"description:{name}"] = tx.text(rows, "", "hint", wrap=True)
         w.column(rows, widgets[f"description:{name}"], padding=w.pad(t.SPACE_2, 0, t.SPACE_3))
+
+
+def settings_page(owner, group, key, widgets, template):
+    page, body = scrolling_body(owner, template)
+    rows = card(body, widgets, key)
+    setting_rows(rows, group.children, widgets, template)
     return page
 
 
@@ -93,7 +105,8 @@ def _selector_style(widget, template):
 
 
 def controls_page(owner, widgets, template):
-    page, rows = _card(owner, widgets, "controls", template)
+    page, body = scrolling_body(owner, template)
+    rows = card(body, widgets, "controls")
     widgets["current"] = tx.text(rows, "", "gold", wrap=True)
     w.column(rows, widgets["current"], padding=w.pad(t.SPACE_2, 0))
     w.column(rows, keys.summary(rows, widgets), padding=w.pad(t.SPACE_1, 0))
