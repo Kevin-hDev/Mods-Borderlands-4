@@ -14,8 +14,8 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
 - The FOV slider ranges from 70 to 150 and applies while the mod is enabled. Disabling the mod restores the game's
   FOV.
 
-If this pack is installed with Apex Movement or Omni Sprint, its camera settings take priority. Install only the
-camera pack you want to configure.
+With Apex Movement installed, Apex Movement's camera settings are the ones used. With Omni Sprint, this pack's
+settings are the ones used.
 
 ## Installing
 

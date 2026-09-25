@@ -1,4 +1,4 @@
-"""The mini pack is the priority-300 client of the existing shared camera runtime."""
+"""The mini pack is a client of the shared camera runtime, below Apex Movement and above Omni Sprint."""
 
 import pathlib
 import sys
@@ -51,21 +51,21 @@ settings.third_person.mod = sdk_stubs.FakeMod(state)
 toggle = camera.toggle_third_person()
 
 ok = runtime.calls[0][0:2] == ("register", "third_person_fov")
-ok = ok and runtime.calls[0][2] == 300
+ok = ok and runtime.calls[0][2] == 150
 ok = ok and runtime.calls[1][0:3] == ("prepare", "third_person_fov", False)
 ok = ok and runtime.calls[2] == ("tick", state["pc"], 42)
 ok = ok and toggle is True and settings.third_person.value is True
 
 arbiter = Arbiter()
 for owner, priority in (("omni_sprint", 100), ("apex_movement", 200),
-                        ("third_person_fov", 300)):
+                        ("third_person_fov", camera.PRIORITY)):
     arbiter.register(Client(owner, priority, object()), camera.PROTOCOL)
 owners = [arbiter.active().owner]
-arbiter.unregister("third_person_fov")
-owners.append(arbiter.active().owner)
 arbiter.unregister("apex_movement")
 owners.append(arbiter.active().owner)
-ok = ok and owners == ["third_person_fov", "apex_movement", "omni_sprint"]
+arbiter.unregister("third_person_fov")
+owners.append(arbiter.active().owner)
+ok = ok and owners == ["apex_movement", "third_person_fov", "omni_sprint"]
 
 runtime.refuse_stop = True
 try:

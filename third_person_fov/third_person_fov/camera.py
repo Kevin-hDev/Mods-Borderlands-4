@@ -18,7 +18,8 @@ except ModuleNotFoundError as error:
 from . import report, settings
 
 OWNER = "third_person_fov"
-PRIORITY = 300
+# Apex Movement (200) comes first, Kevin's first mod (2026-09-25); this pack stays above Omni Sprint (100).
+PRIORITY = 150
 _runtime: Any = None
 _registered = False
 
