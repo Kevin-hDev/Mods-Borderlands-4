@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2 - 2026-09-27
+
+- Fixed: the third-person toggle did nothing for characters using an alternate player animation class.
+
 ## 1.0.1 - 2026-09-27
 
 - A settings window, in English and French, with a Camera page and a Commands page.

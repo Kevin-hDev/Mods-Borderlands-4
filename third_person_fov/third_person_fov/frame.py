@@ -9,7 +9,6 @@ from unrealsdk.hooks import Type
 from . import camera, report
 
 HOOK_PATH = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
-BODY_CLASS = "BPAnim_Player_3rd_C"
 _in_game = False
 
 
@@ -31,10 +30,9 @@ def on_frame(obj: Any, now_ns: int) -> None:
             _in_game = False
             camera.on_frame(now_ns)
         return
-    if str(getattr(getattr(obj, "Class", None), "Name", "")) != BODY_CLASS:
-        return
     mesh = getattr(character, "Mesh", None)
     body = mesh.GetAnimInstance() if mesh is not None else None
+    # The live body is authoritative because player animation subclasses vary by character and state.
     if body is None or _address(body) != _address(obj):
         return
     _in_game = True

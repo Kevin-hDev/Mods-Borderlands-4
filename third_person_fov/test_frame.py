@@ -14,8 +14,8 @@ state["settings_exists"] = True
 
 from third_person_fov import frame  # noqa: E402
 
-played = sdk_stubs.body("BPAnim_Player_3rd_C", 10)
-enemy = sdk_stubs.body("BPAnim_Player_3rd_C", 20)
+played = sdk_stubs.body("BPAnim_Player_3rd_Grav_C", 10)
+enemy = sdk_stubs.body("BPAnim_Player_3rd_Grav_C", 20)
 other = sdk_stubs.body("EnemyAnimation", 30)
 state["pc"] = sdk_stubs.player(played)
 seen = []

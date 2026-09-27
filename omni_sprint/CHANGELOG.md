@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4 - 2026-09-27
+
+- Fixed: the third-person toggle did nothing for characters using an alternate player animation class.
+
 ## 1.0.3 - 2026-09-27
 
 - Shoulder switching: the third-person camera moves to the left or right shoulder. Key 6 by default.

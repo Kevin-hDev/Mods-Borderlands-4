@@ -7,8 +7,8 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 | [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing, slow walk, plus an optional third-person and orbit camera, field of view and loot reach | 1.1.6 |
 | [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.6 |
 | [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns | 1.0.2 |
-| [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, FOV and loot reach | 1.0.3 |
-| [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, first-person aiming, adjustable FOV and loot reach | 1.0.1 |
+| [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, FOV and loot reach | 1.0.4 |
+| [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, first-person aiming, adjustable FOV and loot reach | 1.0.2 |
 
 [camera_runtime](camera_runtime/) is not a mod of its own: it is the camera, field of view and loot reach that Apex
 Movement, Omni Sprint and Third Person & FOV carry inside their `.sdkmod`, with the C++ source of its small native

@@ -134,16 +134,14 @@ _runtime = None
 
 def inspect(obj):
     """Resolve whether one global animation callback belongs to the played body."""
-    body_callback = obj is not None and str(getattr(getattr(obj, 'Class', None), 'Name', '')) == BODY_CLASS
-    if not body_callback and (_runtime is None or _runtime.owner is None):
-        return False, None, None
     from mods_base import get_pc
 
     pc = get_pc(possibly_loading=True)
     character = getattr(pc, 'OakCharacter', None) if pc is not None else None
     mesh = getattr(character, 'Mesh', None) if character is not None else None
     body = mesh.GetAnimInstance() if mesh is not None else None
-    played = body is not None and body_callback and animation_assets.same(body, obj)
+    # The live body is authoritative because player animation subclasses vary by character and state.
+    played = body is not None and obj is not None and animation_assets.same(body, obj)
     return played, character, body
 
 

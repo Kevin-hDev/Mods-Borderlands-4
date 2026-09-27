@@ -83,8 +83,7 @@ and its memory with a fake block. `test_memory.py` runs the real Windows calls o
 ## Known limits
 
 - Never tried in co-op.
-- The third-person camera was tried in play alongside Apex Movement, whose camera settings then apply. Omni Sprint's
-  own third person, without Apex Movement, has not been tried in play yet.
+- Omni Sprint's own third-person camera was tried in local play without Apex Movement on September 27, 2026.
 - Windows only: the memory calls are Windows ones. Not tried on Linux or Steam Deck.
 - The original sprint was tested with Vex and Harlowe. The new backward animation and FOV behavior were verified in
   local play on the current Steam game build; they have not been checked on older builds.

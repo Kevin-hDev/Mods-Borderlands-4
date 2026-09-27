@@ -163,6 +163,15 @@ class AnimationTests(unittest.TestCase):
             animation.animation_assets.build = original_build
             animation._runtime = None
 
+    def test_inspect_accepts_the_played_body_animation_subclass(self):
+        self.anim.Class.Name = 'BPAnim_Player_3rd_Grav_C'
+        state['pc'] = types.SimpleNamespace(OakCharacter=self.character)
+        self.addCleanup(state.__setitem__, 'pc', None)
+
+        self.assertTrue(animation.inspect(self.anim)[0])
+        foreign = obj(999, Class=self.anim.Class)
+        self.assertFalse(animation.inspect(foreign)[0])
+
     def test_foreign_callback_does_not_clear_current_body_but_new_body_does(self):
         original_build = self.prepare_hook()
         try:
