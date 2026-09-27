@@ -1,6 +1,7 @@
 #include "view_target_bridge.h"
 #include "camera_memory.h"
 
+#include <cmath>
 #include <windows.h>
 
 using namespace apex_view;
@@ -122,6 +123,17 @@ int view_set_suspended(uint32_t value) {
     stats.suspended = suspended ? 1U : 0U;
     ReleaseSRWLockExclusive(&guard);
     return 0;
+}
+
+bool view_set_right(double right) {
+    AcquireSRWLockExclusive(&guard);
+    if (!installed || !std::isfinite(right) || std::abs(right) > max_offset) {
+        ReleaseSRWLockExclusive(&guard);
+        return false;
+    }
+    config.right = right;
+    ReleaseSRWLockExclusive(&guard);
+    return true;
 }
 
 int view_stats(Stats* output) {

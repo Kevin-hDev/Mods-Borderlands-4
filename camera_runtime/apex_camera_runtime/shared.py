@@ -8,14 +8,26 @@ from .constants import PROTOCOL
 from .fov import FovEngine
 from .runtime import CameraRuntime
 
-STATE = f"_apex_camera_runtime_v{PROTOCOL}"
+# Zoom adds callbacks and persisted distance: old runtimes must not silently own new commands.
+STATE = "_apex_camera_runtime_v3"
+LEGACY_STATES = ("_apex_camera_runtime_v1", "_apex_camera_runtime_v2")
+ALL_STATES = (STATE, *LEGACY_STATES)
+
+
+def _existing_state() -> ModuleType | None:
+    found = [sys.modules[name] for name in ALL_STATES if name in sys.modules]
+    if not found:
+        return None
+    state = found[0]
+    if (any(getattr(item, "protocol", None) != PROTOCOL for item in found)
+            or any(item is not state for item in found[1:])):
+        raise RuntimeError("incompatible shared camera state")
+    return state
 
 
 def shared(weak_ref: Callable | None = None, address_of: Callable | None = None) -> CameraRuntime:
-    state = sys.modules.get(STATE)
+    state = _existing_state()
     if state is not None:
-        if getattr(state, "protocol", None) != PROTOCOL:
-            raise RuntimeError("incompatible shared camera state")
         return state.runtime
     if weak_ref is None:
         from unrealsdk.unreal import WeakPointer
@@ -25,7 +37,11 @@ def shared(weak_ref: Callable | None = None, address_of: Callable | None = None)
     state = ModuleType(STATE)
     state.protocol = PROTOCOL
     state.runtime = CameraRuntime(FovEngine(weak_ref, address_of))
-    sys.modules[STATE] = state
+    from .loot_runtime import LootRuntime
+    from .loot_unit import create_unit
+    state.runtime.loot = LootRuntime(create_unit)
+    for name in ALL_STATES:
+        sys.modules[name] = state
     return state.runtime
 
 
@@ -40,7 +56,9 @@ def elected() -> str | None:
 
 
 def reset_for_tests() -> None:
-    state = sys.modules.get(STATE)
+    state = next((sys.modules[name] for name in ALL_STATES if name in sys.modules), None)
     if state is not None:
         state.runtime.stop()
-        del sys.modules[STATE]
+        for name in ALL_STATES:
+            if sys.modules.get(name) is state:
+                del sys.modules[name]

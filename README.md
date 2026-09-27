@@ -4,15 +4,15 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 
 | Mod | What it does | Version |
 |---|---|---|
-| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing, plus an optional third-person camera and field of view | 1.1.5 |
+| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing, slow walk, plus an optional third-person and orbit camera, field of view and loot reach | 1.1.6 |
 | [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.6 |
 | [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns | 1.0.2 |
-| [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person camera and FOV | 1.0.2 |
-| [Third Person & FOV](third_person_fov/) | Standalone over-the-shoulder camera, first-person aiming and adjustable FOV | 1.0.0 |
+| [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, FOV and loot reach | 1.0.3 |
+| [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, first-person aiming, adjustable FOV and loot reach | 1.0.1 |
 
-[camera_runtime](camera_runtime/) is not a mod of its own: it is the third-person camera and field of view that Apex
+[camera_runtime](camera_runtime/) is not a mod of its own: it is the camera, field of view and loot reach that Apex
 Movement, Omni Sprint and Third Person & FOV carry inside their `.sdkmod`, with the C++ source of its small native
-library.
+libraries.
 
 ## Installing a mod
 
@@ -41,7 +41,7 @@ Run each test script separately. A failing test exits with a non-zero code; opti
 
 The original code in this repository is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Kevin-hDev.
 
-Apex Grapple's bundled Anton and Barlow Condensed fonts retain their SIL Open Font License 1.1; their license files are included in its `assets` directory. Game assets and the Borderlands 4 SDK are not relicensed by this repository.
+The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Game assets and the Borderlands 4 SDK are not relicensed by this repository.
 
 ## Credits
 

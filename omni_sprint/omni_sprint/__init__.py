@@ -9,13 +9,14 @@ from mods_base import build_mod
 
 from . import animation, camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "kevin-hDev"
 
 
 def _on_enable() -> None:
     report.reset()
     frame.reset()
+    settings.commands.align()
     camera.start()
     report.note(f"enabled, version {__version__}")
 
@@ -39,7 +40,7 @@ def _on_disable() -> None:
 mod = build_mod(
     name="Omni Sprint",
     hooks=[frame.tick],
-    keybinds=[settings.third_person_bind],
+    keybinds=settings.commands.binds,
     # The window's language and page are hidden options: the SDK menu still lists only settings.OPTIONS.
     options=[*settings.OPTIONS, *panel_preferences.ALL],
     on_enable=_on_enable,

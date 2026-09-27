@@ -11,7 +11,8 @@ import sdk_stubs  # noqa: E402
 
 sdk_stubs.install()
 
-from omni_sprint import panel_form, panel_labels, panel_model, panel_theme, settings  # noqa: E402
+from omni_sprint import camera_control_config, panel_camera_commands, panel_form, panel_ownership  # noqa: E402
+from omni_sprint import panel_labels, panel_model, panel_theme, settings  # noqa: E402
 
 fails: list[str] = []
 
@@ -53,6 +54,9 @@ class Widget:
     def SetRenderOpacity(self, value):
         self.opacity = value
 
+    def SetVisibility(self, value):
+        self.visibility = value
+
     def SetText(self, value):
         self.text = value
 
@@ -80,39 +84,41 @@ class Mod:
 
 
 panel_labels.apply = lambda *_: None
+panel_camera_commands.refresh = lambda *_: None
+panel_ownership.w.enum = lambda name, member: f"{name}.{member}"
 shown = {}  # What the labels would show beside each setting: for the shortcut, the key in its key field.
 panel_labels.value = lambda _widgets, option, current, _language: shown.__setitem__(option.identifier, current)
 mod = Mod()
 model = panel_model.Model(mod)
 names = ["focus", "pages", "notice", "close", "EN", "FR", "restore", "undo", "enabled", "nav:omni_sprint",
-         "nav:camera", "row:fov", "description:fov"]
+         "nav:camera", "nav:commands", "row:fov", "description:fov", "icons:PS5", "icons:XSX",
+         "camera:settings", "commands:settings", "commands:external"]
+names += [f"{part}:{name}" for name in ("loot_reach", "shoulder_left", "orbit") for part in ("row", "description")]
 names += [f"setting:{key}" for key in model.options]
+for action, device in camera_control_config.SLOTS:
+    names += [f"command:{action}:{device}", f"clear:{action}:{device}", f"value:{action}:{device}"]
+names += ["commands_reset", "commands_status"]
 widgets = {name: Widget() for name in names}
 form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
-change, fov = widgets["setting:third_person_key"], widgets["setting:fov"]
-check("the saved key shows in the key field, and the Change button keeps its own word",
-      shown["third_person_key"] == "P" and change.SelectedKey.Key.KeyName == "None")
+fov = widgets["setting:fov"]
 check("the FOV row is greyed while Custom FOV is off",
       fov.enabled is False and widgets["row:fov"].opacity < 1 and widgets["description:fov"].opacity < 1)
-
-change.SelectedKey.Key.KeyName = "K"
-check("a captured key moves to the key field and frees the button",
-      not form.poll() and form.pending["third_person_key"] == "K" and shown["third_person_key"] == "K"
-      and change.SelectedKey.Key.KeyName == "None")
-change.selecting = True
-change.SelectedKey.Key.KeyName = "J"
-check("nothing is read while the button still waits for a key",
-      form.selecting() and not form.poll() and form.pending["third_person_key"] == "K")
-change.selecting = False
-check("the key pressed is read once the wait ends", not form.selecting() and not form.poll()
-      and form.pending["third_person_key"] == "J")
-change.SelectedKey.Key.KeyName = "LeftMouseButton"
-check("a second click on the button cancels like Escape, with no failure",
-      not form.poll() and form.pending["third_person_key"] == "J" and form.notice != "failed")
-change.SelectedKey.Key.KeyName = "Tilde"
-check("a refused key keeps the previous one and says so",
-      not form.poll() and form.pending["third_person_key"] == "J" and form.notice == "failed"
-      and change.SelectedKey.Key.KeyName == "None")
+check("the shoulder and the orbit camera are greyed outside third person, the loot reach is live under its switch",
+      all(widgets[f"setting:{name}"].enabled is False and widgets[f"row:{name}"].opacity < 1
+          for name in ("shoulder_left", "orbit"))
+      and widgets["setting:loot_reach"].enabled is True and widgets["row:loot_reach"].opacity == 1.0)
+widgets["setting:extended_loot"].checked = True
+check("Extended Loot Reach off greys the loot reach",
+      not form.poll() and widgets["setting:loot_reach"].enabled is False and widgets["row:loot_reach"].opacity < 1)
+widgets["setting:extended_loot"].checked = True
+widgets["setting:third_person"].checked = True
+check("third person on brings the shoulder and the orbit camera back",
+      not form.poll() and "extended_loot" not in form.pending and form.pending["third_person"] is True
+      and all(widgets[f"setting:{name}"].enabled is True for name in ("shoulder_left", "orbit")))
+widgets["setting:third_person"].checked = True
+form.poll()
+check("camera shortcuts use their own immediate transaction", model.write_commands({"third_person_key": "J"})
+      and settings.third_person_key.value == settings.third_person_bind.key == "J")
 
 widgets["setting:custom_fov"].checked = True
 check("Custom FOV on brings the FOV row back",

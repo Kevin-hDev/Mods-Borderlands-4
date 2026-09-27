@@ -102,7 +102,7 @@ GAME_ONLY = ("ORDER", "SAVE_DELAY_NS", "PAGES", "BRAND", "AUTHOR", "PX_TO_POINTS
              "PRESS_OVERLAY", "SELECTOR_WIDTH", "KEY_CHANGE_WIDTH", "FONT_LINE_HEIGHT", "GAME_ONLY")
 ORDER = 10000
 SAVE_DELAY_NS = 300_000_000
-PAGES = tuple(group.identifier.removesuffix("_menu") for group in menu.MENU)
+PAGES = (*tuple(group.identifier.removesuffix("_menu") for group in menu.MENU), "commands")
 BRAND, AUTHOR = "OMNI SPRINT", "KEVIN-HDEV"
 # Unreal sizes fonts in points drawn at 96 DPI: a size of 20 is 26.7 pixels. The mockup's pixels times 0.75 give
 # the same letters; without it every text was a third larger than approved (screenshot of 2026-09-21).

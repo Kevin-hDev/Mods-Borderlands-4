@@ -1,8 +1,8 @@
-"""The full Movement window builds all ten pages in Grapple's approved frame."""
+"""The full Movement window builds its settings and camera commands pages in Grapple's frame."""
 
 from movement_test_result import Reporter
 
-result = Reporter("full Movement window builds ten pages and a scrolling sidebar")
+result = Reporter("full Movement window builds settings and camera command pages in a scrolling sidebar")
 
 from types import SimpleNamespace
 
@@ -12,7 +12,7 @@ movement_ui_fixture.install()
 
 import unrealsdk  # noqa: E402
 
-from apex_movement import panel_assets, panel_fonts, panel_form, panel_model, panel_preferences  # noqa: E402
+from apex_movement import camera_settings, panel_assets, panel_fonts, panel_form, panel_model, panel_preferences  # noqa: E402
 from apex_movement import panel_theme as theme, panel_view  # noqa: E402
 
 
@@ -68,11 +68,12 @@ panel_assets.texture = lambda _world: None
 panel_fonts.build = lambda _root: {"title": object(), "body": object()}
 
 panel_preferences.last_page.value = len(panel_preferences.PAGE_KEYS) - 1
+camera_settings.shoulder_controller.value = "Gamepad_FaceButton_Top"
 model = panel_model.Model(SimpleNamespace(is_enabled=True))
 root, widgets = panel_view.build_view(SimpleNamespace(), model)
 assert root.kind == "UserWidget"
 assert root.WidgetTree.RootWidget.kind == "ScaleBox"
-assert len(model.pages) == 10
+assert len(model.pages) == 11 and model.pages[-1] == "commands"
 assert len(widgets["pages"].children) == len(model.pages) + 1
 assert model.page == "options" and widgets["focus"] is widgets["options"]
 assert "EN" not in widgets and "FR" not in widgets
@@ -100,24 +101,24 @@ assert sum(node.calls.get("SetMinDesiredWidth") == (float(theme.SWITCH_WIDTH),)
            for node in walk(language_boxes[0])) == 2
 assert all(widgets[f"options_icon:{index}"].calls["SetBrush"][0].DrawAs == "ESlateBrushDrawType.RoundedBox"
            for index in (4, 5))
-assert all(f"row:{key}" in widgets for key in ("third_person", "custom_fov", "fov"))
-# Kevin's shortcut fields (2026-09-25): no row of their own, but the key then its Change button after the Third
-# Person switch.
-assert "row:third_person_key" not in widgets and "label:third_person_key" not in widgets
-row = widgets["row:third_person"]
-shown, change = widgets["key:third_person_key"], widgets["setting:third_person_key"]
-assert len(row.children) == 4
-assert shown in walk(row.children[2]) and change in walk(row.children[3])
-assert shown.kind == change.kind == "InputKeySelector"
-assert shown.calls["SetVisibility"] == ("ESlateVisibility.HitTestInvisible",)
-assert change.calls["SetAllowGamepadKeys"] == (False,) and "SetVisibility" not in change.calls
-assert row.slots[2].calls["SetSize"][0].SizeRule == "ESlateSizeRule.Fill"
-assert row.slots[2].calls["SetPadding"][0].Bottom == theme.SHADOW_SM
-assert row.slots[3].calls["SetPadding"][0].Left == theme.SPACE_3
-fit = [node for node in walk(row.children[2]) if node.kind == "ScaleBox"]
-assert len(fit) == 1 and fit[0].calls["SetStretchDirection"] == ("EStretchDirection.DownOnly",)
-assert any(node.calls.get("SetMinDesiredWidth") == (float(theme.KEY_CHANGE_WIDTH),) for node in walk(row.children[3]))
-# The walk key sits the same way on its switch's row, on the auto sprint's page (Kevin, 2026-09-25).
+assert all(f"row:{key}" in widgets for key in
+           ("third_person", "shoulder_left", "orbit", "custom_fov", "fov"))
+# Camera shortcuts have left the Camera card: the dedicated page owns three cards and two device rows each.
+assert all(f"setting:{key}" not in widgets for key in
+           ("third_person_key", "third_person_controller", "shoulder_key", "shoulder_controller",
+            "orbit_key", "orbit_controller"))
+for action in ("third_person", "shoulder", "orbit"):
+    assert f"heading:command_{action}" in widgets
+    for device in ("keyboard", "controller"):
+        selector = widgets[f"command:{action}:{device}"]
+        assert selector.kind == "InputKeySelector"
+        assert selector.calls["SetEscapeKeys"][0][0].KeyName == "Escape"
+        selector_box = next(node for node in Widget.created if node.kind == "SizeBox"
+                            and any(child.kind == "Overlay" and selector in child.children
+                                    for child in node.children))
+        assert selector_box.calls["SetWidthOverride"] == (float(theme.KEY_CHANGE_WIDTH),)
+        assert f"clear:{action}:{device}" in widgets and f"value:{action}:{device}" in widgets
+# The slow walk key sits the same way on its switch's row, on the Movement page (Kevin, 2026-09-25 and 26).
 assert "row:walk_key" not in widgets and "label:walk_key" not in widgets
 walk_row = widgets["row:walk"]
 walk_shown, walk_change = widgets["key:walk_key"], widgets["setting:walk_key"]
@@ -128,8 +129,8 @@ assert walk_shown in walk(walk_row.children[2]) and walk_change in walk(walk_row
 for group in model.groups:
     group.description = group.identifier  # The SDK fake has no group description.
 form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
-assert shown.calls["SetSelectedKey"][0].Key.KeyName == "P"
 assert walk_shown.calls["SetSelectedKey"][0].Key.KeyName == "CapsLock"
+assert widgets["setting:shoulder_left_label"].calls["SetText"] == ("RIGHT",)
 # As the FOV under Custom FOV: the key's speed fades while the walk key is off, since it then changes nothing.
 speed_row = ("row:walk_key_speed", "description:walk_key_speed")
 assert all(widgets[name].calls["SetRenderOpacity"] == (1.0,) for name in speed_row)
@@ -139,13 +140,19 @@ assert widgets["setting:walk_key_speed"].calls["SetIsEnabled"] == (False,)
 assert all(widgets[name].calls["SetRenderOpacity"] == (theme.OPACITY_DISABLED,) for name in speed_row)
 form.shown["walk"] = True
 form.refresh_dependency(form.resolve())
+change = widgets["command:third_person:keyboard"]
 assert change.calls["SetNoKeySpecifiedText"] == ("CHANGE",) and change.calls["SetKeySelectionText"] == ("PRESS A KEY",)
-assert shown.calls["SetNoKeySpecifiedText"] == ("NONE",) and "SetSelectedKey" not in change.calls
 panel_preferences.french.value = True
 form.refresh_labels(form.resolve())
 assert change.calls["SetNoKeySpecifiedText"] == ("MODIFIER",)
 assert change.calls["SetKeySelectionText"] == ("APPUIE SUR UNE TOUCHE",)
-assert shown.calls["SetNoKeySpecifiedText"] == ("AUCUNE",)
+assert widgets["value:third_person:keyboard"].calls["SetText"] == ("P",)
+assert widgets["value:shoulder:controller"].calls["SetText"] == ("Triangle",)
+assert widgets["value:shoulder:controller:icon"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+assert widgets["setting:shoulder_left_label"].calls["SetText"] == ("DROITE",)
+form.shown["shoulder_left"] = True
+form.refresh_labels(form.resolve())
+assert widgets["setting:shoulder_left_label"].calls["SetText"] == ("GAUCHE",)
 
 attached = set()
 
@@ -161,5 +168,5 @@ visit(root.WidgetTree.RootWidget)
 assert all(id(widget) in attached for widget in widgets.values())
 assert sum(node.kind == "ScrollBox" for node in Widget.created) == len(model.pages) + 2
 assert all(f"setting:{key}" in widgets for key in model.options)
-assert len(widgets) < 450, "each widget is resolved during every menu poll"
+assert len(widgets) < 600, "the fixed widget registry must stay bounded"
 result.success()

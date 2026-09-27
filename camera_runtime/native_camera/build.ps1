@@ -19,14 +19,14 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Native test build failed' }
     & .\view_target_test.exe
     if ($LASTEXITCODE -ne 0) { throw 'Native bridge test failed' }
-    & cl.exe @common '/LD' @sources '/Fe:apex_camera_view_v4.dll'
+    & cl.exe @common '/LD' @sources '/Fe:apex_camera_view_v5.dll'
     if ($LASTEXITCODE -ne 0) { throw 'Native library build failed' }
     $assets = Join-Path (Split-Path $sourceRoot) 'apex_camera_runtime\assets'
     New-Item -ItemType Directory -Force -Path $assets | Out-Null
-    $target = Join-Path $assets 'apex_camera_view_v4.dll'
-    Copy-Item -LiteralPath (Join-Path $buildRoot 'apex_camera_view_v4.dll') -Destination $target -Force
+    $target = Join-Path $assets 'apex_camera_view_v5.dll'
+    Copy-Item -LiteralPath (Join-Path $buildRoot 'apex_camera_view_v5.dll') -Destination $target -Force
     $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $target).Hash.ToLowerInvariant()
-    Set-Content -LiteralPath (Join-Path $assets 'apex_camera_view_v4.sha256') -Value $hash -Encoding ascii -NoNewline
+    Set-Content -LiteralPath (Join-Path $assets 'apex_camera_view_v5.sha256') -Value $hash -Encoding ascii -NoNewline
     Get-FileHash -Algorithm SHA256 -LiteralPath $target
 } finally {
     Pop-Location

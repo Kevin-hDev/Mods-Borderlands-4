@@ -24,12 +24,15 @@ if pack.is_full():
     from . import camera as camera_adapter
     from . import camera_settings
     camera_options = camera_settings.ALL
-    camera_keybinds = [camera_settings.third_person_bind]
+    camera_keybinds = list(camera_settings.commands.binds)
     frame.set_camera(camera_adapter)
-# Only with the auto sprint, which the key stops: another separate file would hold Caps Lock for nothing.
-walk_keybinds = [walk_key.bind] if pack.carries("Auto sprint") else []
+# The slow walk ships in the full pack only (Kevin, 2026-09-26): a separate file holds no key for it.
+walk_keybinds = []
+if pack.is_full():
+    from . import slow_walk
+    walk_keybinds = [walk_key.bind]
 
-__version__ = "1.1.5"
+__version__ = "1.1.6"
 __author__ = "kevin-hDev"
 
 
@@ -43,6 +46,10 @@ def _register(name: str, module: Any, *switches: Any) -> None:
 # No switch: a walking speed has no off state, and the game's own values are named in the sliders.
 _register("ground_speed", ground_speed)
 _register("auto_sprint", sprint, settings.auto_sprint)
+# After the auto sprint, which already refrains while the key walks: this one ends the game's own sprint too. No
+# switch of its own: the key's switch is read inside, and the ground speed it slows has no off state either.
+if pack.is_full():
+    _register("slow_walk", slow_walk)
 # Before the slide speed: at a slide's end it puts the speed curve back first, and the slide speed reads that curve.
 _register("slide_physics", slide_physics, settings.slides)
 _register("slide", slide, settings.slides)
@@ -70,7 +77,10 @@ def _on_enable() -> None:
     for line in settings.keep_in_bounds(walk_key.speed):
         report.warning(line)
     if camera_adapter is not None:
+        camera_settings.commands.align()
         camera_adapter.start()
+    if pack.is_full():
+        report.note(walk_key.state_line())
     report.note(f"enabled, version {__version__}")
 
 

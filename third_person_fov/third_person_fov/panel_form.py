@@ -1,0 +1,207 @@
+"""Poll Movement's menu controls and save validated option changes."""
+
+import time
+
+from . import panel_ownership
+
+from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
+
+# A setting that changes nothing while its switch is off; this mod's FOV has no switch of its own.
+DEPENDS_ON = {"loot_reach": "extended_loot", "shoulder_left": "third_person", "orbit": "third_person"}
+
+
+class PanelForm:
+    keep_when_disabled = True
+
+    def __init__(self, widgets, model):
+        self.widgets, self.model = widgets, model
+        self.page = model.pages.index(model.page)
+        self.notice = "ready"
+        self.pending, self.shown = {}, {}
+        self.changed_at = 0
+        self.focus = widgets["focus"]
+        self.command_form = self.command_catalogue = None
+        if model.command_actions is not None:
+            from .camera_control_form import Form
+            from .panel_glyphs import Catalogue
+            self.command_form = Form(widgets, model)
+            self.command_catalogue = Catalogue()
+        self.sync(self.resolve())
+        panel_ownership.refresh(self, self.resolve())
+
+    def resolve(self):
+        widgets = {name: reference() for name, reference in self.widgets.items()}
+        if any(widget is None for widget in widgets.values()):
+            raise ValueError("Window widget unavailable")
+        return widgets
+
+    def sync(self, widgets):
+        self.pending.clear()
+        widgets["pages"].SetActiveWidgetIndex(self.page)
+        for key, option in self.model.options.items():
+            self.shown[key] = option.value
+            widget = widgets[f"setting:{key}"]
+            if sc.is_shortcut(option):
+                continue  # The labels show its key; its Change button keeps its own word.
+            if type(option.default_value) is bool:
+                widget.SetIsChecked(False)
+            else:
+                widget.SetValue(float(option.value))
+        self.refresh_dependency(widgets)
+        self.refresh_labels(widgets)
+        if self.command_form is not None:
+            self.command_form.set_enabled(not self.model.transaction.pending and not self.model.camera_elsewhere)
+
+    def refresh_dependency(self, widgets):
+        for name, switch in DEPENDS_ON.items():
+            if name not in self.model.options:
+                continue
+            active = self.shown[switch] is True
+            widgets[f"setting:{name}"].SetIsEnabled(active)
+            # The whole row fades, label and value included, as the mockup's .row.muted does.
+            for part in ("row", "description"):
+                widgets[f"{part}:{name}"].SetRenderOpacity(1.0 if active else t.OPACITY_DISABLED)
+
+    def refresh_labels(self, widgets):
+        labels.apply(self, widgets)
+        for key, option in self.model.options.items():
+            labels.value(widgets, option, self.shown[key], self.model.language)
+        if self.command_form is not None:
+            from . import panel_camera_commands
+            panel_camera_commands.refresh(self, widgets, self.command_catalogue)
+
+    @staticmethod
+    def take(widget):
+        if not widget.IsChecked():
+            return False
+        widget.SetIsChecked(False)
+        return True
+
+    def report(self, widgets, key):
+        self.notice = key
+        widgets["notice"].SetText(i18n.text(key, self.model.language))
+
+    def flush(self, widgets):
+        if self.model.transaction.pending:
+            return False
+        if not self.pending:
+            return True
+        success = self.model.write(self.pending)
+        self.notice = "saved" if success else "ready" if success is None else "failed"
+        self.sync(widgets)
+        return success is True
+
+    def close_ready(self):
+        return self.model.cancel_transaction()
+
+    def read_changes(self, widgets, now):
+        for key, option in self.model.options.items():
+            if self.model.camera_elsewhere and key in self.model.camera_options:
+                continue
+            widget = widgets[f"setting:{key}"]
+            if sc.is_shortcut(option):
+                raw = sc.take_key(widget)
+                if raw is None:
+                    continue
+                try:
+                    value = self.model.normalize(option, raw)
+                except (TypeError, ValueError):
+                    self.report(widgets, "failed")
+                    continue
+                if value == self.shown[key]:
+                    continue
+            elif type(option.default_value) is bool:
+                if not self.take(widget):
+                    continue
+                value = not self.shown[key]
+            else:
+                raw = widget.GetValue()
+                if abs(raw - self.shown[key]) < max(1e-6, option.step * 0.01):
+                    continue
+                try:
+                    value = self.model.normalize(option, raw)
+                except (TypeError, ValueError, OverflowError):
+                    self.report(widgets, "failed")
+                    self.sync(widgets)
+                    return
+                if value == self.shown[key]:
+                    continue
+            self.shown[key] = value
+            if value == option.value:
+                self.pending.pop(key, None)
+            else:
+                self.pending[key] = value
+            self.changed_at = now
+            labels.value(widgets, option, value, self.model.language)
+        self.refresh_dependency(widgets)
+
+    def poll(self):
+        widgets, now = self.resolve(), time.perf_counter_ns()
+        ownership = panel_ownership.refresh(self, widgets)
+        if ownership:
+            # A live camera owner change must not discard drafts outside the camera section.
+            drafts = dict(self.pending)
+            self.sync(widgets)
+            self.pending.update(drafts)
+            self.shown.update(drafts)
+            self.refresh_dependency(widgets)
+            self.refresh_labels(widgets)
+            if ownership == "discarded":
+                self.report(widgets, "camera_draft_discarded")
+        outcome = self.model.advance()
+        if outcome is not None:
+            self.notice = outcome
+            self.sync(widgets)
+        self.read_changes(widgets, now)
+        if self.take(widgets["close"]):
+            return self.flush(widgets)
+        for language in ("EN", "FR"):
+            if self.take(widgets[language]):
+                if self.flush(widgets) and self.model.change_language(language):
+                    self.refresh_labels(widgets)
+                else:
+                    self.report(widgets, "failed")
+                return False
+        for family in ("PS5", "XSX"):
+            if self.command_form is not None and self.take(widgets[f"icons:{family}"]):
+                if self.model.change_controller_icons(family):
+                    self.refresh_labels(widgets)
+                else:
+                    self.report(widgets, "failed")
+                return False
+        for index, key in enumerate(self.model.pages):
+            if self.take(widgets[f"nav:{key}"]):
+                if self.flush(widgets) and self.model.change_page(key):
+                    self.page = index
+                    widgets["pages"].SetActiveWidgetIndex(index)
+                    self.refresh_labels(widgets)
+                else:
+                    self.report(widgets, "failed")
+                return False
+        for name in ("restore", "undo", "enabled"):
+            if self.take(widgets[name]):
+                if not self.flush(widgets):
+                    return False
+                success = (self.model.toggle_enabled if name == "enabled"
+                           else getattr(self.model, name))()
+                self.notice = ({"restore": "restored", "undo": "undone",
+                                "enabled": "saved"}[name] if success else
+                               "ready" if success is None else "failed")
+                self.sync(widgets)
+                return False
+        if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
+            self.flush(widgets)
+        if (not self.model.camera_elsewhere and self.command_form is not None and not self.model.transaction.pending
+                and self.model.pages[self.page] == "commands"):
+            self.command_form.poll()
+            if self.command_form.changed:
+                self.refresh_labels(widgets)
+        return False
+
+    def selecting(self):
+        widgets = self.resolve()
+        settings_selecting = any(sc.is_shortcut(option) and widgets[f"setting:{key}"].GetIsSelectingKey()
+                                 for key, option in self.model.options.items())
+        commands_selecting = (self.command_form is not None and self.model.pages[self.page] == "commands"
+                              and self.command_form.selecting())
+        return settings_selecting or commands_selecting

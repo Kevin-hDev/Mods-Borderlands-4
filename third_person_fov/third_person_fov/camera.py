@@ -7,13 +7,13 @@ from mods_base import get_pc
 try:
     from .apex_camera_runtime.bootstrap import ensure
     from .apex_camera_runtime.constants import PROTOCOL
-    from .apex_camera_runtime.shared import shared
+    from .apex_camera_runtime.shared import elected, shared
 except ModuleNotFoundError as error:
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
     from apex_camera_runtime.bootstrap import ensure
     from apex_camera_runtime.constants import PROTOCOL
-    from apex_camera_runtime.shared import shared
+    from apex_camera_runtime.shared import elected, shared
 
 from . import report, settings
 
@@ -25,12 +25,20 @@ _registered = False
 
 
 class Settings:
+    orbit_distance = staticmethod(settings.zoom.distance)
+    set_orbit_distance = staticmethod(settings.zoom.save)
+    loot_distance = staticmethod(settings.loot_distance)
     fov_enabled = staticmethod(settings.custom_fov_enabled)
     fov_value = staticmethod(settings.fov_value)
     saved_fov_pair = staticmethod(settings.saved_fov_pair)
     remember_fov_pair = staticmethod(settings.remember_fov_pair)
     third_person_enabled = staticmethod(settings.third_person_enabled)
     set_third_person = staticmethod(settings.set_third_person)
+    shoulder_left = staticmethod(settings.shoulder_left_enabled)
+    set_shoulder_left = staticmethod(settings.set_shoulder_left)
+    orbit_enabled = staticmethod(settings.orbit_enabled)
+    set_orbit = staticmethod(settings.set_orbit)
+    reject_orbit = staticmethod(settings.reject_orbit)
     note = staticmethod(report.note)
 
 
@@ -58,6 +66,40 @@ def on_frame(now_ns: int) -> None:
 
 def toggle_third_person() -> bool:
     return bool(_registered and _runtime.toggle_third_person(OWNER))
+
+
+def toggle_shoulder() -> bool:
+    return bool(_registered and _runtime.toggle_shoulder(OWNER))
+
+
+def set_shoulder(left: bool) -> bool:
+    return bool(_registered and _runtime.set_shoulder(OWNER, left))
+
+
+def toggle_orbit() -> bool:
+    return bool(_registered and _runtime.toggle_orbit(OWNER))
+
+
+def set_orbit(enabled: bool) -> bool:
+    return bool(_registered and _runtime.set_orbit(OWNER, enabled))
+
+
+def cancel_orbit() -> bool:
+    return bool(_registered and _runtime.cancel_orbit(OWNER))
+
+
+def ready() -> bool:
+    return bool(_registered and _runtime.camera_ready(OWNER))
+
+
+def adjust_orbit_zoom(direction: int) -> bool:
+    return bool(_registered and _runtime.adjust_orbit_zoom(OWNER, direction))
+
+
+def elected_elsewhere() -> bool:
+    """Do not expose settings that cannot control the currently elected camera."""
+    owner = elected()
+    return owner is not None and owner != OWNER
 
 
 def stop() -> None:

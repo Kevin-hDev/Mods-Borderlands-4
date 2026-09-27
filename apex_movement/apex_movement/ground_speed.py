@@ -71,8 +71,8 @@ def update(character: Any, now_ns: int) -> None:
     stance_speed = None
     if movement.bIsSprinting:
         speed = speeds.sprint
-    elif walk_key.asked():
-        # Asked by the auto sprint while the walk key is held; stopped, it asks nothing.
+    elif walk_key.walking():
+        # Held or toggled, with or without the auto sprint (Kevin, 2026-09-25): the key is a movement of its own.
         speed = speed_order.walk_key_speed()
         stance_speed = _scaled_stance_speed(character)
     else:

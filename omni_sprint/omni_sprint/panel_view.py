@@ -3,7 +3,8 @@
 import unrealsdk
 
 from . import panel_buttons as b, panel_fonts as fonts, panel_header as h
-from . import panel_pages as p, panel_shortcut as sc, panel_text as tx, panel_theme as t, panel_widgets as w, report
+from . import panel_pages as p, panel_ownership
+from . import panel_shortcut as sc, panel_text as tx, panel_theme as t, panel_widgets as w, report
 
 
 def _sidebar(owner, widgets, template):
@@ -57,10 +58,13 @@ def _window(root, world, model, widgets, template):
     widgets["pages"] = switcher
     for group, key in zip(model.groups, model.pages):
         page, body = p.scrolling_body(switcher, template)
-        # No camera option is shown while another mod drives the camera: its card keeps the sentence.
-        shown = [option for option in group.children if option.identifier in model.options]
-        sc.rows(p.card(body, widgets, key), shown, widgets, template)
+        rows = p.card(body, widgets, key)
+        rows = panel_ownership.section(rows, widgets, "camera:settings") if key == "camera" else rows
+        sc.rows(rows, group.children, widgets, template)
         switcher.AddChild(page)
+    if "commands" in model.pages:
+        from . import panel_camera_commands as commands
+        switcher.AddChild(commands.page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))
     w.column(stack, _footer(stack, widgets, template))

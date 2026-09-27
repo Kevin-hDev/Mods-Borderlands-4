@@ -11,7 +11,10 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import frame, game, ownership, settings, walk_key  # noqa: E402
+from apex_movement import camera_settings, frame, game, ownership, settings, walk_key  # noqa: E402
+
+# Movement isolation: native loot lifecycle has its own tests.
+camera_settings.loot.enabled.value = False
 
 fails: list[str] = []
 
@@ -22,20 +25,7 @@ def check(label: str, condition: bool) -> None:
         fails.append(label)
 
 
-class Movement:
-    def __init__(self, broken: bool = False) -> None:
-        self.updates, self.stops, self.resets, self.broken = 0, 0, 0, broken
-
-    def update(self, character: object, now_ns: int) -> None:
-        if self.broken:
-            raise ValueError("boom")
-        self.updates += 1
-
-    def stop(self, character: object) -> None:
-        self.stops += 1
-
-    def reset(self) -> None:
-        self.resets += 1
+from frame_test_fixtures import Movement
 
 
 S = 1_000_000_000

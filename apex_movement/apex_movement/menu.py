@@ -37,15 +37,17 @@ def _group(identifier: str, title: str, description: str, switch: Any, *sliders:
 # The names follow the game's own option screen (Sprint, Slide, Dash, Slam), so that a line of the menu and a line of
 # the Nexus page name the same move. "Air crouch" named nothing a Borderlands player would recognise (Kevin,
 # 2026-09-18).
+# The slow walk is a speed, so it sits with the speeds (Kevin, 2026-09-26), and in the full pack only: its key, the
+# sprint it ends and the ground speed it slows are three movements, and a separate file would show it half working.
+slow_walk_lines = [walk_key.switch, walk_key.key, walk_key.toggle, walk_key.speed] if pack.is_full() else []
 movement = NestedOption(
-    "movement_menu", [settings.walk_speed, settings.sprint_speed],
-    display_name="Movement", description="How fast you walk and sprint. These apply whether auto sprint is on or off.",
+    "movement_menu", [settings.walk_speed, settings.sprint_speed, *slow_walk_lines],
+    display_name="Movement",
+    description="How fast you walk and sprint, and the slow walk key. These apply whether auto sprint is on or off.",
 )
-# The walk key's speed goes through the ground speed: a file that does not carry it walks at the game's own walk, and
-# a slider there would change nothing.
 auto_sprint = _group(
     "auto_sprint_menu", "Auto sprint", "Sprint on a fully pushed stick, without pressing anything.",
-    settings.auto_sprint, walk_key.switch, walk_key.key, *([walk_key.speed] if pack.carries("Movement") else []),
+    settings.auto_sprint,
 )
 slides = _group(
     "slides_menu", "Slides", "How slides start, go on, and slow down.",

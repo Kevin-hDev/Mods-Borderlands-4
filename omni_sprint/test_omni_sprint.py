@@ -36,7 +36,8 @@ check("a fresh install switches it on and says its version",
 check("its one hook is the clock, under the mod's own identifier: Apex Movement and Vehicle Driving use theirs on the "
       "same function, and two identifiers never replace each other",
       mod.kwargs["hooks"] == [frame.tick] and frame.tick.identifier == "omni_sprint:frame" and frame.tick.enabled)
-check("P toggles third person by default", set(state["keybinds"]) == {"P"})
+check("P, Six and Seven expose the three default camera actions",
+      set(state["keybinds"]) == {"P", "Six", "Seven"})
 source = pathlib.Path(omni_sprint.__file__).parent
 text = "\n".join(path.read_text(encoding="utf-8") for path in sorted(source.glob("*.py")))
 check("nothing Apex Movement or Vehicle Driving writes is named: sprint request, slide, speeds, vehicle",

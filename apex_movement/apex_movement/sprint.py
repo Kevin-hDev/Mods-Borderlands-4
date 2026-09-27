@@ -19,7 +19,6 @@ _restarting = False
 def reset() -> None:
     global _requested, _restarting
     _requested = _restarting = False
-    walk_key.ask(False)
 
 
 def _request(movement: Any, wanted: bool) -> None:
@@ -33,15 +32,21 @@ def _request(movement: Any, wanted: bool) -> None:
     _requested = wanted
 
 
+def refuse(movement: Any) -> bool:
+    """Ends the sprint under way, the game's own included: the slow walk wins (Kevin, 2026-09-26). The one place
+    that writes the sprint request, so the slow walk and the auto sprint never disagree on it."""
+    if not movement.bWantsToSprint:
+        return False
+    _request(movement, False)
+    return True
+
+
 def update(character: Any, now_ns: int) -> None:
     global _restarting
     movement = character.CharacterMovement
     aiming = game.is_aiming(character)
     pushed = game.stick(character) >= STICK_THRESHOLD
-    walking = walk_key.held()
-    if walking != walk_key.asked():
-        report.note(f"walk key {'held' if walking else 'released'}")
-    walk_key.ask(walking)
+    walking = walk_key.walking()
     if movement.bIsSprinting:
         _restarting = False
     if not aiming and pushed and not walking and game.is_on_ground(movement):
@@ -59,10 +64,10 @@ def update(character: Any, now_ns: int) -> None:
 
 
 def stop(character: Any) -> None:
-    # Forgotten even when the write fails: kept, the walk went on with the key up (audit, 2026-09-25).
+    # The walk key is not forgotten here: a movement of its own, it goes on without the auto sprint (Kevin,
+    # 2026-09-25); the frame loop forgets it with the character, or when the whole mod stops.
     try:
         if character is not None and _requested:
             character.CharacterMovement.bWantsToSprint = False
     finally:
         reset()
-        walk_key.forget()

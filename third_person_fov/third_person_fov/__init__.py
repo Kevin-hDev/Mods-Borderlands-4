@@ -2,15 +2,16 @@
 
 from mods_base import build_mod
 
-from . import camera, frame, report, settings
+from . import camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "kevin-hDev"
 
 
 def _on_enable() -> None:
     report.reset()
     frame.reset()
+    settings.commands.align()
     camera.start()
     report.note(f"enabled, version {__version__}")
 
@@ -27,11 +28,12 @@ def _on_disable() -> None:
 mod = build_mod(
     name="Third Person & FOV",
     hooks=[frame.tick],
-    keybinds=[settings.third_person_bind],
-    options=settings.OPTIONS,
+    keybinds=settings.commands.binds,
+    options=[*settings.OPTIONS, *panel_preferences.ALL],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )
+panel_open.install(mod)
 
 if mod.settings_file is not None and not mod.settings_file.exists():
     mod.enable()

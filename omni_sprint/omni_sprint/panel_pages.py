@@ -1,10 +1,15 @@
-"""Page contents: one mockup card per settings group, each in a scrolling page."""
+"""Page contents: one mockup card per settings group, and the key-capture card, each in a scrolling page."""
+
+import unrealsdk
 
 from . import panel_buttons as b, panel_slider as s, panel_text as tx, panel_theme as t, panel_widgets as w
+from . import panel_key_view as keys
 
 _SCROLL_THUMBS = (("NormalThumbImage", t.COLOR_GOLD), ("HoveredThumbImage", t.COLOR_GOLD_HI),
                   ("DraggedThumbImage", t.COLOR_GOLD_HI))
 _SCROLL_TRACK = ("VerticalBackgroundImage", "VerticalTopSlotImage", "VerticalBottomSlotImage")
+_SELECTOR_STATES = (("Normal", t.COLOR_INK), ("Hovered", t.COLOR_HOVER), ("Pressed", t.COLOR_HOVER),
+                    ("Disabled", t.COLOR_INK))
 
 
 def _scrollbar(scroll, template):
@@ -78,3 +83,49 @@ def settings_page(owner, group, key, widgets, template):
     rows = card(body, widgets, key)
     setting_rows(rows, group.children, widgets, template)
     return page
+
+
+def selector(owner, listening, template):
+    widget = w.new("InputKeySelector", owner)
+    widget.SetAllowGamepadKeys(True)
+    widget.SetAllowModifierKeys(False)
+    widget.SetEscapeKeys([unrealsdk.make_struct("Key", KeyName="Escape")])
+    widget.SetKeySelectionText(listening)
+    widget.SetCursor(w.enum("EMouseCursor", "Default"))
+    w.cosmetic("selector", lambda: _selector_style(widget, template))
+    return widget
+
+
+def _selector_style(widget, template):
+    for field, tint in _SELECTOR_STATES:
+        w.style_brush(widget.WidgetStyle, field, template, tint)
+    tx.configure(widget.TextStyle.Font, "button")
+    widget.TextStyle.ColorAndOpacity = w.slate(t.COLOR_GOLD)
+    widget.Margin = w.pad(t.SPACE_2, t.SPACE_6)
+
+
+def controls_page(owner, widgets, template):
+    page, body = scrolling_body(owner, template)
+    rows = card(body, widgets, "controls")
+    widgets["current"] = tx.text(rows, "", "gold", wrap=True)
+    w.column(rows, widgets["current"], padding=w.pad(t.SPACE_2, 0))
+    w.column(rows, keys.summary(rows, widgets), padding=w.pad(t.SPACE_1, 0))
+    w.column(rows, keys.family_choice(rows, widgets, template), padding=w.pad(t.SPACE_3, 0))
+    widgets["two_text"] = tx.text(rows, "", "label", wrap=True)
+    _row(rows, widgets["two_text"], b.button(rows, widgets, "two", "switch", template, "off"))
+    for name in ("first", "second"):
+        w.column(rows, _selector_frame(rows, keys.selector(rows, widgets, name)),
+                 padding=w.pad(t.SPACE_3, 0, 0), halign="Left")
+    widgets["second"].SetIsEnabled(False)  # Only the two-key mode offers a second key.
+    widgets["status"] = tx.text(rows, "", "status", wrap=True)
+    w.column(rows, widgets["status"], padding=w.pad(t.SPACE_3, 0))
+    w.column(rows, b.button(rows, widgets, "reset", "action", template, "secondary"), halign="Left")
+    widgets["escape_hint"] = tx.text(rows, "", "hint", wrap=True)
+    w.column(rows, widgets["escape_hint"], padding=w.pad(t.SPACE_3, 0))
+    return page
+
+
+def _selector_frame(owner, widget):
+    frame = w.border(owner, t.COLOR_SPARK, t.STROKE)
+    frame.SetContent(w.sized(owner, widget, width=t.SELECTOR_WIDTH))
+    return w.slant(frame)

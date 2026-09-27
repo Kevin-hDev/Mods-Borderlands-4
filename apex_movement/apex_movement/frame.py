@@ -95,6 +95,8 @@ def on_frame(obj: Any, now_ns: int) -> None:
         # carrying a slide model through a ride resumed it with an old timer and zero speed (2026-09-23).
         if change == game.CHARACTER:
             ownership.forget_character()
+        # After a death, a vehicle or a new game the player walks or sprints as usual (Kevin, 2026-09-25).
+        walk_key.forget()
         for name, _, movement in _movements:
             try:
                 movement.reset()
@@ -141,6 +143,7 @@ def stop_all() -> list[str]:
     for name, _, movement in _movements:
         if name in _active:
             _stop(name, movement, character)
+    walk_key.forget()
     failures = ownership.restore_all()
     _failed.clear()
     game.forget()

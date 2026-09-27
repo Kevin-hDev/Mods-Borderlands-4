@@ -53,6 +53,10 @@ camera.ensure = fail_ensure
 camera.start()
 ok = runtime.registered[0][:2] == ("omni_sprint", 100)
 ok = ok and settings.third_person.value is False
+ok = ok and settings.shoulder_left.value is False and settings.orbit.value is False
+adapter = runtime.registered[0][2]
+ok = ok and all(hasattr(adapter, name) for name in
+                ("shoulder_left", "set_shoulder_left", "orbit_enabled", "set_orbit"))
 state["pc"] = sdk_stubs.player(sdk_stubs.BASE)
 camera.on_frame(123)
 ok = ok and runtime.ticks == [(state["pc"], 123)] and ensured == []

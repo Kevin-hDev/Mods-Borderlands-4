@@ -19,19 +19,21 @@ UI_SHARED = (
     "control_console_handoff", "control_console_keys", "control_reserved", "control_window",
     "control_window_cleanup", "control_window_hooks", "panel_assets", "panel_buttons",
     "panel_common_en", "panel_common_fr", "panel_en", "panel_entry", "panel_factory", "panel_fonts",
-    "panel_form", "panel_fr", "panel_header", "panel_i18n", "panel_labels", "panel_model",
-    "panel_open", "panel_options", "panel_pages", "panel_preferences", "panel_shortcut", "panel_slider", "panel_text",
-    "panel_theme", "panel_view", "panel_widgets",
+    "panel_form", "panel_fr", "panel_header", "panel_i18n", "panel_labels", "panel_model", "panel_transaction",
+    "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_pages", "panel_preferences",
+    "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_view", "panel_widgets",
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.
-# walk_key is written by the auto sprint and read by the ground speed, two movements; shortcut_key serves its option
-# and the menu's key capture in every file.
+# walk_key is read by two movements, the auto sprint and the ground speed, so it is in every file; its key, its menu
+# lines and the slow_walk module that ends the sprint ship in the full pack only (Kevin, 2026-09-26), and a separate
+# file never walks slowly. shortcut_key serves its option and the menu's key capture in every file.
 SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", "movements", "ownership", "pack",
           "report", "settings", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
 # Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
 # its shared native runtime, so these modules belong only to the full pack.
-FULL_ONLY = ("camera", "camera_settings")
+FULL_ONLY = ("camera", "camera_settings", "camera_control_actions", "camera_control_config",
+             "camera_control_form", "panel_camera_commands", "slow_walk")
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,
 # which belong to two movements. The speeds every movement reads come from speed_order, not from settings.

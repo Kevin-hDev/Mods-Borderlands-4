@@ -58,9 +58,7 @@ def game_scale(movement: Any) -> float:
 
 
 def walk_key_speed() -> float:
-    """The walk key's speed, never above the walk; the game's own walk in a file that does not carry the speeds."""
+    """The slow walk's speed, never above the walk; the slow walk ships in the full pack only, with the speeds."""
     # Imported here: walk_key takes GAME_WALK from this module for its slider.
     from . import walk_key
-    if not pack.carries("Movement"):
-        return GAME_WALK
     return min(float(walk_key.speed.value), speeds().walk)

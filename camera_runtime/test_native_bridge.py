@@ -31,19 +31,28 @@ class Function:
         return self.result
 
 
-config = bridge.make_config()
+config = bridge.make_config(48.4)
 check("the production ABI has no probe deadline",
       (config.abi, config.duration_ms, config.slot_index, config.expected_rva)
-      == (4, 0, 264, 0x3CD4832))
+      == (5, 0, 264, 0x3CD4832))
 check("the validated framing is the single configured value", (config.right, config.up) == (48.4, 5.0))
 check("the ABI layouts are fixed", ctypes.sizeof(config) == 40 and ctypes.sizeof(bridge.Stats) == 96)
 
-start, stop, suspend, stats = Function(), Function(), Function(), Function()
+start, stop, suspend, set_right, stats = Function(), Function(), Function(), Function(True), Function()
 library = types.SimpleNamespace(view_start=start, view_stop=stop,
-                                view_set_suspended=suspend, view_stats=stats)
+                                view_set_suspended=suspend, view_set_right=set_right,
+                                view_stats=stats)
 api = bridge.Bridge(library)
 manager = types.SimpleNamespace(_get_address=lambda: 0x12345678)
-api.start(manager)
+check("a finite signed shoulder offset starts the bridge", api.start(manager, 48.4) is True)
+started_config = ctypes.cast(start.calls[0][1], ctypes.POINTER(bridge.Config)).contents
+check("start passes the requested shoulder offset", started_config.right == 48.4)
+check("the shoulder changes without restarting", api.set_right(-48.4) is True)
+check("the signed shoulder value reaches the native boundary", set_right.calls == [(-48.4,)])
+check("a non-finite shoulder value is refused before native code",
+      api.set_right(float("nan")) is False and set_right.calls == [(-48.4,)])
+check("an out-of-range shoulder value is refused before native code",
+      api.set_right(150.001) is False and set_right.calls == [(-48.4,)])
 api.suspend(True)
 api.stop()
 check("the wrapper passes the exact manager and suspension state",
@@ -53,9 +62,9 @@ payload = b"MZ" + bytes(range(64))
 digest = hashlib.sha256(payload).hexdigest()
 temporary = tempfile.TemporaryDirectory(prefix="camera_bridge_")
 target = pathlib.Path(temporary.name)
-path = bridge.install_library(payload, target, "camera_v4.dll", digest)
+path = bridge.install_library(payload, target, "camera_v5.dll", digest)
 check("a verified PE payload is written", path.read_bytes() == payload)
-same = bridge.install_library(payload, target, "camera_v4.dll", digest)
+same = bridge.install_library(payload, target, "camera_v5.dll", digest)
 check("an identical installed library is reused", same == path and same.read_bytes() == payload)
 for label, bad_payload, bad_hash in (
     ("a non-PE payload is refused", b"not a dll", hashlib.sha256(b"not a dll").hexdigest()),

@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.6 - 2026-09-27
+
+- Shoulder switching: the third-person camera moves to the left or right shoulder. Key 6 by default.
+- Orbit camera: the camera turns freely around the character. Key 7 by default. Two more keys, none set by default,
+  move it closer or farther away.
+- New Commands page: every camera key, for keyboard and mouse and for controller, with PlayStation or Xbox icons.
+- Loot reach: pick up loot and open containers from farther away, from 1× to 3×, 2× by default.
+- Fixed: in third person, you had to aim next to an item to pick it up.
+- Fixed: when downed, the view switched to an offset first-person view; third person now stays in place.
+- Slow walk toggle, off by default: press once to walk slowly, press again to stop. The sprint key also ends the slow
+  walk, and going down cuts it.
+- Slow walk now wins over everything: it ends the sprint, the game's own included, with or without auto sprint. Its
+  settings move to the Movement page.
+- Slow walk is part of the full pack: the separate Apex Auto Sprint file no longer includes it.
+
 ## 1.1.5 - 2026-09-25
 
 - Added slow walk: hold Caps Lock to walk slowly instead of sprinting while auto sprint is on, on the ground and in

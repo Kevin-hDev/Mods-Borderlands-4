@@ -119,6 +119,7 @@ def install() -> dict:
     mods_base.BoolOption = FakeOption
     mods_base.KeybindOption = FakeKeybindOption
     mods_base.SliderOption = FakeOption
+    mods_base.SpinnerOption = FakeOption
     mods_base.NestedOption = FakeNested
     mods_base.get_pc = lambda **kwargs: state["pc"]
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, hook_identifier))
@@ -136,6 +137,7 @@ def install() -> dict:
 
     mods_base.Mod = FakeMod
     mods_base.build_mod = build_mod
+    mods_base.EInputEvent = types.SimpleNamespace(IE_Pressed="IE_Pressed")
     mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(
         state, identifier, key, callback, kwargs,
     )

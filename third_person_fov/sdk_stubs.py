@@ -23,7 +23,17 @@ class FakeOption:
         self.display_name = kwargs.get("display_name", identifier)
         self.description = kwargs.get("description", "")
         self.is_hidden = kwargs.get("is_hidden", False)
+        self.true_text, self.false_text = kwargs.get("true_text"), kwargs.get("false_text")
         self.mod = None
+        self.step = kwargs.get("step", 1)
+        self.is_integer = kwargs.get("is_integer", True)
+
+
+class FakeNestedOption:
+    def __init__(self, identifier, children, **kwargs):
+        self.identifier, self.children = identifier, children
+        self.display_name = kwargs.get("display_name", identifier)
+        self.description = kwargs.get("description", "")
 
 
 class FakeKeybindOption(FakeOption):
@@ -97,6 +107,9 @@ class FakeMod:
             raise RuntimeError("save refused")
         self.state["settings_saves"] += 1
 
+    def iter_display_options(self):
+        yield from self.kwargs.get("options", ())
+
     def enable(self) -> None:
         if self.is_enabled:
             return
@@ -136,7 +149,10 @@ def install() -> dict:
 
     mods_base = types.ModuleType("mods_base")
     mods_base.BoolOption = mods_base.SliderOption = FakeOption
+    mods_base.SpinnerOption = FakeOption
+    mods_base.NestedOption = FakeNestedOption
     mods_base.KeybindOption = FakeKeybindOption
+    mods_base.EInputEvent = types.SimpleNamespace(IE_Pressed="IE_Pressed")
     mods_base.get_pc = lambda **_kwargs: state["pc"]
     mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(
         state, identifier, key, callback, kwargs)

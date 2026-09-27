@@ -15,4 +15,5 @@ TEXT = {'close': 'FERMER',
  'saved': 'Enregistré.',
  'failed': 'Échec de sauvegarde. Réglages précédents conservés. Réessaie.',
  'restored': 'Réglages d’origine restaurés. Tu peux annuler cette restauration.',
- 'undone': 'Réglages précédents rétablis.'}
+ 'undone': 'Réglages précédents rétablis.',
+ 'refused': 'Attribution refusée. Cette touche est réservée ou déjà utilisée.'}

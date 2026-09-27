@@ -38,6 +38,9 @@ def apply(form, widgets):
     for group, key in zip(form.model.groups, form.model.pages):
         widgets[f"heading:{key}"].SetText(i18n.text(key, language))
         widgets[f"group:{key}"].SetText(i18n.group_text(group, key, language))
+    if "heading:command_external" in widgets:
+        widgets["heading:command_external"].SetText(i18n.text("commands", language))
+        widgets["group:command_external"].SetText(i18n.text("camera_elsewhere", language))
     for key, option in form.model.options.items():
         if sc.is_shortcut(option):
             sc.texts(widgets, key, language)
@@ -52,6 +55,9 @@ def value(widgets, option, current, language):
     key = option.identifier
     if sc.is_shortcut(option):
         sc.show_key(widgets[f"key:{key}"], current)
+    elif key == "shoulder_left":
+        widgets[f"setting:{key}_label"].SetText(i18n.text("left" if current else "right", language))
+        b.paint(widgets, f"setting:{key}", "on" if current else "off")
     elif type(option.default_value) is bool:
         widgets[f"setting:{key}_label"].SetText(i18n.text("on" if current else "off", language))
         b.paint(widgets, f"setting:{key}", "on" if current else "off")

@@ -57,6 +57,10 @@ pack.CARRIES = ()
 camera.start()
 ok = ok and runtime.registered[0][:2] == ("apex_movement", 200)
 ok = ok and camera_settings.third_person.value is False and camera_settings.custom_fov.value is False
+ok = ok and camera_settings.shoulder_left.value is False and camera_settings.orbit.value is False
+adapter = runtime.registered[0][2]
+ok = ok and all(hasattr(adapter, name) for name in
+                ("shoulder_left", "set_shoulder_left", "orbit_enabled", "set_orbit"))
 ok = ok and (camera_settings.fov.min_value, camera_settings.fov.max_value) == (70, 150)
 sdk_stubs.use_character(state, sdk_stubs.FakeCharacter())
 camera.on_frame(123)

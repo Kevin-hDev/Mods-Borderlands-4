@@ -1,0 +1,16 @@
+"""One authority for loot range bounds and refresh/cleanup budgets."""
+from .generated_limits import LOOT_BASE_DISTANCE, LOOT_MAX_DISTANCE
+
+BASE_DISTANCE = LOOT_BASE_DISTANCE
+DEFAULT_MULTIPLIER = 2.0
+MIN_MULTIPLIER = 1.0
+MAX_MULTIPLIER = LOOT_MAX_DISTANCE / LOOT_BASE_DISTANCE
+MULTIPLIER_STEP = 0.1
+REFRESH_NS = 2_000_000_000
+MAX_OBJECTS = 1024
+MAX_SCAN = 4096
+MAX_PATH = 500
+CLASS_NAME = 'LootableObject'
+LOOT_DEFINITION = 'usabilitydata_lootable_default'
+FIELD_OFFSET = 0x6B8 + 0x1B
+FIELD_SIZE = 5

@@ -25,6 +25,9 @@ _registered = False
 
 
 class Settings:
+    orbit_distance = staticmethod(settings.zoom.distance)
+    set_orbit_distance = staticmethod(settings.zoom.save)
+    loot_distance = staticmethod(settings.loot_distance)
     @staticmethod
     def fov_enabled() -> bool:
         return settings.custom_fov_enabled()
@@ -48,6 +51,26 @@ class Settings:
     @staticmethod
     def set_third_person(value: bool) -> None:
         settings.set_third_person(value)
+
+    @staticmethod
+    def shoulder_left() -> bool:
+        return settings.shoulder_left_enabled()
+
+    @staticmethod
+    def set_shoulder_left(value: bool) -> None:
+        settings.set_shoulder_left(value)
+
+    @staticmethod
+    def orbit_enabled() -> bool:
+        return settings.orbit_enabled()
+
+    @staticmethod
+    def set_orbit(value: bool) -> None:
+        settings.set_orbit(value)
+
+    @staticmethod
+    def reject_orbit() -> None:
+        settings.reject_orbit()
 
     @staticmethod
     def note(message: str) -> None:
@@ -78,6 +101,34 @@ def on_frame(now_ns: int) -> None:
 
 def toggle_third_person() -> bool:
     return bool(_registered and _runtime.toggle_third_person(OWNER))
+
+
+def toggle_shoulder() -> bool:
+    return bool(_registered and _runtime.toggle_shoulder(OWNER))
+
+
+def set_shoulder(left: bool) -> bool:
+    return bool(_registered and _runtime.set_shoulder(OWNER, left))
+
+
+def toggle_orbit() -> bool:
+    return bool(_registered and _runtime.toggle_orbit(OWNER))
+
+
+def set_orbit(enabled: bool) -> bool:
+    return bool(_registered and _runtime.set_orbit(OWNER, enabled))
+
+
+def cancel_orbit() -> bool:
+    return bool(_registered and _runtime.cancel_orbit(OWNER))
+
+
+def ready() -> bool:
+    return bool(_registered and _runtime.camera_ready(OWNER))
+
+
+def adjust_orbit_zoom(direction: int) -> bool:
+    return bool(_registered and _runtime.adjust_orbit_zoom(OWNER, direction))
 
 
 def elected_elsewhere() -> bool:

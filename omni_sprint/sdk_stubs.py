@@ -181,6 +181,8 @@ def install() -> dict:
     mods_base.KeybindOption = FakeKeybindOption
     mods_base.NestedOption = FakeNestedOption
     mods_base.SliderOption = FakeOption
+    mods_base.SpinnerOption = FakeOption
+    mods_base.EInputEvent = types.SimpleNamespace(IE_Pressed="IE_Pressed")
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, kind, hook_identifier))
     mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(
         state, identifier, key, callback, kwargs)

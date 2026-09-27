@@ -8,12 +8,25 @@ from . import aiming
 def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bool,
          stale: bool = False, now_ns: int | None = None) -> None:
     errors = []
+    try:
+        controller.zoom.stop(stale=stale)
+    except Exception as error:
+        errors.append(error)
     if controller._hooks_installed:
         try:
             controller._transitions.remove()
             controller._hooks_installed = False
         except Exception as error:
             errors.append(error)
+    controller.foot_mode.reset()
+    try:
+        pc = controller._lifetime.pc_ref() if controller._lifetime.pc_ref is not None else None
+        if pc is not None and callable(getattr(pc, "ClientSetCameraMode", None)):
+            # Default is requested after hook removal so shutdown has one native end state.
+            pc.ClientSetCameraMode(transition)
+    except Exception as error:
+        controller.foot_mode.rollback_failed = True
+        errors.append(error)
     if controller._mode_pushes:
         try:
             actor, manager = controller._lifetime.owned()
@@ -37,14 +50,11 @@ def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bo
         except Exception as error:
             errors.append(error)
     if not controller.cleanup_pending:
-        controller._remove_cleanup_hook()
+        controller.cleanup_retry.reset()
         controller._lifetime.clear()
         controller._transitions = None
         controller._in_vehicle = False
-        controller._cleanup_attempts = 0
-        controller._next_cleanup_ns = 0
-        controller._cleanup_stale = False
-        controller._disable_cleanup_attempted = False
+        controller._vehicle_reassert_ns = 0
         controller._recovery_requested = False
         aiming.reset(controller)
         controller._suspensions.clear()
@@ -52,5 +62,5 @@ def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bo
             controller.collision.reset()
     if errors:
         moment = controller.clock() if now_ns is None else now_ns
-        controller._schedule_cleanup(moment, stale)
+        controller.cleanup_retry.schedule(controller, moment, stale)
         raise RuntimeError("third person cleanup incomplete") from errors[0]

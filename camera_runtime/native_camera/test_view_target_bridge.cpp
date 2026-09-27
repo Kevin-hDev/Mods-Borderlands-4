@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <limits>
 
 #undef assert
 #define assert(condition) do { if (!(condition)) { \
@@ -43,7 +44,7 @@ bool close_to(double value, double expected) { return std::abs(value - expected)
 Config make_config(uint32_t duration_ms = 0) {
     const auto module = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
     const auto function = reinterpret_cast<uintptr_t>(&original_update);
-    return Config{abi_version, duration_ms, update_slot, 0,
+    return Config{VIEW_TARGET_ABI, duration_ms, update_slot, 0,
                   static_cast<uint64_t>(function - module), 35.0, 5.0};
 }
 
@@ -55,6 +56,7 @@ int main() {
     assert(VirtualProtect(table, 4096, PAGE_READONLY, &previous));
     Manager manager{table};
     auto config = make_config();
+    assert(!view_set_right(0.0));
     assert(valid_config(config) && view_start(&manager, &config) == 0);
 
     ViewTarget shifted{};
@@ -67,6 +69,20 @@ int main() {
     assert(close_to(read_value(shifted, view_location_offset + 8), 55.0));
     assert(close_to(read_value(shifted, view_location_offset + 16), 35.0));
 
+    assert(view_set_right(-35.0));
+    ViewTarget left{};
+    write_value(left, view_yaw_offset, 0.0);
+    invoke(manager, left);
+    assert(close_to(read_value(left, view_location_offset + 8), -35.0));
+    assert(view_set_right(150.0) && view_set_right(-150.0));
+    assert(!view_set_right(std::numeric_limits<double>::quiet_NaN()));
+    assert(!view_set_right(std::numeric_limits<double>::infinity()));
+    assert(!view_set_right(150.001));
+    ViewTarget kept{};
+    write_value(kept, view_yaw_offset, 0.0);
+    invoke(manager, kept);
+    assert(close_to(read_value(kept, view_location_offset + 8), -150.0));
+
     assert(view_set_suspended(1) == 0);
     ViewTarget guarded{};
     write_value(guarded, view_yaw_offset, 0.0);
@@ -74,12 +90,12 @@ int main() {
     assert(close_to(read_value(guarded, view_location_offset), 5.0));
     Stats stats{};
     assert(view_stats(&stats) == 0);
-    assert(stats.active == 1 && stats.suspended == 1 && stats.writes == 1);
-    assert(close_to(stats.before[0], 5.0) && close_to(stats.after[1], 35.0));
+    assert(stats.active == 1 && stats.suspended == 1 && stats.writes == 3);
+    assert(close_to(stats.before[0], 5.0) && close_to(stats.after[1], -150.0));
 
     assert(view_set_suspended(0) == 0);
     invoke(manager, guarded);
-    assert(close_to(read_value(guarded, view_location_offset + 8), 35.0));
+    assert(close_to(read_value(guarded, view_location_offset + 8), -150.0));
     assert(view_stop() == 0 && table[update_slot] == reinterpret_cast<void*>(&original_update));
 
     config = make_config(1);

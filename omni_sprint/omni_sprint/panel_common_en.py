@@ -15,4 +15,5 @@ TEXT = {'close': 'CLOSE',
  'saved': 'Saved.',
  'failed': 'Could not save. Previous settings kept. Please try again.',
  'restored': 'Default settings restored. You can undo this reset.',
- 'undone': 'Previous settings restored.'}
+ 'undone': 'Previous settings restored.',
+ 'refused': 'Assignment refused. This input is reserved or already used.'}

@@ -142,7 +142,7 @@ for now in range(2_000_000_000, 3_000_000_000, 100_000_000):
     retry.sync("apex_movement", retry_pc, settings, now)
 check("manual disable adds only one final attempt after the automatic retry limit",
       retry_bridge.stops == bounded_stops + 1
-      and retry._cleanup_attempts == MAX_CLEANUP_ATTEMPTS)
+      and retry.cleanup_retry.attempts == MAX_CLEANUP_ATTEMPTS)
 settings.enabled = True
 for now in range(3_000_000_000, 4_000_000_000, 100_000_000):
     try:

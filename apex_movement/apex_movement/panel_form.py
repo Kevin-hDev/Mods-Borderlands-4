@@ -4,8 +4,11 @@ import time
 
 from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
 
-# A setting that changes nothing while its switch is off: FOV under Custom FOV, the walk key's speed under the walk key.
-DEPENDS_ON = {"fov": "custom_fov", "walk_key_speed": "walk"}
+# A setting that changes nothing while its switch is off: FOV under Custom FOV, the walk key's toggle and speed under
+# the walk key, the loot reach under its switch, the shoulder and the orbit camera outside third person (the runtime
+# takes neither before it, runtime.camera_ready; review, 2026-09-26).
+DEPENDS_ON = {"fov": "custom_fov", "walk_toggle": "walk", "walk_key_speed": "walk", "loot_reach": "extended_loot",
+              "shoulder_left": "third_person", "orbit": "third_person"}
 
 
 class PanelForm:
@@ -20,6 +23,12 @@ class PanelForm:
         self.pending, self.shown = {}, {}
         self.changed_at = 0
         self.focus = widgets["focus"]
+        self.command_form = self.command_catalogue = None
+        if model.command_actions is not None:
+            from .camera_control_form import Form
+            from .panel_glyphs import Catalogue
+            self.command_form = Form(widgets, model)
+            self.command_catalogue = Catalogue()
         self.sync(self.resolve())
 
     def resolve(self):
@@ -43,6 +52,8 @@ class PanelForm:
                 widget.SetValue(float(option.value))
         self.refresh_dependency(widgets)
         self.refresh_labels(widgets)
+        if self.command_form is not None:
+            self.command_form.set_enabled(not self.model.transaction.pending)
 
     def refresh_dependency(self, widgets):
         for name, switch in DEPENDS_ON.items():
@@ -58,6 +69,9 @@ class PanelForm:
         labels.apply(self, widgets)
         for key, option in self.model.options.items():
             labels.value(widgets, option, self.shown[key], self.model.language)
+        if self.command_form is not None:
+            from . import panel_camera_commands
+            panel_camera_commands.refresh(self, widgets, self.command_catalogue)
 
     @staticmethod
     def take(widget):
@@ -71,12 +85,17 @@ class PanelForm:
         widgets["notice"].SetText(i18n.text(key, self.model.language))
 
     def flush(self, widgets):
+        if self.model.transaction.pending:
+            return False
         if not self.pending:
             return True
         success = self.model.write(self.pending)
-        self.notice = "saved" if success else "failed"
+        self.notice = "saved" if success else "ready" if success is None else "failed"
         self.sync(widgets)
-        return success
+        return success is True
+
+    def close_ready(self):
+        return self.model.cancel_transaction()
 
     def read_changes(self, widgets, now):
         for key, option in self.model.options.items():
@@ -119,6 +138,10 @@ class PanelForm:
 
     def poll(self):
         widgets, now = self.resolve(), time.perf_counter_ns()
+        outcome = self.model.advance()
+        if outcome is not None:
+            self.notice = outcome
+            self.sync(widgets)
         self.read_changes(widgets, now)
         if self.take(widgets["close"]):
             return self.flush(widgets)
@@ -133,6 +156,13 @@ class PanelForm:
         for language in ("EN", "FR"):
             if self.take(widgets[f"language:{language}"]):
                 if self.flush(widgets) and self.model.change_language(language):
+                    self.refresh_labels(widgets)
+                else:
+                    self.report(widgets, "failed")
+                return False
+        for family in ("PS5", "XSX"):
+            if self.command_form is not None and self.take(widgets[f"icons:{family}"]):
+                if self.model.change_controller_icons(family):
                     self.refresh_labels(widgets)
                 else:
                     self.report(widgets, "failed")
@@ -153,15 +183,24 @@ class PanelForm:
                     return False
                 success = (self.model.toggle_enabled if name == "enabled"
                            else getattr(self.model, name))()
-                self.notice = {"restore": "restored", "undo": "undone",
-                               "enabled": "saved"}[name] if success else "failed"
+                self.notice = ({"restore": "restored", "undo": "undone",
+                                "enabled": "saved"}[name] if success else
+                               "ready" if success is None else "failed")
                 self.sync(widgets)
                 return False
         if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
             self.flush(widgets)
+        if (self.command_form is not None and not self.model.transaction.pending
+                and self.model.pages[self.page] == "commands"):
+            self.command_form.poll()
+            if self.command_form.changed:
+                self.refresh_labels(widgets)
         return False
 
     def selecting(self):
         widgets = self.resolve()
-        return any(sc.is_shortcut(option) and widgets[f"setting:{key}"].GetIsSelectingKey()
-                   for key, option in self.model.options.items())
+        settings_selecting = any(sc.is_shortcut(option) and widgets[f"setting:{key}"].GetIsSelectingKey()
+                                 for key, option in self.model.options.items())
+        commands_selecting = (self.command_form is not None and self.model.pages[self.page] == "commands"
+                              and self.command_form.selecting())
+        return settings_selecting or commands_selecting

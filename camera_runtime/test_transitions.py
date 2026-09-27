@@ -8,6 +8,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from apex_camera_runtime.transitions import TransitionHooks  # noqa: E402
+from apex_camera_runtime.foot_mode import ORBIT_MODE  # noqa: E402
 from camera_test_fixtures import Bound, Hooks, args  # noqa: E402
 
 fails = []
@@ -31,6 +32,11 @@ check("another controller's transition is untouched", callback(stranger, args("S
       and bound.calls == [])
 check("the player's slide stays in third person", callback(player, args("Slide"), None, bound) is hooks.Block
       and bound.calls[0][0] == "ThirdPerson")
+ffyl = Bound()
+ffyl_result = callback(player, args("FFYL"), None, ffyl)
+check("the player's FFYL request stays in third person",
+      ffyl_result is hooks.Block and len(ffyl.calls) == 1
+      and ffyl.calls[0][0] == "ThirdPerson")
 transitions.set_first_person_allowed(True)
 aim = Bound()
 check("the player's native first-person mode is preserved while aiming",
@@ -71,6 +77,44 @@ live_actor.ZoomState.bWantsToZoom = False
 check("the live aim exception ends as soon as the input is released",
       live_callback(live_player, args("Default"), None, Bound()) is live_hooks.Block)
 live.remove()
+
+
+class OrbitPC:
+    def __init__(self):
+        self.client_modes = []
+
+    def ClientSetCameraMode(self, mode):
+        self.client_modes.append(mode)
+
+
+orbit_hooks, orbit_pc = Hooks(), OrbitPC()
+orbit = TransitionHooks(orbit_hooks, "orbit_rewrite", orbit_pc, lambda *_: None,
+                        lambda *_: None, lambda: ORBIT_MODE)
+orbit.install()
+for suffix in (":CameraTransition", ":ServerCameraTransition"):
+    orbit_path = next(item for item in orbit.paths if item.endswith(suffix))
+    original = Bound()
+    result = orbit_hooks.items[(orbit_path, "PRE", "orbit_rewrite")](
+        orbit_pc, args("Slide"), None, original)
+    check(f"{suffix[1:]} restores Orbit through ClientSetCameraMode",
+          result is orbit_hooks.Block and original.calls == []
+          and orbit_pc.client_modes[-1] == ORBIT_MODE)
+client_path = next(item for item in orbit.paths if item.endswith(":ClientSetCameraMode"))
+client_original = Bound()
+client_args = types.SimpleNamespace(NewCamMode="Default")
+result = orbit_hooks.items[(client_path, "PRE", "orbit_rewrite")](
+    orbit_pc, client_args, None, client_original)
+check("ClientSetCameraMode rewrites once to Orbit",
+      result is orbit_hooks.Block and client_original.calls == [(ORBIT_MODE,)])
+orbit_ffyl = Bound()
+orbit_ffyl_result = orbit_hooks.items[(path, "PRE", "orbit_rewrite")](
+    orbit_pc, args("FFYL"), None, orbit_ffyl)
+check("FFYL preserves Orbit when it is the selected third-person mode",
+      orbit_ffyl_result is orbit_hooks.Block and orbit_ffyl.calls == []
+      and orbit_pc.client_modes[-1] == ORBIT_MODE)
+check("no transition path calls CameraTransition with Orbit",
+      orbit_pc.client_modes == [ORBIT_MODE, ORBIT_MODE, ORBIT_MODE])
+orbit.remove()
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

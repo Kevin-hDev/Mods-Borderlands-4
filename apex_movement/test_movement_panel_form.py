@@ -10,7 +10,8 @@ import movement_ui_fixture
 
 movement_ui_fixture.install()
 
-from apex_movement import panel_form, panel_labels, panel_model, panel_theme, settings
+from apex_movement import camera, camera_settings, panel_camera_commands, panel_form, panel_labels, panel_model
+from apex_movement import panel_theme, settings
 
 
 class Widget:
@@ -45,6 +46,18 @@ class Widget:
     def SetText(self, value):
         self.text = value
 
+    def SetVisibility(self, value):
+        self.visibility = value
+
+    def SetBrush(self, value):
+        self.brush = value
+
+    def SetNoKeySpecifiedText(self, value):
+        self.empty_text = value
+
+    def SetKeySelectionText(self, value):
+        self.selection_text = value
+
     def SetSelectedKey(self, value):
         self.SelectedKey = value
 
@@ -71,28 +84,56 @@ class Mod:
 
 
 panel_labels.apply = lambda *_: None
+panel_camera_commands.refresh = lambda *_: None
 shown = {}  # What the labels would show beside each setting: for the shortcut, the key in its key field.
 panel_labels.value = lambda _widgets, option, current, _language: shown.__setitem__(option.identifier, current)
 mod = Mod()
 model = panel_model.Model(mod)
 names = ["focus", "pages", "notice", "close", "options", "language:EN", "language:FR",
          "restore", "undo", "enabled", "row:fov", "description:fov",
-         "row:walk_key_speed", "description:walk_key_speed"]
+         "row:walk_toggle", "description:walk_toggle", "row:walk_key_speed", "description:walk_key_speed",
+         "row:loot_reach", "description:loot_reach", "row:shoulder_left", "description:shoulder_left",
+         "row:orbit", "description:orbit"]
 names += [f"nav:{page}" for page in model.pages]
 names += [f"setting:{key}" for key in model.options]
+for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out"):
+    names += [f"heading:command_{action}", f"group:command_{action}"]
+    for device in ("keyboard", "controller"):
+        base = f"{action}:{device}"
+        names += [f"device:{base}", f"command:{base}", f"clear:{base}", f"clear:{base}_label",
+                  f"value:{base}", f"value:{base}:icon"]
+names += ["heading:command_tools", "group:command_tools", "commands_reset", "commands_reset_label",
+          "commands_status", "icons_label", "icons:PS5", "icons:PS5_label", "icons:XSX", "icons:XSX_label"]
 widgets = {name: Widget() for name in names}
 form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
-change = widgets["setting:third_person_key"]
-assert shown["third_person_key"] == "P" and change.SelectedKey.Key.KeyName == "None"
 assert widgets["setting:fov"].enabled is False
 assert widgets["row:fov"].opacity < 1 and widgets["description:fov"].opacity < 1
-# The walk key is on by default: its speed is live.
+# The walk key is on by default: its toggle and its speed are live.
 assert widgets["setting:walk_key_speed"].enabled is True and widgets["row:walk_key_speed"].opacity == 1.0
+assert widgets["setting:walk_toggle"].enabled is True and widgets["row:walk_toggle"].opacity == 1.0
 widgets["setting:walk"].checked = True
 assert not form.poll() and form.pending["walk"] is False
 assert widgets["setting:walk_key_speed"].enabled is False and widgets["row:walk_key_speed"].opacity < 1
+assert widgets["setting:walk_toggle"].enabled is False and widgets["row:walk_toggle"].opacity < 1
 widgets["setting:walk"].checked = True
 assert not form.poll() and "walk" not in form.pending and widgets["row:walk_key_speed"].opacity == 1.0
+assert widgets["row:walk_toggle"].opacity == 1.0
+# The loot reach greys under its switch, the shoulder and the orbit camera outside third person (review, 2026-09-26).
+assert widgets["setting:loot_reach"].enabled is True and widgets["row:loot_reach"].opacity == 1.0
+for name in ("shoulder_left", "orbit"):
+    assert widgets[f"setting:{name}"].enabled is False and widgets[f"row:{name}"].opacity < 1
+    assert widgets[f"description:{name}"].opacity < 1
+widgets["setting:extended_loot"].checked = True
+assert not form.poll() and form.pending["extended_loot"] is False
+assert widgets["setting:loot_reach"].enabled is False and widgets["row:loot_reach"].opacity < 1
+widgets["setting:extended_loot"].checked = True
+assert not form.poll() and "extended_loot" not in form.pending and widgets["setting:loot_reach"].enabled is True
+widgets["setting:third_person"].checked = True
+assert not form.poll() and form.pending["third_person"] is True
+assert all(widgets[f"setting:{name}"].enabled is True and widgets[f"row:{name}"].opacity == 1.0
+           for name in ("shoulder_left", "orbit"))
+widgets["setting:third_person"].checked = True
+assert not form.poll() and "third_person" not in form.pending and widgets["setting:orbit"].enabled is False
 
 widgets["options"].checked = True
 assert not form.poll() and widgets["pages"].active == len(model.pages)
@@ -100,25 +141,6 @@ assert form.options_open
 assert model.page == "options"
 form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
 assert form.options_open and widgets["pages"].active == len(model.pages)
-# A captured key moves to the key field and the Change button shows its own word again.
-change.SelectedKey.Key.KeyName = "K"
-assert not form.poll() and form.pending["third_person_key"] == "K"
-assert shown["third_person_key"] == "K" and change.SelectedKey.Key.KeyName == "None"
-# Nothing is read while the button still waits for a key.
-change.selecting = True
-change.SelectedKey.Key.KeyName = "J"
-assert form.selecting() and not form.poll() and form.pending["third_person_key"] == "K"
-assert change.SelectedKey.Key.KeyName == "J"
-change.selecting = False
-assert not form.selecting() and not form.poll() and form.pending["third_person_key"] == "J"
-# A second click on the button cancels, like Escape: the key stays and no failure is reported.
-change.SelectedKey.Key.KeyName = "LeftMouseButton"
-assert not form.poll() and form.pending["third_person_key"] == "J" and form.notice != "failed"
-assert shown["third_person_key"] == "J" and change.SelectedKey.Key.KeyName == "None"
-# A refused key keeps the previous one, says so, and frees the button.
-change.SelectedKey.Key.KeyName = "Tilde"
-assert not form.poll() and form.pending["third_person_key"] == "J" and form.notice == "failed"
-assert shown["third_person_key"] == "J" and change.SelectedKey.Key.KeyName == "None"
 widgets["setting:custom_fov"].checked = True
 assert not form.poll() and widgets["setting:fov"].enabled is True
 assert widgets["row:fov"].opacity == 1.0 and widgets["description:fov"].opacity == 1.0
@@ -141,6 +163,50 @@ widgets["options"].checked = True
 form.poll()
 widgets["language:FR"].checked = True
 assert not form.poll() and model.language == "FR"
+
+deferred = [True]
+camera_ready = [True]
+
+
+def set_shoulder(left):
+    camera_settings.set_shoulder_left(left)
+    return True
+
+
+def set_orbit(enabled):
+    if not deferred[0]:
+        camera_settings.set_orbit(enabled)
+    return True
+
+
+camera.set_shoulder, camera.set_orbit = set_shoulder, set_orbit
+camera.ready = lambda: camera_ready[0]
+camera_settings.shoulder_left.mod.is_enabled = True
+camera_settings.third_person.value = True
+camera_settings.set_shoulder_left(True)
+camera_settings.set_orbit(True)
+form.sync(widgets)
+widgets["restore"].checked = True
+assert not form.poll() and form.notice == "ready" and model.transaction.pending
+assert camera_settings.orbit.value is True and camera_settings.shoulder_left.value is True
+camera_settings.set_orbit(False)
+assert not form.poll() and form.notice == "restored" and not model.transaction.pending
+assert (not camera_settings.third_person.value and not camera_settings.shoulder_left.value
+        and not camera_settings.orbit.value and model.can_undo)
+widgets["undo"].checked = True
+camera_ready[0] = False
+assert not form.poll() and form.notice == "ready" and model.transaction.pending
+widgets["close"].checked = True
+assert not form.poll() and model.transaction.pending
+assert not form.poll() and form.notice == "ready" and model.transaction.pending
+camera_ready[0] = True
+assert not form.poll() and form.notice == "ready" and model.transaction.pending
+camera_settings.set_orbit(True)
+assert not form.poll() and form.notice == "undone" and not model.transaction.pending
+assert (camera_settings.third_person.value and camera_settings.shoulder_left.value
+        and camera_settings.orbit.value and not model.can_undo)
+deferred[0] = False
+
 widgets["restore"].checked = True
 assert not form.poll() and settings.dash.value is True and model.can_undo
 widgets["undo"].checked = True

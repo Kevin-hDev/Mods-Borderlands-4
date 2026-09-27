@@ -3,6 +3,7 @@
 import ctypes
 import hashlib
 import hmac
+import math
 import os
 import pathlib
 import pkgutil
@@ -10,15 +11,17 @@ import re
 import secrets
 from typing import Any, Callable
 
-from .constants import THIRD_PERSON_RIGHT, THIRD_PERSON_UP
+from .constants import THIRD_PERSON_UP
+from .generated_limits import SHOULDER_MAX_OFFSET
 
-ABI_VERSION = 4
+ABI_VERSION = 5
 UPDATE_SLOT = 264
 EXPECTED_UPDATE_RVA = 0x3CD4832
 MAX_LIBRARY_BYTES = 2_000_000
 _FILE_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,80}\.dll$")
-LIBRARY_NAME = "apex_camera_view_v4.dll"
-HASH_NAME = "apex_camera_view_v4.sha256"
+MAX_RIGHT = SHOULDER_MAX_OFFSET
+LIBRARY_NAME = "apex_camera_view_v5.dll"
+HASH_NAME = "apex_camera_view_v5.sha256"
 
 
 class Config(ctypes.Structure):
@@ -35,9 +38,12 @@ class Stats(ctypes.Structure):
     _fields_ += [(name, ctypes.c_uint32) for name in ("active", "slot_index", "suspended", "reserved")]
 
 
-def make_config() -> Config:
+def make_config(right: float) -> Config:
+    if (isinstance(right, bool) or not isinstance(right, (int, float))
+            or not math.isfinite(right) or abs(right) > MAX_RIGHT):
+        raise ValueError("invalid shoulder offset")
     return Config(ABI_VERSION, 0, UPDATE_SLOT, 0, EXPECTED_UPDATE_RVA,
-                  THIRD_PERSON_RIGHT, THIRD_PERSON_UP)
+                  float(right), THIRD_PERSON_UP)
 
 
 def install_library(payload: bytes, folder: pathlib.Path, name: str, expected_sha256: str) -> pathlib.Path:
@@ -62,9 +68,10 @@ def install_library(payload: bytes, folder: pathlib.Path, name: str, expected_sh
 
 
 def load_packaged_library(folder: pathlib.Path, get_data: Callable | None = None,
-                          loader: Callable | None = None) -> Any:
+                          loader: Callable | None = None, *,
+                          library_name: str = LIBRARY_NAME, hash_name: str = HASH_NAME) -> Any:
     read = get_data or (lambda name: pkgutil.get_data(__package__, f"assets/{name}"))
-    payload, raw_hash = read(LIBRARY_NAME), read(HASH_NAME)
+    payload, raw_hash = read(library_name), read(hash_name)
     if payload is None or raw_hash is None:
         raise RuntimeError("native camera asset missing")
     try:
@@ -73,7 +80,7 @@ def load_packaged_library(folder: pathlib.Path, get_data: Callable | None = None
         raise ValueError("invalid native camera hash") from error
     if not re.fullmatch(r"[0-9a-fA-F]{64}", expected):
         raise ValueError("invalid native camera hash")
-    path = install_library(payload, pathlib.Path(folder), LIBRARY_NAME, expected)
+    path = install_library(payload, pathlib.Path(folder), library_name, expected)
     return (loader or (lambda item: ctypes.CDLL(str(item))))(path)
 
 
@@ -85,14 +92,29 @@ class Bridge:
         library.view_stop.argtypes, library.view_stop.restype = [], ctypes.c_int
         library.view_set_suspended.argtypes = [ctypes.c_uint32]
         library.view_set_suspended.restype = ctypes.c_int
+        library.view_set_right.argtypes = [ctypes.c_double]
+        library.view_set_right.restype = ctypes.c_bool
         library.view_stats.argtypes = [ctypes.POINTER(Stats)]
         library.view_stats.restype = ctypes.c_int
 
-    def start(self, manager: Any) -> None:
-        config = make_config()
-        status = self.library.view_start(int(manager._get_address()), ctypes.byref(config))
+    def start(self, manager: Any, right: float) -> bool:
+        try:
+            address = int(manager._get_address())
+            config = make_config(right)
+        except (AttributeError, TypeError, ValueError, OverflowError):
+            return False
+        if address <= 0:
+            return False
+        status = self.library.view_start(address, ctypes.byref(config))
         if status:
             raise RuntimeError(f"native camera start refused ({status})")
+        return True
+
+    def set_right(self, right: float) -> bool:
+        if (isinstance(right, bool) or not isinstance(right, (int, float))
+                or not math.isfinite(right) or abs(right) > MAX_RIGHT):
+            return False
+        return bool(self.library.view_set_right(float(right)))
 
     def stop(self) -> None:
         status = self.library.view_stop()

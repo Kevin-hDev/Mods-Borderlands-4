@@ -20,6 +20,8 @@ class Runtime:
     def __init__(self):
         self.calls = []
         self.refuse_stop = False
+        self.active = "third_person_fov"
+        self.accept_menu = True
 
     def register(self, *args):
         self.calls.append(("register", *args))
@@ -36,6 +38,37 @@ class Runtime:
         settings.set_third_person(not settings.third_person_enabled())
         return True
 
+    def toggle_shoulder(self, owner):
+        self.calls.append(("shoulder", owner))
+        if owner != self.active:
+            return False
+        settings.set_shoulder_left(not settings.shoulder_left_enabled())
+        return True
+
+    def toggle_orbit(self, owner):
+        self.calls.append(("orbit", owner))
+        if owner != self.active:
+            return False
+        settings.set_orbit(not settings.orbit_enabled())
+        return True
+
+    def set_shoulder(self, owner, left):
+        self.calls.append(("shoulder_menu", owner, left))
+        if owner != self.active or not self.accept_menu:
+            return False
+        settings.set_shoulder_left(left)
+        return True
+
+    def set_orbit(self, owner, enabled):
+        self.calls.append(("orbit_menu", owner, enabled))
+        if owner != self.active or not self.accept_menu:
+            return False
+        settings.set_orbit(enabled)
+        return True
+
+    def camera_ready(self, owner):
+        return owner == self.active
+
     def unregister(self, owner):
         self.calls.append(("unregister", owner))
         if self.refuse_stop:
@@ -49,12 +82,33 @@ state["pc"] = object()
 camera.on_frame(42)
 settings.third_person.mod = sdk_stubs.FakeMod(state)
 toggle = camera.toggle_third_person()
+settings.shoulder_left.mod = sdk_stubs.FakeMod(state)
+settings.orbit.mod = sdk_stubs.FakeMod(state)
+shoulder = camera.toggle_shoulder()
+orbit = camera.toggle_orbit()
 
 ok = runtime.calls[0][0:2] == ("register", "third_person_fov")
 ok = ok and runtime.calls[0][2] == 150
 ok = ok and runtime.calls[1][0:3] == ("prepare", "third_person_fov", False)
 ok = ok and runtime.calls[2] == ("tick", state["pc"], 42)
 ok = ok and toggle is True and settings.third_person.value is True
+ok = ok and shoulder is True and settings.shoulder_left.value is True
+ok = ok and orbit is True and settings.orbit.value is True
+state["mods"][0].is_enabled = True
+settings.shoulder_left.mod = state["mods"][0]
+settings.orbit.mod = state["mods"][0]
+settings.shoulder_left.value = False
+settings.orbit.value = False
+ok = ok and runtime.calls[-2:] == [("shoulder_menu", "third_person_fov", False),
+                                   ("orbit_menu", "third_person_fov", False)]
+ok = ok and settings.shoulder_left.value is False and settings.orbit.value is False
+runtime.accept_menu = False
+settings.shoulder_left.value = True
+settings.orbit.value = True
+ok = ok and settings.shoulder_left.value is False and settings.orbit.value is False
+runtime.active = "apex_movement"
+ok = ok and not camera.toggle_shoulder() and not camera.toggle_orbit()
+ok = ok and settings.shoulder_left.value is False and settings.orbit.value is False
 
 arbiter = Arbiter()
 for owner, priority in (("omni_sprint", 100), ("apex_movement", 200),

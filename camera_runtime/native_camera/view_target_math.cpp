@@ -5,7 +5,7 @@
 
 namespace apex_view {
 bool valid_config(const Config& config) {
-    return config.abi == abi_version
+    return config.abi == VIEW_TARGET_ABI
         && config.duration_ms <= max_duration_ms
         && config.slot_index == update_slot
         && config.expected_rva > 0

@@ -5,8 +5,20 @@ from .panel_common_fr import TEXT as COMMON
 TEXT = {
     **COMMON,
     "options": "OPTIONS", "options_desc": "Caméra et langue du menu.", "options_desc_menu": "Langue du menu.",
-    "camera": "CAMÉRA", "camera_desc": "Vue et champ de vision.",
+    "camera": "CAMÉRA", "camera_desc": "Vue, champ de vision et loot.",
     "change_key": "MODIFIER", "press_key": "APPUIE SUR UNE TOUCHE", "no_key": "AUCUNE",
+    "commands": "COMMANDES", "keyboard": "CLAVIER / SOURIS", "controller": "MANETTE",
+    "command_third_person": "TROISIÈME PERSONNE", "command_third_person_desc": "Active ou coupe la vue à la troisième personne.",
+    "command_shoulder": "CHANGER D'ÉPAULE", "command_shoulder_desc": "Place la caméra sur l'autre épaule.",
+    # One name for the orbit camera, the switch's: « Orbite », « Orbit » and « caméra libre » read as three cameras
+    # (review, 2026-09-26).
+    "command_orbit": "CAMÉRA ORBITALE", "command_orbit_desc": "Active ou coupe la caméra orbitale.",
+    "command_zoom_in": "RAPPROCHER LA CAMÉRA", "command_zoom_in_desc": "Un cran par appui, en caméra orbitale.",
+    "command_zoom_out": "ÉLOIGNER LA CAMÉRA", "command_zoom_out_desc": "Un cran par appui, en caméra orbitale.",
+    "command_tools": "OPTIONS DES COMMANDES", "command_tools_desc": "Icônes de manette et touches caméra d'origine.",
+    "commands_reset": "TOUCHES D'ORIGINE", "controller_icons": "ICÔNES DE MANETTE",
+    "camera_draft_discarded": "Mod caméra changé : les réglages caméra non enregistrés ont été annulés.",
+    "right": "DROITE", "left": "GAUCHE",
     "language": "LANGUE", "menu_language": "LANGUE DU MENU", "language_name": "FRANÇAIS",
     "movement": "DÉPLACEMENT", "auto_sprint": "COURSE AUTOMATIQUE", "slides": "GLISSADES",
     "axle_slide": "GLISSADE AXLE", "dash": "DASH", "glide": "VOL PLANÉ",
@@ -15,7 +27,7 @@ TEXT = {
 }
 
 GROUPS = {
-    "movement": "Vitesse de marche et de course.",
+    "movement": "Vitesse de marche et de course, et la touche de marche lente.",
     "auto_sprint": "Cours automatiquement quand le stick est poussé à fond.",
     "slides": "Départ, distance et vitesse des glissades.",
     "axle_slide": "Dirige et accélère les glissades à la manière d'Axle.",
@@ -28,14 +40,22 @@ GROUPS = {
 }
 
 OPTIONS = {
+    "extended_loot": ("Portée du loot augmentée", "Ramasse le loot et ouvre les coffres de plus loin."),
+    "loot_reach": ("Portée du loot", "1 : portée du jeu ; 2 : deux fois plus loin."),
     "third_person": ("Troisième personne", "Garde la caméra derrière le personnage à pied."),
+    "shoulder_left": ("Épaule", "Place la caméra à gauche ou à droite du personnage."),
+    "orbit": ("Caméra orbitale", "La caméra tourne librement autour du personnage."),
     "custom_fov": ("FOV personnalisé", "Utilise le FOV ci-dessous à la place de celui du jeu."),
     "fov": ("FOV", "Champ de vision, jusqu'à 150."),
     "walk_speed": ("Vitesse de marche", "Valeur du jeu : 540."),
     "sprint_speed": ("Vitesse de course", "Valeur du jeu : 828."),
     "auto_sprint": ("Activé", "Courir en poussant le stick à fond."),
-    "walk": ("Touche de marche", "Maintiens la touche pour marcher au lieu de courir."),
-    "walk_key_speed": ("Vitesse avec la touche", "Jusqu'à 540, la marche du jeu."),
+    "walk": ("Marche lente",
+             "Maintiens la touche pour marcher lentement. Avec la bascule, un seul appui suffit."),
+    "walk_toggle": ("Marche lente en bascule",
+                    "NON : maintiens la touche pour marcher lentement. OUI : un appui pour marcher lentement, "
+                    "un autre pour arrêter."),
+    "walk_key_speed": ("Vitesse de la marche lente", "Jusqu'à 540, la marche du jeu."),
     "slides": ("Activé", "Des glissades plus rapides et plus longues."),
     "momentum_slides": ("Suivre l'élan", "La glissade suit ton déplacement au lieu du viseur."),
     "slide_speed": ("Vitesse de départ", "Vitesse au début d'une glissade."),

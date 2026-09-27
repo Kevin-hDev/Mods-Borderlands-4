@@ -23,6 +23,9 @@ state = sdk_stubs.install()
 
 from omni_sprint import camera, settings  # noqa: E402
 
+# Isolate FOV logging; loot behavior is covered by the shared runtime tests.
+settings.loot.enabled.value = False
+
 MS = 1_000_000
 now = 1_000 * MS
 

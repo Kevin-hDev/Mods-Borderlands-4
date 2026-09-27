@@ -11,7 +11,8 @@ sprint = NestedOption(
     display_name="Omni Sprint", description="The game's sprint, in every direction.",
 )
 camera = NestedOption(
-    "camera_menu", [settings.third_person, settings.third_person_key, settings.custom_fov, settings.fov],
+    "camera_menu", [settings.third_person, settings.shoulder_left, settings.orbit,
+                    settings.custom_fov, settings.fov, *settings.loot.options],
     display_name="Camera", description=panel_camera_text.EN["camera_desc"],
 )
 

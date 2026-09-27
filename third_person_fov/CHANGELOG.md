@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.1 - 2026-09-27
+
+- A settings window, in English and French, with a Camera page and a Commands page.
+- Shoulder switching: the camera moves to the left or right shoulder. Key 6 by default.
+- Orbit camera: the camera turns freely around the character. Key 7 by default. Two more keys, none set by default,
+  move it closer or farther away.
+- Commands page: every camera key, for keyboard and mouse and for controller, with PlayStation or Xbox icons.
+- Loot reach: pick up loot and open containers from farther away, from 1× to 3×, 2× by default.
+- Fixed: in third person, you had to aim next to an item to pick it up.
+- Fixed: when downed, the view switched to an offset first-person view; third person now stays in place.
+
 ## 1.0.0 - 2026-09-25
 
 - Initial public source release.

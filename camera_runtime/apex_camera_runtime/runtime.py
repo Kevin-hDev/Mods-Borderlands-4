@@ -13,6 +13,7 @@ class CameraRuntime:
         self.arbiter = Arbiter()
         self.fov = fov_engine
         self.third_person = third_person
+        self.loot = None
         self._active_client: Client | None = None
         self._next_fov_ns = 0
         self._setup_owner: str | None = None
@@ -71,6 +72,88 @@ class CameraRuntime:
             return False
         return True
 
+    def camera_ready(self, owner: str) -> bool:
+        client = self.arbiter.active()
+        if (client is None or client.owner != owner or self.third_person is None
+                or not client.settings.third_person_enabled()):
+            return False
+        return bool(self.third_person.orbit_available())
+
+    def toggle_shoulder(self, owner: str) -> bool:
+        client = self.arbiter.active()
+        if client is None or client.owner != owner:
+            return False
+        try:
+            left = client.settings.shoulder_left()
+        except Exception:
+            return False
+        return self.set_shoulder(owner, not left)
+
+    def set_shoulder(self, owner: str, left: bool) -> bool:
+        client = self.arbiter.active()
+        if (type(left) is not bool or client is None or client.owner != owner
+                or self.third_person is None):
+            return False
+        try:
+            if (not client.settings.third_person_enabled()
+                    or not self.third_person.shoulder_available()):
+                return False
+            return bool(self.third_person.set_shoulder(client.settings, left))
+        except Exception:
+            client.settings.note("shoulder shortcut: setting could not be saved")
+            return False
+
+    def toggle_orbit(self, owner: str) -> bool:
+        client = self.arbiter.active()
+        if client is None or client.owner != owner or self.third_person is None:
+            return False
+        try:
+            if (not client.settings.third_person_enabled()
+                    or not self.third_person.orbit_available()):
+                return False
+            return bool(self.third_person.toggle_orbit(client.settings, self.third_person.clock()))
+        except Exception:
+            client.settings.note("orbit shortcut: setting could not be saved")
+            return False
+
+    def set_orbit(self, owner: str, enabled: bool) -> bool:
+        client = self.arbiter.active()
+        if (type(enabled) is not bool or client is None or client.owner != owner
+                or self.third_person is None):
+            return False
+        try:
+            if (not client.settings.third_person_enabled()
+                    or not self.third_person.orbit_available()):
+                return False
+            return bool(self.third_person.set_orbit(
+                client.settings, enabled, self.third_person.clock()))
+        except Exception:
+            client.settings.note("orbit setting: camera change was refused")
+            return False
+
+    def adjust_orbit_zoom(self, owner: str, direction: int) -> bool:
+        client = self.arbiter.active()
+        if (client is None or client.owner != owner or self.third_person is None
+                or not client.settings.third_person_enabled()
+                or self.third_person.zoom.settings is not client.settings):
+            return False
+        try:
+            return self.third_person.zoom.change(client.settings, direction)
+        except Exception:
+            client.settings.note("Orbit Camera zoom unavailable. Please retry.")
+            return False
+
+    def cancel_orbit(self, owner: str) -> bool:
+        client = self.arbiter.active()
+        if client is None or client.owner != owner or self.third_person is None:
+            return False
+        try:
+            return bool(self.third_person.cancel_orbit(
+                client.settings, self.third_person.clock()))
+        except Exception:
+            client.settings.note("orbit setting: cancellation was refused")
+            return False
+
     def tick(self, context: Any, now_ns: int) -> None:
         client = self.arbiter.active()
         if client is not self._active_client:
@@ -82,6 +165,8 @@ class CameraRuntime:
                 self._next_fov_ns = 0
         if client is None:
             return
+        if self.loot is not None:
+            self.loot.sync(client.owner, context, client.settings, now_ns)
         if self.third_person is not None:
             self.third_person.sync(client.owner, context, client.settings, now_ns)
         player = context
@@ -96,6 +181,11 @@ class CameraRuntime:
 
     def _stop_active(self) -> None:
         errors = []
+        if self.loot is not None:
+            try:
+                self.loot.stop()
+            except Exception as error:
+                errors.append(error)
         try:
             self.fov.stop()
         except Exception as error:

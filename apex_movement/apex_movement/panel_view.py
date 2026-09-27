@@ -3,7 +3,8 @@
 import unrealsdk
 
 from . import panel_buttons as b, panel_fonts as fonts, panel_header as h, panel_shortcut as sc
-from . import panel_options as o, panel_pages as p, panel_text as tx, panel_theme as t, panel_widgets as w, report
+from . import panel_options as o, panel_pages as p
+from . import panel_text as tx, panel_theme as t, panel_widgets as w, report
 
 
 def _sidebar(owner, widgets, template):
@@ -60,6 +61,9 @@ def _window(root, world, model, widgets, template):
         # A shortcut sits on its switch's row: the walk key on the auto sprint's page (Kevin, 2026-09-25).
         sc.rows(p.card(body, widgets, key), group.children, widgets, template)
         switcher.AddChild(page)
+    if "commands" in model.pages:
+        from . import panel_camera_commands as commands
+        switcher.AddChild(commands.page(switcher, model, widgets, template))
     switcher.AddChild(o.options_page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))

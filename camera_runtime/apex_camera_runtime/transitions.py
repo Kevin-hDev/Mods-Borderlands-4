@@ -1,4 +1,6 @@
-"""Keep only the local player's on-foot camera in ThirdPerson."""
+"""Keep only the local player's selected on-foot camera mode."""
+
+from .constants import FFYL_MODE, ORBIT_MODE, THIRD_PERSON_MODE
 
 REQUESTS = {
     "/Script/OakGame.OakPlayerController:CameraTransition":
@@ -7,9 +9,11 @@ REQUESTS = {
         ("NewMode", "Transition", "BlendTimeOverride", "bTeleport", "bForceResetMode"),
     "/Script/Engine.PlayerController:ClientSetCameraMode": ("NewCamMode",),
 }
-THIRD_PERSON = "ThirdPerson"
+THIRD_PERSON = THIRD_PERSON_MODE
 VEHICLE_MODE = "ThirdPersonVehicle"
-ON_FOOT_MODES = frozenset(("Default", "Slide"))
+# FFYL accepts the selected third-person camera while downed; verified in game on 2026-09-27.
+ON_FOOT_MODES = frozenset(("Default", "Slide", FFYL_MODE))
+RECOVERABLE_MODES = ON_FOOT_MODES | frozenset((ORBIT_MODE, THIRD_PERSON_MODE))
 
 
 def _same_object(first, second):
@@ -22,12 +26,15 @@ def _same_object(first, second):
 
 
 class TransitionHooks:
-    def __init__(self, hooks, identifier, controller, log, on_effective) -> None:
+    def __init__(self, hooks, identifier, controller, log, on_effective,
+                 desired_mode=lambda: THIRD_PERSON, request_mode=None) -> None:
         self.hooks = hooks
         self.identifier = identifier
         self.controller = controller
         self.log = log
         self.on_effective = on_effective
+        self.desired_mode = desired_mode
+        self.request_mode = request_mode or self._request_direct
         self.paths = tuple(REQUESTS)
         self._first_person_allowed = False
 
@@ -43,13 +50,19 @@ class TransitionHooks:
         except Exception:
             return False
 
+    @staticmethod
+    def _request_direct(mode, call):
+        call(mode)
+        return True
+
     def _callback(self, names):
         def on_request(obj, args, _ret, func):
             if not _same_object(obj, self.controller):
                 return None
             values = [getattr(args, name) for name in names]
             requested = str(values[0])
-            effective = (THIRD_PERSON if requested in ON_FOOT_MODES
+            desired = self.desired_mode()
+            effective = (desired if requested in ON_FOOT_MODES
                          and not self._wants_first_person()
                          else requested)
             values[0] = effective
@@ -60,7 +73,12 @@ class TransitionHooks:
                 return self.hooks.Block
             if requested == effective:
                 return None
-            func(*values)
+            if effective == ORBIT_MODE:
+                call = (self.controller.ClientSetCameraMode
+                        if names[0] != "NewCamMode" else func)
+                self.request_mode(effective, call)
+            else:
+                func(*values)
             return self.hooks.Block
         return on_request
 
