@@ -102,6 +102,11 @@ def is_held() -> bool:
     return bool(_ground_held) or any(not press["combo"] for press in _held.values())
 
 
+def ground_keys() -> frozenset[str]:
+    """Ground-pressed crouch keys still down, exposed read-only to the native slam guard."""
+    return frozenset(_ground_held)
+
+
 def due_requests(now_ns: int) -> list[str]:
     due = [kind for kind, at_ns in _requests if at_ns <= now_ns]
     _requests[:] = [(kind, at_ns) for kind, at_ns in _requests if at_ns > now_ns]

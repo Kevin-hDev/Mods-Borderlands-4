@@ -14,7 +14,7 @@ have no way to tell why. Turned off, the key goes back to the game and the game'
 
 from typing import Any
 
-from . import air_actions, air_bindings, air_keys, game, report, speed_order
+from . import air_actions, air_bindings, air_keys, game, report, slam_hold, speed_order
 
 # Once a second, not every frame: the list holds every mapping of the player. Read only at a character change, it
 # missed the gamepad's crouch key at a vehicle exit, and that key stayed unbound until the next level (2026-09-18).
@@ -28,6 +28,7 @@ _next_keys_ns = 0
 def reset() -> None:
     global _was_in_air, _air_speed, _next_keys_ns
     # So that the next frame reads the key list again: the new character may come with other keys.
+    slam_hold.release()
     air_bindings.unbind()
     air_keys.reset()
     air_actions.forget()
@@ -66,6 +67,8 @@ def _landed(character: Any, now_ns: int) -> None:
 
 def update(character: Any, now_ns: int) -> None:
     global _was_in_air, _air_speed
+    # The game rebuilds bShouldBeIgnored, so a ground-held key's old slam action is muted again every frame.
+    slam_hold.update(air_keys.ground_keys())
     _follow_keys(now_ns)
     for kind in air_keys.due_requests(now_ns):
         if kind == "dash":

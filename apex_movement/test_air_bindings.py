@@ -46,7 +46,11 @@ game.refresh(0)
 crouch = state["keybinds"][pad]
 
 check("a ground press reaches the game", crouch(pressed) is None)
+pad_hold = next(mapping for mapping in state["mappings"]
+                if mapping.Action.Name == "Action_Crouch_Hold" and mapping.Key.KeyName == pad)
+check("a ground press mutes only the old native hold action before reaching the game", pad_hold.bShouldBeIgnored)
 crouch(released)
+check("the ground release restores the native hold action", not pad_hold.bShouldBeIgnored)
 player.CharacterMovement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
 check("an air press is blocked", crouch(pressed) is Block)
 player.CharacterMovement.MovementMode = sdk_stubs.Mode("MOVE_Walking")

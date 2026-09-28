@@ -123,7 +123,8 @@ class FakeKeybind:
 
 
 def mapping(action: str, key: str) -> Any:
-    return types.SimpleNamespace(Action=types.SimpleNamespace(Name=action), Key=types.SimpleNamespace(KeyName=key))
+    return types.SimpleNamespace(Action=types.SimpleNamespace(Name=action), Key=types.SimpleNamespace(KeyName=key),
+                                 bShouldBeIgnored=False)
 
 
 class FakeJumpGoal:

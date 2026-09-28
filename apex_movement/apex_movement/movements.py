@@ -72,7 +72,7 @@ MOVEMENTS = (
     # on a held crouch; two switches would allow a state where the block stays on while the player asked for neither,
     # losing them the held-crouch slam with no way to tell why (Kevin, 2026-09-18). A comment rather than a field: no
     # test can tell one movement from two, and a field nothing read looked like a checked rule (review, 2026-09-19).
-    Movement("Ground slam and landing slide", ("air_crouch", "air_actions", "air_bindings", "air_keys"),
+    Movement("Ground slam and landing slide", ("air_crouch", "air_actions", "air_bindings", "air_keys", "slam_hold"),
              ("air_crouch_menu",), "apex_ground_slam", "Apex Ground Slam"),
     Movement("Air / tap strafe", ("air_strafe",), ("air_strafe_menu",), "apex_air_strafe", "Apex Air Strafe"),
     # jump_report writes the jumps this movement shapes: under its switch it runs in one installed file, not in each.

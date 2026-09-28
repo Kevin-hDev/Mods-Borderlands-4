@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.7 - 2026-09-28
+
+- Fixed: holding crouch while sliding off a high ledge could still trigger the game's old held-crouch ground slam.
+  Ground slam continues to require jump and crouch together.
+
 ## 1.1.6 - 2026-09-27
 
 - Shoulder switching: the third-person camera moves to the left or right shoulder. Key 6 by default.

@@ -52,6 +52,11 @@ check("a file may carry several movements", pack.carries("Slides") and pack.carr
 check("and shows all their lines", [group.identifier for group in menu.carried()]
       == ["slides_menu", "axle_slide_menu", "dash_menu"])
 
+pack.CARRIES = ("Ground slam and landing slide",)
+slam_owner = movements.owner("slam_hold")
+check("the separate ground slam file owns its native hold guard",
+      slam_owner is not None and slam_owner.name == "Ground slam and landing slide")
+
 pack.CARRIES = ("Typo In A Name",)
 check("a name that matches no movement carries nothing rather than everything", not pack.carries("Slides"))
 check("and shows no movement line", [group.identifier for group in menu.carried()] == [])

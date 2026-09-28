@@ -12,7 +12,7 @@ from typing import Any
 from mods_base import keybind
 from unrealsdk.hooks import Block
 
-from . import air_keys, game, report
+from . import air_keys, game, report, slam_hold
 
 CROUCH_ACTIONS = ("Action_Crouch_Hold", "Action_Crouch", "Action_CrouchOrDash")
 JUMP_ACTIONS = ("Action_Jump_HoldToGlide",)
@@ -39,7 +39,10 @@ def _on_crouch(key: str) -> Any:
                 return None
             in_air = game.is_in_air(character.CharacterMovement)
             name = getattr(event, "name", str(event))
-            return Block if air_keys.crouch_event(key, name, time.perf_counter_ns(), in_air) else None
+            blocked = air_keys.crouch_event(key, name, time.perf_counter_ns(), in_air)
+            # A ground press must reach native crouch/slide, but its separate hold action must be muted before it does.
+            slam_hold.update(air_keys.ground_keys())
+            return Block if blocked else None
         except Exception as exc:
             # A press wrongly blocked makes the game unplayable; a press wrongly passed only does what the game does.
             report.error_once("air_bindings:crouch", f"crouch key passed to the game after an error: {exc!r}")

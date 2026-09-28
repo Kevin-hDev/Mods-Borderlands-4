@@ -26,6 +26,8 @@ pad = "Gamepad_FaceButton_Right"
 
 check("a crouch on the ground passes", not air_keys.crouch_event(pad, "IE_Pressed", 0, False))
 check("a crouch pressed on the ground counts as held, for a slide jump's landing", air_keys.is_held())
+ground_keys = getattr(air_keys, "ground_keys", lambda: frozenset())
+check("the ground-held key is exposed so only its native hold action can be muted", ground_keys() == {pad})
 check("its repeats in the air still pass", not air_keys.crouch_event(pad, "IE_Repeat", 30 * MS, True))
 check("its release passes too", not air_keys.crouch_event(pad, "IE_Released", 50 * MS, False))
 check("and ends the hold", not air_keys.is_held())
