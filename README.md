@@ -9,6 +9,7 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 | [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns | 1.0.2 |
 | [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, FOV and loot reach | 1.0.4 |
 | [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, first-person aiming, adjustable FOV and loot reach | 1.0.2 |
+| [Apex Heirloom](apex_heirloom/) | An Apex Legends style heirloom: the Jakobs knife or the axe in your hand when your weapon is put away, and a key to put it away | 1.0.1 |
 
 [camera_runtime](camera_runtime/) is not a mod of its own: it is the camera, field of view and loot reach that Apex
 Movement, Omni Sprint and Third Person & FOV carry inside their `.sdkmod`, with the C++ source of its small native
@@ -41,7 +42,7 @@ Run each test script separately. A failing test exits with a non-zero code; opti
 
 The original code in this repository is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Kevin-hDev.
 
-The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Game assets and the Borderlands 4 SDK are not relicensed by this repository.
+The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Game assets and the Borderlands 4 SDK are not relicensed by this repository. Apex Heirloom's models and animations are built from the game's own files: they are not in this repository, only in the mod's Nexus archive.
 
 ## Credits
 

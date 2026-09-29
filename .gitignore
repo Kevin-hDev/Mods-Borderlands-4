@@ -3,3 +3,7 @@ __pycache__/
 *.sdkmod
 AGENTS.md
 CLAUDE.md
+# Game containers built from the game's own files (Apex Heirloom's knife): shipped on Nexus only, never here.
+*.pak
+*.ucas
+*.utoc
