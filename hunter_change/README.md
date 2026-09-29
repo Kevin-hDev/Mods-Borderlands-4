@@ -17,6 +17,9 @@ two pages.
   skill tree in each game. The first time you become a hunter in a game, their skill tree starts over with all your
   points to spend. The next times, the points you spent are still there.
 
+The **ENABLED** button, at the bottom left of the window, turns the chosen look on or off: off, your hunter gets their
+own look back. The HUNTER page works either way.
+
 ## Changing hunter
 
 **From inside a game.** Open HUNTER and click a hunter: a message says what changes. Click **RETURN TO MAIN MENU**.
@@ -58,9 +61,8 @@ no real Steam ID. Each test prints a `RESULTAT:` line and exits with a non-zero 
 
 ## Known limits
 
-- Steam version only: the saves of other stores are not read.
+- Tested on the Steam version only. The HUNTER page reads Steam saves; the Epic Games version has not been tried.
 - Not tested in co-op, on Linux or on Steam Deck.
-- Changing hunter at the main menu has not been tried in game yet; changing from inside a game has.
 - Wait the 5 seconds at the main menu before clicking your game: a game selected too soon may keep its old hunter.
   Change again if it does.
 - A game update may change the save format: the mod then refuses to change a save it does not fully understand, and
