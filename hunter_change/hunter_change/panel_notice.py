@@ -1,0 +1,13 @@
+"""The sentence at the top of the APPEARANCE page, above the hunter cards, in an orange slanted frame as sketch B2
+drew it (Kevin, 2026-09-28): a look applies at once, for this game. Apex Heirloom's own frame, copied by
+outils/sync_menu_ui.py; panel_hunters.py writes it, in capitals as the sketch did.
+"""
+
+from . import panel_text as tx, panel_theme as t, panel_widgets as w
+
+
+def notice(rows, widgets, key):
+    frame, fill = w.framed(rows, t.COLOR_CARD, t.STROKE, w.pad(t.SPACE_2, t.SPACE_4), frame=t.COLOR_SPARK)
+    widgets[f"notice:{key}"] = tx.text(fill, "", "status", wrap=True)
+    fill.SetContent(widgets[f"notice:{key}"])
+    w.column(rows, w.slant(frame), padding=w.pad(t.SPACE_3, 0, t.SPACE_1, t.SPACE_1), halign="Left")
