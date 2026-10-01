@@ -3,6 +3,8 @@
 import math
 
 from . import control_actions, control_config, menu, panel_choices, settings
+from .command_actions import Actions
+from .command_keys import KEYS
 from .panel_preferences import LANGUAGES, language
 from .panel_preferences import CONTROLLER_ICONS, controller_icons
 from .panel_preferences import last_page
@@ -16,6 +18,7 @@ class Model:
         self.groups = tuple(menu.MENU)
         self.options = {option.identifier: option for option in settings.ALL}
         self._undo = ()
+        self.command_actions = Actions(KEYS, mod)
 
     @property
     def language(self):
@@ -105,6 +108,17 @@ class Model:
             return False
         self._undo = ()
         return True
+
+    def assign_command(self, action, device, key):
+        return self._command_saved(self.command_actions.assign(action, device, key))
+
+    def default_commands(self):
+        return self._command_saved(self.command_actions.defaults())
+
+    def _command_saved(self, success):
+        if success:
+            self._undo = ()
+        return success
 
     def toggle_enabled(self):
         previous = self.mod.is_enabled

@@ -12,10 +12,10 @@ runs, and only their hooks, keys and settings are given to the mod below.
 from mods_base import build_mod
 
 from . import family, frame, heirloom, heirloom_settings, holster_settings, keys, lifecycle, pack, panel_open
-from . import heirloom_choices
+from . import heirloom_choices, inspect_keys
 from . import panel_preferences, parts, restriction, settings
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "kevin-hDev"
 
 # Set here: heirloom_settings is read by heirloom, which it cannot import back.
@@ -27,7 +27,8 @@ for _skin in heirloom_settings.SKINS.values():
 
 # What each part brings to the mod, in the full mod's order: its hooks, its keys, and its options besides its settings.
 _BROUGHT = {
-    parts.HEIRLOOM: ([lifecycle.arms_frame], [], []),
+    parts.HEIRLOOM: ([lifecycle.arms_frame], [inspect_keys.keyboard_bind, inspect_keys.controller_bind],
+                     [inspect_keys.keyboard_key, inspect_keys.controller_key]),
     parts.HOLSTER: ([frame.tick, restriction.on_restriction], [keys.keyboard_bind, keys.controller_bind],
                     [keys.keyboard_key, keys.controller_key]),
 }
@@ -47,7 +48,7 @@ mod = build_mod(
     description=DESCRIPTIONS[pack.PARTS],
     hooks=[hook for part in parts.PARTS for hook in _BROUGHT[part][0]],
     keybinds=[bind for part in parts.PARTS for bind in _BROUGHT[part][1]],
-    # The window's language, icons and page are hidden options: the SDK menu lists the settings and both keys.
+    # The window's language, icons and page are hidden options: the SDK menu lists the settings and the keys.
     options=[*settings.ALL, *(option for part in parts.PARTS for option in _BROUGHT[part][2]),
              panel_preferences.language, panel_preferences.controller_icons, panel_preferences.last_page],
     on_enable=parts.mod_on,

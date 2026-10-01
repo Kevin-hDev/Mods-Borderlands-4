@@ -95,7 +95,8 @@ HEIRLOOMS = {'jakobs_knife': {'model': '/Game/ApexHeirloom/SM_ApexHeirloom_JakKn
                              'glow': None}],
                   'lists': {'default': 'apex',
                             'container': '000_HeirloomLists_999_P',
-                            'folders': {'apex': 'HeirApx', 'borderlands': 'HeirBrd'}}},
+                            'folders': {'apex': 'HeirApx', 'borderlands': 'HeirBrd'}},
+                  'inspect': None},
  'axe': {'model': '/Game/ApexHeirloom/SM_ApexHeirloom_AxePainted.SM_ApexHeirloom_AxePainted',
          'container': '000_ApexHeirloomAxe_999_P',
          'hold': {'size': 100.0, 'pitch': -26.27, 'yaw': -0.53, 'roll': -2.55, 'grip': [-0.22, -0.184, 8.252]},
@@ -200,4 +201,5 @@ HEIRLOOMS = {'jakobs_knife': {'model': '/Game/ApexHeirloom/SM_ApexHeirloom_JakKn
                     'glow': None}],
          'lists': {'default': 'apex',
                    'container': '000_HeirloomListsAxe_999_P',
-                   'folders': {'apex': 'AxeApex', 'borderlands': 'AxeBord'}}}}
+                   'folders': {'apex': 'AxeApex', 'borderlands': 'AxeBord'}},
+         'inspect': {'animation': 'AS_UA_Inspect', 'crouched': 'AS_UA_Inspect_Crouch', 'again_at': 0.2}}}

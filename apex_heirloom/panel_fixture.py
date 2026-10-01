@@ -5,12 +5,13 @@ from types import SimpleNamespace as NS
 import heirloom_stubs
 
 state = heirloom_stubs.install()
-# The game's console key, as Grapple's control_fixture.py gives it: a key the CONTROLS page must refuse.
+# The game's console key, as Grapple's control_fixture.py gives it: a key the COMMANDS page must refuse.
 state["classes"]["InputSettings"] = NS(ClassDefaultObject=NS(ConsoleKeys=[NS(KeyName="Tilde"), NS(KeyName="F10")]))
 
 import unrealsdk  # noqa: E402
 
-from apex_heirloom import menu, mod, panel_choices, panel_factory, panel_form, panel_model, panel_theme  # noqa: E402
+from apex_heirloom import control_config, menu, mod, panel_choices, panel_form, panel_model  # noqa: E402
+from apex_heirloom import panel_theme  # noqa: E402
 
 BUTTON_PARTS = ("", "_label", "_fill", "_frame", "_shadow")
 unrealsdk.find_enum = lambda name: NS(Visible="Visible", Collapsed="Collapsed", HitTestInvisible="HitTestInvisible",
@@ -82,16 +83,24 @@ class Widget:
 
 
 def names(model):
-    """Every widget name the view registers, derived the way panel_view builds them: one key selector, no chord, a
-    button per choice of a spinner or two arrows around its name, each row in a box of its own, the sentences at the
-    top of pages and the CONTROLS page's keys as one box."""
-    found = {"focus", "first", "pages", "status", "current", "settings_caption", "meta", "notice", "escape_hint", "tag",
-             "icons_label", "pad_summary", "pad_label", "pad_first", "pad_second", "pad_separator", "pad_second_box",
-             "first:icon", "first:key_label"}
-    buttons = ["EN", "FR", "close", "restore", "undo", "enabled", "reset", "icons:PS5", "icons:XSX"]
+    """Every widget name the view registers, derived the way panel_view builds them: a button per choice of a spinner
+    or two arrows around its name, each row in a box of its own, the sentences at the top of pages; on the COMMANDS
+    page a card per command, each row with its selector, its NONE and its value, then the icons and the reset."""
+    found = {"focus", "pages", "settings_caption", "meta", "notice", "escape_hint", "tag", "icons_label",
+             "commands_status"}
+    buttons = ["EN", "FR", "close", "restore", "undo", "enabled", "commands_reset", "icons:PS5", "icons:XSX"]
     buttons += [f"nav:{page}" for page in panel_theme.PAGES]
-    for page in panel_theme.PAGES:
+    for group in model.groups:
+        page = group.identifier.removesuffix("_menu")
         found.update((f"heading:{page}", f"group:{page}"))
+    for command in control_config.COMMANDS:
+        key = f"command_{command.name}"
+        found.update((f"heading:{key}", f"group:{key}", f"card:{key}"))
+        for device in ("keyboard", "controller"):
+            slot = f"{command.name}:{device}"
+            found.update((f"device:{slot}", f"command:{slot}", f"command:{slot}:icon", f"command:{slot}:key_label",
+                          f"value:{slot}", f"value:{slot}:icon"))
+            buttons.append(f"clear:{slot}")
     for key, option in model.options.items():
         found.update((f"label:{key}", f"description:{key}", f"row:{key}", f"block:{key}"))
         if type(option.default_value) is bool:
@@ -105,7 +114,6 @@ def names(model):
         else:
             found.update((f"setting:{key}", f"value:{key}", f"fill:{key}"))
     found.update(f"notice:{page}" for page in menu.NOTICES)
-    found.add("controls_keys")
     found.update(name + part for name in buttons for part in BUTTON_PARTS)
     return found
 
@@ -114,5 +122,5 @@ def create():
     model = panel_model.Model(mod)
     widgets = {name: Widget() for name in names(model)}
     refs = {name: lambda widget=widget: widget for name, widget in widgets.items()}
-    form = panel_form.PanelForm(refs, panel_factory.PanelBindings(), model)
+    form = panel_form.PanelForm(refs, model)
     return widgets, form

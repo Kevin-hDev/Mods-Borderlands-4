@@ -26,6 +26,9 @@ Why, 2026-09-26 (docs/mokup/menu_mods/decisions.md): a setting changed in the me
 `weapon_changed` is called at each one, before the draw starts, so that it plays with what the player set.
 Why, 2026-09-29 (Kevin's choice): the game's depth of field is off while the heirloom is shown, and back when it is
 hidden or the watch stops (apex_depth_of_field.py says why); set here, with the visibility it follows.
+Why, 2026-09-29 (cosmetics/heirloom/docs/heirloom.md, section 20): only drawing the weapon stops the heirloom's
+inspection before its end (Kevin); it stops at once as its draw does, as the weapon comes back and whenever the
+heirloom is hidden (apex_inspect.py). A key plays it only while the heirloom shows in the empty hand (in_empty_hand).
 """
 
 import time
@@ -59,6 +62,10 @@ LATE_S = 0.3
 class Draw(Protocol):
     def play(self, arms_animation: Any) -> None: ...
 
+    def cancel(self, arms_animation: Any) -> None: ...
+
+
+class Inspect(Protocol):
     def cancel(self, arms_animation: Any) -> None: ...
 
 
@@ -110,12 +117,13 @@ def show(component: Any, watch: Watch, why: str, say: Say) -> None:
 def follow(held: Callable[[], Any], owner: Any, say: Say, draw: Draw | None = None, put_away: PutAway | None = None,
            clock: Callable[[], float] = time.perf_counter, camera: Callable[[], Any] = lambda: None,
            played: Callable[[], bool] = lambda: True, gone: Callable[[], None] = lambda: None,
-           weapon_changed: Callable[[], None] = lambda: None) -> None:
+           weapon_changed: Callable[[], None] = lambda: None, inspect: Inspect | None = None) -> None:
     """Shows or hides what `held` gives now, at each weapon change of `owner`, as its hands climb, as `camera` (the
     player's camera manager) leaves his eyes and as the arms start or stop playing our animations (`played`), until
     stop(); `draw` plays as the weapon put away shows the heirloom, `put_away` as the weapon back takes it away;
     `gone` is called each time the heirloom leaves the hands: a weapon in them, or the game's animations;
-    `weapon_changed` at each weapon change, first. Hidden by a climb or the camera, the hands still hold it."""
+    `weapon_changed` at each weapon change, first; `inspect` stops with the draw. Hidden by a climb or the camera,
+    the hands still hold it."""
     stop()
     watch = Watch(holstered=not weapon_in_hand(owner), shown_at=clock(), ours=played())
     watch.was_holding = watch.holding()
@@ -133,11 +141,16 @@ def follow(held: Callable[[], Any], owner: Any, say: Say, draw: Draw | None = No
             return None
         return component if getattr(obj, "OakCharacter", None) is owner else None
 
+    def still(obj: Any) -> None:
+        """The heirloom's own gestures stopped at once: it leaves the empty hand."""
+        for gesture in (draw, inspect):
+            if gesture is not None:
+                gesture.cancel(obj)
+
     def leave(obj: Any, weapon: Any, now: float) -> None:
         if put_away is None or now - watch.shown_at < SWITCH_S:
             return
-        if draw is not None:
-            draw.cancel(obj)
+        still(obj)
         lasting = put_away.start(obj, weapon)
         if lasting is not None:
             watch.leaving_until = now + lasting
@@ -154,8 +167,8 @@ def follow(held: Callable[[], Any], owner: Any, say: Say, draw: Draw | None = No
             watch.shown_at = now
             if draws and draw is not None:
                 draw.play(obj)
-        if was_shown and not watch.shown() and draw is not None:
-            draw.cancel(obj)
+        if was_shown and not watch.shown():
+            still(obj)
         holding = watch.holding()
         if watch.was_holding and not holding:
             gone()
@@ -213,6 +226,12 @@ def follow(held: Callable[[], Any], owner: Any, say: Say, draw: Draw | None = No
 def holding() -> bool:
     """Whether the watched hands hold the heirloom now, seen or not."""
     return STATE.watch is not None and STATE.watch.holding()
+
+
+def in_empty_hand() -> bool:
+    """Whether the heirloom shows in the empty hand now: not while it goes down with the weapon coming back."""
+    watch = STATE.watch
+    return watch is not None and watch.holstered and watch.shown()
 
 
 def stop() -> None:

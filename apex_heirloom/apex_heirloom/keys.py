@@ -15,7 +15,7 @@ from . import holster_settings, keyboard_place, report
 from .controller_option import ControllerKeybindOption
 from .holster import Holster
 from .key_press import KeyWatch
-from .keyboard_option import PutAwayKeyOption
+from .keyboard_option import WheelFreeKeyOption
 from .holster_settings import CONTROLLER, KEYBOARD
 
 # Square on a PlayStation controller, X on an Xbox one (Kevin, 2026-09-25: "maintient carré pour ranger l'arme").
@@ -48,17 +48,20 @@ def _on(device: str) -> Any:
 
 # Hidden binds, each shown once through its option: a visible bind is listed a second time under "Keybinds", and a key
 # changed there never reaches the option (Kevin, 2026-09-25, for the other mods: "retire le second").
+# Why "Keyboard: Put Away", 2026-09-30: the SDK's text menu now lists the inspection's keys too, "Keyboard: Inspect";
+# each entry names its device and its command, or two of the four would read alike (docs/mokup/menu_mods/decisions.md,
+# 2026-09-26). The identifiers stay: the players' settings files keep their keys under them.
 keyboard_bind = keybind(
     "put_away_keyboard", keyboard_place.default_key(), _on(KEYBOARD),
-    display_name="Keyboard Key", description="The keyboard or mouse key that puts your weapon away.",
+    display_name="Keyboard: Put Away", description="The keyboard or mouse key that puts your weapon away.",
     is_hidden=True, event_filter=None,
 )
 controller_bind = keybind(
     "put_away_controller", CONTROLLER_DEFAULT, _on(CONTROLLER),
-    display_name="Controller Button", description="The controller button that puts your weapon away.",
+    display_name="Controller: Put Away", description="The controller button that puts your weapon away.",
     is_hidden=True, event_filter=None,
 )
-keyboard_key = PutAwayKeyOption.sole_entry(keyboard_bind)
+keyboard_key = WheelFreeKeyOption.sole_entry(keyboard_bind)
 controller_key = ControllerKeybindOption.sole_entry(controller_bind)
 BINDS = {KEYBOARD: keyboard_bind, CONTROLLER: controller_bind}
 

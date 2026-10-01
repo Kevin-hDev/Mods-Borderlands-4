@@ -38,6 +38,11 @@ check("the controller button is read on every event", keys.controller_bind.event
 check("each bind is hidden and shown once, through its option",
       keys.keyboard_bind.is_hidden and keys.controller_bind.is_hidden
       and keys.keyboard_key.is_hidden is False and keys.controller_key.is_hidden is False)
+check("each entry of the SDK's menu names its device and the put-away, apart from the inspection's (2026-09-30)",
+      keys.keyboard_key.display_name == "Keyboard: Put Away" and keys.controller_key.display_name
+      == "Controller: Put Away" and keys.keyboard_bind.display_name == "Keyboard: Put Away")
+check("saved under the same names as before, so the players' settings files keep their keys",
+      (keys.keyboard_key.identifier, keys.controller_key.identifier) == ("put_away_keyboard", "put_away_controller"))
 keys.controller_key.value = "Gamepad_FaceButton_Top"
 check("a button changed in the menu reaches the controller's bind", keys.controller_bind.key == "Gamepad_FaceButton_Top")
 keys.controller_key.value = "A"

@@ -1,5 +1,5 @@
 """Apex Heirloom's window model, as Apex Grapple's: both parts' settings in both languages, the mode among its
-choices only, its pages and preferences saved."""
+choices only, its pages and preferences saved; Restore and Undo with the four keys, the inspection's included."""
 
 import pathlib
 import sys
@@ -9,7 +9,8 @@ sys.path.insert(0, str(HERE))
 
 import panel_fixture as pf  # noqa: E402
 
-from apex_heirloom import heirloom_settings, holster_settings, keys, menu, mod, panel_i18n, panel_open  # noqa: E402
+from apex_heirloom import heirloom_settings, holster_settings, inspect_keys, keys, menu, mod, panel_i18n  # noqa: E402
+from apex_heirloom import panel_open  # noqa: E402
 from apex_heirloom import panel_preferences as prefs, settings  # noqa: E402
 from apex_heirloom.panel_model import Model  # noqa: E402
 
@@ -48,11 +49,16 @@ check("each holster setting has one short sentence in both languages, the French
           for language in ("EN", "FR"))
       and all(panel_i18n.option_text(option, "FR") != panel_i18n.option_text(option, "EN")
               for option in holster_settings.ALL))
-check("the CONTROLS page keeps Grapple's words where one key changes nothing",
-      panel_i18n.text("listening", "FR") == "APPUIE SUR TA TOUCHE" and panel_i18n.text("gamepad", "FR") == "Manette"
-      and panel_i18n.text("reset_controls", "FR") == "TOUCHES D’ORIGINE")
-check("and its own where Grapple speaks of two slots or of the game's controls",
-      panel_i18n.text("first", "FR") == "CHOISIR UNE TOUCHE" and "grappin" not in panel_i18n.text("controls_reset", "FR")
+check("the COMMANDS page keeps Grapple's words for its reset and icons, as sketch I1 writes them",
+      panel_i18n.text("reset_controls", "FR") == "TOUCHES D’ORIGINE"
+      and panel_i18n.text("controller_icons", "FR") == "ICÔNES MANETTE"
+      and panel_i18n.text("PS5", "FR") == "PLAYSTATION")
+check("and its own for each card and row (sketch I1)",
+      panel_i18n.text("command_put_away", "FR") == "RANGER L'ARME"
+      and panel_i18n.text("command_inspect", "EN") == "INSPECT"
+      and panel_i18n.text("change_controller", "FR") == "CHOISIR UN BOUTON"
+      and panel_i18n.text("no_key", "FR") == "AUCUNE"
+      and "grappin" not in panel_i18n.text("controls_reset", "FR")
       and "ensemble" not in panel_i18n.text("escape_hint", "FR"))
 
 check("a hold time past the slider's bounds is refused", not model.write({"hold_time": 0.1})
@@ -62,13 +68,21 @@ check("the mode takes only one of its choices", not model.write({"mode": "Halo"}
 check("the switches take only On or Off", not model.write({"keyboard_hold": "yes"})
       and model.write({"keyboard_hold": False}) and holster_settings.mode(holster_settings.KEYBOARD) == "Press")
 keys.controller_key.value = "Gamepad_FaceButton_Top"
+inspect_keys.keyboard_key.value = "F"
 heirloom_settings.heirloom.value = False
-check("Restore puts both parts' settings and both keys back", model.restore()
+check("Restore puts both parts' settings and the four keys back, the inspection's to none", model.restore()
       and heirloom_settings.heirloom.value is True and heirloom_settings.mode.value == "Apex"
-      and holster_settings.keyboard_hold.value is True
+      and holster_settings.keyboard_hold.value is True and inspect_keys.keyboard_bind.key is None
       and keys.controller_bind.key == "Gamepad_FaceButton_Left" and model.can_undo)
 check("Undo gives them back", model.undo() and holster_settings.keyboard_hold.value is False
-      and keys.controller_bind.key == "Gamepad_FaceButton_Top")
+      and keys.controller_bind.key == "Gamepad_FaceButton_Top" and inspect_keys.keyboard_bind.key == "F")
+check("a key chosen on the COMMANDS page is saved, and ends an Undo", model.restore() and model.can_undo
+      and model.assign_command("inspect", "controller", "Gamepad_DPad_Up")
+      and inspect_keys.controller_bind.key == "Gamepad_DPad_Up" and not model.can_undo)
+check("so does RESET CONTROLS", model.restore() and model.default_commands() and not model.can_undo
+      and inspect_keys.controller_bind.key is None)
+check("a key refused is not saved and keeps the Undo", model.restore() and not model.assign_command(
+      "inspect", "keyboard", "MouseScrollUp") and model.can_undo and model.command_actions.last_status == "wheel_key")
 check("the language, the controller's icons and the page are saved",
       model.change_language("FR") and model.change_controller_icons("XSX") and model.change_page("controls")
       and Model(mod).language == "FR" and Model(mod).controller_icons == "XSX" and Model(mod).page == "controls")

@@ -1,10 +1,11 @@
 """Tests the window's pages: HEIRLOOM, its switch then the heirloom, each one's skin, the glow, the mode, each one's
-size and the draw (sketch H2); HOLSTER, its switch then the two hold switches and the hold time; then Grapple's
-CONTROLS. Each page's rows grey with its part's switch, the hold time also while no key is held, the CONTROLS page's
-keys with the holster; a skin row greys when its heirloom has one skin only, the glow when the skin shown has none of
-ours; the chosen heirloom's skin, size and picture show, the other's hide, by the values the window shows; the skins are
-chosen with arrows; the HEIRLOOM page says the next weapon change applies its settings; every heirloom and skin has a
-name in English, the heirlooms in French too, and every setting its French words."""
+size and the draw (sketch H2); HOLSTER, its switch then the two hold switches and the hold time; then Movement's
+COMMANDS (sketch I1). Each page's rows grey with its part's switch, the hold time also while no key is held, the
+COMMANDS page's PUT AWAY card with the holster, its INSPECT card with the heirloom; a skin row greys when its
+heirloom has one skin only, the glow when the skin shown has none of ours; the chosen heirloom's skin, size and
+picture show, the other's hide, by the values the window shows; the skins are chosen with arrows; the HEIRLOOM page
+says the next weapon change applies its settings; every heirloom and skin has a name in English, the heirlooms in
+French too, and every setting its French words."""
 
 import pathlib
 import sys
@@ -16,7 +17,9 @@ import heirloom_stubs  # noqa: E402
 
 heirloom_stubs.install()
 
-from apex_heirloom import heirloom_settings, holster_settings, keys, menu, panel_en, panel_fr, panel_theme  # noqa: E402
+from apex_heirloom import heirloom_settings, holster_settings, inspect_keys, keys, menu, panel_en  # noqa: E402
+from apex_heirloom import panel_fr  # noqa: E402
+from apex_heirloom import panel_theme  # noqa: E402
 from apex_heirloom.heirloom_catalog import HEIRLOOMS, OFFERED  # noqa: E402
 
 fails: list[str] = []
@@ -35,14 +38,16 @@ check("HEIRLOOM holds its switch, the heirloom, each one's skin, the glow, the m
       menu.heirloom_page.children == list(h.ALL) and h.ALL[:2] == (h.heirloom, h.model))
 check("HOLSTER holds its switch, then the two hold switches and the hold time",
       menu.holster_page.children == [k.holster, k.keyboard_hold, k.controller_hold, k.hold_time])
-check("the keys are chosen on the CONTROLS page that follows, on neither page",
+check("the keys, the inspection's too, are chosen on the COMMANDS page that follows, on neither page",
       panel_theme.PAGES == ("heirloom", "holster", "controls")
-      and not {keys.keyboard_key, keys.controller_key} & {*menu.heirloom_page.children, *menu.holster_page.children})
+      and not {keys.keyboard_key, keys.controller_key, inspect_keys.keyboard_key, inspect_keys.controller_key}
+      & {*menu.heirloom_page.children, *menu.holster_page.children})
 check("each row but the switches greys with its part's switch, the hold time also while no key is held",
       menu.DEPENDS_ON == {**{option.identifier: (("heirloom",),) for option in h.ALL[1:]},
                           "keyboard_hold": (("holster",),), "controller_hold": (("holster",),),
                           "hold_time": (("holster",), ("keyboard_hold", "controller_hold"))})
-check("the CONTROLS page's keys grey with the holster", menu.CONTROLS_DEPEND_ON == (("holster",),))
+check("the PUT AWAY card greys with the holster, the INSPECT card with the heirloom (Kevin, 2026-09-30)",
+      menu.COMMANDS_DEPEND_ON == {"put_away": (("holster",),), "inspect": (("heirloom",),)})
 check("the full mod offers every page (a separate file, its own part's: test_build_heirloom_files.py)",
       menu.SHOWN_PAGES == panel_theme.PAGES)
 check("the HEIRLOOM page, and it alone, says the next weapon change applies its settings, in both languages",

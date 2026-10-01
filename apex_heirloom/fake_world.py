@@ -194,6 +194,7 @@ class World:
                                      K2_GetComponentScale=lambda: sdk_stubs.vector(1.0, 1.0, 1.0), **FLAGS)
         instance.Outer = arms
         character = types.SimpleNamespace(
+            bIsCrouched=False,
             ActiveWeapons=types.SimpleNamespace(Slots=[types.SimpleNamespace(Weapon=None)]),
             CharacterMovement=types.SimpleNamespace(
                 LadderState=types.SimpleNamespace(CurrentClimbable=None),

@@ -7,7 +7,8 @@ character's changes are ignored; the watch stops when the heirloom is gone or wh
 put-away again. With our own animations: shown only while the arms play them, read as the hands empty or a few frames
 later (drawn then), kept while the hands go down; its leaving the hands is told, not its hiding by a climb. The game's
 depth of field is off while the heirloom is shown, and the player's value back when it is hidden or the watch
-stops."""
+stops. The heirloom's inspection stops at once with its draw whenever it leaves the empty hand: a weapon back, a switch
+between two weapons, a climb; a key may inspect it only while it shows in the empty hand."""
 
 import pathlib
 import sys
@@ -324,6 +325,48 @@ follow.follow(lambda: gone_knife[0], player(None), say)
 gone_knife[0] = None
 hooks[frame_key](types.SimpleNamespace(OakCharacter=player(None)), None, None, None)
 check("the knife gone, the next frame of any arms stops the watch", key not in hooks and frame_key not in hooks)
+
+
+class Gesture:
+    """The heirloom's inspection as the watch sees it: stopped, and how often."""
+
+    def __init__(self) -> None:
+        self.cancelled = 0
+
+    def cancel(self, _arms: object) -> None:
+        self.cancelled += 1
+
+
+inspection, owner, draw, put_away = Gesture(), player(None), Draw(), PutAway()
+now[0] = 49.0
+follow.follow(lambda: knife, owner, say, draw, put_away, lambda: now[0], inspect=inspection)
+changed, frame = hooks[key], hooks[frame_key]
+arms = types.SimpleNamespace(OakCharacter=owner, GetCurrentActiveMontage=lambda: None)
+check("the heirloom shown in the empty hand: a key may inspect it",
+      follow.in_empty_hand() and inspection.cancelled == 0)
+weapon_change(rifle, 50.0)
+check("the weapon back: the inspection stops at once with the draw; while the hands go down with the heirloom, a key "
+      "plays nothing", inspection.cancelled == 1 and draw.events[-1:] == ["cancel"] and knife.visible[-1] is True
+      and not follow.in_empty_hand())
+frame_at(50.5)
+check("the hands down: hidden, a key plays nothing", knife.visible[-1] is False and not follow.in_empty_hand())
+weapon_change(None, 51.0)
+check("put away again: a key may inspect it", follow.in_empty_hand())
+stopped = inspection.cancelled
+weapon_change(pistol, 51.05)
+check("a switch between two weapons: the heirloom goes at once, its inspection stopped",
+      inspection.cancelled == stopped + 1 and not follow.in_empty_hand())
+weapon_change(None, 52.0)
+stopped = inspection.cancelled
+owner.CharacterMovement.LadderState.CurrentClimbable = object()
+frame_at(52.1)
+check("a climb hides it: its inspection stops, a key plays nothing",
+      inspection.cancelled == stopped + 1 and not follow.in_empty_hand())
+owner.CharacterMovement.LadderState.CurrentClimbable = None
+frame_at(52.2)
+check("the climb over: a key may inspect it again", follow.in_empty_hand())
+follow.stop()
+check("the watch stopped: a key plays nothing", not follow.in_empty_hand())
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

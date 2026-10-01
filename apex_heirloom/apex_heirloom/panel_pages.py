@@ -1,9 +1,10 @@
-"""Page contents: one mockup card per settings group, and the key-capture card, each in a scrolling page."""
+"""Page contents: one mockup card per settings group, each in a scrolling page, and the key selector
+the COMMANDS page's rows use (panel_commands.py)."""
 
 import unrealsdk
 
 from . import panel_buttons as b, panel_slider as s, panel_text as tx, panel_theme as t, panel_widgets as w
-from . import menu, panel_choices, panel_key_view as keys, panel_notice, panel_picture
+from . import menu, panel_choices, panel_notice, panel_picture
 
 _SCROLL_THUMBS = (("NormalThumbImage", t.COLOR_GOLD), ("HoveredThumbImage", t.COLOR_GOLD_HI),
                   ("DraggedThumbImage", t.COLOR_GOLD_HI))
@@ -34,14 +35,20 @@ def scrolling_body(owner, template):
     return scroll, body
 
 
-def card(body, widgets, key, world=None):
-    """Ink rim, hard shadow and orange title plate shared by every settings card; the page's sentence under the
-    description, and its picture right of them, on a page that has them (menu.NOTICES, menu.PICTURES)."""
+def plain_card(body):
+    """Ink rim and hard shadow shared by every card, without a title plate."""
     frame, inner = w.framed(body, t.COLOR_CARD, t.STROKE, w.pad(t.SPACE_5, t.SPACE_6, t.SPACE_3))
     layers, _ = w.shadowed(body, frame, t.SHADOW_LG)
     w.column(body, layers, padding=w.pad(0, 0, t.SPACE_5))
     rows = w.new("VerticalBox", inner)
     inner.SetContent(rows)
+    return rows
+
+
+def card(body, widgets, key, world=None):
+    """Ink rim, hard shadow and orange title plate shared by every settings card; the page's sentence under the
+    description, and its picture right of them, on a page that has them (menu.NOTICES, menu.PICTURES)."""
+    rows = plain_card(body)
     head = panel_picture.head(rows, widgets, key, world)
     plate, fill = w.framed(head, t.COLOR_SPARK, t.STROKE, w.pad(tx.inset(t.SPACE_1, "plate"), t.SPACE_4))
     widgets[f"heading:{key}"] = tx.text(fill, "", "plate")
@@ -114,31 +121,3 @@ def _selector_style(widget, template):
     tx.configure(widget.TextStyle.Font, "button")
     widget.TextStyle.ColorAndOpacity = w.slate(t.COLOR_GOLD)
     widget.Margin = w.pad(t.SPACE_2, t.SPACE_6)
-
-
-def controls_page(owner, widgets, template):
-    page, body = scrolling_body(owner, template)
-    rows = card(body, widgets, "controls")
-    # The holster's keys, greyed and stilled together while its switch is off (menu.CONTROLS_DEPEND_ON).
-    widgets["controls_keys"] = w.new("VerticalBox", rows)
-    w.column(rows, widgets["controls_keys"])
-    rows = widgets["controls_keys"]
-    widgets["current"] = tx.text(rows, "", "gold", wrap=True)
-    w.column(rows, widgets["current"], padding=w.pad(t.SPACE_2, 0))
-    w.column(rows, keys.summary(rows, widgets), padding=w.pad(t.SPACE_1, 0))
-    w.column(rows, keys.family_choice(rows, widgets, template), padding=w.pad(t.SPACE_3, 0))
-    # One key per device, no two-key chord (Kevin, 2026-09-25).
-    w.column(rows, _selector_frame(rows, keys.selector(rows, widgets, "first")),
-             padding=w.pad(t.SPACE_3, 0, 0), halign="Left")
-    widgets["status"] = tx.text(rows, "", "status", wrap=True)
-    w.column(rows, widgets["status"], padding=w.pad(t.SPACE_3, 0))
-    w.column(rows, b.button(rows, widgets, "reset", "action", template, "secondary"), halign="Left")
-    widgets["escape_hint"] = tx.text(rows, "", "hint", wrap=True)
-    w.column(rows, widgets["escape_hint"], padding=w.pad(t.SPACE_3, 0))
-    return page
-
-
-def _selector_frame(owner, widget):
-    frame = w.border(owner, t.COLOR_SPARK, t.STROKE)
-    frame.SetContent(w.sized(owner, widget, width=t.SELECTOR_WIDTH))
-    return w.slant(frame)

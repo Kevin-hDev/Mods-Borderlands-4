@@ -12,7 +12,9 @@ Two parts, each with its own switch at the top of its page in the settings windo
 
 - **The heirloom.** With no weapon in hand, your right hand holds your heirloom, the Jakobs knife or the axe, each
   with its own animations: idle, walking, running, crouching, sliding and jumping. When your weapon comes back, your
-  hands go down with it. The heirloom hides while you climb (ladder, ledge, wall) and in third person.
+  hands go down with it. The heirloom hides while you climb (ladder, ledge, wall) and in third person. A key of your
+  choice inspects it: your hand spins the axe, as in Apex Legends. The knife has no inspection yet: with it, the key
+  does nothing.
 - **The holster.** Hold A on keyboard (the key to the right of Tab, Q on an English keyboard) or Square on controller
   to put your weapon away. Hold or press, and the hold time from 0.2 to 1 second, are set separately for keyboard and
   controller. Drawing your weapon again is left to the game.
@@ -24,7 +26,8 @@ the rest. The moment and speed of the draw are adjustable too. A skin or a glow 
 settings apply at the next weapon change after leaving the menu.
 
 Open the console with `~`, type `mods`, and choose **Apex Heirloom**: its settings window, in English and French, has
-three pages, HEIRLOOM, HOLSTER and CONTROLS. The CONTROLS page changes the keyboard key and the controller button.
+three pages, HEIRLOOM, HOLSTER and CONTROLS. The CONTROLS page sets the keyboard key and the controller button that
+put your weapon away, and those that inspect your heirloom (none by default).
 
 ## Three files
 
@@ -32,7 +35,7 @@ The mod is released as three files on Nexus Mods, built from the same package:
 
 - **Apex Heirloom**: both parts.
 - **Tidy Weapons**: the holster alone. Its window shows HOLSTER and CONTROLS.
-- **Heirloom**: the heirloom alone. Its window shows HEIRLOOM.
+- **Heirloom**: the heirloom alone. Its window shows HEIRLOOM and CONTROLS.
 
 Only `pack.py` differs between them: it names the file and the parts it runs. Tidy Weapons and Heirloom run side by
 side. A file that finds one of its parts already running in another installed file, such as the full mod next to a

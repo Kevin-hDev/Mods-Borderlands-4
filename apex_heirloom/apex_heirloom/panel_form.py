@@ -1,26 +1,32 @@
-"""Full menu interactions, with bounded drafts and one shared key-capture form."""
+"""Full menu interactions, with bounded drafts; the COMMANDS page's own form captures the keys."""
 
 import time
 
-from .control_form import Form
-from .control_bindings import FAILED, RESERVED, RESET
+from .command_form import Form
+from .panel_glyphs import Catalogue
 from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t
-from . import panel_choices, panel_key_display, panel_rows, slider_values
+from . import panel_choices, panel_rows, slider_values
 from .family import blocked
-from .menu import CONTROLS_DEPEND_ON, DEPENDS_ON
+from .menu import COMMANDS_DEPEND_ON, DEPENDS_ON
 
 
-class PanelForm(Form):
+class PanelForm:
     keep_when_disabled = True
 
-    def __init__(self, widgets, bindings, model):
-        super().__init__(widgets, bindings)
+    def __init__(self, widgets, model):
+        self.widgets = widgets
         self.model, self.page, self.notice = model, t.PAGES.index(model.page), "ready"
         self.pending, self.shown = {}, {}
         self.changed_at = 0
         self.focus = widgets["focus"]
-        self.key_display = panel_key_display.Display()
+        self.command_form, self.command_catalogue = Form(widgets, model), Catalogue()
         self.sync(self.resolve())
+
+    def resolve(self):
+        widgets = {name: reference() for name, reference in self.widgets.items()}
+        if any(widget is None for widget in widgets.values()):
+            raise ValueError("Window widget unavailable")
+        return widgets
 
     def sync(self, widgets):
         self.pending.clear()
@@ -46,9 +52,10 @@ class PanelForm(Form):
             active = self.met(needs) and panel_rows.active(name, self.shown)
             self.grey(widgets, f"setting:{name}", (f"row:{name}", f"description:{name}"), active)
         panel_rows.show(widgets, self.shown)
-        active = self.met(CONTROLS_DEPEND_ON)
-        self.grey(widgets, "controls_keys", ("controls_keys",), active)
-        widgets["first"].SetIsEnabled(active)
+        for command, needs in COMMANDS_DEPEND_ON.items():
+            active = self.met(needs)
+            self.grey(widgets, f"card:command_{command}", (f"card:command_{command}",), active)
+            self.command_form.block(widgets, command, not active)
 
     @staticmethod
     def grey(widgets, control, faded, active):
@@ -113,19 +120,6 @@ class PanelForm(Form):
         widget.SetIsChecked(False)
         return True
 
-    def show_result(self, widgets, result):
-        success, message = result
-        key = "controls_saved" if success else "invalid_keys"
-        if message == RESET:
-            key = "controls_reset"
-        elif message == FAILED:
-            key = "failed"
-        elif message == RESERVED:
-            key = "reserved_key"
-        widgets["status"].SetText(i18n.text(key, self.model.language))
-        widgets["current"].SetText(labels.controls_summary(self.bindings, self.model.language))
-        self.key_display.summary(self, widgets)
-
     def poll(self):
         widgets, now = self.resolve(), time.perf_counter_ns()
         self.read_changes(widgets, now)
@@ -162,16 +156,15 @@ class PanelForm(Form):
                 success = operation()
                 self.notice = ({"restore": "restored", "undo": "undone", "enabled": "saved"}[name] if success
                                else "refused_part" if name == "enabled" and blocked() else "failed")
-                if success and name in ("restore", "undo"):
-                    self.clear(widgets)
                 self.sync(widgets)
                 return False
         if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
             self.flush(widgets)
         if self.page == t.PAGES.index("controls"):
-            super().poll()
-            self.key_display.update(self, widgets)
+            self.command_form.poll()
+            if self.command_form.changed:
+                self.refresh_labels(widgets)
         return False
 
     def selecting(self):
-        return self.page == t.PAGES.index("controls") and super().selecting()
+        return self.page == t.PAGES.index("controls") and self.command_form.selecting()

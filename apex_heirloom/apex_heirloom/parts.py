@@ -10,7 +10,7 @@ A separate file runs its own part only (pack.py): the other part is left out of 
 
 from typing import Any, Callable
 
-from . import heirloom_settings, holster_settings, keys, lifecycle, pack, report, restriction
+from . import heirloom_settings, holster_settings, inspect_keys, keys, lifecycle, pack, report, restriction
 
 
 class Part:
@@ -27,6 +27,11 @@ class Part:
         (self._start if wanted else self._stop)()
 
 
+def _heirloom_on() -> None:
+    inspect_keys.start()
+    lifecycle.turn_on()
+
+
 def _holster_on() -> None:
     report.reset()
     keys.start()
@@ -39,7 +44,7 @@ def _holster_off() -> None:
     report.note("off")
 
 
-HEIRLOOM = Part(heirloom_settings.heirloom, lifecycle.turn_on, lifecycle.turn_off)
+HEIRLOOM = Part(heirloom_settings.heirloom, _heirloom_on, lifecycle.turn_off)
 HOLSTER = Part(holster_settings.holster, _holster_on, _holster_off)
 PARTS = tuple(part for part in (HEIRLOOM, HOLSTER) if pack.runs(part.switch.identifier))
 for _part in PARTS:

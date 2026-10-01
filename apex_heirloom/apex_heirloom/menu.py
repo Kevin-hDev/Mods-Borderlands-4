@@ -1,12 +1,12 @@
-"""The window's pages: HEIRLOOM, then HOLSTER, each led by its part's switch; the CONTROLS page follows, Apex Grapple's
-own (control_config.py). Kevin chose it on 2026-09-26 from the sketches in cosmetics/heirloom/docs/esquisses_menu/
-(U1 to U3), and the HEIRLOOM page's choice of heirloom, skin and glow on 2026-09-29 (sketch H2),
-docs/mokup/menu_mods/decisions.md.
+"""The window's pages: HEIRLOOM, then HOLSTER, each led by its part's switch; the COMMANDS page follows, Apex
+Movement's, a card per command (control_config.py). Kevin chose it on 2026-09-26 from the sketches in
+cosmetics/heirloom/docs/esquisses_menu/ (U1 to U3), the HEIRLOOM page's choice of heirloom, skin and glow on 2026-09-29
+(sketch H2), and the COMMANDS page's cards on 2026-09-30 (sketch I1), docs/mokup/menu_mods/decisions.md.
 """
 
 from mods_base import NestedOption
 
-from . import heirloom_settings, holster_settings, pack
+from . import control_config, heirloom_settings, holster_settings, pack
 
 # Left out of the mod's options: saved values stay at the top level of the settings file, as before the window.
 heirloom_page = NestedOption(
@@ -22,8 +22,9 @@ ALL = MENU = [heirloom_page, holster_page]
 _RUNS_HEIRLOOM = pack.runs(heirloom_settings.heirloom.identifier)
 _RUNS_HOLSTER = pack.runs(holster_settings.holster.identifier)
 # The pages a player can open, in the window's order (panel_theme.PAGES): a separate file shows its own part's only.
-# The other part's pages are still built, never shown, so the window's code finds every widget it reads.
-SHOWN_PAGES = (*(("heirloom",) if _RUNS_HEIRLOOM else ()), *(("holster", "controls") if _RUNS_HOLSTER else ()))
+# The other part's pages are still built, never shown, so the window's code finds every widget it reads. COMMANDS is in
+# every file since the heirloom has keys of its own (sketch I1, 2026-09-30): Heirloom shows its INSPECT card there.
+SHOWN_PAGES = (*(("heirloom",) if _RUNS_HEIRLOOM else ()), *(("holster",) if _RUNS_HOLSTER else ()), "controls")
 
 # A row that changes nothing while its switches are off greys and stays still, as the FOV under Custom FOV in Apex
 # Movement: each tuple needs one of its switches on. A part's switch greys its whole page (Kevin, 2026-09-26, U2).
@@ -38,8 +39,10 @@ _HOLSTER_ROWS = {
     holster_settings.hold_time.identifier: (_HOLSTER, _A_KEY_HELD),
 }
 DEPENDS_ON = {**(_HEIRLOOM_ROWS if _RUNS_HEIRLOOM else {}), **(_HOLSTER_ROWS if _RUNS_HOLSTER else {})}
-# The CONTROLS page chooses the holster's keys only: they grey with it (Kevin, 2026-09-26: « oui on grise aussi »).
-CONTROLS_DEPEND_ON = (_HOLSTER,) if _RUNS_HOLSTER else ()
+# Each card of the COMMANDS page greys and stays still with the switch of the part it serves: PUT AWAY with the holster
+# (Kevin, 2026-09-26: « oui on grise aussi »), INSPECT with the heirloom (Kevin, 2026-09-30, sketch I1). By command,
+# as DEPENDS_ON: one of each tuple's switches on.
+COMMANDS_DEPEND_ON = {command.name: ((command.part,),) for command in control_config.COMMANDS}
 # Said at the top of a page, always in view: the heirloom's settings wait for the next weapon change (Kevin,
 # 2026-09-26, sketch A). By page, the text's key in panel_en.py and panel_fr.py.
 NOTICES = {"heirloom": "applies"}

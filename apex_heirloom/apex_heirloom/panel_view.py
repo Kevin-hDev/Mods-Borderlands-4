@@ -2,7 +2,7 @@
 
 import unrealsdk
 
-from . import panel_buttons as b, panel_fonts as fonts, panel_header as h, panel_i18n as i18n, panel_pages as p
+from . import panel_buttons as b, panel_commands, panel_fonts as fonts, panel_header as h, panel_pages as p
 from . import menu, panel_text as tx, panel_theme as t, panel_widgets as w, report
 
 
@@ -56,7 +56,7 @@ def _window(root, world, model, widgets, template):
     widgets["pages"] = switcher
     for group, key in zip(model.groups, t.PAGES):
         switcher.AddChild(p.settings_page(switcher, group, key, widgets, template, world))
-    switcher.AddChild(p.controls_page(switcher, widgets, template))
+    switcher.AddChild(panel_commands.page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))
     w.column(stack, _footer(stack, widgets, template))
@@ -85,8 +85,7 @@ def build_view(pc, model, _return_to_menu=True):
     loaded = fonts.build(root)
     tx.use(loaded)
     try:
-        widgets = {name: p.selector(root, i18n.text("listening", model.language), template)
-                   for name in ("first",)}
+        widgets = {}
         avatar = _window(root, pc, model, widgets, template)
     finally:
         tx.use({})

@@ -1,7 +1,9 @@
-"""French Apex Heirloom texts: the CONTROLS page's words from Apex Grapple's menu, the rest this mod's own.
+"""French Apex Heirloom texts: Apex Grapple's words for the page name, the icons and the reset of the COMMANDS page
+(panel_controls_text.py), the rest this mod's own.
 
 The heirloom's are those of the sketches Kevin chose on 2026-09-26 and 29 (cosmetics/heirloom/docs/esquisses_menu/,
-A, U1 to U3 and H2), the sentence at the top of its page his own.
+A, U1 to U3 and H2), the sentence at the top of its page his own; the COMMANDS page's cards those of sketch I1
+(2026-09-30).
 """
 
 from . import heirloom_settings
@@ -9,13 +11,25 @@ from .panel_common_fr import TEXT as COMMON
 from .panel_controls_text import FR as CONTROLS
 
 TEXT = {
-    **COMMON, **CONTROLS, "heirloom": "HEIRLOOM", "holster": "RANGEMENT", "first": "CHOISIR UNE TOUCHE",
-    "no_key": "Aucune", "applies": "Quitte le menu et change d'arme pour appliquer le changement.",
+    **COMMON, **CONTROLS, "heirloom": "HEIRLOOM", "holster": "RANGEMENT", "no_key": "AUCUNE",
+    "applies": "Quitte le menu et change d'arme pour appliquer le changement.",
     "refused_part": "Un autre fichier installé fait déjà tourner cette partie. Éteins-le d'abord.",
-    "controls_intro": "Choisis une touche : clavier, souris ou manette.",
+    "command_put_away": "RANGER L'ARME",
+    "command_put_away_desc": "La touche qui range ton arme. Grisée quand le Rangement est sur NON.",
+    "command_inspect": "INSPECTER",
+    "command_inspect_desc": "Fais tourner ton heirloom dans ta main quand ton arme est rangée. Grisée quand le "
+                            "Heirloom est sur NON.",
+    "keyboard": "CLAVIER / SOURIS", "controller": "MANETTE",
+    "change_keyboard": "CHOISIR UNE TOUCHE", "change_controller": "CHOISIR UN BOUTON",
+    "press_keyboard": "APPUIE SUR UNE TOUCHE", "press_controller": "APPUIE SUR UN BOUTON",
     "escape_hint": "Échap annule la saisie. La touche console est réservée.",
-    "invalid_keys": "Non enregistré. Choisis une touche du clavier, un bouton de la souris ou de la manette.",
     "controls_reset": "Commandes d’origine restaurées.",
+    "duplicate_put_away": "Non enregistrée : cette touche range déjà ton arme. Touche précédente gardée.",
+    "duplicate_inspect": "Non enregistrée : cette touche inspecte déjà ton heirloom. Touche précédente gardée.",
+    "wheel_key": "Non enregistrée : la molette change d'arme dans le jeu. Touche précédente gardée.",
+    "invalid_keyboard": "Non enregistrée : choisis une touche du clavier ou un bouton de la souris. Touche précédente "
+                        "gardée.",
+    "invalid_controller": "Non enregistré : choisis un bouton de la manette. Bouton précédent gardé.",
 }
 GROUPS = {"heirloom": "Ton heirloom dans ta main droite quand ton arme est rangée.",
           "holster": "Comment chaque touche range ton arme."}

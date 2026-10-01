@@ -22,6 +22,9 @@ the axe, whose animations, model, hold and looks differ. The chosen heirloom's l
 put-away play, its model, skin and glow go on (apex_wear.py) and its hold applies, each as the mod's catalog sets it
 (heirloom_catalog.py, generated from their heirloom.json); it shows only while the arms play its animations: chosen
 again, from the next weapon change. The player's choices are made through heirloom_choices.py.
+Why an inspection, 2026-09-29 (cosmetics/heirloom/docs/heirloom.md, section 20): Kevin wants a key that makes the
+heirloom's flourish in the hand, as in Apex; its key (inspect_keys.py) plays the chosen heirloom's (apex_inspect.py)
+while it shows in the empty hand.
 """
 
 import types
@@ -32,7 +35,7 @@ from unrealsdk import logging
 from unrealsdk.unreal import WeakPointer
 
 from . import apex_anim_list as anim_list
-from . import apex_draw, apex_first_person, apex_put_away
+from . import apex_draw, apex_first_person, apex_inspect, apex_put_away
 from . import heirloom_settings
 from . import apex_held_object as held_object
 from . import apex_holster_follow as holster_follow
@@ -45,10 +48,10 @@ SOCKET = "R_Hand_Object"
 NO_TURN = (0.0, 0.0, 0.0, 1.0)
 MIRRORED = (1.0, -1.0, 1.0)
 
-# The knife, the character and arms holding it, whether it is on its way out, and the fit and timing last applied:
-# the draw and the put-away read `timing` as they play.
+# The knife, the character and arms holding it, whether it is on its way out, the fit and timing last applied (the
+# draw and the put-away read `timing` as they play), and its inspection, while it hangs.
 STATE = types.SimpleNamespace(component=None, owner=None, arms=None, retiring=False, fit=None,
-                              timing=heirloom_settings.timing())
+                              timing=heirloom_settings.timing(), inspect=None)
 
 
 def say(text: str) -> None:
@@ -76,7 +79,7 @@ def drop_knife() -> None:
     """The knife out of the hands it hangs on, and its watch stopped; our list stays."""
     holster_follow.stop()
     component = held()
-    STATE.component, STATE.owner = None, None
+    STATE.component, STATE.owner, STATE.inspect = None, None, None
     held_object.remove(component, say)
 
 
@@ -185,6 +188,14 @@ def show(owner: Any) -> bool:
     return True
 
 
+def inspect() -> None:
+    """The chosen heirloom's inspection, at a press of its key: only while it shows in the empty hand."""
+    arms, inspection = _alive(STATE.arms), STATE.inspect
+    if arms is None or inspection is None or not holster_follow.in_empty_hand():
+        return
+    inspection.play(arms.GetAnimInstance())
+
+
 def _animation(name: str) -> str:
     """One of the chosen heirloom's animations, read as it plays: the heirloom chosen since the knife was hung."""
     return anim_list.animation(heirloom_settings.chosen_heirloom(), name)
@@ -201,7 +212,9 @@ def _hang(component: Any, arms: Any, owner: Any) -> bool:
     draw = apex_draw.Draw(lambda: load("AnimSequence", _animation(apex_draw.DRAW)), STATE.timing, WeakPointer, say)
     put_away = apex_put_away.PutAway(lambda: load("AnimSequence", _animation(apex_put_away.PUT_AWAY)), STATE.timing,
                                      WeakPointer, say)
+    STATE.inspect = apex_inspect.Inspect(heirloom_settings.chosen_heirloom, lambda: _alive(STATE.owner).bIsCrouched,
+                                         lambda name: load("AnimSequence", _animation(name)), WeakPointer, say)
     holster_follow.follow(held, owner, say, draw, put_away,
                           camera=lambda: getattr(get_pc(), "PlayerCameraManager", None), played=playing_ours,
-                          gone=gone, weapon_changed=weapon_changed)
+                          gone=gone, weapon_changed=weapon_changed, inspect=STATE.inspect)
     return True

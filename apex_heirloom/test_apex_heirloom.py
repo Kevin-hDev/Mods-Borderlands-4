@@ -1,7 +1,8 @@
-"""Tests the mod as the SDK builds it: one mod, Apex Heirloom, with both parts' settings, keys and hooks; a fresh install
-switches itself on with both parts running; each part's switch stops and starts it alone, the other running on; the
-mod's own switch stops both, forgetting a key held and a restriction begun, and starts only those whose switch is on;
-switching on gives each key its option's."""
+"""Tests the mod as the SDK builds it: one mod, Apex Heirloom, with both parts' settings, keys and hooks, the heirloom's
+two inspection keys first, with no key; a fresh install switches itself on with both parts running; each part's switch
+stops and starts it alone, the other running on; the mod's own switch stops both, forgetting a key held and a
+restriction begun, and starts only those whose switch is on; switching a part on gives each of its keys its
+option's."""
 
 import pathlib
 import sys
@@ -29,6 +30,7 @@ state["settings_exists"] = False
 
 import apex_heirloom  # noqa: E402
 from apex_heirloom import frame, heirloom_settings, holster_settings, keys, lifecycle, parts, restriction  # noqa: E402
+from apex_heirloom import inspect_keys  # noqa: E402
 from apex_heirloom import control_actions, control_config, panel_preferences as prefs, settings  # noqa: E402
 
 
@@ -37,13 +39,19 @@ def running() -> tuple[bool, bool]:
 
 
 mod = state["mods"][0]
-check("one mod is built, Apex Heirloom 1.0.1", len(state["mods"]) == 1 and mod.kwargs["name"] == "Apex Heirloom"
-      and apex_heirloom.__version__ == "1.0.1")
-check("both keys are given to the SDK", mod.kwargs["keybinds"] == [keys.keyboard_bind, keys.controller_bind])
-check("both parts' settings and both keys are given to the SDK, the window's own preferences last",
-      mod.kwargs["options"] == [*settings.ALL, keys.keyboard_key, keys.controller_key, prefs.language,
-                                prefs.controller_icons, prefs.last_page]
+check("one mod is built, Apex Heirloom 1.0.2", len(state["mods"]) == 1 and mod.kwargs["name"] == "Apex Heirloom"
+      and apex_heirloom.__version__ == "1.0.2")
+check("the heirloom's two inspection keys, then the holster's two keys, are given to the SDK",
+      mod.kwargs["keybinds"] == [inspect_keys.keyboard_bind, inspect_keys.controller_bind, keys.keyboard_bind,
+                                 keys.controller_bind])
+check("both parts' settings and all four keys are given to the SDK, the window's own preferences last",
+      mod.kwargs["options"] == [*settings.ALL, inspect_keys.keyboard_key, inspect_keys.controller_key,
+                                keys.keyboard_key, keys.controller_key, prefs.language, prefs.controller_icons,
+                                prefs.last_page]
       and heirloom_settings.heirloom in settings.ALL and holster_settings.holster in settings.ALL)
+check("no inspection key by default, neither keyboard nor controller (Kevin, 2026-09-30)",
+      inspect_keys.keyboard_bind.key is None and inspect_keys.controller_bind.key is None
+      and inspect_keys.keyboard_key.default_value is None and inspect_keys.controller_key.default_value is None)
 check("choosing the mod in the SDK's menu opens its window",
       getattr(mod, "_apex_heirloom_panel_display_installed", False) is True)
 check("the arms' frames, for the knife and for a key held, and the weapon restriction are given to the SDK",
@@ -83,6 +91,12 @@ check("the mod on starts only the parts whose switch is on", running() == (False
 check("switching on gives each key its option's, the one the window shows",
       keys.keyboard_bind.key == keys.keyboard_key.value and keys.keyboard_bind.key != "LeftMouseButton"
       and keys.controller_bind.key == keys.controller_key.value == "Gamepad_FaceButton_Left")
+inspect_keys.keyboard_key.value, inspect_keys.controller_key.value = "F", "Gamepad_DPad_Up"
+inspect_keys.keyboard_bind.key, inspect_keys.controller_bind.key = "LeftMouseButton", "Gamepad_LeftX"
+heirloom_settings.heirloom.value = True
+check("the heirloom switched on gives each inspection key its option's, not the file's own copy",
+      running() == (True, True) and inspect_keys.keyboard_bind.key == "F"
+      and inspect_keys.controller_bind.key == "Gamepad_DPad_Up")
 check("each part is one of the two the mod runs", parts.PARTS == (parts.HEIRLOOM, parts.HOLSTER)
       and parts.HEIRLOOM.switch is heirloom_settings.heirloom and parts.HOLSTER.switch is holster_settings.holster)
 

@@ -5,7 +5,9 @@ sets, shown only while no weapon is in hand and the arms play our animations; th
 next weapon change, its mode's list given at once; another heirloom chosen, its list given at once, its model, own
 look, glow and hold on the heirloom in hand at once, hidden until the arms play its animations, drawn with its own;
 a glow force or a skin chosen, seen at once, another heirloom's skin leaving it as it is, a change that fails written
-without stopping the next; each chosen as the window saves it, through its option; switched off, our list
+without stopping the next; each chosen as the window saves it, through its option; the chosen heirloom's inspection
+played at a press of its key from its own folder, only while it shows in the empty hand, stopped when a weapon comes
+back or the camera leaves the eyes, the knife's none, one not in the game said once; switched off, our list
 taken back and the knife staying while the hands hold it, all taken away once it leaves them, and switched on before,
 it stays; put on a new character, the old knife leaves the old hands; without our list, our model or the arms,
 nothing is built and it is said."""
@@ -25,6 +27,7 @@ import fake_world  # noqa: E402
 
 world = fake_world.World(state)
 from apex_heirloom import heirloom, heirloom_choices, heirloom_settings, mod  # noqa: E402
+from fake_arms import Arms  # noqa: E402
 
 fails: list[str] = []
 
@@ -149,6 +152,83 @@ check("the knife chosen again: its list, its model in its own look, its hold",
       and [copy.parent for copy in mesh.materials] == [world.look[look[slot]["parent"]]
                                                           for slot in ("Base_Mat", "Tech_Mat")]
       and mesh.fitted_scale == (0.62, -0.62, 0.62))
+# The inspection, at a press of its key (inspect_keys.py calls heirloom.inspect): the arms play montages from here on.
+montages = Arms()
+for method in ("PlaySlotAnimationAsDynamicMontage", "Montage_IsPlaying", "Montage_Stop"):
+    setattr(world.instance, method, getattr(montages, method))
+# Where the parent's tools build the axe's: its lists container, its default mode's folder, beside its draw.
+INSPECTION = "/Game/PlayerCharacters/_Shared/Animation/1st/AxeApex/AS_UA_Inspect.AS_UA_Inspect"
+inspection = types.SimpleNamespace(Name="AS_UA_Inspect")
+rifle = types.SimpleNamespace(Name="OakWeapon_1")
+
+
+def inspected() -> list[dict]:
+    """The inspections played on the arms, in their order: in the draw's slot, by their names."""
+    return [played for played in montages.played if played.get("SlotNodeName") == "FullBody"
+            and getattr(played.get("Asset"), "Name", "").startswith("AS_UA_Inspect")]
+
+
+world.rest[0] = "HeirApx"
+world.frame()
+state["info"].clear()
+heirloom.inspect()
+check("the knife in the empty hand: it has no inspection, the key plays nothing and says so",
+      inspected() == [] and said("the jakobs_knife has no inspection"))
+chosen(heirloom_settings.model, "axe")
+world.rest[0] = "AxeApex"
+world.frame()
+state["info"].clear()
+heirloom.inspect()
+heirloom.inspect()
+check("the axe's inspection not in the game yet: said once, nothing played",
+      inspected() == [] and len([line for line in state["info"] if "no inspection until" in line]) == 1
+      and said("AS_UA_Inspect was not found"))
+world.container[INSPECTION] = inspection
+heirloom.inspect()
+check("in the game since, it waits for the heirloom to be put in a hand again", inspected() == [])
+heirloom.show(world.character)
+mesh = world.meshes[-1]
+heirloom.inspect()
+check("put in a hand again, a press plays the axe's own, loaded from its folder, from its start with no fade",
+      len(inspected()) == 1 and inspected()[0].get("Asset") is inspection
+      and inspected()[0].get("InTimeToStartMontageAt") == 0.0 and inspected()[0].get("BlendInTime") == 0.0
+      and package(INSPECTION) in world.loaded)
+heirloom.inspect()
+again_at = (fake_world.HEIRLOOMS["axe"].get("inspect") or {}).get("again_at")
+check("pressed again while it plays: from the first key, fading in briefly",
+      again_at is not None and len(inspected()) == 2 and inspected()[1].get("InTimeToStartMontageAt") == again_at
+      and inspected()[1].get("BlendInTime") == 0.1)
+playing = montages.playing[-1] if montages.playing else None
+world.weapon_change(rifle)
+check("a weapon drawn while it plays stops it at once", playing is not None and (0.0, playing) in montages.stopped
+      and said("inspection stopped"))
+heirloom.inspect()
+check("a weapon in hand: the key plays nothing", len(inspected()) == 2)
+world.weapon_change(None)
+heirloom.inspect()
+check("the weapon put away again: a press plays it from its start",
+      len(inspected()) == 3 and inspected()[2].get("InTimeToStartMontageAt") == 0.0)
+playing = montages.playing[-1] if montages.playing else None
+eyes = world.camera.GetActorCameraMode
+world.camera.GetActorCameraMode = lambda _character: "ThirdPerson"
+world.frame()
+heirloom.inspect()
+check("the camera out of the eyes hides the heirloom: its inspection stops, and the key plays nothing",
+      playing is not None and (0.0, playing) in montages.stopped and len(inspected()) == 3)
+world.camera.GetActorCameraMode = eyes
+world.frame()
+CROUCHED = "/Game/PlayerCharacters/_Shared/Animation/1st/AxeApex/AS_UA_Inspect_Crouch.AS_UA_Inspect_Crouch"
+world.container[CROUCHED] = types.SimpleNamespace(Name="AS_UA_Inspect_Crouch")
+world.character.bIsCrouched = True
+heirloom.inspect()
+check("the player crouched: a press plays the axe's inspection built on the crouched rest, from its folder",
+      len(inspected()) == 4 and inspected()[3].get("Asset") is world.container[CROUCHED]
+      and package(CROUCHED) in world.loaded)
+world.character.bIsCrouched = False
+for method in ("PlaySlotAnimationAsDynamicMontage", "Montage_IsPlaying", "Montage_Stop"):
+    delattr(world.instance, method)
+chosen(heirloom_settings.model, "jakobs_knife")
+
 chosen(heirloom_settings.glow, 3)
 world.rest[0] = "HeirApx"
 

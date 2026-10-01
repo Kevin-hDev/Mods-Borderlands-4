@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2 - 2026-10-01
+
+- New: a key to inspect your heirloom. Your hand spins the axe, as in Apex Legends.
+- The knife will get its own inspection later: with it, the key does nothing for now.
+- Choose the key on the CONTROLS page, on keyboard or mouse and on controller. There is no key by default.
+- The separate Heirloom file now has a CONTROLS page too, for this key.
+
 ## 1.0.1 - 2026-09-29
 
 - New heirloom: an axe, with its own animations and a glowing blade.

@@ -1,7 +1,8 @@
 """Apex Heirloom's window as built: Apex Grapple's frame, the HEIRLOOM page with its sentence at the top, the chosen
 heirloom's picture beside it (sketch H2), the mode's and the heirloom's buttons, the skin's arrows, each row in a box
-the page can hide; the HOLSTER page, then Grapple's CONTROLS page with one key selector, which captures the
-controller too, its keys in one box that greys with the holster."""
+the page can hide; the HOLSTER page, then Apex Movement's COMMANDS page (sketch I1): a card per command, PUT AWAY then
+INSPECT, each a keyboard/mouse row and a controller row, then an untitled card with the icons, the reset and the Esc
+hint."""
 
 import pathlib
 import sys
@@ -101,8 +102,12 @@ panel_fonts.build = lambda _root: {"title": object(), "body": object()}
 Widget.created.clear()
 model = panel_model.Model(mod)
 root, widgets = panel_view.build_view(SimpleNamespace(), model)
-form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()},
-                            panel_factory.PanelBindings(), model)
+form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
+bindings = panel_factory.PanelBindings()
+built = panel_factory.build(SimpleNamespace(), bindings, True)
+check("the factory, Movement's, opens the window on the mod, the disabled mod included, and hands the form the model",
+      bindings.mod is mod and bindings.ready() and bindings.prepare() and isinstance(built[1], panel_form.PanelForm)
+      and built[1].model.mod is mod)
 
 check("three pages, HEIRLOOM, HOLSTER then CONTROLS, opened on HEIRLOOM, under the mod's name",
       theme.PAGES == ("heirloom", "holster", "controls") and len(widgets["pages"].children) == 3
@@ -127,19 +132,28 @@ check("the heirloom is a button per heirloom; the skin, two arrows around its na
               for name in ("setting:skin_axe:previous", "choice:skin_axe", "setting:skin_axe:next"))
       and widgets["value:skin_axe"] in walk(widgets["row:skin_axe"])
       and widgets["value:skin_axe"] not in walk(widgets["setting:skin_axe"]))
-first = widgets["first"]
-check("the CONTROLS page has Grapple's key selector, its icon, the current keys, the icon families and the reset",
-      first in walk(widgets["pages"].children[2]) and "first:icon" in widgets and "pad_summary" in widgets
-      and "icons:PS5" in widgets and "icons:XSX" in widgets and "reset" in widgets and "current" in widgets)
-check("the key selector, the icon families and the reset sit in the box that greys with the holster",
-      all(widgets[name] in walk(widgets["controls_keys"]) for name in ("first", "icons:PS5", "reset", "current")))
-check("one key per device: no second selector, no two-key switch", "second" not in widgets and "two" not in widgets
-      and "two_text" not in widgets)
-check("the selector captures the controller's buttons as well as the keyboard's",
-      first.calls["SetAllowGamepadKeys"] == (True,))
-check("the selector's words are this mod's: CHOOSE A KEY, then Grapple's PRESS YOUR KEY NOW",
-      first.calls["SetNoKeySpecifiedText"] == ("CHOOSE A KEY",)
-      and first.calls["SetKeySelectionText"] == ("PRESS YOUR KEY NOW",))
+commands = list(walk(widgets["pages"].children[2]))
+cards = [widgets["card:command_put_away"], widgets["card:command_inspect"]]
+check("the COMMANDS page: the PUT AWAY card, then INSPECT, then the icons, the reset, its status and the Esc hint",
+      all(card in commands for card in cards) and commands.index(cards[0]) < commands.index(cards[1])
+      < commands.index(widgets["icons:PS5"]) < commands.index(widgets["commands_reset"])
+      < commands.index(widgets["commands_status"]) < commands.index(widgets["escape_hint"]))
+check("each card holds its title, its description, then a keyboard/mouse row and a controller row",
+      all(widgets[f"{part}:command_{name}"] in walk(widgets[f"card:command_{name}"])
+          for name in ("put_away", "inspect") for part in ("heading", "group"))
+      and all(widgets[f"{part}:{name}:{device}"] in walk(widgets[f"card:command_{name}"])
+              for name in ("put_away", "inspect") for device in ("keyboard", "controller")
+              for part in ("device", "command", "clear", "value")))
+check("the last card has no title (sketch I1): only the two commands have one",
+      sorted(name for name in widgets if name.startswith("heading:command"))
+      == ["heading:command_inspect", "heading:command_put_away"]
+      and not any(widgets["icons:PS5"] in walk(card) for card in cards))
+check("the keyboard's rows ignore the controller's buttons, the controller's rows take them",
+      all(widgets[f"command:{name}:keyboard"].calls["SetAllowGamepadKeys"] == (False,)
+          and widgets[f"command:{name}:controller"].calls["SetAllowGamepadKeys"] == (True,)
+          for name in ("put_away", "inspect")))
+check("no key selector from Grapple's CONTROLS page is left", "first" not in widgets and "second" not in widgets
+      and "controls_keys" not in widgets and "current" not in widgets)
 check("every widget is attached once", attached_once(root, widgets))
 
 picture = widgets.get("picture:heirloom:jakobs_knife")
