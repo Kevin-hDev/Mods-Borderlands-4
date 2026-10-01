@@ -159,9 +159,9 @@ check("on again, the card is live, the hold time still grey while no key is held
 
 w["nav:controls"].checked = True
 form.poll()
-check("COMMANDS is the third page: PUT AWAY then INSPECT, each a keyboard/mouse row and a controller row",
+check("COMMANDS is the third page: PUT AWAY then ANIMATION, each a keyboard/mouse row and a controller row",
       w["pages"].index == 2 and w["heading:command_put_away"].text == "PUT AWAY"
-      and w["heading:command_inspect"].text == "INSPECT"
+      and w["heading:command_inspect"].text == "ANIMATION"
       and w["group:command_put_away"].text == "The key that puts your weapon away. Greyed out while Holster is OFF."
       and w["device:inspect:keyboard"].text == "KEYBOARD / MOUSE"
       and w["device:inspect:controller"].text == "CONTROLLER")
@@ -202,7 +202,8 @@ w["command:put_away:controller"].SelectedKey.Key.KeyName = "Gamepad_FaceButton_T
 form.poll()
 check("the inspection's button is refused for PUT AWAY, which keeps Square",
       keys.controller_bind.key == "Gamepad_FaceButton_Left"
-      and w["commands_status"].text == "Not saved: this key already inspects your heirloom. Previous key kept.")
+      and w["commands_status"].text == "Not saved: this key already plays your heirloom's animation. Previous key "
+                                       "kept.")
 for command, owner, kept in (("inspect", inspect_keys, "F"), ("put_away", keys, "Q")):
     w[f"command:{command}:keyboard"].SelectedKey.Key.KeyName = "MouseScrollDown"
     form.poll()
@@ -247,7 +248,7 @@ check("in French, the pages speak French", panel_preferences.language.value == "
       and w["setting:model:axe_label"].text == "HACHE" and w["label:glow"].text == "LUMIÈRE"
       and w["choice:skin_axe"].text == "COUTEAU JAKOBS")
 check("... and the COMMANDS page speaks the sketch's words",
-      w["heading:command_put_away"].text == "RANGER L'ARME" and w["heading:command_inspect"].text == "INSPECTER"
+      w["heading:command_put_away"].text == "RANGER L'ARME" and w["heading:command_inspect"].text == "ANIMATION"
       and w["group:command_put_away"].text == "La touche qui range ton arme. Grisée quand le Rangement est sur NON."
       and w["group:command_inspect"].text == "Fais tourner ton heirloom dans ta main quand ton arme est rangée. "
                                              "Grisée quand le Heirloom est sur NON."

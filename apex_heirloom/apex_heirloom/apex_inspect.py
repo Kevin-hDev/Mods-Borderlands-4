@@ -1,5 +1,6 @@
 """Plays the chosen heirloom's inspection on the arms at a press of its key (inspect_keys.py): a short flourish of the
-heirloom in the right hand, as Wraith turns her kunai in Apex Legends, over whatever the arms play.
+heirloom in the right hand, as Wraith turns her kunai in Apex Legends, over whatever the arms play. Not what Apex calls
+the inspection, a slower animation (Kevin, 2026-10-01): the player reads ANIMATION, "inspect" is the code's name only.
 
 Why, 2026-09-29 (cosmetics/heirloom/docs/heirloom.md, section 20): Kevin wants it played "partout", standing, walking,
 running, crouched or sliding, the left hand keeping its own motion, and only drawing the weapon stops it before its

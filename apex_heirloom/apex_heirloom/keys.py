@@ -48,7 +48,7 @@ def _on(device: str) -> Any:
 
 # Hidden binds, each shown once through its option: a visible bind is listed a second time under "Keybinds", and a key
 # changed there never reaches the option (Kevin, 2026-09-25, for the other mods: "retire le second").
-# Why "Keyboard: Put Away", 2026-09-30: the SDK's text menu now lists the inspection's keys too, "Keyboard: Inspect";
+# Why "Keyboard: Put Away", 2026-09-30: the SDK's text menu now lists the animation's keys too, "Keyboard: Animation";
 # each entry names its device and its command, or two of the four would read alike (docs/mokup/menu_mods/decisions.md,
 # 2026-09-26). The identifiers stay: the players' settings files keep their keys under them.
 keyboard_bind = keybind(

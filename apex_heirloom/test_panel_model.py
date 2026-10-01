@@ -55,7 +55,7 @@ check("the COMMANDS page keeps Grapple's words for its reset and icons, as sketc
       and panel_i18n.text("PS5", "FR") == "PLAYSTATION")
 check("and its own for each card and row (sketch I1)",
       panel_i18n.text("command_put_away", "FR") == "RANGER L'ARME"
-      and panel_i18n.text("command_inspect", "EN") == "INSPECT"
+      and panel_i18n.text("command_inspect", "EN") == "ANIMATION"
       and panel_i18n.text("change_controller", "FR") == "CHOISIR UN BOUTON"
       and panel_i18n.text("no_key", "FR") == "AUCUNE"
       and "grappin" not in panel_i18n.text("controls_reset", "FR")

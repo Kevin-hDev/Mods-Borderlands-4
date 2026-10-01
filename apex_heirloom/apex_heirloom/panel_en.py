@@ -11,7 +11,7 @@ TEXT = {
     # The COMMANDS page's cards (sketch I1, 2026-09-30), each row worded by its device, as the sketch.
     "command_put_away": "PUT AWAY",
     "command_put_away_desc": "The key that puts your weapon away. Greyed out while Holster is OFF.",
-    "command_inspect": "INSPECT",
+    "command_inspect": "ANIMATION",
     "command_inspect_desc": "Spin your heirloom in your hand while your weapon is put away. Greyed out while Heirloom "
                             "is OFF.",
     "keyboard": "KEYBOARD / MOUSE", "controller": "CONTROLLER",
@@ -21,7 +21,7 @@ TEXT = {
     "controls_reset": "Default controls restored.",
     # Why a key was not saved, each its own cause (command_keys.py).
     "duplicate_put_away": "Not saved: this key already puts your weapon away. Previous key kept.",
-    "duplicate_inspect": "Not saved: this key already inspects your heirloom. Previous key kept.",
+    "duplicate_inspect": "Not saved: this key already plays your heirloom's animation. Previous key kept.",
     "wheel_key": "Not saved: the mouse wheel changes weapons in the game. Previous key kept.",
     "invalid_keyboard": "Not saved: choose a keyboard key or a mouse button. Previous key kept.",
     "invalid_controller": "Not saved: choose a controller button. Previous button kept.",

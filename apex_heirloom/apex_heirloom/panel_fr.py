@@ -16,7 +16,7 @@ TEXT = {
     "refused_part": "Un autre fichier installé fait déjà tourner cette partie. Éteins-le d'abord.",
     "command_put_away": "RANGER L'ARME",
     "command_put_away_desc": "La touche qui range ton arme. Grisée quand le Rangement est sur NON.",
-    "command_inspect": "INSPECTER",
+    "command_inspect": "ANIMATION",
     "command_inspect_desc": "Fais tourner ton heirloom dans ta main quand ton arme est rangée. Grisée quand le "
                             "Heirloom est sur NON.",
     "keyboard": "CLAVIER / SOURIS", "controller": "MANETTE",
@@ -25,7 +25,8 @@ TEXT = {
     "escape_hint": "Échap annule la saisie. La touche console est réservée.",
     "controls_reset": "Commandes d’origine restaurées.",
     "duplicate_put_away": "Non enregistrée : cette touche range déjà ton arme. Touche précédente gardée.",
-    "duplicate_inspect": "Non enregistrée : cette touche inspecte déjà ton heirloom. Touche précédente gardée.",
+    "duplicate_inspect": "Non enregistrée : cette touche joue déjà l'animation de ton heirloom. Touche précédente "
+                         "gardée.",
     "wheel_key": "Non enregistrée : la molette change d'arme dans le jeu. Touche précédente gardée.",
     "invalid_keyboard": "Non enregistrée : choisis une touche du clavier ou un bouton de la souris. Touche précédente "
                         "gardée.",

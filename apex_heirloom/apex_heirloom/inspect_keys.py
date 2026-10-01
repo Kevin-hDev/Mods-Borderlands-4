@@ -6,7 +6,7 @@ Why a key of its own, 2026-09-29 (cosmetics/heirloom/docs/heirloom.md, section 2
 menu ». Where, Kevin, 2026-09-30 (docs/mokup/menu_mods/decisions.md, sketch I1): on the COMMANDS page, the card
 « Inspecter » under « Ranger l'arme » (control_config.py). Why none by default, Kevin, the same day: « aucune par défaut
 assignable dans le menu pour manette et clavier/souris »: the player chooses each, and no key the game or another mod
-already uses is taken for him.
+already uses is taken for him. Why the player reads ANIMATION there, not « Inspecter »: apex_inspect.py.
 
 A key is never blocked: the game keeps it. One gesture per press (Kevin, 2026-09-25): a press or a mouse double click
 starts it, a key held does not repeat it.
@@ -47,12 +47,12 @@ def _on(device: str) -> Callable[[Any], None]:
 # names its device (docs/mokup/menu_mods/decisions.md, 2026-09-26: two entries of one command must not read alike).
 keyboard_bind = keybind(
     "inspect_keyboard", None, _on(KEYBOARD),
-    display_name="Keyboard: Inspect", description="The keyboard or mouse key that inspects your heirloom.",
+    display_name="Keyboard: Animation", description="The keyboard or mouse key that plays your heirloom's animation.",
     is_hidden=True, event_filter=None,
 )
 controller_bind = keybind(
     "inspect_controller", None, _on(CONTROLLER),
-    display_name="Controller: Inspect", description="The controller button that inspects your heirloom.",
+    display_name="Controller: Animation", description="The controller button that plays your heirloom's animation.",
     is_hidden=True, event_filter=None,
 )
 # Why not the wheel, 2026-09-30, as the put-away key (keyboard_option.py): the game changes weapon with it, which would

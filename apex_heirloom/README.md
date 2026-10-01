@@ -13,8 +13,8 @@ Two parts, each with its own switch at the top of its page in the settings windo
 - **The heirloom.** With no weapon in hand, your right hand holds your heirloom, the Jakobs knife or the axe, each
   with its own animations: idle, walking, running, crouching, sliding and jumping. When your weapon comes back, your
   hands go down with it. The heirloom hides while you climb (ladder, ledge, wall) and in third person. A key of your
-  choice inspects it: your hand spins the axe, as in Apex Legends. The knife has no inspection yet: with it, the key
-  does nothing.
+  choice plays its animation: your hand spins the axe, as in Apex Legends. The knife has no animation of its own yet:
+  with it, the key does nothing.
 - **The holster.** Hold A on keyboard (the key to the right of Tab, Q on an English keyboard) or Square on controller
   to put your weapon away. Hold or press, and the hold time from 0.2 to 1 second, are set separately for keyboard and
   controller. Drawing your weapon again is left to the game.
@@ -27,7 +27,7 @@ settings apply at the next weapon change after leaving the menu.
 
 Open the console with `~`, type `mods`, and choose **Apex Heirloom**: its settings window, in English and French, has
 three pages, HEIRLOOM, HOLSTER and CONTROLS. The CONTROLS page sets the keyboard key and the controller button that
-put your weapon away, and those that inspect your heirloom (none by default).
+put your weapon away, and those that play your heirloom's animation (none by default).
 
 ## Three files
 

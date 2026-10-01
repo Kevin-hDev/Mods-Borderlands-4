@@ -47,8 +47,8 @@ check("no key by default, neither keyboard nor controller (Kevin, 2026-09-30)",
       and inspect_keys.controller_key.value is None)
 check("saved under their own names, apart from the put-away keys",
       (keyboard.identifier, controller.identifier) == ("inspect_keyboard", "inspect_controller"))
-check("each entry of the SDK's menu names its device and the inspection",
-      keyboard.display_name == "Keyboard: Inspect" and controller.display_name == "Controller: Inspect")
+check("each entry of the SDK's menu names its device and the animation, not Apex's inspection (Kevin, 2026-10-01)",
+      keyboard.display_name == "Keyboard: Animation" and controller.display_name == "Controller: Animation")
 check("each is read on every event, so that a mouse double click counts",
       keyboard.event_filter is None and controller.event_filter is None)
 inspect_keys.keyboard_key.value = "F"
