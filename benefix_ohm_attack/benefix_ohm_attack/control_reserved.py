@@ -1,0 +1,30 @@
+# Generated: the settings window Kevin's mods share, taken from Apex Heirloom's and put under this mod's names.
+# Its comments may speak of that mod. Never edited by hand: the window's generator writes this file.
+"""Read console shortcuts only at a completed UI choice, without retaining engine objects."""
+
+import re
+
+MAX_CONSOLE_KEYS = 16
+# Grapple's key-name bounds, copied from its input_list module by outils/sync_menu_heirloom.py.
+MAX_NAME_LENGTH = 256
+NAME_PATTERN = re.compile(r"[A-Za-z0-9_]+")
+
+
+def console_keys():
+    import unrealsdk
+
+    configured = unrealsdk.find_class("InputSettings").ClassDefaultObject.ConsoleKeys
+    if len(configured) > MAX_CONSOLE_KEYS:
+        raise ValueError("Too many console shortcuts")
+    found = set()
+    for entry in configured:
+        name = str(entry.KeyName)
+        # Native ConsoleKeys includes literal layout characters (² on Kevin's keyboard).
+        # Preserve them as reserved keys without relaxing assignable key/action names.
+        character = len(name) == 1 and name.isprintable() and not name.isspace()
+        if not 0 < len(name) <= MAX_NAME_LENGTH:
+            raise ValueError("Invalid console shortcut")
+        if not character and not NAME_PATTERN.fullmatch(name):
+            raise ValueError("Invalid console shortcut")
+        found.add(name)
+    return frozenset(found)

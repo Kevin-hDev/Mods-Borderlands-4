@@ -1,0 +1,26 @@
+# Generated: the settings window Kevin's mods share, taken from Apex Heirloom's and put under this mod's names.
+# Its comments may speak of that mod. Never edited by hand: the window's generator writes this file.
+"""Show the custom window when this mod's SDK settings page is selected."""
+
+from . import report
+
+MARKER = "_benefix_ohm_attack_panel_display_installed"
+
+
+def install(mod):
+    if getattr(mod, MARKER, False):
+        return
+    original = getattr(mod, "iter_display_options", None)
+    if not callable(original):
+        return
+
+    def display():
+        try:
+            from . import panel_entry
+            panel_entry.open_page(mod)
+        except Exception:
+            report.error_once("panel:menu", "Custom menu unavailable. Console settings remain available.")
+        yield from original()
+
+    mod.iter_display_options = display
+    setattr(mod, MARKER, True)
