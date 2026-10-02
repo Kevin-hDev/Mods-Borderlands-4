@@ -14,6 +14,13 @@ LEGACY_STATES = ("_apex_camera_runtime_v1", "_apex_camera_runtime_v2")
 ALL_STATES = (STATE, *LEGACY_STATES)
 
 
+class IncompatibleState(RuntimeError):
+    """A loaded mod carries a camera runtime of another protocol: the player has to update one of the two."""
+
+    # The line a settings window shows for this refusal, in place of its line for an unknown cause.
+    notice = "camera_outdated"
+
+
 def _existing_state() -> ModuleType | None:
     found = [sys.modules[name] for name in ALL_STATES if name in sys.modules]
     if not found:
@@ -21,7 +28,7 @@ def _existing_state() -> ModuleType | None:
     state = found[0]
     if (any(getattr(item, "protocol", None) != PROTOCOL for item in found)
             or any(item is not state for item in found[1:])):
-        raise RuntimeError("incompatible shared camera state")
+        raise IncompatibleState("incompatible shared camera state")
     return state
 
 

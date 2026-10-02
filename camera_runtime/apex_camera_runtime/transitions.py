@@ -1,6 +1,6 @@
 """Keep only the local player's selected on-foot camera mode."""
 
-from .constants import FFYL_MODE, ORBIT_MODE, THIRD_PERSON_MODE
+from .constants import FFYL_MODE, GROUND_SLAM_EXIT_MODE, ORBIT_MODE, THIRD_PERSON_MODE
 
 REQUESTS = {
     "/Script/OakGame.OakPlayerController:CameraTransition":
@@ -12,7 +12,8 @@ REQUESTS = {
 THIRD_PERSON = THIRD_PERSON_MODE
 VEHICLE_MODE = "ThirdPersonVehicle"
 # FFYL accepts the selected third-person camera while downed; verified in game on 2026-09-27.
-ON_FOOT_MODES = frozenset(("Default", "Slide", FFYL_MODE))
+# The game lays GroundSlamExit over the selected camera for 1.4 s after a ground slam lands; measured on 2026-10-02.
+ON_FOOT_MODES = frozenset(("Default", "Slide", FFYL_MODE, GROUND_SLAM_EXIT_MODE))
 RECOVERABLE_MODES = ON_FOOT_MODES | frozenset((ORBIT_MODE, THIRD_PERSON_MODE))
 
 

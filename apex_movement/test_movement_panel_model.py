@@ -12,7 +12,7 @@ import movement_ui_fixture
 movement_ui_fixture.install()
 
 from apex_movement import camera, camera_settings, pack, settings, walk_key
-from apex_movement import panel_model, panel_preferences, panel_theme
+from apex_movement import panel_en, panel_fr, panel_model, panel_preferences, panel_theme, report
 
 
 class Mod:
@@ -190,6 +190,30 @@ model.command_actions.apply = apply_commands
 assert model.toggle_enabled() and not mod.is_enabled
 assert model.write({"dash_distance": 230}) and not mod.is_enabled
 assert model.toggle_enabled() and mod.is_enabled
+
+
+# A switch that does not take keeps the state, writes its cause in the log and names the line the window shows.
+class Outdated(RuntimeError):
+    notice = "camera_outdated"
+
+
+def refuse():
+    raise Outdated("incompatible shared camera state")
+
+
+errors = []
+report.logging.error = errors.append
+report.reset()
+mod.is_enabled = False
+mod.enable = refuse
+assert model.toggle_enabled() is False and not mod.is_enabled
+assert model.toggle_notice == "camera_outdated"
+assert errors == ["[Apex Movement] could not switch the mod on: Outdated: incompatible shared camera state"]
+mod.enable = lambda: (_ for _ in ()).throw(OSError("private path"))
+assert model.toggle_enabled() is False and model.toggle_notice == "toggle_failed" and len(errors) == 2
+del mod.enable
+assert model.toggle_enabled() and mod.is_enabled
+assert all("camera_outdated" in text and "toggle_failed" in text for text in (panel_en.TEXT, panel_fr.TEXT))
 camera_settings.zoom.option.value = 600
 assert model.default_commands() and camera_settings.zoom.distance() == 600
 assert model.restore() and camera_settings.zoom.distance() == 300

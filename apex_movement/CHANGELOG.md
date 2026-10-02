@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.8 - 2026-10-02
+
+- Fixed: in third person, landing a ground slam switched the view to first person for a moment.
+
 ## 1.1.7 - 2026-09-28
 
 - Fixed: holding crouch while sliding off a high ledge could still trigger the game's old held-crouch ground slam.

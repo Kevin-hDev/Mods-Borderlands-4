@@ -187,7 +187,8 @@ class PanelForm:
                            else getattr(self.model, name))()
                 self.notice = ({"restore": "restored", "undo": "undone",
                                 "enabled": "saved"}[name] if success else
-                               "ready" if success is None else "failed")
+                               "ready" if success is None else
+                               self.model.toggle_notice if name == "enabled" else "failed")
                 self.sync(widgets)
                 return False
         if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:

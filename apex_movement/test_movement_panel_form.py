@@ -212,6 +212,27 @@ assert not form.poll() and settings.dash.value is True and model.can_undo
 widgets["undo"].checked = True
 assert not form.poll() and settings.dash.value is False and not model.can_undo
 
+
+# A switch that does not take is not a failed save: the window shows the line the error names, or the switch's own.
+class Outdated(RuntimeError):
+    notice = "camera_outdated"
+
+
+def refuse():
+    raise Outdated("incompatible shared camera state")
+
+
+mod.is_enabled = False
+mod.enable = refuse
+widgets["enabled"].checked = True
+assert not form.poll() and form.notice == "camera_outdated" and not mod.is_enabled
+mod.enable = lambda: (_ for _ in ()).throw(OSError("private path"))
+widgets["enabled"].checked = True
+assert not form.poll() and form.notice == "toggle_failed" and not mod.is_enabled
+del mod.enable
+widgets["enabled"].checked = True
+assert not form.poll() and form.notice == "saved" and mod.is_enabled
+
 mod.fail = True
 widgets["setting:dash_distance"].value = 230
 widgets["close"].checked = True

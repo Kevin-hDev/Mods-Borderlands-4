@@ -18,6 +18,8 @@ TEXT = {
     "command_tools": "OPTIONS DES COMMANDES", "command_tools_desc": "Icônes de manette et touches caméra d'origine.",
     "commands_reset": "TOUCHES D'ORIGINE", "controller_icons": "ICÔNES DE MANETTE",
     "camera_draft_discarded": "Mod caméra changé : les réglages caméra non enregistrés ont été annulés.",
+    "camera_outdated": "Des mods de caméra de versions différentes sont chargés. Mets à jour Apex Movement, Omni Sprint "
+                       "et Third Person & FOV, puis relance le jeu.",
     "right": "DROITE", "left": "GAUCHE",
     "language": "LANGUE", "menu_language": "LANGUE DU MENU", "language_name": "FRANÇAIS",
     "movement": "DÉPLACEMENT", "auto_sprint": "COURSE AUTOMATIQUE", "slides": "GLISSADES",

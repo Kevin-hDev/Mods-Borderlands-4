@@ -4,7 +4,7 @@ from mods_base import build_mod
 
 from . import camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "kevin-hDev"
 
 

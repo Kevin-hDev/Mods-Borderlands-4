@@ -5,10 +5,14 @@ import math
 from mods_base import KeybindOption
 
 from . import menu, pack, panel_preferences as prefs, report
+from . import panel_toggle
 from .panel_transaction import Transaction
 
 
 class Model:
+    # The line the window shows when the ENABLED switch did not take.
+    toggle_notice = panel_toggle.FAILED
+
     def __init__(self, mod):
         self.mod = mod
         self.groups = tuple(menu.MENU)
@@ -212,7 +216,8 @@ class Model:
         try:
             (self.mod.disable if previous else self.mod.enable)()
             self.mod.save_settings()
-        except Exception:
+        except Exception as error:
+            self.toggle_notice = panel_toggle.notice(not previous, error)
             try:
                 (self.mod.enable if previous else self.mod.disable)()
                 self.mod.save_settings()

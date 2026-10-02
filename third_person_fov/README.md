@@ -9,7 +9,7 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
 
 - Keeps the camera behind the character while on foot. Third person is off by default.
 - Aiming uses the game's native first-person view, then returns to third person when aim is released.
-- Sliding, leaving a vehicle and being downed keep the selected on-foot camera.
+- Sliding, leaving a vehicle, landing a ground slam and being downed keep the selected on-foot camera.
 - In third person, the camera sits over the right shoulder or the left one, and an orbit camera turns freely around
   the character. Both switches are greyed while third person is off.
 - The FOV slider ranges from 70 to 150 and applies while the mod is enabled. Disabling the mod restores the game's

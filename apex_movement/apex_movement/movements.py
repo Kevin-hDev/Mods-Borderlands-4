@@ -21,7 +21,7 @@ UI_SHARED = (
     "panel_common_en", "panel_common_fr", "panel_en", "panel_entry", "panel_factory", "panel_fonts",
     "panel_form", "panel_fr", "panel_header", "panel_i18n", "panel_labels", "panel_model", "panel_transaction",
     "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_pages", "panel_preferences",
-    "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_view", "panel_widgets",
+    "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_toggle", "panel_view", "panel_widgets",
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.

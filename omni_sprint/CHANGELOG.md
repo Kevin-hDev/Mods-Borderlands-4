@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.5 - 2026-10-02
+
+- Fixed: in third person, landing a ground slam switched the view to first person for a moment.
+
 ## 1.0.4 - 2026-09-27
 
 - Fixed: the third-person toggle did nothing for characters using an alternate player animation class.

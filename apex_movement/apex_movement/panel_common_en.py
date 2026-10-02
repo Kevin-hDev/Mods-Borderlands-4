@@ -14,6 +14,8 @@ TEXT = {'close': 'CLOSE',
  'ready': 'Changes are saved automatically. Close returns to the mod list.',
  'saved': 'Saved.',
  'failed': 'Could not save. Previous settings kept. Please try again.',
+ 'toggle_failed': 'The mod could not be switched on or off. Nothing was changed. The reason is in '
+                  'unrealsdk.log.',
  'restored': 'Default settings restored. You can undo this reset.',
  'undone': 'Previous settings restored.',
  'refused': 'Assignment refused. This input is reserved or already used.'}

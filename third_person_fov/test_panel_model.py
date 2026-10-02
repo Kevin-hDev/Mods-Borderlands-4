@@ -2,6 +2,7 @@
 
 import pathlib
 import sys
+import types
 import weakref
 
 import sdk_stubs
@@ -64,6 +65,24 @@ check("another camera owner hides ineffective controls", elsewhere.camera_elsewh
       and not elsewhere.write({"fov": 130}) and not elsewhere.assign_command("orbit", "keyboard", "J"))
 owner.unregister("apex_movement")
 check("controls return after the other owner leaves", bool(Model(mod).options))
+shared.reset_for_tests()
+
+# A camera mod of another protocol loaded first, as an Apex Movement older than this file: the switch refuses.
+mod.disable()
+legacy = types.ModuleType("_apex_camera_runtime_v2")
+legacy.protocol, legacy.runtime = 2, object()
+sys.modules["_apex_camera_runtime_v2"] = legacy
+refused = Model(mod)
+check("a camera mod of another version refuses the switch and leaves the mod off",
+      refused.toggle_enabled() is False and not mod.is_enabled)
+check("the window then says which mods to update instead of a failed save",
+      refused.toggle_notice == "camera_outdated")
+check("the cause of the refusal is written in the log",
+      state["errors"][-1] == "[Third Person & FOV] could not switch the mod on: "
+                             "IncompatibleState: incompatible shared camera state")
+del sys.modules["_apex_camera_runtime_v2"]
+check("once the other mod is gone the switch works again", refused.toggle_enabled() and mod.is_enabled)
+mod.disable()
 shared.reset_for_tests()
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(bool(fails))

@@ -37,6 +37,11 @@ ffyl_result = callback(player, args("FFYL"), None, ffyl)
 check("the player's FFYL request stays in third person",
       ffyl_result is hooks.Block and len(ffyl.calls) == 1
       and ffyl.calls[0][0] == "ThirdPerson")
+slam = Bound()
+slam_result = callback(player, args("GroundSlamExit"), None, slam)
+check("the player's ground slam landing stays in third person",
+      slam_result is hooks.Block and len(slam.calls) == 1
+      and slam.calls[0][0] == "ThirdPerson")
 transitions.set_first_person_allowed(True)
 aim = Bound()
 check("the player's native first-person mode is preserved while aiming",
@@ -112,8 +117,14 @@ orbit_ffyl_result = orbit_hooks.items[(path, "PRE", "orbit_rewrite")](
 check("FFYL preserves Orbit when it is the selected third-person mode",
       orbit_ffyl_result is orbit_hooks.Block and orbit_ffyl.calls == []
       and orbit_pc.client_modes[-1] == ORBIT_MODE)
+orbit_slam = Bound()
+orbit_slam_result = orbit_hooks.items[(path, "PRE", "orbit_rewrite")](
+    orbit_pc, args("GroundSlamExit"), None, orbit_slam)
+check("a ground slam landing preserves Orbit when it is the selected third-person mode",
+      orbit_slam_result is orbit_hooks.Block and orbit_slam.calls == []
+      and orbit_pc.client_modes[-1] == ORBIT_MODE)
 check("no transition path calls CameraTransition with Orbit",
-      orbit_pc.client_modes == [ORBIT_MODE, ORBIT_MODE, ORBIT_MODE])
+      orbit_pc.client_modes == [ORBIT_MODE] * 4)
 orbit.remove()
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")

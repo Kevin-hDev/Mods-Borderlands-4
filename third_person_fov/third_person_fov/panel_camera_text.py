@@ -25,7 +25,9 @@ EN = {'camera': 'CAMERA',
  'command_zoom_in_desc': 'One step per press, in the Orbit Camera.',
  'command_zoom_out': 'ORBIT CAMERA ZOOM OUT',
  'command_zoom_out_desc': 'One step per press, in the Orbit Camera.',
- 'camera_draft_discarded': 'Camera mod changed: unsaved camera settings were discarded.'}
+ 'camera_draft_discarded': 'Camera mod changed: unsaved camera settings were discarded.',
+ 'camera_outdated': 'Camera mods of different versions are loaded. Update Apex Movement, Omni '
+                    'Sprint and Third Person & FOV, then restart the game.'}
 FR = {'camera': 'CAMÉRA',
  'camera_desc': 'Vue, champ de vision et loot.',
  'change_key': 'MODIFIER',
@@ -51,7 +53,9 @@ FR = {'camera': 'CAMÉRA',
  'command_zoom_out': 'ÉLOIGNER LA CAMÉRA',
  'command_zoom_out_desc': 'Un cran par appui, en caméra orbitale.',
  'camera_draft_discarded': 'Mod caméra changé : les réglages caméra non enregistrés ont été '
-                           'annulés.'}
+                           'annulés.',
+ 'camera_outdated': 'Des mods de caméra de versions différentes sont chargés. Mets à jour Apex '
+                    'Movement, Omni Sprint et Third Person & FOV, puis relance le jeu.'}
 FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrière le personnage à pied.'),
  'shoulder_left': ('Épaule', 'Place la caméra à gauche ou à droite du personnage.'),
  'orbit': ('Caméra orbitale', 'La caméra tourne librement autour du personnage.'),

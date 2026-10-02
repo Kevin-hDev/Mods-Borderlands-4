@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.1.7**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.1.8**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.
@@ -41,7 +41,7 @@ The mod turns itself on the first time the game launches with it installed.
 The full pack also carries an optional camera, on the Options page:
 
 - **Third person**: an over-the-shoulder camera on foot, off by default. Aiming switches to the game's own
-  first-person view. When downed, the view stays in third person.
+  first-person view. When downed, and when a ground slam lands, the view stays in third person.
 - **Shoulder**: the camera sits over the right shoulder by default, or the left one.
 - **Orbit camera**: the camera turns freely around the character. The shoulder and the orbit camera only work in
   third person, and are greyed while it is off.

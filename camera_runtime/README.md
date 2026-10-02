@@ -10,8 +10,8 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
 ## What it does
 
 - **Third person** on foot: the game's own ThirdPerson camera mode, shifted over the shoulder. Aiming hands the view
-  back to the game's own first-person aim; sliding, leaving a vehicle and being downed keep the selected camera. The
-  shoulder shift is suspended while it would put the camera through a wall.
+  back to the game's own first-person aim; sliding, leaving a vehicle, landing a ground slam and being downed keep the
+  selected camera. The shoulder shift is suspended while it would put the camera through a wall.
 - **Shoulder**: the camera sits over the right shoulder or the left one.
 - **Orbit camera**: the game's own Orbit mode, a camera that turns freely around the character. Two commands move it
   closer or farther away, 25 units a press, from 75 to 600 (300 at first); the distance is kept per mod.

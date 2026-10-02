@@ -16,6 +16,8 @@ TEXT = {
     "command_tools": "COMMAND OPTIONS", "command_tools_desc": "Controller icons and camera command defaults.",
     "commands_reset": "DEFAULT KEYS", "controller_icons": "CONTROLLER ICONS",
     "camera_draft_discarded": "Camera mod changed: unsaved camera settings were discarded.",
+    "camera_outdated": "Camera mods of different versions are loaded. Update Apex Movement, Omni Sprint and "
+                       "Third Person & FOV, then restart the game.",
     "right": "RIGHT", "left": "LEFT",
     "language": "LANGUAGE", "menu_language": "MENU LANGUAGE", "language_name": "ENGLISH",
     "movement": "MOVEMENT", "auto_sprint": "AUTO SPRINT", "slides": "SLIDES",

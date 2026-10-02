@@ -40,11 +40,12 @@ old.protocol, old.runtime = 2, object()
 sys.modules["_apex_camera_runtime_v2"] = old
 try:
     shared_module.shared(lambda item: item, lambda item: 1)
-except RuntimeError:
-    refused = True
+except RuntimeError as error:
+    refused, notice = True, getattr(error, "notice", None)
 else:
-    refused = False
+    refused, notice = False, None
 check("a runtime without zoom is refused before registering new commands", refused)
+check("the refusal names the line a settings window shows for it", notice == "camera_outdated")
 sys.modules.pop("_apex_camera_runtime_v2", None)
 runtime = shared_module.shared(lambda item: item, lambda item: 1)
 state = sys.modules.get("_apex_camera_runtime_v3")
