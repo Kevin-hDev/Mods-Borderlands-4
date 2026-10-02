@@ -45,13 +45,16 @@ separate file, stays off: the SDK log says why, and so does its window when you 
 
 1. Install the [Borderlands 4 Python SDK](https://github.com/bl-sdk/oak2-mod-manager/releases/latest).
 2. Copy the file's `.sdkmod` into `...\Borderlands 4\sdk_mods\`.
-3. For Apex Heirloom and Heirloom, also copy the twelve files `000_ApexHeirloom_999_P`, `000_HeirloomLists_999_P`,
-   `000_ApexHeirloomAxe_999_P` and `000_HeirloomListsAxe_999_P` (`.pak`, `.ucas` and `.utoc`) into
-   `...\Borderlands 4\OakGame\Content\Paks\`. Tidy Weapons does not need them.
+3. For Apex Heirloom and Heirloom, also download the Heirloom Paks file and copy its twelve files
+   `000_ApexHeirloom_999_P`, `000_HeirloomLists_999_P`, `000_ApexHeirloomAxe_999_P` and `000_HeirloomListsAxe_999_P`
+   (`.pak`, `.ucas` and `.utoc`) into `...\Borderlands 4\OakGame\Content\Paks\`. Tidy Weapons does not need them.
 4. Launch the game. The mod turns itself on the first time.
 
+With Vortex, install Heirloom Paks too: Vortex puts its files in the Paks folder. When it asks which files to install,
+choose Install All.
+
 The twelve files hold the knife's and the axe's models and their animations. They are built from the game's own files,
-so they are not in this repository: take them from the Nexus archive.
+so they are not in this repository: take them from the Heirloom Paks file on Nexus.
 
 ## Tests
 

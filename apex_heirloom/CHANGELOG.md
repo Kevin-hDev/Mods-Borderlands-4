@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3 - 2026-10-02
+
+- With Vortex, the knife's and the axe's files now go to the right game folder.
+- They come in a file of their own on Nexus, Heirloom Paks: install it along with Apex Heirloom or Heirloom.
+- Nothing else changes.
+
 ## 1.0.2 - 2026-10-01
 
 - New: a key to play your heirloom's animation. Your hand spins the axe, as in Apex Legends.

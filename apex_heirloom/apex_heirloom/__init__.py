@@ -15,7 +15,7 @@ from . import family, frame, heirloom, heirloom_settings, holster_settings, keys
 from . import heirloom_choices, inspect_keys
 from . import panel_preferences, parts, restriction, settings
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "kevin-hDev"
 
 # Set here: heirloom_settings is read by heirloom, which it cannot import back.

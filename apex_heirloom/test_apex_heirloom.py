@@ -39,8 +39,8 @@ def running() -> tuple[bool, bool]:
 
 
 mod = state["mods"][0]
-check("one mod is built, Apex Heirloom 1.0.2", len(state["mods"]) == 1 and mod.kwargs["name"] == "Apex Heirloom"
-      and apex_heirloom.__version__ == "1.0.2")
+check("one mod is built, Apex Heirloom 1.0.3", len(state["mods"]) == 1 and mod.kwargs["name"] == "Apex Heirloom"
+      and apex_heirloom.__version__ == "1.0.3")
 check("the heirloom's two inspection keys, then the holster's two keys, are given to the SDK",
       mod.kwargs["keybinds"] == [inspect_keys.keyboard_bind, inspect_keys.controller_bind, keys.keyboard_bind,
                                  keys.controller_bind])
