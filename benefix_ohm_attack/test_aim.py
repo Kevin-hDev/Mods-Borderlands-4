@@ -73,5 +73,25 @@ for label, result in (
 check("a name of any length is cut before it is read",
       len(aim.species_of(types.SimpleNamespace(Name="Char_" + "x" * 500))) == aim.MAX_NAME == 80)
 
+check("an aim says by itself neither that its enemy was caught beside it nor that one was hidden: the catch does",
+      sky.caught is False and sky.hidden is False and wall.caught is False and wall.hidden is False)
+beside = sdk_stubs.Actor("Char_Psycho_31", (800.0, 15.0, 50.0))
+check("where a ray touched what it met is the game's own spot",
+      aim.touched(sdk_stubs.met(beside, 780.0, at=(790.0, 12.0, 50.0))[1], (1.0, 2.0, 3.0)) == (790.0, 12.0, 50.0))
+check("the spot given stands in when the game does not say where",
+      aim.touched(sdk_stubs.met(beside, 780.0)[1], (1.0, 2.0, 3.0)) == (1.0, 2.0, 3.0))
+check("or says a spot that is no number",
+      aim.touched(sdk_stubs.met(beside, 780.0, at=(float("nan"), 12.0, 50.0))[1], (1.0, 2.0, 3.0)) == (1.0, 2.0, 3.0))
+
+target = sdk_stubs.aim_at(state, "Char_Psycho_8", distance=400.0)
+met, result = aim.ray(character, (0.0, 0.0, 50.0), (450.0, 0.0, 50.0))
+ray = state["rays"][-1]
+check("a ray between two spots is the camera's own kind: what it met, and the same way of asking",
+      met is True and result is state["trace"][1] and ray[0] is character and sdk_stubs.spot(ray[1]) == (0.0, 0.0, 50.0)
+      and sdk_stubs.spot(ray[2]) == (450.0, 0.0, 50.0) and ray[3] == aim.TRACE_CHANNEL and ray[8] is True)
+check("who a ray met is read from its answer", aim.hit_actor(result) is target)
+sdk_stubs.aim_at(state, None)
+check("a ray that met nothing says so", aim.ray(character, (0.0, 0.0, 50.0), (450.0, 0.0, 50.0))[0] is False)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

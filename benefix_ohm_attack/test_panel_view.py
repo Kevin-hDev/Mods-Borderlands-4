@@ -1,7 +1,8 @@
 """Benefix Ohm Attack's window as built (sketch M1, Kevin, 2026-10-01): the frame of our other mods under this mod's
-name, one BEAM page with its two cards, BEAM then ENERGY, the element between two arrows; then the COMMANDS page
-(sketch C): one card, a keyboard/mouse row and a controller row, then the icons, the reset and the Esc hint. The
-widgets the view registers are those the form reads and those the interaction tests use (panel_fixture.py)."""
+name, one BEAM page with its two cards, BEAM then ENERGY, the element between two arrows; the LOCK page of
+2026-10-02 with its two, LOCK then BOUNCE; then the COMMANDS page (sketch C): one card, a keyboard/mouse row and a
+controller row, then the icons, the reset and the Esc hint. The widgets the view registers are those the form reads
+and those the interaction tests use (panel_fixture.py)."""
 
 import pathlib
 import sys
@@ -106,8 +107,8 @@ check("the factory opens the window on the mod, switched off included, and hands
       bindings.mod is mod and bindings.ready() and bindings.prepare() and isinstance(built[1], panel_form.PanelForm)
       and built[1].model.mod is mod)
 
-check("two pages, BEAM then COMMANDS, opened on BEAM, under the mod's working name",
-      theme.PAGES == ("beam", "controls") == menu.SHOWN_PAGES and len(widgets["pages"].children) == 2
+check("three pages, BEAM, LOCK then COMMANDS, opened on BEAM, under the mod's working name",
+      theme.PAGES == ("beam", "lock", "controls") == menu.SHOWN_PAGES and len(widgets["pages"].children) == 3
       and widgets["focus"] is widgets["nav:beam"] and theme.BRAND == "BENEFIX OHM ATTACK")
 check("EN and FR sit in the header", "EN" in widgets and "FR" in widgets)
 
@@ -118,18 +119,30 @@ def place(name):
     return page.index(widgets[name])
 
 
-order = ["heading:beam", "group:beam", "label:element", "label:damage", "heading:energy", "group:energy",
-         "label:show_bar", "label:drain", "label:regen", "label:regen_delay"]
-check("the BEAM page holds two cards (sketch M1): BEAM with the element and the damage, then ENERGY with the bar's "
-      "switch and the three energy rows", all(widgets[name] in page for name in order)
+order = ["heading:beam", "group:beam", "label:element", "label:damage", "label:width", "heading:energy",
+         "group:energy", "label:show_bar", "label:drain", "label:regen", "label:regen_delay"]
+check("the BEAM page holds two cards (sketch M1): BEAM with the element, the damage and the catch distance, then ENERGY "
+      "with the bar's switch and the three energy rows", all(widgets[name] in page for name in order)
       and [place(name) for name in order] == sorted(place(name) for name in order))
 check("the two cards are apart: no card's frame holds both titles, and each row is in its own card's",
       not any(widgets["heading:beam"] in walk(node) and widgets["heading:energy"] in walk(node)
               for node in page if node.kind == "Border")
       and any(widgets["heading:energy"] in walk(node) and widgets["label:drain"] in walk(node)
               and widgets["label:element"] not in walk(node) for node in page if node.kind == "Border"))
-check("every setting has its control, its row and its box, on the BEAM page",
-      all(widgets[f"{part}:{key}"] in page for key in model.options for part in ("setting", "row", "block")))
+lock_page = list(walk(widgets["pages"].children[1]))
+check("every setting has its control, its row and its box, on its own page",
+      all(widgets[f"{part}:{option.identifier}"] in page and widgets[f"{part}:{option.identifier}"] not in lock_page
+          for option in settings.BEAM_PAGE for part in ("setting", "row", "block"))
+      and all(widgets[f"{part}:{option.identifier}"] in lock_page and widgets[f"{part}:{option.identifier}"] not in page
+              for option in settings.LOCK_PAGE for part in ("setting", "row", "block")))
+lock_order = ["heading:lock", "group:lock", "label:lock", "label:lock_delay", "label:lock_angle", "heading:bounce",
+              "group:bounce", "label:bounce"]
+check("the LOCK page holds two cards: LOCK with its switch, the time and the angle, then BOUNCE with its switch",
+      all(widgets[name] in lock_page for name in lock_order)
+      and [lock_page.index(widgets[name]) for name in lock_order]
+      == sorted(lock_page.index(widgets[name]) for name in lock_order)
+      and not any(widgets["heading:lock"] in walk(node) and widgets["heading:bounce"] in walk(node)
+                  for node in lock_page if node.kind == "Border"))
 check("each row sits in its own box with its description",
       all(widgets[name] in walk(widgets[f"block:{key}"]) for key in model.options
           for name in (f"row:{key}", f"description:{key}")))
@@ -138,17 +151,20 @@ check("the element is two arrows around its name, its place among the elements i
           for name in ("setting:element:previous", "choice:element", "setting:element:next"))
       and widgets["value:element"] in walk(widgets["row:element"])
       and widgets["value:element"] not in walk(widgets["setting:element"]))
-check("the bar's switch is a button, the four numbers are sliders with their value boxes",
-      widgets["setting:show_bar"].kind == "CheckBox"
-      and all(widgets[f"setting:{key}"].kind == "Slider" and f"value:{key}" in widgets and f"fill:{key}" in widgets
-              for key in ("damage", "drain", "regen", "regen_delay")))
+SLIDERS = (settings.damage, settings.width, settings.drain, settings.regen, settings.regen_delay,
+           settings.lock_delay, settings.lock_angle)
+check("the three switches are buttons, the seven numbers are sliders with their value boxes",
+      all(widgets[f"setting:{key}"].kind == "CheckBox" for key in ("show_bar", "lock", "bounce"))
+      and all(widgets[f"setting:{option.identifier}"].kind == "Slider" and f"value:{option.identifier}" in widgets
+              and f"fill:{option.identifier}" in widgets for option in SLIDERS)
+      and [option for option in settings.ALL if hasattr(option, "min_value")] == list(SLIDERS))
 check("each slider has its setting's bounds and step",
       all(widgets[f"setting:{option.identifier}"].calls["SetMinValue"] == (float(option.min_value),)
           and widgets[f"setting:{option.identifier}"].calls["SetMaxValue"] == (float(option.max_value),)
           and widgets[f"setting:{option.identifier}"].calls["SetStepSize"] == (float(option.step),)
-          for option in (settings.damage, settings.drain, settings.regen, settings.regen_delay)))
+          for option in SLIDERS))
 
-commands = list(walk(widgets["pages"].children[1]))
+commands = list(walk(widgets["pages"].children[2]))
 card = widgets["card:command_fire"]
 check("the COMMANDS page: the FIRE card, then the icons, the reset, its status and the Esc hint",
       card in commands and commands.index(card) < commands.index(widgets["icons:PS5"])
@@ -168,7 +184,11 @@ check("every widget is attached once", attached_once(root, widgets))
 check("the form writes each card's name and sentence, the second card's from the mod's words",
       widgets["heading:beam"].calls["SetText"] == ("BEAM",) and widgets["heading:energy"].calls["SetText"] == ("ENERGY",)
       and widgets["group:energy"].calls["SetText"][0].startswith("The beam has its own energy")
-      and widgets["group:beam"].calls["SetText"][0].startswith("Hold the beam's key"))
+      and widgets["group:beam"].calls["SetText"][0].startswith("Hold the beam's key")
+      and widgets["heading:lock"].calls["SetText"] == ("LOCK",)
+      and widgets["heading:bounce"].calls["SetText"] == ("BOUNCE",)
+      and widgets["group:lock"].calls["SetText"][0].startswith("The beam locks onto the enemy")
+      and widgets["group:bounce"].calls["SetText"][0].startswith("The beam jumps"))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

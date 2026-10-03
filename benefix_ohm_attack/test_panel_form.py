@@ -43,7 +43,7 @@ check("both languages word the same things, every setting and every element incl
       panel_fr.TEXT.keys() == panel_en.TEXT.keys()
       and set(panel_fr.OPTIONS) == {option.identifier for option in settings.ALL}
       and set(panel_fr.CHOICES) == set(panel_en.CHOICES) == set(settings.ELEMENTS)
-      and set(panel_fr.GROUPS) == {"beam"})
+      and set(panel_fr.GROUPS) == {"beam", "lock"})
 clock = [0]
 panel_form.time.perf_counter_ns = lambda: clock[0]
 w, form = pf.create()
@@ -114,9 +114,39 @@ check("a save that fails keeps the previous value and says so", settings.regen.v
       and w["notice"].text == panel_fr.TEXT["failed"] and w["setting:regen"].value == 25.0)
 pf.state["refuse_saves"] = False
 
+click("nav:lock")
+check("the LOCK page opens: VERROU with its switch on and the weapon's two numbers, then REBOND with its switch on",
+      w["pages"].index == 1 and w["heading:lock"].text == "VERROU" and w["group:lock"].text == panel_fr.GROUPS["lock"]
+      and w["heading:bounce"].text == "REBOND" and w["group:bounce"].text == panel_fr.TEXT["bounce_desc"]
+      and w["label:lock"].text == "VERROUILLAGE" and w["setting:lock_label"].text == "OUI"
+      and w["label:lock_delay"].text == "TEMPS AVANT LE VERROU" and w["value:lock_delay"].text == "0.20"
+      and w["label:lock_angle"].text == "ANGLE DE RUPTURE" and w["value:lock_angle"].text == "30"
+      and w["label:bounce"].text == "REBOND" and w["setting:bounce_label"].text == "OUI"
+      and w["nav:lock_label"].text == "VERROU")
+check("with the lock on, its two numbers can be moved", w["setting:lock_delay"].enabled and w["setting:lock_angle"].enabled
+      and w["row:lock_angle"].opacity == 1.0)
+click("setting:lock")
+check("the lock switched off greys its two numbers and holds them still, at once",
+      not w["setting:lock_delay"].enabled and not w["setting:lock_angle"].enabled
+      and w["row:lock_delay"].opacity == w["description:lock_angle"].opacity == panel_theme.OPACITY_DISABLED)
+check("the bounce is not the lock's: its switch stays", w["setting:bounce"].enabled and w["row:bounce"].opacity == 1.0)
+wait()
+check("... and the lock off is saved", settings.lock.value is False)
+click("setting:lock")
+w["setting:lock_delay"].value = 0.52
+form.poll()
+click("setting:bounce")
+wait()
+check("switched on again its numbers move: the time on its steps of five hundredths; the bounce switched off is saved",
+      settings.lock.value is True and w["setting:lock_delay"].enabled and settings.lock_delay.value == 0.5
+      and settings.bounce.value is False)
+click("nav:beam")
+check("on the BEAM page the catch distance is a number of its own, never greyed",
+      w["label:width"].text == "DISTANCE D'ACCROCHE" and w["value:width"].text == "200" and w["setting:width"].enabled)
+
 click("nav:controls")
 check("the COMMANDS page opens: one card, LANCER LE RAYON, no key on either device",
-      w["pages"].index == 1 and w["heading:command_fire"].text == "LANCER LE RAYON"
+      w["pages"].index == 2 and w["heading:command_fire"].text == "LANCER LE RAYON"
       and w["group:command_fire"].text == panel_fr.TEXT["command_fire_desc"]
       and w["device:fire:keyboard"].text == "CLAVIER / SOURIS" and w["device:fire:controller"].text == "MANETTE"
       and w["value:fire:keyboard"].text == "AUCUNE" and w["value:fire:controller"].text == "AUCUNE"

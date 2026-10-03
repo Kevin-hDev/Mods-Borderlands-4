@@ -8,14 +8,22 @@ docs/attaque-rayon/outils/menu_window.py). Its decisions, trials and tools are i
 
 from mods_base import build_mod
 
-from . import attack, bar, control_config, damage, frame, hand, keys, panel_open, panel_preferences, report, settings
+from . import attack, bar, bounce, catch, control_config, damage, enemy, foes, frame, hand, keys, lock, panel_open
+from . import panel_preferences, report, settings
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "kevin-hDev"
 
 
 def _on_enable() -> None:
     report.reset()
+    # What the game refused once is asked of it again: the walk of its characters, who is a friend, the catch, the
+    # lock, the bounce.
+    foes.restart()
+    enemy.forget()
+    catch.restart()
+    lock.restart()
+    bounce.restart()
     damage.forget()
     hand.forget()
     keys.align()

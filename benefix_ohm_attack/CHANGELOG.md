@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 - 2026-10-02
+
+- The beam locks onto the enemy it touches and stays on it while your aim moves away.
+- The beam catches an enemy near your crosshair: no need to aim right at it.
+- The beam bounces from its target to a second enemy nearby.
+- A new LOCK page in the settings window: the lock and the bounce each have a switch, with the time before the lock
+  and the angle at which it lets go. The catch distance is on the BEAM page.
+
 ## 1.0.0 - 2026-10-02
 
 - Initial release.

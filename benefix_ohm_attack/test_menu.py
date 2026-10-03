@@ -1,6 +1,6 @@
-"""Tests the window's pages as the mod declares them (sketch M1): every setting on a card, once, in the order the
-sketch drew; the words each card and each choice need, in both languages; and what the heirloom's window can do that
-this one leaves empty."""
+"""Tests the window's pages as the mod declares them (sketch M1, then the LOCK page of 2026-10-02): every setting on a
+card, once, in the window's order; the words each card and each choice need, in both languages; the rows a switch
+greys; and what the heirloom's window can do that this one leaves empty."""
 
 import pathlib
 import sys
@@ -22,28 +22,45 @@ def check(label: str, condition: bool) -> None:
         fails.append(label)
 
 
-check("one page of settings, BEAM, then the COMMANDS page",
-      [group.identifier for group in menu.MENU] == ["beam_menu"] and menu.SHOWN_PAGES == ("beam", "controls")
-      and panel_theme.PAGES == menu.SHOWN_PAGES and set(menu.CARDS) == {"beam"})
+check("two pages of settings, BEAM and LOCK, then the COMMANDS page",
+      [group.identifier for group in menu.MENU] == ["beam_menu", "lock_menu"]
+      and menu.SHOWN_PAGES == ("beam", "lock", "controls")
+      and panel_theme.PAGES == menu.SHOWN_PAGES and set(menu.CARDS) == {"beam", "lock"})
 cards = menu.CARDS["beam"]
-check("the page's cards are BEAM, under the page's own name, then ENERGY (sketch M1)",
+check("the BEAM page's cards are BEAM, under the page's own name, then ENERGY (sketch M1)",
       [name for name, _ in cards] == ["beam", "energy"])
-check("BEAM holds the element then the damage; ENERGY the bar's switch, then what is spent, given back and waited",
-      cards[0][1] == (settings.element, settings.damage)
+check("BEAM holds the element, the damage, then the catch distance; ENERGY the bar's switch, then what is spent, given "
+      "back and waited",
+      cards[0][1] == (settings.element, settings.damage, settings.width)
       and cards[1][1] == (settings.show_bar, settings.drain, settings.regen, settings.regen_delay))
-on_cards = [option for _, options in cards for option in options]
+lock_cards = menu.CARDS["lock"]
+check("the LOCK page's cards are LOCK, under the page's own name, then BOUNCE",
+      [name for name, _ in lock_cards] == ["lock", "bounce"])
+check("LOCK holds its switch, then the time before the lock and the angle that breaks it; BOUNCE its switch",
+      lock_cards[0][1] == (settings.lock, settings.lock_delay, settings.lock_angle)
+      and lock_cards[1][1] == (settings.bounce,))
+every_card = [card for page in ("beam", "lock") for card in menu.CARDS[page]]
+on_cards = [option for _, options in every_card for option in options]
 check("every setting of the window is on a card, once, in the window's order",
-      on_cards == list(settings.ALL) == list(menu.MENU[0].children))
+      on_cards == list(settings.ALL) == [option for group in menu.MENU for option in group.children])
+check("each page's settings are its group's", list(menu.MENU[0].children) == list(settings.BEAM_PAGE)
+      and list(menu.MENU[1].children) == list(settings.LOCK_PAGE))
 check("the element shows between two arrows, and is the only row that does", menu.ARROWS == {"element"}
       and settings.element.choices == list(settings.ELEMENTS))
-check("nothing is greyed, hidden, pictured or said in an orange frame",
-      not any((menu.DEPENDS_ON, menu.COMMANDS_DEPEND_ON, menu.NOTICES, menu.ACTIVE_WHEN, menu.SHOWN_WHEN, menu.PICTURES)))
-check("each card after the first has its name and its sentence in both languages",
-      all(f"{name}{suffix}" in words for name, _ in cards[1:] for suffix in ("", "_desc")
-          for words in (panel_en.TEXT, panel_fr.TEXT)))
+check("the lock's two numbers grey and stay still while the lock is off: they would change nothing",
+      menu.DEPENDS_ON == {"lock_delay": (("lock",),), "lock_angle": (("lock",),)})
+check("the catch and the bounce act with the lock off: they are never greyed",
+      "width" not in menu.DEPENDS_ON and "bounce" not in menu.DEPENDS_ON)
+check("nothing else is greyed, hidden, pictured or said in an orange frame",
+      not any((menu.COMMANDS_DEPEND_ON, menu.NOTICES, menu.ACTIVE_WHEN, menu.SHOWN_WHEN, menu.PICTURES)))
+other_cards = [name for page in ("beam", "lock") for name, _ in menu.CARDS[page][1:]]
+check("each card after a page's first has its name and its sentence in both languages",
+      other_cards == ["energy", "bounce"]
+      and all(f"{name}{suffix}" in words for name in other_cards for suffix in ("", "_desc")
+              for words in (panel_en.TEXT, panel_fr.TEXT)))
 check("each page has its name in both languages, and its sentence in French (the English one is the page's own)",
       all(page in panel_en.TEXT and page in panel_fr.TEXT for page in menu.SHOWN_PAGES)
-      and set(panel_fr.GROUPS) == {"beam"} and menu.MENU[0].description)
+      and set(panel_fr.GROUPS) == {"beam", "lock"} and all(group.description for group in menu.MENU))
 check("each setting has its French name and sentence, and its English ones on the option",
       set(panel_fr.OPTIONS) == {option.identifier for option in settings.ALL}
       and all(option.display_name != option.identifier and option.description for option in settings.ALL))

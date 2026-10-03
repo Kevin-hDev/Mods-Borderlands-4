@@ -3,6 +3,8 @@
 The ray is Apex Grapple's (verified in game, 2026-09-16): KismetSystemLibrary.LineTraceSingle on the class
 default object, the character as world context, every output and drawing parameter passed, channel 2 because it
 meets what blocks the player. Trials of 2026-10-01 showed it hands back the enemy under the crosshair.
+
+A thin ray misses an enemy a hair beside the crosshair: the catch (catch.py) looks beside the aim for one.
 """
 
 import math
@@ -22,13 +24,18 @@ MAX_NAME = 80
 
 @dataclass(frozen=True)
 class Aim:
-    """One frame's aim: where the beam ends, and the enemy it ends on when there is one, with how far it stands."""
+    """One frame's aim: where the beam ends, and the enemy it ends on when there is one, with how far it stands.
+
+    For the shot's line of the log (shot_report.py): whether the enemy was caught beside the aim rather than met
+    under it, and whether a foe near the aim was left because something hid him."""
 
     anchor: tuple[float, float, float]
     hit: Any = None
     enemy: Any = None
     species: str = ""
     distance: float = 0.0
+    caught: bool = False
+    hidden: bool = False
 
 
 def facing(turn: Any) -> tuple[float, float, float]:
@@ -70,19 +77,41 @@ def eye(pc: Any) -> tuple[tuple[float, float, float], Any]:
     return (float(spot.X), float(spot.Y), float(spot.Z)), manager.GetCameraRotation()
 
 
+def ray(character: Any, start: tuple, end: tuple) -> tuple[bool, Any]:
+    """A thin ray between two spots: whether it met something, and the game's answer."""
+    met, _ignored, result = unrealsdk.find_class("KismetSystemLibrary").ClassDefaultObject.LineTraceSingle(
+        character, vector(start), vector(end), TRACE_CHANNEL, False, [], 0, unrealsdk.make_struct("HitResult"), True,
+        unrealsdk.make_struct("LinearColor"), unrealsdk.make_struct("LinearColor"), 0.0)
+    return bool(met), result
+
+
+def touched(result: Any, fallback: tuple) -> tuple[float, float, float]:
+    """Where a ray touched what it met; the spot given when the game does not say."""
+    try:
+        point = result.ImpactPoint
+        found = (float(point.X), float(point.Y), float(point.Z))
+    except Exception:
+        return fallback
+    return found if all(math.isfinite(value) for value in found) else fallback
+
+
+def _met(character: Any, result: Any) -> tuple[Any, str]:
+    """(the enemy a ray met, its species): nobody when it met a wall, an ally or the player himself."""
+    actor = hit_actor(result)
+    if actor is None or actor is character:
+        return None, ""
+    species = species_of(actor)
+    return (actor if is_enemy(species) else None), species
+
+
 def look(pc: Any, character: Any, reach: float) -> Aim:
     start, turn = eye(pc)
     way = facing(turn)
     end = tuple(start[axis] + way[axis] * reach for axis in range(3))
-    hit, _ignored, result = unrealsdk.find_class("KismetSystemLibrary").ClassDefaultObject.LineTraceSingle(
-        character, vector(start), vector(end), TRACE_CHANNEL, False, [], 0, unrealsdk.make_struct("HitResult"), True,
-        unrealsdk.make_struct("LinearColor"), unrealsdk.make_struct("LinearColor"), 0.0)
-    if not hit:
+    met, result = ray(character, start, end)
+    if not met:
         return Aim(anchor=end)
     distance = float(result.Distance)
     anchor = tuple(start[axis] + way[axis] * distance for axis in range(3))
-    actor = hit_actor(result)
-    if actor is None or actor is character:
-        return Aim(anchor=anchor, hit=result)
-    species = species_of(actor)
-    return Aim(anchor=anchor, hit=result, enemy=actor if is_enemy(species) else None, species=species, distance=distance)
+    enemy, species = _met(character, result)
+    return Aim(anchor=anchor, hit=result, enemy=enemy, species=species, distance=distance if species else 0.0)

@@ -1,5 +1,7 @@
 """Installs a fake SDK and a fake game for the beam attack's tests: no game, no library to install."""
 
+import enum
+import math
 import sys
 import types
 
@@ -79,6 +81,30 @@ class Made:
 
 def spot(vector):
     return vector.X, vector.Y, vector.Z
+
+
+class Actor:
+    """A character of the game: its name, where it stands, whether it is dead. Equal only to itself, as two of
+    the game's objects are (two SimpleNamespace of the same fields would be equal)."""
+
+    def __init__(self, name, at=(0.0, 0.0, 0.0), dead=False):
+        self.Name, self.at = name, at
+        self.HealthState = types.SimpleNamespace(bCurrentlyDead=dead)
+
+    def K2_GetActorLocation(self):
+        return types.SimpleNamespace(X=self.at[0], Y=self.at[1], Z=self.at[2])
+
+
+# The game's own enum, as read in its field map on 2026-10-02: lower-case names.
+ETeamAttitude = enum.IntEnum("ETeamAttitude", {"friendly": 0, "neutral": 1, "hostile": 2})
+
+
+def met(actor, distance, at=None):
+    """A ray's answer: that actor met that far, at that spot when the game says where."""
+    result = types.SimpleNamespace(HitObjectHandle=types.SimpleNamespace(Actor=actor), Distance=distance)
+    if at is not None:
+        result.ImpactPoint = types.SimpleNamespace(X=at[0], Y=at[1], Z=at[2])
+    return True, result
 
 
 class Beam:
@@ -268,8 +294,16 @@ def install() -> dict:
                    "camera_mode": "Default",
                    "loads": [], "load_classes": [], "in_archives": True, "trace": (False, None), "anim_instances": [],
                    "mods": [], "scans": 0, "scanned": [], "rays": [], "spawn_gives": "beam",
-                   # The window's side: the game's objects of a class, by its name; the mod's saves.
-                   "all": {}, "saves": 0, "refuse_saves": False}
+                   # A ray's answer by its two ends, when a test's world holds more than one thing: a function of
+                   # (start, end) giving (met, result), or None to leave the ray to state["trace"].
+                   "line": None,
+                   # What the game says one actor is to the player, by the actor's id; hostile when not told.
+                   "attitudes": {}, "attitude_calls": [], "attitude_raises": None,
+                   # The game's objects of a class, by its name: the window's side, and the game's characters (none
+                   # until a test puts some; None, and their walk fails). Then the mod's saves.
+                   "all": {"OakCharacter": []}, "saves": 0, "refuse_saves": False,
+                   # Every walk of the game's objects asked for: (the class, exact or not).
+                   "finds": []}
 
     def cause(**arguments):
         state["events"].append("HIT")
@@ -296,6 +330,7 @@ def install() -> dict:
             state["objects"].setdefault(f"{data.PackageName}.{data.AssetName}", "a loaded beam")
 
     def find_all(name, exact=True):
+        state["finds"].append((name, exact))
         if name in state["all"]:
             return iter(state["all"][name])
         state["scans"] += 1
@@ -306,14 +341,26 @@ def install() -> dict:
         # As the SDK hands back a function without a result: an ellipsis, then what the function wrote.
         return ..., origin, extent, component.radius
 
+    def line(*arguments):
+        state["rays"].append(arguments)
+        state.setdefault("traced", []).append(arguments[2])
+        answer = state["line"](spot(arguments[1]), spot(arguments[2])) if state["line"] is not None else None
+        found, result = answer if answer is not None else state["trace"]
+        return found, [], result
+
+    def attitude(source, target):
+        state["attitude_calls"].append((source, target))
+        if state["attitude_raises"] is not None:
+            raise state["attitude_raises"]
+        return state["attitudes"].get(id(target), ETeamAttitude.hostile)
+
     classes = {
         "DamageStatics": types.SimpleNamespace(_find=lambda name: Named("CauseDamage", fields=state["props"]),
                                                ClassDefaultObject=types.SimpleNamespace(CauseDamage=cause)),
         "KismetSystemLibrary": types.SimpleNamespace(ClassDefaultObject=types.SimpleNamespace(
-            LineTraceSingle=lambda *arguments: (
-                state["rays"].append(arguments) or state.setdefault("traced", []).append(arguments[2])
-                or state["trace"][0], [], state["trace"][1]),
-            GetComponentBounds=bounds)),
+            LineTraceSingle=line, GetComponentBounds=bounds)),
+        "GbxTeamFunctionLibrary": types.SimpleNamespace(
+            ClassDefaultObject=types.SimpleNamespace(GetAttitudeTowards=attitude)),
         "NiagaraFunctionLibrary": types.SimpleNamespace(
             ClassDefaultObject=types.SimpleNamespace(SpawnSystemAtLocation=spawn)),
         "AssetRegistryHelpers": types.SimpleNamespace(ClassDefaultObject=types.SimpleNamespace(GetAsset=get_asset)),
@@ -363,8 +410,11 @@ def player(state, level=10):
     class CameraModeState:
         ViewModelFOV = property(lambda self: state["arms_fov"])
 
+    # Where the camera looks, (pitch, yaw) in degrees: straight along X until a test turns it.
+    state["look"] = (0.0, 0.0)
     camera = types.SimpleNamespace(GetCameraLocation=lambda: types.SimpleNamespace(X=0.0, Y=0.0, Z=50.0),
-                                   GetCameraRotation=lambda: types.SimpleNamespace(Pitch=0.0, Yaw=0.0),
+                                   GetCameraRotation=lambda: types.SimpleNamespace(Pitch=state["look"][0],
+                                                                                   Yaw=state["look"][1]),
                                    GetActorCameraMode=lambda actor: state["camera_mode"],
                                    GetFOVAngle=lambda: state["fov"], CameraModeState=CameraModeState())
     state["body_sockets"] = {"FX_L_Hand": (30.0, -15.0, 120.0), "L_Hand": (28.0, -14.0, 118.0)}
@@ -389,11 +439,44 @@ def player(state, level=10):
     return state["pc"], character
 
 
+def world(state, *things):
+    """A world of balls for the scenes that hold several things: each thing is (actor, radius), the ball standing
+    where the actor does, so moving the actor moves it. A ray meets the nearest ball it enters, at its skin; an
+    actor that left the world is met no more."""
+    def line(start, end):
+        span = [b - a for a, b in zip(start, end)]
+        length = math.sqrt(sum(part * part for part in span))
+        if length == 0.0:
+            return False, None
+        way = [part / length for part in span]
+        nearest = None
+        for actor, radius in things:
+            if id(actor) in state["gone"]:
+                continue
+            to = [c - a for a, c in zip(start, actor.at)]
+            along = sum(a * b for a, b in zip(to, way))
+            beside = sum(part * part for part in to) - along * along
+            if beside > radius * radius:
+                continue
+            entry = along - math.sqrt(radius * radius - beside)
+            if 0.0 <= entry <= length and (nearest is None or entry < nearest[1]):
+                nearest = (actor, entry)
+        if nearest is None:
+            return False, None
+        return met(nearest[0], nearest[1], at=tuple(a + part * nearest[1] for a, part in zip(start, way)))
+
+    state["line"] = line
+
+
 def aim_at(state, name=None, distance=500.0):
-    """What the camera's ray meets: nothing when the name is None, else an actor of that name; returns the actor."""
+    """What the camera's ray meets: nothing when the name is None, else an actor of that name, standing where the
+    ray meets it; returns the actor. These scenes hold one thing at a time: the actor met before leaves the world."""
+    previous = state.pop("aimed_at", None)
+    if previous is not None:
+        state["gone"].add(id(previous))
     if name is None:
         state["trace"] = (False, None)
         return None
-    actor = types.SimpleNamespace(Name=name)
-    state["trace"] = (True, types.SimpleNamespace(HitObjectHandle=types.SimpleNamespace(Actor=actor), Distance=distance))
+    actor = state["aimed_at"] = Actor(name, (distance, 0.0, 50.0))
+    state["trace"] = met(actor, distance)
     return actor

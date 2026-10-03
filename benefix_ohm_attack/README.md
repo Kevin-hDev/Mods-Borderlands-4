@@ -14,22 +14,29 @@ Hold the key you chose: your left hand fires an energy beam at what you aim at.
 
 - **The beam** comes out of your left hand, with no range limit, and hits the enemy you aim at five times a second.
   It works in first and third person, weapon out or put away.
+- **It locks on**: the beam catches an enemy near your crosshair, stays on the enemy it has touched while your aim
+  moves away, and bounces to a second enemy nearby. Each can be set or switched off.
 - **Six elements**: fire, shock, corrosive, cryo, radiation, or kinetic (no element, a white lightning bolt).
 - **Damage that follows your level**, like a weapon's. You set its starting strength.
 - **No ammo**: the attack uses its own energy, 100, shown by a new bar under your stamina bar. Empty, the beam stops;
   the energy comes back by itself after a short delay.
 
-Open the console with `~`, type `mods`, and choose **Benefix Ohm Attack**: its menu, in English and French, has two
-pages.
+Open the console with `~`, type `mods`, and choose **Benefix Ohm Attack**: its menu, in English and French, has
+three pages.
 
 | Page | Setting | Values |
 |---|---|---|
 | BEAM | Element | Fire by default |
 | BEAM | Damage per second | From 5 to 2,000, 75 by default: the value at level 1 |
+| BEAM | Catch distance | From 0 to 500 cm, 200 by default: how far from your aim the beam catches an enemy |
 | BEAM | Energy bar | Shown or hidden |
 | BEAM | Energy per second | From 0 to 100, 20 by default; at 0, the energy never goes down |
 | BEAM | Recharge per second | From 1 to 100, 25 by default |
 | BEAM | Delay before recharge | From 0 to 10 seconds, 2 by default |
+| LOCK | Target lock | On by default |
+| LOCK | Time before lock | From 0 to 3 seconds, 0.2 by default |
+| LOCK | Break angle | From 1 to 90 degrees, 30 by default: how far your aim may move away before the lock lets go |
+| LOCK | Bounce | On by default: the second enemy must stand within 20 metres of the first |
 | CONTROLS | Fire the beam | Keyboard/mouse and controller |
 
 No key is set by default: choose yours on the CONTROLS page before playing.

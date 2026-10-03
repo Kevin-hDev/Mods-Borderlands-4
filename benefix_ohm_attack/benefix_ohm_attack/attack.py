@@ -4,12 +4,17 @@ The one place that decides: the key says what the player wants, the reserve says
 raises the hand, lights the beam, moves it, hits on its own beat and switches everything off. An error in a frame
 ends the shot: nothing is left lit and the hand comes down. A part that fails on its own (the beam, the pose, the
 hand, the level, the hit) says so once and leaves the rest of the shot going.
+
+What the beam is on is the aim's enemy, or the one caught beside the aim (catch.py), or the one the lock holds while
+the aim strays (lock.py); the bounce adds a second enemy, hit on the same beat for the same amount (bounce.py). All
+three are the player's to switch off.
 """
 
 import sys
 from typing import Any
 
-from . import aim, bar, beam, damage, gesture, hand, keys, player, report, reserve, settings, strength, view
+from . import aim, bar, beam, bounce, catch, damage, foes, gesture, hand, keys, lock, player, report, reserve
+from . import settings, shot_report, strength, view
 from .slider_values import bounded
 
 # A frame longer than this is a hitch: it drains and refills as this much, no more.
@@ -41,20 +46,38 @@ def stop() -> None:
     _last_s = None
     _unpaid_s = 0.0
     keys.release()
+    _put_out()
+
+
+def _put_out() -> None:
+    """Everything a shot lit or held is given back: its beam, the bounce's, the enemy locked, the hand."""
     beam.off()
+    bounce.forget()
+    lock.forget()
     gesture.lower()
 
 
 def _fire(pc: Any, character: Any, passed: float) -> None:
     global _firing, _unpaid_s, _hit_said
-    aimed = aim.look(pc, character, settings.REACH)
-    damage_type, effect = settings.chosen()
-    if not _firing:
+    starting = not _firing
+    if starting:
         _firing, _hit_said = True, False
-        # Lit once per shot: a beam the game refuses is not asked for again at every frame, and the hits go on.
         hand.forget()
+        shot_report.begin()
+    locking = settings.lock.value is True
+    aimed = aim.look(pc, character, settings.REACH)
+    # The catch looks beside the aim for an enemy: with one under it or one locked there is nobody to look for.
+    if aimed.enemy is None and not lock.held():
+        aimed = catch.near(pc, character, aimed, bounded(settings.width), settings.REACH)
+    first = (lock.follow(pc, character, aimed, passed, bounded(settings.lock_delay), bounded(settings.lock_angle))
+             if locking else lock.plain(aimed))
+    end = first.point if first is not None else aimed.anchor
+    shot_report.frame(aimed, first, passed)
+    damage_type, effect = settings.chosen()
+    if starting:
+        # Lit once per shot: a beam the game refuses is not asked for again at every frame, and the hits go on.
         raised = gesture.raise_hand(character)
-        beam.light(character, effect, hand.spot(pc, character), aimed.anchor)
+        beam.light(character, effect, hand.spot(pc, character), end)
         # The element, not its damage type: two elements can share one (the two white candidates did, and the log
         # of 2026-10-01 could not tell them apart).
         report.note(f"beam on, {settings.element_name()}, level {player.level(pc)}, "
@@ -62,18 +85,21 @@ def _fire(pc: Any, character: Any, passed: float) -> None:
                     f"{'third' if view.third_person(pc, character) else 'first'} person"
                     f"{', no damage: the game refused a hit' if damage.refused() else ''}")
     else:
-        beam.follow(hand.spot(pc, character), aimed.anchor)
+        beam.follow(hand.spot(pc, character), end)
+    second = bounce.follow(character, first, effect) if settings.bounce.value is True else bounce.forget()
     _unpaid_s += passed
     if _unpaid_s >= HIT_S - ROUNDING_S:
         # One hit a frame at most: a frame longer than the beat does not hit twice.
         _unpaid_s = min(max(_unpaid_s - HIT_S, 0.0), HIT_S)
-        if aimed.enemy is not None:
+        if first is not None:
             amount = strength.per_hit(bounded(settings.damage), player.level(pc), settings.HITS_PER_SECOND)
-            landed = damage.hit(character, aimed.enemy, aimed.hit, amount, damage_type)
+            landed = damage.hit(character, first.enemy, first.hit, amount, damage_type)
             # Only a hit the game took: a line of this log is a proof.
             if landed and not _hit_said:
                 _hit_said = True
-                report.note(f"hit {aimed.species} at {aimed.distance / 100:.0f} m")
+                report.note(f"hit {first.species} at {first.distance / 100:.0f} m")
+            if second is not None:
+                damage.hit(character, second.enemy, second.hit, amount, damage_type)
 
 
 def _window_open() -> bool:
@@ -88,9 +114,9 @@ def _cease() -> None:
     if _firing:
         _firing = False
         seen = beam.state()
-        beam.off()
-        gesture.lower()
+        _put_out()
         report.note(f"beam off, energy {energy.left:.0f}, {seen}")
+        report.note(shot_report.line())
 
 
 def on_frame(now_s: float) -> None:
@@ -98,6 +124,7 @@ def on_frame(now_s: float) -> None:
     gap = 0.0 if _last_s is None else max(now_s - _last_s, 0.0)
     _last_s = now_s
     passed = min(gap, MAX_FRAME_S)
+    foes.tick(passed)
     try:
         if gap > GAP_S and (_firing or keys.held()):
             report.note(f"no frame for {gap:.1f} s: the shot ends and the key is forgotten")

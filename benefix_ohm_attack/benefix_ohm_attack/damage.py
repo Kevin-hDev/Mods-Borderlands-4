@@ -129,7 +129,8 @@ def arguments(rows: list[dict], given: dict, handles: dict) -> dict:
 
 
 def hit(character: Any, target: Any, where: Any, amount: float, damage_type: str) -> bool:
-    """One hit on the target. False, said once, when the game's function is not the one this mod knows."""
+    """One hit on the target, where a ray met it; with no ray's answer to give (None), the game is handed the
+    empty one of its own kind. False, said once, when the game's function is not the one this mod knows."""
     global _rows, _refused
     if _refused:
         return False
@@ -138,7 +139,9 @@ def hit(character: Any, target: Any, where: Any, amount: float, damage_type: str
         if _rows is None:
             _rows = describe(library._find(FUNCTION))
         given = {"DamageCauser": character, "DamageInstigator": character, "DamageTarget": target,
-                 "DamageOverride": float(amount), "TargetedHitInfo": where}
+                 "DamageOverride": float(amount)}
+        if where is not None:
+            given["TargetedHitInfo"] = where
         filled = arguments(_rows, given, {"DamageData": DAMAGE_DATA, "DamageTypeOverride": damage_type})
         getattr(library.ClassDefaultObject, FUNCTION)(**filled)
         return True

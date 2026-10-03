@@ -48,6 +48,18 @@ damage = BoundedSliderOption(
     display_name="Damage per second",
     description="The damage at level 1. The beam grows with your level from this value.",
 )
+# The lock, the catch and the bounce are the game's weapon's own, the Benefix Ohm I Got, with the lock's numbers as
+# its defaults (read in the game's files on 2026-10-02, docs/attaque-rayon/enquetes/2026-10-02-accroche-du-rayon.md).
+# Kevin, the same day: each with its setting in the window, the lock and the bounce with a switch, on by default.
+# After his first trial, no difference to be seen between the lowest and the highest setting: "permettre au réglage
+# une limite bien plus importante". The catch went from 1 m at most to 5, the lock's delay from 1 s to 3, its
+# angle from 5-60 degrees to 1-90. The catch was shown as "Beam thickness": it never changed how the beam looks.
+# The catch's default is Kevin's for the release, after his second trial: 200 cm (the weapon's 20 could not be felt).
+width = BoundedSliderOption(
+    "width", 200, 0, 500, step=10, is_integer=True,
+    display_name="Catch distance",
+    description="How far from your aim the beam catches an enemy, in centimetres. 0: you must aim at the enemy.",
+)
 show_bar = BoolOption(
     "show_bar", True,
     display_name="Energy bar",
@@ -69,9 +81,32 @@ regen_delay = BoundedSliderOption(
     description="Seconds without firing before the energy comes back.",
 )
 
-# Every setting the window shows, in its page's order (menu.py): its model, Restore and Undo read them from here, and
-# the SDK's own menu lists them in the same order.
-ALL = (element, damage, show_bar, drain, regen, regen_delay)
+lock = BoolOption(
+    "lock", True,
+    display_name="Target lock",
+    description="The beam stays on the enemy it has touched, even when your aim strays.",
+)
+lock_delay = BoundedSliderOption(
+    "lock_delay", 0.2, 0.0, 3.0, step=0.05, is_integer=False,
+    display_name="Time before lock",
+    description="Seconds the beam must stay on an enemy before it locks on.",
+)
+lock_angle = BoundedSliderOption(
+    "lock_angle", 30, 1, 90, step=1, is_integer=True,
+    display_name="Break angle",
+    description="How far your aim may stray from the enemy, in degrees, before the lock lets go.",
+)
+bounce = BoolOption(
+    "bounce", True,
+    display_name="Bounce",
+    description="The second enemy must stand within 20 metres of the first.",
+)
+
+# Every setting the window shows, page by page, in each page's order (menu.py): its model, Restore and Undo read
+# them from here, and the SDK's own menu lists them in the same order.
+BEAM_PAGE = (element, damage, width, show_bar, drain, regen, regen_delay)
+LOCK_PAGE = (lock, lock_delay, lock_angle, bounce)
+ALL = (*BEAM_PAGE, *LOCK_PAGE)
 
 
 def element_name() -> str:

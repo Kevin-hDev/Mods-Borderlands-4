@@ -9,6 +9,10 @@ TEXT = {
     # The BEAM page's second card (menu.CARDS).
     "energy": "ENERGY",
     "energy_desc": "The beam has its own energy, 100 of it. Empty, the beam stops.",
+    # The LOCK page, and its second card.
+    "lock": "LOCK",
+    "bounce": "BOUNCE",
+    "bounce_desc": "The beam jumps from its target to a second enemy.",
     # The COMMANDS page's card, each row worded by its device (sketch C).
     "command_fire": "FIRE THE BEAM",
     "command_fire_desc": "The key to hold to fire the beam. None by default: choose yours.",

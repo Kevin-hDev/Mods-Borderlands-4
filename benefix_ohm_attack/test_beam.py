@@ -114,5 +114,34 @@ check("a step of the switching off that fails is said once and does not stop the
       made.bAutoDestroy is True and state["events"].count("REMOVED") == removed + 1
       and len(state["errors"]) == errors + 1 and not lit())
 
+# A second beam, for the bounce: lit, followed and removed on its own.
+report.reset()
+state["objects"][sdk_stubs.FIRE_BEAM] = "the fire beam"
+FIRST, SECOND = (700.0, 0.0, 50.0), (700.0, 900.0, 50.0)
+beam.light(character, FIRE, HAND, FIRST)
+main = state["beams"][-1]
+second = beam.Beam("bounce")
+check("a second beam has nothing lit while the first is", second.state() == "no effect" and lit())
+second.light(character, FIRE, FIRST, SECOND)
+other = state["beams"][-1]
+check("it is lit between its own two ends, the first one untouched",
+      other is not main and other.poses == [(FIRST, (0.0, 90.0))] and other.targets == [("User.Target", SECOND)]
+      and len(main.poses) == 1 and second.state() != "no effect")
+second.follow(FIRST, (700.0, -900.0, 50.0))
+check("following it moves it alone", other.targets[-1][1] == (700.0, -900.0, 50.0) and len(main.targets) == 1)
+removed = state["events"].count("REMOVED")
+beam.off()
+check("switching the first off leaves the second lit",
+      state["events"].count("REMOVED") == removed + 1 and second.state() != "no effect" and not lit())
+other.refuses_target = True
+errors = len(state["errors"])
+second.follow(FIRST, SECOND)
+check("a second beam that stops following is switched off, said once under its own name",
+      second.state() == "no effect" and len(state["errors"]) == errors + 1 and "bounce" in state["errors"][-1])
+beam.light(character, FIRE, HAND, FIRST)
+state["beams"][-1].refuses_target = True
+beam.follow(HAND, FIRST)
+check("and the first one's failure is still said, apart from the second's", len(state["errors"]) == errors + 2)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -118,5 +118,13 @@ check("an SDK that only takes a struct by its bare name is given it: the hit is 
       and state["hits"][-1]["ImpactForceOverride"].made_from == "ForceSelection")
 sys.modules["unrealsdk"].make_struct = real_make
 
+damage.forget()
+hits = len(state["hits"])
+check("a hit with no ray's answer to give (the bounce, when its ray met nothing) is made all the same",
+      damage.hit(character, enemy, None, 30.0, "Fire") is True and len(state["hits"]) == hits + 1)
+sent = state["hits"][-1]
+check("the game is handed an empty answer of its own kind, never nothing", len(sent) == 22
+      and sent["TargetedHitInfo"].made_from == "/Script/Engine.HitResult" and sent["DamageTarget"] is enemy)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

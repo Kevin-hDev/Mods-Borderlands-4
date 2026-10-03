@@ -14,22 +14,29 @@ Tiens la touche que tu as choisie : ta main gauche lance un rayon d'énergie sur
 
 - **Le rayon** part de ta main gauche, sans limite de portée, et touche l'ennemi visé cinq fois par seconde. Il
   marche à la première et à la troisième personne, arme sortie ou rangée.
+- **Il se verrouille** : le rayon attrape un ennemi proche de ton viseur, reste sur l'ennemi qu'il a touché quand
+  ton viseur s'en écarte, et rebondit sur un second ennemi proche. Chacun se règle ou se coupe.
 - **Six éléments** : feu, électrique, corrosif, cryo, radiation, ou cinétique (sans élément, un éclair blanc).
 - **Des dégâts qui suivent ton niveau**, comme ceux d'une arme. Tu règles leur force de départ.
 - **Aucune munition** : l'attaque consomme sa propre énergie, de 100, montrée par une nouvelle barre sous ta barre
   d'endurance. Vide, le rayon s'arrête ; l'énergie revient toute seule après un court délai.
 
 Ouvre la console avec `~`, tape `mods`, puis choisis **Benefix Ohm Attack** : son menu, en français et en anglais,
-a deux pages.
+a trois pages.
 
 | Page | Réglage | Valeurs |
 |---|---|---|
 | RAYON | Élément | Feu au départ |
 | RAYON | Dégâts par seconde | De 5 à 2 000, 75 au départ : la valeur au niveau 1 |
+| RAYON | Distance d'accroche | De 0 à 500 cm, 200 au départ : à quelle distance de ton viseur le rayon attrape un ennemi |
 | RAYON | Barre d'énergie | Affichée ou cachée |
 | RAYON | Énergie par seconde | De 0 à 100, 20 au départ ; à 0, l'énergie ne baisse jamais |
 | RAYON | Recharge par seconde | De 1 à 100, 25 au départ |
 | RAYON | Délai avant recharge | De 0 à 10 secondes, 2 au départ |
+| VERROU | Verrouillage | Activé au départ |
+| VERROU | Temps avant le verrou | De 0 à 3 secondes, 0,2 au départ |
+| VERROU | Angle de rupture | De 1 à 90 degrés, 30 au départ : l'écart de ton viseur au-delà duquel le verrou lâche |
+| VERROU | Rebond | Activé au départ : le second ennemi doit être à moins de 20 mètres du premier |
 | COMMANDES | Lancer le rayon | Clavier/souris et manette |
 
 Aucune touche n'est réglée au départ : choisis la tienne dans la page COMMANDES avant de jouer.
