@@ -28,7 +28,7 @@ def _same_object(first, second):
 
 class TransitionHooks:
     def __init__(self, hooks, identifier, controller, log, on_effective,
-                 desired_mode=lambda: THIRD_PERSON, request_mode=None) -> None:
+                 desired_mode=lambda: THIRD_PERSON, request_mode=None, native_aim=None, preserve_mode=None) -> None:
         self.hooks = hooks
         self.identifier = identifier
         self.controller = controller
@@ -38,6 +38,8 @@ class TransitionHooks:
         self.request_mode = request_mode or self._request_direct
         self.paths = tuple(REQUESTS)
         self._first_person_allowed = False
+        self.native_aim = native_aim
+        self.preserve_mode = preserve_mode
 
     def set_first_person_allowed(self, allowed: bool) -> None:
         self._first_person_allowed = bool(allowed)
@@ -45,6 +47,8 @@ class TransitionHooks:
     def _wants_first_person(self) -> bool:
         if self._first_person_allowed:
             return True
+        if self.native_aim is not None:
+            return bool(self.native_aim())
         try:
             actor = self.controller.OakCharacter
             return bool(actor.ZoomState.bWantsToZoom)
@@ -74,6 +78,8 @@ class TransitionHooks:
                 return self.hooks.Block
             if requested == effective:
                 return None
+            if self.preserve_mode is not None and self.preserve_mode(requested, effective):
+                return self.hooks.Block
             if effective == ORBIT_MODE:
                 call = (self.controller.ClientSetCameraMode
                         if names[0] != "NewCamMode" else func)

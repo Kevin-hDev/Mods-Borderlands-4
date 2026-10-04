@@ -10,6 +10,9 @@ from .transitions import RECOVERABLE_MODES, THIRD_PERSON, VEHICLE_MODE
 
 
 def available(controller: Any) -> bool:
+    ads = getattr(controller, "ads", None)
+    if ads is not None and ads.pending:
+        return False
     if (not controller.cleanup_pending or controller.foot_mode.pending or controller._recovery_requested
             or controller._aiming or controller._aim_returning or controller._in_vehicle):
         return False

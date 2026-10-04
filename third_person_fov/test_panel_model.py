@@ -27,7 +27,7 @@ model = Model(mod)
 check("SDK entry opens the custom window", getattr(mod, panel_open.MARKER, False))
 check("only camera settings and five separate command pairs are exposed",
       model.pages == ("camera", "commands") and model.page == "camera"
-      and list(model.options) == ["third_person", "shoulder_left", "orbit", "fov", "extended_loot", "loot_reach"]
+      and list(model.options) == ["third_person", "third_person_ads", "shoulder_left", "orbit", "fov", "extended_loot", "loot_reach"]
       and len(model.command_options) == 10)
 check("preferences belong to the mod's existing save file",
       all(option in mod.kwargs["options"] and option.mod is mod for option in prefs.ALL))

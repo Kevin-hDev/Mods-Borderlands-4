@@ -13,29 +13,15 @@ from typing import Any, Callable
 
 from .constants import THIRD_PERSON_UP
 from .generated_limits import SHOULDER_MAX_OFFSET
+from .generated_ads import VIEW_ABI, VIEW_UPDATE_SLOT as UPDATE_SLOT, VIEW_UPDATE_RVA, ViewConfig as Config, ViewStats as Stats
 
-ABI_VERSION = 5
-UPDATE_SLOT = 264
-EXPECTED_UPDATE_RVA = 0x3CD4832
+ABI_VERSION = VIEW_ABI
+EXPECTED_UPDATE_RVA = VIEW_UPDATE_RVA
 MAX_LIBRARY_BYTES = 2_000_000
 _FILE_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,80}\.dll$")
 MAX_RIGHT = SHOULDER_MAX_OFFSET
-LIBRARY_NAME = "apex_camera_view_v5.dll"
-HASH_NAME = "apex_camera_view_v5.sha256"
-
-
-class Config(ctypes.Structure):
-    _fields_ = [
-        ("abi", ctypes.c_uint32), ("duration_ms", ctypes.c_uint32),
-        ("slot_index", ctypes.c_uint32), ("reserved", ctypes.c_uint32),
-        ("expected_rva", ctypes.c_uint64), ("right", ctypes.c_double), ("up", ctypes.c_double),
-    ]
-
-
-class Stats(ctypes.Structure):
-    _fields_ = [(name, ctypes.c_uint64) for name in ("calls", "writes", "rejected")]
-    _fields_ += [("before", ctypes.c_double * 3), ("after", ctypes.c_double * 3), ("yaw", ctypes.c_double)]
-    _fields_ += [(name, ctypes.c_uint32) for name in ("active", "slot_index", "suspended", "reserved")]
+LIBRARY_NAME = "apex_camera_view_v6.dll"
+HASH_NAME = "apex_camera_view_v6.sha256"
 
 
 def make_config(right: float) -> Config:

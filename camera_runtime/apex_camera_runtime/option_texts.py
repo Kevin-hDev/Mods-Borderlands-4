@@ -5,6 +5,8 @@ others (review, 2026-09-26). The French texts are Apex Movement's panel_fr.py, g
 """
 
 THIRD_PERSON = {"display_name": "Third Person", "description": "Keep the on-foot camera behind the character."}
+AIM_VIEW = {"display_name": "Aim View", "true_text": "Third Person", "false_text": "First Person",
+            "description": "Sniper rifles and heavy weapons use first-person aiming."}
 # The SDK's text menu reads On/Off for a switch; the shoulder's two values are sides (review, 2026-09-26).
 SHOULDER = {"display_name": "Shoulder", "description": "Put the camera over the left or right shoulder.",
             "true_text": "Left", "false_text": "Right"}
@@ -12,3 +14,13 @@ ORBIT = {"display_name": "Orbit Camera", "description": "The camera turns freely
 # Apex Movement and Omni Sprint only: Third Person & FOV always applies its FOV.
 CUSTOM_FOV = {"display_name": "Custom FOV", "description": "Use the FOV below instead of the game's."}
 FOV ={"display_name": "FOV", "description": "Field of view, up to 150."}
+
+ADS_NOTICES = {
+    "unsupported": "Shoulder aiming is unavailable on this version. Keep first-person aiming until the mod is updated.",
+    "unknown_weapon": "Weapon not recognized: first-person aiming retained. Try another weapon.",
+    "heavy_native": "Heavy weapons retain first-person aiming pending validation.",
+    "wrong_thread": "Aim presentation is unavailable: first-person aiming retained. Report this issue with the log.",
+    "mode_unavailable": "Aim view not confirmed: first-person aiming retained. Release and aim again.",
+    "cleanup_pending": "Returning to the game view. Wait before changing camera mods.",
+    "install_failed": "Shoulder aiming could not start. Restart the game; if this persists, report it with the log.",
+}

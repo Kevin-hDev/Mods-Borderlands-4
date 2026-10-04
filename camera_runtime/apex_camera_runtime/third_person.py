@@ -3,7 +3,7 @@
 import time
 from typing import Any, Callable
 
-from . import active_mode, aiming, cleanup, foot_preemption, mode_layers
+from . import active_mode, ads_coordination, aiming, cleanup, foot_preemption, mode_layers
 from .cleanup_retry import MAX_CLEANUP_ATTEMPTS, CleanupRetry
 from .constants import CAMERA_BLEND as BLEND
 from .constants import CAMERA_TELEPORT as TELEPORT
@@ -19,7 +19,7 @@ from .transitions import THIRD_PERSON, VEHICLE_MODE, TransitionHooks
 class ThirdPersonController(ControllerActions):
     def __init__(self, hooks: Any, bridge: Any, identifier: str,
                  weak_ref: Callable | None = None, log: Callable | None = None,
-                 collision: Any = None, clock: Callable[[], int] | None = None) -> None:
+                 collision: Any = None, clock: Callable[[], int] | None = None, ads: Any = None) -> None:
         self.hooks = hooks
         self.bridge = bridge
         self.identifier = identifier
@@ -45,11 +45,14 @@ class ThirdPersonController(ControllerActions):
         self._suspensions: set[str] = set()
         self.transition_name = TRANSITION
         self.zoom = OrbitZoom(self)
+        self.ads = ads
+        self._ads_settings = None
 
     @property
     def cleanup_pending(self) -> bool:
         return (self._bridge_started or self._hooks_installed or self._mode_pushes > 0
-                or self.foot_mode.rollback_failed or self.zoom.pending)
+                or self.foot_mode.rollback_failed or self.zoom.pending
+                or (self.ads is not None and self.ads.pending))
 
     def _suspend(self, reason: str, enabled: bool) -> None:
         previous = self._suspensions.copy()
@@ -75,6 +78,8 @@ class ThirdPersonController(ControllerActions):
 
     def _on_transition(self, requested: str, effective: str) -> None:
         if requested == VEHICLE_MODE:
+            if self.ads is not None:
+                self.ads.stop()
             self._suspend("vehicle", True)
             try:
                 foot_preemption.cancel(self.foot_mode, self, "vehicle", True)
@@ -108,7 +113,9 @@ class ThirdPersonController(ControllerActions):
                 raise RuntimeError("saved shoulder refused")
             self._transitions = TransitionHooks(
                 self.hooks, self.identifier, pc, self.log, self._on_transition,
-                lambda: self._desired_mode, self._request_transition)
+                lambda: self._desired_mode, self._request_transition,
+                lambda: ads_coordination.native_requested(self),
+                lambda requested, effective: ads_coordination.preserve_mode(self, requested, effective))
             self._transitions.install()
             self._hooks_installed = True
             if self._desired_mode == ORBIT_MODE:
@@ -130,6 +137,11 @@ class ThirdPersonController(ControllerActions):
             raise setup_error
 
     def sync(self, _owner: str, pc: Any, settings: Any, _now_ns: int) -> None:
+        if self.cleanup_retry.waiting:
+            self.cleanup_retry.retry(self, _now_ns)
+            if self.cleanup_retry.pending:
+                return
+        self._ads_settings = settings
         enabled = settings.third_person_enabled()
         if not enabled or pc is None:
             if self.cleanup_pending and self.cleanup_retry.exhausted:
@@ -193,7 +205,10 @@ class ThirdPersonController(ControllerActions):
             else:
                 self.stop(stale=True, now_ns=_now_ns)
             return
+        ads_coordination.choose(self, pc, actor, manager, settings)
         active_mode.sync(self, pc, actor, manager, settings, _now_ns)
+        if self._bridge_started:
+            ads_coordination.confirm(self, actor, manager)
         if self._bridge_started and not self.cleanup_retry.pending:
             try:
                 self.zoom.sync(settings)

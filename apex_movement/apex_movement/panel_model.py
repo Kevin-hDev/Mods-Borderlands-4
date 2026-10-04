@@ -6,7 +6,7 @@ from mods_base import KeybindOption
 
 from . import menu, pack, panel_preferences as prefs, report
 from . import panel_toggle
-from .panel_transaction import Transaction
+from .panel_transaction import Transaction, write_options
 
 
 class Model:
@@ -123,14 +123,7 @@ class Model:
         return int(round(result)) if option.is_integer else round(result, 6)
 
     def write(self, values):
-        if type(values) is not dict or not 0 < len(values) <= len(self.options):
-            return False
-        try:
-            changes = tuple((self.options[key], self.normalize(self.options[key], value))
-                            for key, value in values.items())
-        except (KeyError, TypeError, ValueError, OverflowError):
-            return False
-        return self.save(changes, "write")
+        return write_options(self, values)
 
     def write_commands(self, values):
         if not self._commands_ready():

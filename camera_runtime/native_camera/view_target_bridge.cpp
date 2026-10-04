@@ -1,5 +1,7 @@
 #include "view_target_bridge.h"
 #include "camera_memory.h"
+#include "ads_api.h"
+#include "ads_view.h"
 
 #include <cmath>
 #include <windows.h>
@@ -35,12 +37,30 @@ int stop_locked() {
 }
 
 void dispatch(void* manager, void* view_target, float delta_time) {
-    original(manager, view_target, delta_time);
     AcquireSRWLockExclusive(&guard);
-    if (installed && deadline && GetTickCount64() >= deadline) {
+    const bool expired = installed && deadline && GetTickCount64() >= deadline;
+    if (expired) {
         stop_locked();
     }
+    const bool owned = stats.active && manager == target_manager;
+    ReleaseSRWLockExclusive(&guard);
+    auto& ads = apex_ads::shared_ads();
+    if (expired) {
+        const auto generation = ads.statistics().generation;
+        if (generation) ads.clear(generation);
+    }
+    bool effective = false;
+    if (owned) {
+        effective = apex_ads::update_view(ads, manager, view_target, delta_time, original);
+    } else {
+        original(manager, view_target, delta_time);
+    }
+    const auto ads_stats = ads.statistics();
+    AcquireSRWLockExclusive(&guard);
     if (stats.active && manager == target_manager) {
+        stats.ads_effective = effective ? 1U : 0U;
+        stats.ads_error = ads_stats.error;
+        stats.ads_generation = ads_stats.generation;
         ++stats.calls;
         if (apex_camera::memory_access(view_target, view_required_size, true)
             && shift_view(config, view_target, stats, !suspended)) {
@@ -107,8 +127,12 @@ int view_start(void* manager, const Config* candidate) {
 }
 
 int view_stop() {
+    auto& ads = apex_ads::shared_ads();
+    const auto generation = ads.statistics().generation;
+    if (generation) ads.clear(generation);
     AcquireSRWLockExclusive(&guard);
     const int result = stop_locked();
+    stats.ads_effective = 0;
     ReleaseSRWLockExclusive(&guard);
     return result;
 }

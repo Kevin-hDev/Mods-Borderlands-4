@@ -18,7 +18,8 @@ def sync(controller: Any, pc: Any, actor: Any, manager: Any, mode: str, third_pe
          desired_mode: str, transition: str, now_ns: int) -> bool:
     if controller._in_vehicle:
         return False
-    wants = wants_to_aim(actor)
+    ads = getattr(controller, "ads", None)
+    wants = wants_to_aim(actor) and not (ads is not None and ads.wanted)
     if wants and not controller._aiming:
         controller._suspend("aim", True)
         controller._transitions.set_first_person_allowed(True)
@@ -81,6 +82,8 @@ def prepare_vehicle(controller: Any, third_person: str, desired_mode: str, trans
 
 
 def prepare_observed_vehicle(controller: Any) -> None:
+    if controller.ads is not None:
+        controller.ads.stop()
     if not (controller._aiming or controller._aim_returning):
         return
     controller._transitions.set_first_person_allowed(False)

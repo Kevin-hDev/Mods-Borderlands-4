@@ -6,6 +6,22 @@ import time
 TRANSACTION_TIMEOUT_NS = 2_000_000_000
 
 
+def write_options(model, values):
+    """Validate one write and recheck live ownership immediately before persistence."""
+    if type(values) is not dict or not 0 < len(values) <= len(model.options):
+        return False
+    if "third_person_ads" in model.options:
+        from .panel_ads import refuses
+        if refuses(values):
+            return False
+    try:
+        changes = tuple((model.options[key], model.normalize(model.options[key], value))
+                        for key, value in values.items())
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return False
+    return model.save(changes, "write")
+
+
 def _priority(change):
     option, target = change
     if option.identifier == "third_person":

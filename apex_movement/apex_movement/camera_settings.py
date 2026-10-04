@@ -5,6 +5,7 @@ import math
 from mods_base import BoolOption, SliderOption
 
 try:
+    from .apex_camera_runtime.ads_options import AdsOptions
     from .apex_camera_runtime.loot_options import LootOptions
     from .apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
     from .apex_camera_runtime.camera_option import CameraBoolOption
@@ -14,6 +15,7 @@ try:
 except ModuleNotFoundError as error:
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
+    from apex_camera_runtime.ads_options import AdsOptions
     from apex_camera_runtime.loot_options import LootOptions
     from apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
     from apex_camera_runtime.camera_option import CameraBoolOption
@@ -24,6 +26,8 @@ except ModuleNotFoundError as error:
 loot = LootOptions()
 loot_distance = loot.distance
 zoom = OrbitZoomOptions()
+ads = AdsOptions()
+third_person_ads = ads.option
 
 third_person = BoolOption("third_person", False, **option_texts.THIRD_PERSON)
 
@@ -94,8 +98,8 @@ fov = SliderOption(
 native_fov = SliderOption("native_fov", 0, 0, 180, step=1, is_integer=False, is_hidden=True)
 applied_fov = SliderOption("applied_fov", 0, 0, 180, step=1, is_integer=False, is_hidden=True)
 # The custom panel exposes only player choices; recovery values stay private.
-VISIBLE = (third_person, shoulder_left, orbit, custom_fov, fov, *loot.options)
-ALL = [third_person, third_person_key, third_person_controller,
+VISIBLE = (third_person, third_person_ads, shoulder_left, orbit, custom_fov, fov, *loot.options)
+ALL = [third_person, third_person_ads, third_person_key, third_person_controller,
        shoulder_left, shoulder_key, shoulder_controller,
        orbit, orbit_key, orbit_controller, *commands.options[6:], custom_fov, fov, *loot.options, native_fov, applied_fov,
            zoom.option]

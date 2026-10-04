@@ -7,7 +7,8 @@ from . import panel_ownership
 from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
 
 # A setting that changes nothing while its switch is off; this mod's FOV has no switch of its own.
-DEPENDS_ON = {"loot_reach": "extended_loot", "shoulder_left": "third_person", "orbit": "third_person"}
+DEPENDS_ON = {"loot_reach": "extended_loot", "shoulder_left": "third_person", "orbit": "third_person",
+              "third_person_ads": "third_person"}
 
 
 class PanelForm:
@@ -69,6 +70,12 @@ class PanelForm:
         if self.command_form is not None:
             from . import panel_camera_commands
             panel_camera_commands.refresh(self, widgets, self.command_catalogue)
+        self.refresh_aim(widgets)
+
+    def refresh_aim(self, widgets):
+        if "third_person_ads" in self.model.options:
+            from . import panel_ads
+            panel_ads.refresh(self, widgets)
 
     @staticmethod
     def take(widget):
@@ -99,6 +106,9 @@ class PanelForm:
             if self.model.camera_elsewhere and key in self.model.camera_options:
                 continue
             widget = widgets[f"setting:{key}"]
+            if key == "third_person_ads" and getattr(self, "ads_blocked", False):
+                widget.SetIsChecked(False)
+                continue
             if sc.is_shortcut(option):
                 raw = sc.take_key(widget)
                 if raw is None:
@@ -135,6 +145,8 @@ class PanelForm:
             labels.value(widgets, option, value, self.model.language)
         self.refresh_dependency(widgets)
 
+        self.refresh_aim(widgets)
+
     def poll(self):
         widgets, now = self.resolve(), time.perf_counter_ns()
         ownership = panel_ownership.refresh(self, widgets)
@@ -148,6 +160,7 @@ class PanelForm:
             self.refresh_labels(widgets)
             if ownership == "discarded":
                 self.report(widgets, "camera_draft_discarded")
+        self.refresh_aim(widgets)
         outcome = self.model.advance()
         if outcome is not None:
             self.notice = outcome

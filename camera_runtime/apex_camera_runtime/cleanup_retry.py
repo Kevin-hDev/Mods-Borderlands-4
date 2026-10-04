@@ -16,6 +16,7 @@ class CleanupRetry:
         self.log = log
         self.label = label
         self.pending = False
+        self.waiting = False
         self.attempts = 0
         self.next_ns = 0
         self.stale = False
@@ -30,6 +31,7 @@ class CleanupRetry:
         if self.pending and self.hooks.has_hook(CLEANUP_PATH, self.hooks.Type.POST, hook_id):
             self.hooks.remove_hook(CLEANUP_PATH, self.hooks.Type.POST, hook_id)
         self.pending = False
+        self.waiting = False
 
     def reset(self) -> None:
         self.cancel()
@@ -52,9 +54,19 @@ class CleanupRetry:
         self.pending = True
         self.next_ns = now_ns + CLEANUP_RETRY_FIRST_NS
 
+    def schedule_wait(self, controller: object, now_ns: int, stale: bool) -> None:
+        # The same observer survives mod disable; natural HUD restoration is not a failed cleanup.
+        self.waiting = True
+        self.schedule(controller, now_ns, stale)
+
     def retry(self, controller: object, now_ns: int) -> None:
         if not getattr(controller, "cleanup_pending", False) or now_ns < self.next_ns:
             return
+        if self.waiting:
+            if not controller.ads.stop(stale=self.stale):
+                self.next_ns = now_ns + CLEANUP_RETRY_FIRST_NS
+                return
+            self.waiting = False
         if self.exhausted:
             self.cancel()
             return

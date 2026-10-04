@@ -37,7 +37,7 @@ check("the camera declaration contains no command row",
 check("the sprint's page then the camera's, holding all camera settings, the recovery values left out",
       model.pages == ("omni_sprint", "camera", "commands") and model.page == "omni_sprint"
       and not model.camera_elsewhere
-      and list(model.options) == ["omni_sprint", "third_person", "shoulder_left", "orbit", "custom_fov", "fov", "extended_loot", "loot_reach"]
+      and list(model.options) == ["omni_sprint", "third_person", "third_person_ads", "shoulder_left", "orbit", "custom_fov", "fov", "extended_loot", "loot_reach"]
       and list(model.command_options) == ["third_person_key", "third_person_controller", "shoulder_key",
                                           "shoulder_controller", "orbit_key", "orbit_controller",
                                           "zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller"])
@@ -120,11 +120,11 @@ check("asking which mod drives the camera never creates the runtime",
 shared = runtime.shared(weak_ref=weakref.ref, address_of=id)
 shared.register("omni_sprint", 100, object(), constants.PROTOCOL)
 check("while Omni Sprint drives the camera, its pages show all their settings",
-      not Model(mod).camera_elsewhere and len(Model(mod).options) == 8 and len(Model(mod).command_options) == 10)
+      not Model(mod).camera_elsewhere and len(Model(mod).options) == 9 and len(Model(mod).command_options) == 10)
 shared.register("apex_movement", 200, object(), constants.PROTOCOL)
 elsewhere = Model(mod)
 check("while Apex Movement is on, stable camera controls refuse writes but the sprint remains writable",
-      elsewhere.camera_elsewhere and len(elsewhere.options) == 8 and len(elsewhere.command_options) == 10
+      elsewhere.camera_elsewhere and len(elsewhere.options) == 9 and len(elsewhere.command_options) == 10
       and not elsewhere.write({"fov": 130}) and elsewhere.write({"omni_sprint": False})
       and elsewhere.command_actions is not None and not elsewhere.restore() and settings.fov.value == 120)
 check("a malformed dormant camera write is refused without an exception",

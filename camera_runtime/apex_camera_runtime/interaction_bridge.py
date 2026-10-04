@@ -2,10 +2,11 @@
 import ctypes
 
 from .native_bridge import load_packaged_library
+from .generated_ads import INTERACTION_ABI
 
-ABI_VERSION = 1
-LIBRARY_NAME = 'apex_camera_interaction_v1.dll'
-HASH_NAME = 'apex_camera_interaction_v1.sha256'
+ABI_VERSION = INTERACTION_ABI
+LIBRARY_NAME = 'apex_camera_interaction_v2.dll'
+HASH_NAME = 'apex_camera_interaction_v2.sha256'
 MAX_POINTER = 2**64 - 1 - 0x2000
 
 

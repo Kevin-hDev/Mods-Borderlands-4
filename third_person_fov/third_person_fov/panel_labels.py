@@ -48,6 +48,11 @@ def value(widgets, option, current, language):
     key = option.identifier
     if sc.is_shortcut(option):
         sc.show_key(widgets[f"key:{key}"], current)
+    elif key == "third_person_ads":
+        label = (i18n.text("aim_third" if current else "aim_first", language) if language == "FR"
+                 else option.true_text if current else option.false_text)
+        widgets[f"setting:{key}_label"].SetText(label)
+        b.paint(widgets, f"setting:{key}", "on" if current else "off")
     elif key == "shoulder_left":
         widgets[f"setting:{key}_label"].SetText(i18n.text("left" if current else "right", language))
         b.paint(widgets, f"setting:{key}", "on" if current else "off")

@@ -5,6 +5,7 @@ from typing import Any
 from mods_base import get_pc
 
 try:
+    from .apex_camera_runtime.option_texts import ADS_NOTICES
     from .apex_camera_runtime.bootstrap import ensure
     from .apex_camera_runtime.constants import PROTOCOL
     from .apex_camera_runtime.shared import elected, shared
@@ -12,6 +13,7 @@ except ModuleNotFoundError as error:
     # Source tests use the canonical sibling source; packaged builds carry it below the mod's only SDK root.
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
+    from apex_camera_runtime.option_texts import ADS_NOTICES
     from apex_camera_runtime.bootstrap import ensure
     from apex_camera_runtime.constants import PROTOCOL
     from apex_camera_runtime.shared import elected, shared
@@ -25,6 +27,7 @@ _registered = False
 
 
 class Settings:
+    third_person_ads = staticmethod(settings.ads.enabled)
     orbit_distance = staticmethod(settings.zoom.distance)
     set_orbit_distance = staticmethod(settings.zoom.save)
     loot_distance = staticmethod(settings.loot_distance)
@@ -135,6 +138,11 @@ def elected_elsewhere() -> bool:
     """True while another registered mod's higher-priority camera settings are applied."""
     owner = elected()
     return owner is not None and owner != OWNER
+
+
+def aim_status() -> tuple[str, str] | None:
+    reason = _runtime.ads_status(OWNER) if _registered else None
+    return (reason, ADS_NOTICES[reason]) if reason is not None else None
 
 
 def stop() -> None:

@@ -5,16 +5,18 @@ from typing import Any
 from mods_base import get_pc
 
 try:
+    from .apex_camera_runtime.option_texts import ADS_NOTICES
     from .apex_camera_runtime.bootstrap import ensure
     from .apex_camera_runtime.constants import PROTOCOL
-    from .apex_camera_runtime.shared import shared
+    from .apex_camera_runtime.shared import elected, shared
 except ModuleNotFoundError as error:
     # Source tests use the canonical sibling source; packaged builds carry it below the mod's only SDK root.
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
+    from apex_camera_runtime.option_texts import ADS_NOTICES
     from apex_camera_runtime.bootstrap import ensure
     from apex_camera_runtime.constants import PROTOCOL
-    from apex_camera_runtime.shared import shared
+    from apex_camera_runtime.shared import elected, shared
 
 from . import camera_settings, pack, report
 
@@ -25,6 +27,7 @@ _registered = False
 
 
 class Settings:
+    third_person_ads = staticmethod(camera_settings.ads.enabled)
     orbit_distance = staticmethod(camera_settings.zoom.distance)
     set_orbit_distance = staticmethod(camera_settings.zoom.save)
     loot_distance = staticmethod(camera_settings.loot_distance)
@@ -96,6 +99,16 @@ def ready() -> bool:
 
 def adjust_orbit_zoom(direction: int) -> bool:
     return bool(_registered and _runtime.adjust_orbit_zoom(OWNER, direction))
+
+
+def aim_status() -> tuple[str, str] | None:
+    reason = _runtime.ads_status(OWNER) if _registered else None
+    return (reason, ADS_NOTICES[reason]) if reason is not None else None
+
+
+def elected_elsewhere() -> bool:
+    owner = elected()
+    return owner is not None and owner != OWNER
 
 
 def stop() -> None:

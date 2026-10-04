@@ -3,10 +3,11 @@
 #include <cstddef>
 #include <cstdint>
 #include "generated_limits.h"
+#include "generated_ads.h"
 
 namespace apex_view {
-constexpr std::uint32_t VIEW_TARGET_ABI = 5;
-constexpr uint32_t update_slot = 264;
+constexpr std::uint32_t VIEW_TARGET_ABI = static_cast<uint32_t>(apex_ads::VIEW_ABI);
+constexpr uint32_t update_slot = static_cast<uint32_t>(apex_ads::VIEW_UPDATE_SLOT);
 constexpr uint32_t max_duration_ms = 60000;
 constexpr uint64_t max_expected_rva = 0x80000000ULL;
 constexpr size_t view_location_offset = 0x10;
@@ -17,19 +18,8 @@ constexpr double max_coordinate = 1.0e9;
 constexpr double max_yaw = 360000.0;
 constexpr double degrees_to_radians = 0.017453292519943295;
 
-struct Config {
-    uint32_t abi, duration_ms, slot_index, reserved;
-    uint64_t expected_rva;
-    double right, up;
-};
-
-struct Stats {
-    uint64_t calls, writes, rejected;
-    double before[3], after[3], yaw;
-    uint32_t active, slot_index, suspended, reserved;
-};
-
-static_assert(sizeof(Config) == 40 && sizeof(Stats) == 96, "Unexpected view bridge ABI");
+using Config = apex_ads::ViewConfig;
+using Stats = apex_ads::ViewStats;
 
 bool valid_config(const Config& config);
 bool shift_view(const Config& config, void* view_target, Stats& stats, bool write);

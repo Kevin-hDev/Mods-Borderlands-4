@@ -40,12 +40,12 @@ assert not ({option.identifier for option in camera_settings.VISIBLE}
 assert len(model.groups) == 10 and len(model.pages) == 11
 assert model.pages == panel_theme.PAGES
 assert model.pages[-1] == "commands"
-assert tuple(model.camera_options) == ("third_person", "shoulder_left", "orbit", "custom_fov", "fov", "extended_loot", "loot_reach")
+assert tuple(model.camera_options) == ("third_person", "third_person_ads", "shoulder_left", "orbit", "custom_fov", "fov", "extended_loot", "loot_reach")
 assert tuple(model.command_options) == (
     "third_person_key", "third_person_controller", "shoulder_key", "shoulder_controller",
     "orbit_key", "orbit_controller", "zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller")
-# 30 movement settings, the walk key's four entries and the seven camera/loot settings; commands have their own page.
-assert len(model.options) == 41
+# Movement, walk and eight camera/loot choices; commands have their own page.
+assert len(model.options) == 42
 assert ([key for key in model.options if key.startswith("walk")]
         == ["walk_speed", "walk", "walk_key", "walk_toggle", "walk_key_speed"])
 assert "native_fov" not in model.options and "applied_fov" not in model.options

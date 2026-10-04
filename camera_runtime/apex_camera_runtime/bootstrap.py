@@ -4,6 +4,9 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .collision import CollisionGuard
+from .ads_bridge import AdsBridge
+from .ads_context import ContextReader
+from .ads_session import AdsSession
 from .camera_bridge import CameraBridge
 from .interaction_bridge import InteractionBridge, load_library as load_interaction_library
 from .generated_limits import RUNTIME_FOLDER
@@ -25,8 +28,14 @@ def attach(runtime: Any, library: Any, interaction_library: Any, hooks: Any, sdk
         log(f"interaction alignment setup failed: {type(error).__name__}")
     bridge = CameraBridge(Bridge(library), interaction, log)
     collision = CollisionGuard(kismet, sdk, log)
+    try:
+        native_ads = AdsBridge(library)
+        ads = AdsSession(native_ads, ContextReader(weak_ref, native_ads.identify, sdk.find_all), log)
+    except Exception:
+        ads = None
+        log("Third-person aiming unavailable; native aiming retained.")
     controller = ThirdPersonController(
-        hooks, bridge, IDENTIFIER, weak_ref=weak_ref, log=log, collision=collision)
+        hooks, bridge, IDENTIFIER, weak_ref=weak_ref, log=log, collision=collision, ads=ads)
     runtime.set_third_person(controller)
     return controller
 

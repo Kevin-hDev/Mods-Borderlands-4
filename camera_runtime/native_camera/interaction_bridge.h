@@ -1,9 +1,10 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include "generated_ads.h"
 
 namespace apex_interaction {
-constexpr uint32_t abi = 1;
+constexpr uint32_t abi = static_cast<uint32_t>(apex_ads::INTERACTION_ABI);
 constexpr uintptr_t provider_offset = 0xDA8;
 constexpr uintptr_t provider_rva = 0x1E4996;
 constexpr uintptr_t table_rva = 0xB98B8F0;

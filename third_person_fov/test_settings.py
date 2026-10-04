@@ -24,7 +24,7 @@ def check(label, condition):
 
 check("the public settings keep their exact camera order",
       [item.identifier for item in settings.OPTIONS if not item.is_hidden] ==
-      ["third_person", "third_person_key", "third_person_controller",
+      ["third_person", "third_person_ads", "third_person_key", "third_person_controller",
        "shoulder_left", "shoulder_key", "shoulder_controller",
        "orbit", "orbit_key", "orbit_controller", "zoom_in_key", "zoom_in_controller",
        "zoom_out_key", "zoom_out_controller", "fov", "extended_loot", "loot_reach"])

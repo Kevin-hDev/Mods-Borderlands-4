@@ -13,6 +13,9 @@ def signed_right(left: bool) -> float:
 
 class ShoulderState:
     def available(self, controller: Any) -> bool:
+        ads = getattr(controller, "ads", None)
+        if ads is not None and (ads.pending or (ads.wanted and not ads.effective)):
+            return False
         if not (controller._bridge_started and controller._hooks_installed
                 and controller._mode_pushes > 0 and not controller._aiming
                 and not controller._in_vehicle and not controller.foot_mode.pending):

@@ -55,8 +55,26 @@ FR = {'camera': 'CAMÉRA',
  'camera_draft_discarded': 'Mod caméra changé : les réglages caméra non enregistrés ont été '
                            'annulés.',
  'camera_outdated': 'Des mods de caméra de versions différentes sont chargés. Mets à jour Apex '
-                    'Movement, Omni Sprint et Third Person & FOV, puis relance le jeu.'}
+                    'Movement, Omni Sprint et Third Person & FOV, puis relance le jeu.',
+ 'aim_third': 'Troisième personne',
+ 'aim_first': 'Première personne',
+ 'ads_unsupported': "Visée à l'épaule indisponible avec cette version. Gardez la visée première "
+                    'personne en attendant une mise à jour du mod.',
+ 'ads_unknown_weapon': 'Arme non reconnue : visée première personne conservée. Essayez une autre '
+                       'arme.',
+ 'ads_heavy_native': 'Armes lourdes : visée première personne conservée en attendant leur '
+                     'validation.',
+ 'ads_wrong_thread': 'Présentation de visée indisponible : visée première personne conservée. '
+                     'Signalez ce problème avec le journal.',
+ 'ads_mode_unavailable': 'Vue de visée non confirmée : visée première personne conservée. Relâchez '
+                         'puis reprenez la visée.',
+ 'ads_cleanup_pending': 'Retour à la vue du jeu en cours. Attendez avant de changer de mod caméra.',
+ 'ads_install_failed': "Activation de la visée à l'épaule impossible. Redémarrez le jeu ; si cela "
+                       'persiste, signalez-le avec le journal.'}
 FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrière le personnage à pied.'),
+ 'third_person_ads': ('Visée',
+                      'Les fusils de précision et les armes lourdes gardent la visée en première '
+                      'personne.'),
  'shoulder_left': ('Épaule', 'Place la caméra à gauche ou à droite du personnage.'),
  'orbit': ('Caméra orbitale', 'La caméra tourne librement autour du personnage.'),
  'custom_fov': ('FOV personnalisé', 'Utilise le FOV ci-dessous à la place de celui du jeu.'),

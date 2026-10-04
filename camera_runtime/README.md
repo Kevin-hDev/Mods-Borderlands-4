@@ -9,8 +9,10 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
 
 ## What it does
 
-- **Third person** on foot: the game's own ThirdPerson camera mode, shifted over the shoulder. Aiming hands the view
-  back to the game's own first-person aim; sliding, leaving a vehicle, landing a ground slam and being downed keep the
+- **Third person** on foot: the game's own ThirdPerson camera mode, shifted over the shoulder. A saved Aim View
+  setting selects third-person aim (default) with native weapon zoom and a visible reticle, or first-person aim.
+  Sniper rifles stay in first person; heavy and unsupported weapons retain native aim. Crouch and shoulder switching
+  remain available while aiming; sliding, leaving a vehicle, landing a ground slam and being downed keep the
   selected camera. The shoulder shift is suspended while it would put the camera through a wall.
 - **Shoulder**: the camera sits over the right shoulder or the left one.
 - **Orbit camera**: the game's own Orbit mode, a camera that turns freely around the character. Two commands move it
@@ -47,9 +49,9 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
 In `apex_camera_runtime/assets/`, built from the sources in `native_camera/` with Visual Studio's C++ build tools
 (x64). Each build script compiles and runs its native test first, then writes the DLL and its SHA-256:
 
-- `apex_camera_view_v5.dll` (`build.ps1`) applies the over-the-shoulder offset to the camera's final view, within
-  fixed bounds.
-- `apex_camera_interaction_v1.dll` (`build_interaction.ps1`) aims the interaction ray from the rendered camera.
+- `apex_camera_view_v6.dll` (`build.ps1`) applies the over-the-shoulder offset and guarded native ADS presentation
+  to the camera's final view, within fixed bounds.
+- `apex_camera_interaction_v2.dll` (`build_interaction.ps1`) aims the interaction ray from the rendered camera.
 - `apex_camera_loot_v1.dll` (`build_loot.ps1`) extends the pickup range of loot.
 
 ## Tests

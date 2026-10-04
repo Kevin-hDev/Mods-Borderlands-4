@@ -34,7 +34,7 @@ bool align_output(void* output, const Sample& before, const CameraView& view) {
 int read_camera(const Config& config, ViewStats getter, CameraView& view) {
     apex_view::Stats camera{};
     if (!getter || getter(&camera)) return -1;
-    if (!camera.active || camera.suspended) return 0;
+    if (!camera.active || (camera.suspended && !camera.ads_effective)) return 0;
     auto* pc = reinterpret_cast<unsigned char*>(config.controller);
     auto* manager = reinterpret_cast<unsigned char*>(config.manager);
     if (!apex_camera::memory_access(pc, manager_offset + sizeof(void*))) return -1;

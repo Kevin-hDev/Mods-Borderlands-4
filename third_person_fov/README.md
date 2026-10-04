@@ -1,5 +1,7 @@
 # Third Person & FOV
 
+Version **1.1.0**.
+
 An over-the-shoulder camera and a wider field of view for Borderlands 4, without the movement changes from Apex
 Movement or Omni Sprint.
 
@@ -8,7 +10,9 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
 ## What it does
 
 - Keeps the camera behind the character while on foot. Third person is off by default.
-- Aiming uses the game's native first-person view, then returns to third person when aim is released.
+- Aim View defaults to third person with native weapon zoom and a visible reticle; select first person in Camera
+  settings if preferred. The choice is saved. Crouch and switch shoulders while aiming.
+- Sniper rifles remain in first person. Heavy weapons and unsupported weapons keep the game's native view.
 - Sliding, leaving a vehicle, landing a ground slam and being downed keep the selected on-foot camera.
 - In third person, the camera sits over the right shoulder or the left one, and an orbit camera turns freely around
   the character. Both switches are greyed while third person is off.

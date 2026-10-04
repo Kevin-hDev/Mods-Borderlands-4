@@ -86,6 +86,10 @@ int main() {
     bridge_stats.suspended = 1;
     ok &= check(apex_interaction::read_camera(config, get_stats, observed) == 0,
                 "ADS and vehicle suspension must bypass correction");
+    bridge_stats.ads_effective = 1;
+    ok &= check(apex_interaction::read_camera(config, get_stats, observed) == 1,
+                "wall suspension keeps effective third-person ADS alignment");
+    bridge_stats.ads_effective = 0;
     bridge_stats.suspended = 0;
     bridge_stats.active = 0;
     ok &= check(apex_interaction::read_camera(config, get_stats, observed) == 0,

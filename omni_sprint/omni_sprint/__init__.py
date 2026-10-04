@@ -9,7 +9,7 @@ from mods_base import build_mod
 
 from . import animation, camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 __author__ = "kevin-hDev"
 
 

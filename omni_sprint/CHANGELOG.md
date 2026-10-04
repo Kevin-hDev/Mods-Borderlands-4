@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.6 - 2026-10-04
+
+- Third-person aiming with native weapon zoom and a visible reticle.
+- Saved Camera setting to choose third-person or first-person aiming; third person is the default when enabled.
+- Crouch and switch shoulders while aiming. Sniper rifles stay in first person; heavy and unsupported weapons retain the native view.
+- Smooth aim-in and aim-out zoom, including quick repeated aiming.
+
 ## 1.0.5 - 2026-10-02
 
 - Fixed: in third person, landing a ground slam switched the view to first person for a moment.

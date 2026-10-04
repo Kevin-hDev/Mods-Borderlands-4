@@ -1,5 +1,7 @@
 # Omni Sprint
 
+Version **1.0.6**.
+
 Sprint in every direction in Borderlands 4: sideways, diagonally and backwards, while the camera stays free. Omni
 Sprint keeps the game's sprint speed, supplies a backward running animation in third person, and offers an optional
 third-person camera with an orbit camera, a field-of-view setting and a longer loot reach, in an English and French
@@ -18,9 +20,10 @@ stops. Omni Sprint opens that limit to 180 degrees, so the sprint starts and hol
   The mod uses a private animation carrier and releases it when the sprint ends or the mod is disabled.
 - No extra sprint key: sprint as usual. The optional **Custom FOV** switch is off by default; its slider ranges from
   70 to 150. With the switch off, the game's FOV is used.
-- The optional **Third Person** switch, off by default, keeps an over-the-shoulder camera on foot; aiming switches to
-  the game's own first-person view; a downed character and a ground slam landing stay in third person. Its key is P
-  by default.
+- The optional **Third Person** switch, off by default, keeps an over-the-shoulder camera on foot. Aim View defaults
+  to third person with native weapon zoom and a visible reticle; choose first person in Camera settings if preferred.
+  Crouch and switch shoulders while aiming. Sniper rifles stay in first person; heavy and unsupported weapons keep
+  the native view. A downed character and a ground slam landing stay in third person. Its key is P by default.
 - In third person, key 6 switches shoulders and key 7 switches to the orbit camera, which turns freely around the
   character; two more keys, none set by default, move it closer or farther away. Both switches are greyed while
   third person is off.

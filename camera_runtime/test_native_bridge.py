@@ -34,9 +34,12 @@ class Function:
 config = bridge.make_config(48.4)
 check("the production ABI has no probe deadline",
       (config.abi, config.duration_ms, config.slot_index, config.expected_rva)
-      == (5, 0, 264, 0x3CD4832))
+      == (6, 0, 264, 0x3CD4832))
 check("the validated framing is the single configured value", (config.right, config.up) == (48.4, 5.0))
-check("the ABI layouts are fixed", ctypes.sizeof(config) == 40 and ctypes.sizeof(bridge.Stats) == 96)
+check("the ABI layouts are fixed", ctypes.sizeof(config) == 40 and ctypes.sizeof(bridge.Stats) == 112)
+from apex_camera_runtime import generated_ads
+check("Python uses the generated view contract without a duplicate", bridge.Config is generated_ads.ViewConfig
+      and bridge.Stats is generated_ads.ViewStats)
 
 start, stop, suspend, set_right, stats = Function(), Function(), Function(), Function(True), Function()
 library = types.SimpleNamespace(view_start=start, view_stop=stop,

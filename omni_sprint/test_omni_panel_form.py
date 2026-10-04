@@ -93,7 +93,7 @@ model = panel_model.Model(mod)
 names = ["focus", "pages", "notice", "close", "EN", "FR", "restore", "undo", "enabled", "nav:omni_sprint",
          "nav:camera", "nav:commands", "row:fov", "description:fov", "icons:PS5", "icons:XSX",
          "camera:settings", "commands:settings", "commands:external"]
-names += [f"{part}:{name}" for name in ("loot_reach", "shoulder_left", "orbit") for part in ("row", "description")]
+names += [f"{part}:{name}" for name in ("loot_reach", "shoulder_left", "orbit", "third_person_ads") for part in ("row", "description")]
 names += [f"setting:{key}" for key in model.options]
 for action, device in camera_control_config.SLOTS:
     names += [f"command:{action}:{device}", f"clear:{action}:{device}", f"value:{action}:{device}"]

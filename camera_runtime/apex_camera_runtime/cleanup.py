@@ -8,6 +8,10 @@ from . import aiming
 def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bool,
          stale: bool = False, now_ns: int | None = None) -> None:
     errors = []
+    if controller.ads is not None and not controller.ads.stop(stale=stale):
+        moment = controller.clock() if now_ns is None else now_ns
+        controller.cleanup_retry.schedule_wait(controller, moment, stale)
+        return
     try:
         controller.zoom.stop(stale=stale)
     except Exception as error:

@@ -1,4 +1,6 @@
 #include "view_target_bridge.h"
+#include "ads_api.h"
+#include "ads_native_test_fixture.h"
 
 #include <windows.h>
 #include <cmath>
@@ -16,7 +18,7 @@ using namespace apex_view;
 using Update = void (*)(void*, void*, float);
 
 struct Manager { void** table; };
-struct ViewTarget { alignas(16) unsigned char bytes[64]{}; };
+struct ViewTarget { alignas(16) unsigned char bytes[80]{}; };
 
 double read_value(const ViewTarget& view, size_t offset) {
     double value;
@@ -32,6 +34,8 @@ __declspec(noinline) void original_update(void*, void* raw_view, float) {
     if (raw_view) {
         auto& view = *static_cast<ViewTarget*>(raw_view);
         write_value(view, view_location_offset, read_value(view, view_location_offset) + 5.0);
+        const float fov = 110.0f;
+        std::memcpy(view.bytes + apex_ads::FOV_OFFSET, &fov, sizeof(fov));
     }
 }
 
@@ -105,6 +109,28 @@ int main() {
     invoke(manager, expired);
     assert(close_to(read_value(expired, view_location_offset), 5.0));
     assert(view_stop() == 0);
+    apex_ads::NativeFixture fixture;
+    auto& ads = apex_ads::shared_ads();
+    assert(ads.configure(fixture.table_address(), fixture.third, fixture.zoom));
+    ads.set_installed(true);
+    fixture.put(2, 0, reinterpret_cast<uintptr_t>(table));
+    auto* ads_manager = static_cast<Manager*>(fixture.manager());
+    config = make_config();
+    assert(view_start(ads_manager, &config) == 0);
+    assert(ads.publish(fixture.context(1)) == 0);
+    assert(view_set_suspended(1) == 0);
+    ViewTarget aimed{};
+    invoke(*ads_manager, aimed);
+    float fov{};
+    std::memcpy(&fov, aimed.bytes + apex_ads::FOV_OFFSET, sizeof(fov));
+    assert(std::abs(fov - 71.05929f) < 0.001f);
+    assert(close_to(read_value(aimed, view_location_offset + 8), 0.0));
+    assert(view_stats(&stats) == 0 && stats.ads_effective == 1 && stats.ads_generation == 1);
+    assert(ads.statistics().fov_writes == 1);
+    ViewTarget foreign{};
+    invoke(manager, foreign);
+    assert(ads.statistics().fov_writes == 1);
+    assert(view_stop() == 0 && ads.statistics().active == 0);
     assert(VirtualFree(table, 0, MEM_RELEASE));
     std::cout << "RESULTAT: OK - persistent bridge, suspension, expiry, restore\n";
 }

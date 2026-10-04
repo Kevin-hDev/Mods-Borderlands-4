@@ -62,6 +62,21 @@ class BootstrapTests(unittest.TestCase):
         self.assertIs(self.attach(interaction_library), first)
         self.assertIs(self.runtime.third_person, first)
 
+    def test_ads_uses_the_same_library_and_stays_disabled_before_trial(self):
+        exports = {name: Function() for name in
+                   ("ads_prepare", "ads_identify", "ads_publish", "ads_clear", "ads_release", "ads_stats")}
+        with patch.dict(library.__dict__, exports), \
+                patch.dict(sdk.__dict__, {"find_all": lambda _: []}):
+            controller = self.attach(interaction_library)
+        self.assertIsNotNone(controller.ads)
+        self.assertIs(controller.ads.native.library, library)
+        self.assertFalse(controller.ads.trial)
+
+    def test_missing_ads_exports_keep_existing_camera(self):
+        controller = self.attach(None)
+        self.assertIsNone(controller.ads)
+        self.assert_camera_works(controller)
+
     def test_missing_interaction_library_keeps_camera(self):
         self.assert_camera_works(self.attach(None))
 

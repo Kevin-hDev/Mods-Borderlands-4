@@ -12,6 +12,8 @@ class FakeOption:
         self.min_value, self.max_value, self.kwargs = min_value, max_value, kwargs
         self.display_name = kwargs.get("display_name", identifier)
         self.description = kwargs.get("description", "")
+        self.true_text = kwargs.get("true_text")
+        self.false_text = kwargs.get("false_text")
         self.step = kwargs.get("step", 1)
         self.is_integer = kwargs.get("is_integer", True)
         self.is_hidden = kwargs.get("is_hidden", False)

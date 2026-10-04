@@ -4,6 +4,7 @@ from typing import Any
 
 from .arbitration import Arbiter, Client
 from .constants import PROTOCOL
+from .ads_coordination import transfer_pending
 
 CHECK_NS = 500_000_000
 
@@ -21,6 +22,18 @@ class CameraRuntime:
 
     def register(self, owner: str, priority: int, settings: Any, protocol: int = PROTOCOL) -> None:
         self.arbiter.register(Client(owner, priority, settings), protocol)
+
+    def ads_status(self, owner: str) -> str | None:
+        from .ads_status import notice
+        active = self.arbiter.active()
+        if active is None or active.owner != owner:
+            return None
+        ads = getattr(self.third_person, "ads", None)
+        if ads is not None and ads.pending:
+            return "cleanup_pending"
+        if not active.settings.third_person_enabled() or not active.settings.third_person_ads():
+            return None
+        return notice(self.third_person)
 
     def unregister(self, owner: str) -> None:
         active = self.arbiter.active()
@@ -40,6 +53,8 @@ class CameraRuntime:
     def set_third_person(self, controller: Any) -> None:
         if self.third_person is not None and self.third_person is not controller:
             self.third_person.stop()
+            if transfer_pending(self.third_person):
+                raise RuntimeError("camera restoration pending")
         self.third_person = controller
 
     def prepare_third_person(self, owner: str, enabled: bool, setup: Any) -> Exception | None:
@@ -156,13 +171,22 @@ class CameraRuntime:
 
     def tick(self, context: Any, now_ns: int) -> None:
         client = self.arbiter.active()
+        retry = getattr(self.third_person, "cleanup_retry", None)
+        # Normal HUD restoration is not a camera teardown; only handoff or explicit shutdown waits.
+        if transfer_pending(self.third_person) and (
+                client is not self._active_client or getattr(retry, "waiting", False)):
+            self.third_person.stop()
+            if transfer_pending(self.third_person):
+                return
         if client is not self._active_client:
             # The elected owner must advance even if the old native unit needs its bounded cleanup worker.
             try:
                 self._stop_active()
             finally:
-                self._active_client = client
+                self._active_client = None if transfer_pending(self.third_person) else client
                 self._next_fov_ns = 0
+            if transfer_pending(self.third_person):
+                return
         if client is None:
             return
         if self.loot is not None:

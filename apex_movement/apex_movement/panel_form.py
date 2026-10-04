@@ -8,7 +8,7 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, 
 # the walk key, the loot reach under its switch, the shoulder and the orbit camera outside third person (the runtime
 # takes neither before it, runtime.camera_ready; review, 2026-09-26).
 DEPENDS_ON = {"fov": "custom_fov", "walk_toggle": "walk", "walk_key_speed": "walk", "loot_reach": "extended_loot",
-              "shoulder_left": "third_person", "orbit": "third_person"}
+              "shoulder_left": "third_person", "orbit": "third_person", "third_person_ads": "third_person"}
 
 
 class PanelForm:
@@ -72,6 +72,12 @@ class PanelForm:
         if self.command_form is not None:
             from . import panel_camera_commands
             panel_camera_commands.refresh(self, widgets, self.command_catalogue)
+        self.refresh_aim(widgets)
+
+    def refresh_aim(self, widgets):
+        if "third_person_ads" in self.model.options:
+            from . import panel_ads
+            panel_ads.refresh(self, widgets)
 
     @staticmethod
     def take(widget):
@@ -100,6 +106,9 @@ class PanelForm:
     def read_changes(self, widgets, now):
         for key, option in self.model.options.items():
             widget = widgets[f"setting:{key}"]
+            if key == "third_person_ads" and getattr(self, "ads_blocked", False):
+                widget.SetIsChecked(False)
+                continue
             if sc.is_shortcut(option):
                 raw = sc.take_key(widget)
                 if raw is None:
@@ -136,8 +145,11 @@ class PanelForm:
             labels.value(widgets, option, value, self.model.language)
         self.refresh_dependency(widgets)
 
+        self.refresh_aim(widgets)
+
     def poll(self):
         widgets, now = self.resolve(), time.perf_counter_ns()
+        self.refresh_aim(widgets)
         outcome = self.model.advance()
         if outcome is not None:
             self.notice = outcome

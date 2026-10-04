@@ -24,7 +24,7 @@ class BoundaryTests(unittest.TestCase):
         config = bridge.make_config(pc, manager, NS(_handle=0x40000))
         self.assertEqual(ctypes.sizeof(config), 40)
         self.assertEqual(ctypes.sizeof(bridge.Stats), 200)
-        self.assertEqual((config.abi, config.reserved), (1, 0))
+        self.assertEqual((config.abi, config.reserved), (2, 0))
         for pointer in (0, True, -1, 0x30001, 2**64):
             with self.assertRaises(ValueError):
                 bridge.make_config(pc, manager, NS(_handle=pointer))

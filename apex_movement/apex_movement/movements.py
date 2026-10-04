@@ -32,7 +32,7 @@ SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", 
           "report", "settings", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
 # Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
 # its shared native runtime, so these modules belong only to the full pack.
-FULL_ONLY = ("camera", "camera_settings", "camera_control_actions", "camera_control_config",
+FULL_ONLY = ("camera", "camera_settings", "panel_ads", "camera_control_actions", "camera_control_config",
              "camera_control_form", "panel_camera_commands", "slow_walk")
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,

@@ -6,7 +6,7 @@ from mods_base import KeybindOption
 
 from . import camera, menu, panel_preferences as prefs, report, settings
 from . import panel_toggle
-from .panel_transaction import Transaction
+from .panel_transaction import Transaction, write_options
 
 
 class Model:
@@ -124,14 +124,7 @@ class Model:
         if (self.camera_elsewhere and type(values) is dict
                 and any(key in self.camera_options for key in values)):
             return False
-        if type(values) is not dict or not 0 < len(values) <= len(self.options):
-            return False
-        try:
-            changes = tuple((self.options[key], self.normalize(self.options[key], value))
-                            for key, value in values.items())
-        except (KeyError, TypeError, ValueError, OverflowError):
-            return False
-        return self.save(changes, "write")
+        return write_options(self, values)
 
     def write_commands(self, values):
         if not self._commands_ready():

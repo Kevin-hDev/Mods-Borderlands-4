@@ -1,6 +1,6 @@
 """Values shared by every camera client."""
 
-PROTOCOL = 3
+PROTOCOL = 4
 MAX_CLIENTS = 8
 GAME_MENU_MAX_FOV = 110.0
 FOV_MIN = 70.0

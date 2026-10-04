@@ -8,9 +8,9 @@ from .constants import PROTOCOL
 from .fov import FovEngine
 from .runtime import CameraRuntime
 
-# Zoom adds callbacks and persisted distance: old runtimes must not silently own new commands.
-STATE = "_apex_camera_runtime_v3"
-LEGACY_STATES = ("_apex_camera_runtime_v1", "_apex_camera_runtime_v2")
+# ADS changes native structures and ownership: old runtimes cannot join this authority.
+STATE = "_apex_camera_runtime_v4"
+LEGACY_STATES = ("_apex_camera_runtime_v1", "_apex_camera_runtime_v2", "_apex_camera_runtime_v3")
 ALL_STATES = (STATE, *LEGACY_STATES)
 
 
@@ -47,6 +47,11 @@ def shared(weak_ref: Callable | None = None, address_of: Callable | None = None)
     from .loot_runtime import LootRuntime
     from .loot_unit import create_unit
     state.runtime.loot = LootRuntime(create_unit)
+    from . import ads_category, ads_paths_reader, generated_ads
+    state.ads_category_reader = ads_category.category
+    state.ads_object_address = ads_category.address
+    state.ads_paths_reader = (generated_ads.PathsConfig, generated_ads.PathsSample,
+                              ads_paths_reader.make_config, ads_paths_reader.object_parts)
     for name in ALL_STATES:
         sys.modules[name] = state
     return state.runtime
