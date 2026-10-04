@@ -25,12 +25,15 @@ def check(label, condition):
 
 
 model = Model(mod)
-check("both pages contain each original setting exactly once",
-      model.pages == ("driving", "handling") and len(model.options) == 6
+check("five pages preserve all settings and append vehicle unlocks",
+      model.pages == ("driving", "handling", "boost", "combat", "vehicles") and len(model.options) == 12
       and [option for group in menu.MENU for option in group.children] == settings.OPTIONS)
 check("English and French pages use the approved menu labels",
       panel_i18n.text("driving", "EN") == "DRIVING"
-      and panel_i18n.text("handling", "FR") == "TENUE DE ROUTE")
+      and panel_i18n.text("handling", "FR") == "TENUE DE ROUTE"
+      and panel_i18n.text("boost", "EN") == "BOOST" and panel_i18n.text("boost", "FR") == "TURBO"
+      and panel_i18n.text("combat", "EN") == panel_i18n.text("combat", "FR") == "COMBAT"
+      and panel_i18n.option_text(settings.unlimited_boost, "FR")[0] == "Turbo illimité")
 # Kevin, 2026-09-23: a description says what the player gets in one plain sentence.
 descriptions = [panel_i18n.option_text(option, language)[1]
                 for option in settings.OPTIONS for language in ("EN", "FR")]

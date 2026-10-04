@@ -14,5 +14,8 @@ TEXT = {'close': 'FERMER',
  'ready': 'Sauvegarde automatique. Fermer revient à la liste des mods.',
  'saved': 'Enregistré.',
  'failed': 'Échec de sauvegarde. Réglages précédents conservés. Réessaie.',
+ 'toggle_failed': 'Impossible d’activer ou de désactiver le mod. Rien n’a changé. La raison est '
+                  'dans unrealsdk.log.',
  'restored': 'Réglages d’origine restaurés. Tu peux annuler cette restauration.',
- 'undone': 'Réglages précédents rétablis.'}
+ 'undone': 'Réglages précédents rétablis.',
+ 'refused': 'Attribution refusée. Cette touche est réservée ou déjà utilisée.'}

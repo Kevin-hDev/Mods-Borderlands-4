@@ -6,7 +6,7 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 |---|---|---|
 | [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing, slow walk, plus an optional third-person and orbit camera, third-person aiming, field of view and loot reach | 1.1.9 |
 | [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.6 |
-| [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns | 1.0.2 |
+| [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns, faster reverse, a longer boost that pushes in the air, a tougher vehicle, stronger weapons and vehicle unlocks | 1.0.3 |
 | [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, third-person aiming, FOV and loot reach | 1.0.6 |
 | [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, selectable third-person or first-person aiming, adjustable FOV and loot reach | 1.1.0 |
 | [Apex Heirloom](apex_heirloom/) | An Apex Legends style heirloom: the Jakobs knife or the axe in your hand when your weapon is put away, and a key to put it away | 1.0.3 |

@@ -2,4 +2,4 @@
 
 from .panel_common_en import TEXT as COMMON
 
-TEXT = {**COMMON, "driving": "DRIVING", "handling": "HANDLING"}
+TEXT = {**COMMON, "driving": "DRIVING", "handling": "HANDLING", "boost": "BOOST", "combat": "COMBAT"}

@@ -1,0 +1,9 @@
+"""Generated loader for the standalone bundled vehicle runtime (sync_menu_ui.py)."""
+try:
+    from .vehicle_unlocks.bootstrap import ensure
+except ModuleNotFoundError as error:
+    if error.name != f'{__package__}.vehicle_unlocks':
+        raise
+    from vehicle_unlocks.bootstrap import ensure
+
+runtime = ensure()

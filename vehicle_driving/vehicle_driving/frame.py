@@ -1,10 +1,11 @@
-"""Runs the mod once per frame while the player drives: holds the vehicle, keeps its values, grips it.
+"""Runs the mod once per frame while the player drives: holds the vehicle, keeps its values, grips it and pushes it in
+the air.
 
 The hook is only a clock, as in Apex Movement and the probes: any animation update ticks it, and several update each
 frame, so a tick closer than MIN_STEP_NS to the last is the same frame seen again. At the wheel the controller has no
 character (session 1, 2026-09-18), so no single animation could be trusted to keep running.
-A part that raises, the values or the grip, stops alone until the next vehicle, and each kind of error is reported once:
-one broken part must not take the other down (spec section 3.4).
+A part that raises, the values, the grip or the push, stops alone until the next vehicle, and each kind of error is
+reported once: one broken part must not take the others down (spec section 3.4).
 """
 
 import time
@@ -13,7 +14,7 @@ from typing import Any
 from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 
-from . import grip, report, seat, settings, tuning
+from . import air_push, grip, report, seat, settings, tuning
 
 HOOK_PATH = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 MS = 1_000_000
@@ -22,14 +23,18 @@ MIN_STEP_NS = 3 * MS
 CHECK_NS = 500 * MS
 VALUES = "values"
 GRIP = "grip"
+AIR = "air push"
 
 _tuning = tuning.Tuning()
 _grip = grip.Grip(0)
+_air = air_push.AirPush(0)
 _failed: set[str] = set()
 _last_ns = 0
 _next_check_ns = 0
 # Set at each check, the first one coming with the vehicle itself (_switch), before the grip's first frame.
 _loss = 0.0
+# Set at each check too: a push typed past its top between two checks never reaches the vehicle.
+_push = 0.0
 
 
 def _say(lines: list[str]) -> None:
@@ -50,7 +55,7 @@ def _fail(part: str, exc: Exception) -> None:
 
 def _switch(vehicle: Any, now_ns: int) -> None:
     """The player got in, out, or into another vehicle: the values held go back first."""
-    global _grip, _next_check_ns
+    global _grip, _air, _next_check_ns
     _failed.clear()
     _errors(_tuning.put_back())
     if vehicle is None:
@@ -61,11 +66,12 @@ def _switch(vehicle: Any, now_ns: int) -> None:
     except Exception as exc:
         _fail(VALUES, exc)
     _grip = grip.Grip(now_ns)
+    _air = air_push.AirPush(now_ns)
     _next_check_ns = now_ns
 
 
 def on_frame(now_ns: int) -> None:
-    global _last_ns, _next_check_ns, _loss
+    global _last_ns, _next_check_ns, _loss, _push
     if now_ns - _last_ns < MIN_STEP_NS:
         return
     _last_ns = now_ns
@@ -81,12 +87,21 @@ def on_frame(now_ns: int) -> None:
             report.warning(line)
         # Read here, once in bounds: a loss typed past its top between two checks never reaches the grip.
         _loss = settings.loss_per_degree()
+        _push = settings.push_strength()
         if VALUES not in _failed:
             try:
                 _say(_tuning.update(settings.factors()))
             except Exception as exc:
                 _fail(VALUES, exc)
-    if not settings.grip.value:
+    pushed = False
+    if AIR not in _failed:
+        try:
+            pushed, lines = _air.step(now_ns, vehicle, _push)
+            _say(lines)
+        except Exception as exc:
+            _fail(AIR, exc)
+    # One part sets the vehicle's speed in a frame: the grip's write would wipe the push out (spec section 3.6).
+    if not settings.grip.value or pushed:
         _grip.rest(now_ns)
     elif GRIP not in _failed:
         try:

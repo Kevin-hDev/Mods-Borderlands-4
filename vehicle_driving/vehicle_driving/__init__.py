@@ -1,4 +1,5 @@
-"""Vehicle Driving: livelier vehicles in Borderlands 4, with top speed, acceleration, turning, jump height and grip.
+"""Vehicle Driving: livelier vehicles in Borderlands 4, with top speed, acceleration, turning, jump height, grip,
+reverse, boost, toughness and weapon damage.
 
 Installs beside Apex Movement: its own package name, hook identifier and settings file, no key bound, and no game
 value in common (spec section 4, Kevin's requirement of 2026-09-18).
@@ -7,8 +8,9 @@ value in common (spec section 4, Kevin's requirement of 2026-09-18).
 from mods_base import build_mod
 
 from . import frame, panel_open, panel_preferences, report, settings
+from .vehicle_unlock_runtime import runtime as vehicle_runtime
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "kevin-hDev"
 
 
@@ -17,9 +19,14 @@ def _on_enable() -> None:
     for line in settings.keep_in_bounds():
         report.warning(line)
     report.note(f"enabled, version {__version__}")
+    vehicle_runtime.protection_runtime.start('vehicle_driving')
 
 
 def _on_disable() -> None:
+    if not vehicle_runtime.protection_runtime.stop('vehicle_driving'):
+        mod.enable()
+        report.note('disable refused: vehicle protection restoration failed; restart required')
+        return
     for failure in frame.stop_all():
         report.error_once(failure, failure)
     report.note("disabled, game values restored")
@@ -27,7 +34,8 @@ def _on_disable() -> None:
 
 mod = build_mod(
     name="Vehicle Driving",
-    # Keep the six original top-level keys so existing players' saved values load unchanged.
+    # Every setting stays a top-level key: the six of 1.0 load unchanged, and a 1.0 file leaves the new ones at their
+    # defaults (mods_base's load_options_dict skips a key the file lacks).
     options=[*settings.OPTIONS, *panel_preferences.ALL],
     hooks=[frame.tick],
     on_enable=_on_enable,

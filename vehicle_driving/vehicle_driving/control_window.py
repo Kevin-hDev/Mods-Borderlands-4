@@ -50,6 +50,7 @@ class Session:
         self.closed = self.selecting = False
         self.hooked = self.commanded = self.input_changed = False
         self.handoff = None
+        self.deferred_close = ""
         self.cleanup = None
         self.claimed = False
 
@@ -63,6 +64,11 @@ class Session:
                          and getattr(pc, "Pawn", None) == self.pawn())))
 
     def close(self, reason):
+        gate = getattr(self.form, "close_ready", None)
+        if callable(gate) and not gate():
+            self.deferred_close = reason
+            return
+        self.deferred_close = ""
         self.closed = True
         if self.cleanup is None:
             self.cleanup = Cleanup(self, reason)
@@ -83,6 +89,9 @@ class Session:
     def poll(self, now):
         if self.closed:
             self.recover(now)
+            return
+        if self.deferred_close:
+            self.close(self.deferred_close)
             return
         if now < self.next_poll:
             return

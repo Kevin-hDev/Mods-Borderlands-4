@@ -39,7 +39,7 @@ def seated(vehicle: sdk_stubs.Vehicle) -> types.SimpleNamespace:
 
 state = sdk_stubs.install()
 
-from vehicle_driving import frame, grip, settings  # noqa: E402
+from vehicle_driving import frame, grip, ground, settings  # noqa: E402
 
 MS = 1_000_000
 ON_FOOT = types.SimpleNamespace(Pawn=types.SimpleNamespace(Name="OakCharacter_1"))
@@ -190,6 +190,34 @@ for off_ms in (100, 490):
     velocity = sixth.Mesh.velocity
     check(f"the grip off for {off_ms} ms turns one frame's worth when switched back on, not the time it was off",
           abs(math.degrees(math.atan2(velocity.Y, velocity.X)) - grip.GRIP_DEG_PER_S * 0.01) < 0.01)
+
+pusher = sdk_stubs.Vehicle("OakVehicle_7", driver, yaw=90.0)
+pusher.Mesh = sdk_stubs.Mesh(2290.0, 0.0)
+state["pc"] = seated(pusher)
+frame.on_frame(20_000 * MS)
+pusher.boosting = True
+state["ground"].below = ground.TRACE_UP + 150.0
+frame.on_frame(20_050 * MS)
+check("boosting off the ground the vehicle is pushed, and the grip rests that frame: its write would wipe the push out",
+      len(pusher.Mesh.impulses) == 1 and pusher.Mesh.sets == [])
+pusher.boosting = False
+frame.on_frame(20_100 * MS)
+check("the boost let go, the grip turns the vehicle again",
+      len(pusher.Mesh.impulses) == 1 and len(pusher.Mesh.sets) == 1)
+settings.air_push.value = 0
+pusher.boosting = True
+frame.on_frame(20_500 * MS)
+frame.on_frame(20_550 * MS)
+check("the push's slider is read at the check: at 0 percent the game's boost is alone", len(pusher.Mesh.impulses) == 1)
+settings.air_push.value = 100
+frame.on_frame(21_000 * MS)
+pusher.Mesh.AddImpulse = None
+frame.on_frame(21_050 * MS)
+frame.on_frame(21_100 * MS)
+check("a push that raises stops alone and is reported once",
+      sum("air push stopped until the next vehicle" in line for line in state["errors"]) == 1)
+check("and the grip goes on", len(pusher.Mesh.sets) > 1)
+state["ground"].below = 60.0
 frame.stop_all()
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")

@@ -6,6 +6,8 @@ from . import panel_buttons as b, panel_i18n as i18n, panel_slider as s, panel_t
 def apply(form, widgets):
     from . import __version__
     language = form.model.language
+    from . import panel_vehicles
+    panel_vehicles.paint(form, widgets)
     for name in ("close", "restore", "undo"):
         widgets[f"{name}_label"].SetText(i18n.text(name, language))
     widgets["undo"].SetIsEnabled(form.model.can_undo)
@@ -26,6 +28,9 @@ def apply(form, widgets):
     for group, key in zip(form.model.groups, form.model.pages):
         widgets[f"heading:{key}"].SetText(i18n.text(key, language))
         widgets[f"group:{key}"].SetText(i18n.group_text(group, key, language))
+    if "heading:command_external" in widgets:
+        widgets["heading:command_external"].SetText(i18n.text("commands", language))
+        widgets["group:command_external"].SetText(i18n.text("camera_elsewhere", language))
     for key, option in form.model.options.items():
         title, description = i18n.option_text(option, language)
         widgets[f"label:{key}"].SetText(title.upper())

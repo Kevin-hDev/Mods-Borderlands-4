@@ -37,7 +37,8 @@ sdk_stubs.install()
 
 from vehicle_driving import tuning  # noqa: E402
 
-FACTORS = {"max_speed": 1.25, "acceleration": 2.5, "turn_speed": 2.5, "jump_height": 2.0}
+from tuning_fixture import FACTORS  # noqa: E402
+
 driver = sdk_stubs.Driver()
 attributes = driver.VehicleDriverComponent.VehicleAttributesState
 car = sdk_stubs.Vehicle("OakVehicle_1", driver)
@@ -57,10 +58,27 @@ check("the jump", hover.PowerslideJumpHeight.constant == 330.0)
 check("a first write says what it set, from the game's own values: the proof in the log that nothing is multiplied "
       "twice", len(lines) == 1 and lines[0].startswith("set YawSpring_Hovering[0] 3.000->7.500, ")
       and "maxspeed.BaseValue 50.000->62.500" in lines[0]
-      and lines[0].endswith("PowerslideJumpHeight 165.000->330.000"))
+      and "PowerslideJumpHeight 165.000->330.000, DamageTakenMultiplier.BaseValue 1.000->0.500" in lines[0]
+      and lines[0].endswith("weapon[3].damage.Value 7.000->21.000"))
 check("an update with nothing changed says nothing", owner.update(FACTORS) == [])
 check("an update with nothing changed never multiplies twice",
       hover.PowerslideJumpHeight.constant == 330.0 and attributes.MaxAccel.BaseValue == 2500.0)
+taken = car.DamageState.DamageTakenMultiplier
+weapons = [weapon.behaviors[0].damage for weapon in car.VehicleWeapons]
+check("the reverse speed and the boost's cost, base and value",
+      attributes.ReverseSpeed.BaseValue == 50.0 and near(attributes.ReverseSpeed.Value, 52.46)
+      and attributes.BoostConsumptionRateScalar.BaseValue == 0.5
+      and near(attributes.BoostConsumptionRateScalar.Value, 0.453))
+check("the damage the vehicle takes", taken.BaseValue == 0.5 and taken.Value == 0.5)
+check("every weapon's damage per shot, base and value",
+      all(near(damage.BaseValue, 8.4) and near(damage.Value, 8.4) for damage in weapons[:2])
+      and all(near(damage.BaseValue, 21.0) and near(damage.Value, 21.0) for damage in weapons[2:]))
+owner.update(dict(FACTORS, boost_cost=0.0))
+check("the unlimited boost: the gauge's cost at nothing, base and value",
+      attributes.BoostConsumptionRateScalar.BaseValue == 0.0 and attributes.BoostConsumptionRateScalar.Value == 0.0)
+check("kept at nothing, nothing more is written", owner.update(dict(FACTORS, boost_cost=0.0)) == [])
+owner.update(FACTORS)
+check("and back from it, from the game's own cost", near(attributes.BoostConsumptionRateScalar.Value, 0.453))
 lines = owner.update(dict(FACTORS, jump_height=4.0))
 check("a moved slider writes from the game's original", hover.PowerslideJumpHeight.constant == 660.0
       and lines == ["set PowerslideJumpHeight 165.000->660.000"])
@@ -90,6 +108,9 @@ check("put back: the game's values, the ones it rewrote included",
       and hover.YawSpring_Boosting.Springs[0].Stiffness == 1.5 and attributes.MaxAccel.BaseValue == 1000.0
       and attributes.MaxAccel.Value == 1400.0 and attributes.maxspeed.BaseValue == 50.0
       and hover.PowerslideJumpHeight.constant == 165.0)
+check("put back: the reverse speed, the boost's cost, the damage taken and each weapon's damage",
+      attributes.ReverseSpeed.BaseValue == 25.0 and attributes.BoostConsumptionRateScalar.Value == 0.906
+      and taken.Value == 1.0 and [damage.Value for damage in weapons] == [2.8, 2.8, 7.0, 7.0])
 check("nothing failed and nothing is held any more", lines == [] and owner.vehicle() is None and not owner.holds())
 
 owner.take(car)

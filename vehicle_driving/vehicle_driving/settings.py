@@ -1,8 +1,10 @@
-"""Every setting of the mod, with its default and bounds (spec section 2, validated by Kevin on 2026-09-18).
+"""Every setting of the mod, with its default and bounds (spec section 2, validated by Kevin on 2026-09-18, the 1.0.3
+ones on 2026-10-03).
 
 Percentages of the game's own value, 100 being the game's, so that each effect turns off on its own: Kevin's rule for
 Apex Movement, every movement can be turned off alone. The defaults are session 9's ("c'est nickel, on a ce qu'il
-faut"). The grip has its own switch, since no percentage turns it off.
+faut"). The grip has its own switch, since no percentage turns it off. The unlimited boost has its own switch too; the
+push in the air adds to the game's, so 0 is the game's.
 """
 
 import math
@@ -30,6 +32,12 @@ jump_height = SliderOption(
     display_name="Jump height",
     description="100% = game value.",
 )
+# Kevin, 2026-10-03, after session 12 drove it at 200: "200 par défaut et jusqu'à 300 max".
+reverse_speed = SliderOption(
+    "reverse_speed", 200, 100, 300, step=1, is_integer=True,
+    display_name="Reverse speed",
+    description="100% = the game's reverse speed.",
+)
 grip = BoolOption(
     "grip", True,
     display_name="Grip",
@@ -40,9 +48,41 @@ turn_loss = SliderOption(
     display_name="Speed lost in turns",
     description="Share of speed lost in a right-angle turn.",
 )
-OPTIONS = [max_speed, acceleration, turn_speed, jump_height, grip, turn_loss]
+# Kevin, 2026-10-03: "la durée est déjà pas mal par défaut, avec réglages jusqu'à 300 et illimité".
+boost_duration = SliderOption(
+    "boost_duration", 150, 100, 300, step=1, is_integer=True,
+    display_name="Boost duration",
+    description="100% = how long the game's boost lasts.",
+)
+# Off by default: Kevin's wish of 2026-10-02.
+unlimited_boost = BoolOption(
+    "unlimited_boost", False,
+    display_name="Unlimited boost",
+    description="The boost gauge never empties.",
+)
+# 100 = the boost's push on the ground; to be tuned in game (Kevin, 2026-10-03).
+air_push = SliderOption(
+    "air_push", 100, 0, 300, step=1, is_integer=True,
+    display_name="Boost in the air",
+    description="100% = the boost's ground push, in jumps and falls.",
+)
+# Kevin, 2026-10-03, after session 12's trial at 400: "200% avec réglage jusqu'à 500%".
+toughness = SliderOption(
+    "toughness", 200, 100, 500, step=1, is_integer=True,
+    display_name="Toughness",
+    description="200% = the vehicle takes half the damage.",
+)
+# Kevin, 2026-10-03, after session 12's trial at 500: "300% ... jusqu'à 500%".
+weapon_damage = SliderOption(
+    "weapon_damage", 300, 100, 500, step=1, is_integer=True,
+    display_name="Weapon damage",
+    description="100% = the game's damage, machine gun and rockets.",
+)
+OPTIONS = [max_speed, acceleration, turn_speed, jump_height, reverse_speed, grip, turn_loss, boost_duration,
+           unlimited_boost, air_push, toughness, weapon_damage]
 # The setting each lever of levers.py multiplies, by the name the levers give.
-FACTORS = {"max_speed": max_speed, "acceleration": acceleration, "turn_speed": turn_speed, "jump_height": jump_height}
+FACTORS = {"max_speed": max_speed, "acceleration": acceleration, "turn_speed": turn_speed, "jump_height": jump_height,
+           "reverse_speed": reverse_speed, "weapon_damage": weapon_damage}
 
 
 def keep_in_bounds() -> list[str]:
@@ -65,7 +105,17 @@ def keep_in_bounds() -> list[str]:
 
 
 def factors() -> dict[str, float]:
-    return {name: option.value / 100.0 for name, option in FACTORS.items()}
+    """Each lever's factor, by the name levers.py gives its setting. The duration and the toughness divide: a gauge
+    that lasts 1.5 times longer empties 1.5 times slower, and a vehicle twice as tough takes half the damage."""
+    made = {name: option.value / 100.0 for name, option in FACTORS.items()}
+    made["boost_cost"] = 0.0 if unlimited_boost.value else 100.0 / boost_duration.value
+    made["damage_taken"] = 100.0 / toughness.value
+    return made
+
+
+def push_strength() -> float:
+    """The push in the air as a share of the boost's push on the ground (spec section 3.6)."""
+    return air_push.value / 100.0
 
 
 def loss_per_degree() -> float:

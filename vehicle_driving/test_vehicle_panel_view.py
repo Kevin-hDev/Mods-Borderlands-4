@@ -66,7 +66,7 @@ model = panel_model.Model(SimpleNamespace(is_enabled=True))
 root, widgets = panel_view.build_view(SimpleNamespace(), model)
 assert root.kind == "UserWidget"
 assert root.WidgetTree.RootWidget.kind == "ScaleBox"
-assert len(widgets["pages"].children) == len(model.pages) == 2
+assert len(widgets["pages"].children) == len(model.pages) == 5
 assert widgets["focus"] is widgets["nav:driving"]
 assert theme.BRAND == "VEHICLE DRIVING"
 
@@ -85,5 +85,5 @@ assert all(id(widget) in attached for widget in widgets.values())
 assert sum(node.kind == "ScrollBox" for node in Widget.created) == len(model.pages) + 1
 assert all(f"setting:{key}" in widgets for key in model.options)
 assert len(widgets) < 450, "each widget is resolved during every menu poll"
-print("OK | full Vehicle Driving window builds both pages and a scrolling sidebar")
+print("OK | full Vehicle Driving window builds five pages and a scrolling sidebar")
 print("RESULTAT: TOUS LES TESTS PASSENT")

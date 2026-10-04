@@ -1,0 +1,19 @@
+"""Generated adapter for the shared vehicle reward page (sync_menu_ui.py)."""
+from types import SimpleNamespace
+from .vehicle_unlock_runtime import runtime
+from . import panel_pages as p, panel_widgets as w, panel_text as tx, panel_buttons as b, panel_theme as t
+
+panel = runtime.panel
+UI = SimpleNamespace(p=p, w=w, tx=tx, b=b, t=t)
+
+
+def page(owner, key, widgets, template, world):
+    return panel.page(owner, key, widgets, template, world, UI)
+
+
+def paint(form, widgets):
+    panel.paint(form, widgets, UI)
+
+
+def poll(form, widgets):
+    return panel.poll(form, widgets, UI)

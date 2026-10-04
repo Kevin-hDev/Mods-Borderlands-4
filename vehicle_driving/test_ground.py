@@ -33,6 +33,12 @@ check("nothing under it: in the air", ground.on_ground(car) is False)
 state["ground"].below = ground.TRACE_UP + ground.GROUND_REACH + 1.0
 check("ground beyond the reach counts as none", ground.on_ground(car) is False)
 check("the trace's class is looked up once", state["class_finds"] == 1)
+ground.on_ground(car, 100.0)
+_context, start, end, _channel, _ignore, _tail = state["ground"].calls[-1]
+check("a nearer reach ends nearer: the push in the air looks 100 under the origin", end.Z == 22.0 - 100.0)
+state["ground"].below = ground.TRACE_UP + 150.0
+check("ground 1.5 under the origin: within the grip's reach, beyond the push's",
+      ground.on_ground(car) is True and ground.on_ground(car, 100.0) is False)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

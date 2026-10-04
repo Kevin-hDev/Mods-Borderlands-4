@@ -5,8 +5,8 @@ from unrealsdk import logging
 PREFIX = "[Vehicle Driving]"
 # Bounded: failure kinds are a handful in practice; past this, new kinds are dropped rather than stored.
 MAX_REPORTED = 200
-# A line per vehicle taken, value the game rewrote and grip summary, bounded per switch-on: a long drive must not fill
-# the log, which the game only rewrites at its next launch.
+# A line per vehicle taken, value the game rewrote and grip or push summary, bounded per switch-on: a long drive must
+# not fill the log, which the game only rewrites at its next launch.
 MAX_NOTES = 2000
 
 _reported: set[str] = set()

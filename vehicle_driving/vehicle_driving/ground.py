@@ -2,6 +2,7 @@
 
 The vehicle's origin sat 22 above the flat ground it drove on (sessions 3 to 9); jumps rose 343 to 652. Channel 2 and
 the call are Apex Movement's wall_sense recipe, verified in game; the vehicle itself is ignored by the trace.
+The push in the air looks nearer (air_push.AIR_REACH): at this reach a jump only showed for 0.4 s (session 11).
 """
 
 from typing import Any
@@ -15,13 +16,13 @@ TRACE_CHANNEL = 2
 _library: Any = None
 
 
-def on_ground(vehicle: Any) -> bool:
+def on_ground(vehicle: Any, reach: float = GROUND_REACH) -> bool:
     global _library
     if _library is None:
         _library = unrealsdk.find_class("KismetSystemLibrary").ClassDefaultObject
     where = vehicle.K2_GetActorLocation()
     start = unrealsdk.make_struct("Vector", X=where.X, Y=where.Y, Z=where.Z + TRACE_UP)
-    end = unrealsdk.make_struct("Vector", X=where.X, Y=where.Y, Z=where.Z - GROUND_REACH)
+    end = unrealsdk.make_struct("Vector", X=where.X, Y=where.Y, Z=where.Z - reach)
     hit, _ignored, _result = _library.LineTraceSingle(
         vehicle, start, end, TRACE_CHANNEL, False, [], 0, unrealsdk.make_struct("HitResult"), True,
         unrealsdk.make_struct("LinearColor"), unrealsdk.make_struct("LinearColor"), 0.0,

@@ -2,48 +2,24 @@
 
 Installed into sys.modules before importing vehicle_driving. Cut down from Apex Movement's to what this mod calls:
 options, the frame hook, the mod, weak pointers, the log, one trace and the player controller. The vehicle and its
-driver carry the values sessions 1 to 9 read on Kevin's vehicle (2026-09-18).
+driver carry the values sessions 1 to 9 read on Kevin's vehicle (2026-09-18), and the boost, the damage and the
+weapons sessions 11 and 12 read (2026-10-03).
 """
 
 import sys
 import types
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from sdk_stubs_pointers import WeakPointer, destroy
+from sdk_stubs_options import FakeOption, FakeNestedOption, FakeHook
 
-
-class FakeOption:
-    def __init__(self, identifier: str, value: Any, *args: Any, **kwargs: Any) -> None:
-        # args holds a slider's bounds, in mods_base's order: min_value, max_value.
-        self.identifier, self.value, self.args, self.kwargs = identifier, value, args, kwargs
-        self.display_name = kwargs.get("display_name", identifier)
-        self.description = kwargs.get("description", "")
-        self.step = kwargs.get("step", 1)
-        self.is_integer = kwargs.get("is_integer", True)
-        # mods_base's names for a slider's bounds and first value; a switch has no bounds.
-        self.min_value, self.max_value = (args + (None, None))[:2]
-        self.default_value = value
-
-
-class FakeNestedOption:
-    def __init__(self, identifier: str, children: list, **kwargs: Any) -> None:
-        self.identifier, self.children = identifier, children
-        self.display_name = kwargs.get("display_name", identifier)
-        self.description = kwargs.get("description", "")
-
-
-class FakeHook:
-    def __init__(self, fn: Any, path: str, kind: str, identifier: str) -> None:
-        self.fn, self.path, self.kind, self.identifier, self.enabled = fn, path, kind, identifier, False
-
-    def __call__(self, *args: Any) -> Any:
-        return self.fn(*args)
-
-    def enable(self) -> None:
-        self.enabled = True
-
-    def disable(self) -> None:
-        self.enabled = False
+# Tests run in both the private source tree and the public sibling-package layout.
+_shared_source = Path(__file__).resolve().parents[2] / 'vehicle_unlocks' / 'source'
+if not _shared_source.is_dir():
+    _shared_source = Path(__file__).resolve().parents[1] / 'vehicle_unlocks'
+sys.path.insert(0, str(_shared_source))
 
 
 class FakeMod:
@@ -108,6 +84,7 @@ class Mesh:
     def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None:
         self.velocity = vector(x, y, z)
         self.sets: list[tuple] = []
+        self.impulses: list[tuple] = []
 
     def GetPhysicsLinearVelocity(self, bone: str) -> Any:
         return self.velocity
@@ -115,6 +92,13 @@ class Mesh:
     def SetPhysicsLinearVelocity(self, velocity: Any, add: bool, bone: str) -> None:
         self.sets.append((velocity, add, bone))
         self.velocity = velocity
+
+    def GetMass(self) -> float:
+        return 2500.0
+
+    def AddImpulse(self, impulse: Any, bone: str, velocity_change: bool) -> None:
+        """Recorded only: the game spreads an impulse over 4 to 5 frames (session 6), which no test relies on."""
+        self.impulses.append((impulse, bone, velocity_change))
 
 
 def springs(*stiffness: float) -> Any:
@@ -125,29 +109,51 @@ def pair(value: float, base: float) -> Any:
     return types.SimpleNamespace(Value=value, BaseValue=base)
 
 
+class Behavior:
+    """One of a weapon's behaviors; the firing one carries the damage of a shot, base and value (session 11)."""
+
+    def __init__(self, kind: str, damage: float | None = None) -> None:
+        self.Class = types.SimpleNamespace(Name=f"WeaponBehavior_{kind}")
+        if damage is not None:
+            self.damage = pair(damage, damage)
+
+
+def weapon(damage: float) -> Any:
+    """A vehicle weapon with session 11's four behaviors, the firing one first."""
+    return types.SimpleNamespace(behaviors=[Behavior("FireProjectile", damage), Behavior("DamageModifier"),
+                                            Behavior("OakStatusEffectModifier"), Behavior("Sight")])
+
+
 class Driver:
     """The player's character at the wheel: its driving attributes, base and value with Kevin's Hover Drive."""
 
     def __init__(self) -> None:
         self.Name = "OakCharacter_1"
         attributes = types.SimpleNamespace(maxspeed=pair(51.3194, 50.0), BoostMaxSpeed=pair(66.3425, 65.0),
-                                           MaxAccel=pair(1286.48, 1000.0), BoostMaxAccel=pair(1615.08, 1200.0))
+                                           MaxAccel=pair(1286.48, 1000.0), BoostMaxAccel=pair(1615.08, 1200.0),
+                                           ReverseSpeed=pair(26.23, 25.0), BoostConsumptionRateScalar=pair(0.906, 1.0))
         self.VehicleDriverComponent = types.SimpleNamespace(VehicleAttributesState=attributes)
 
 
 class Vehicle:
-    """A vehicle: springs and jump on its movement's HoverSetup, a physics body, a driver."""
+    """A vehicle: springs and jump on its movement's HoverSetup, the game's boost, a physics body, the damage it takes,
+    its weapons and a driver."""
 
     def __init__(self, name: str = "OakVehicle_1", driver: Any = None, yaw: float = 0.0, slide: str = "None") -> None:
         self.Name = name
         self.yaw = yaw
         self.location = vector(100.0, 200.0, 22.0)
         self.Mesh = Mesh()
+        self.boosting = False
         hover = types.SimpleNamespace(YawSpring_Idle=springs(5.0), YawSpring_Hovering=springs(3.0, 3.5, 4.0),
                                       YawSpring_Boosting=springs(1.0, 1.7, 2.4),
                                       PowerslideJumpHeight=types.SimpleNamespace(constant=165.0))
         self.OakVehicleMovement = types.SimpleNamespace(HoverSetup=hover,
-                                                        PowerslideInput=types.SimpleNamespace(name=slide))
+                                                        PowerslideInput=types.SimpleNamespace(name=slide),
+                                                        IsBoosting=lambda: self.boosting)
+        self.DamageState = types.SimpleNamespace(DamageTakenMultiplier=pair(1.0, 1.0))
+        # Two machine guns and two rocket launchers (session 11).
+        self.VehicleWeapons = [weapon(2.8), weapon(2.8), weapon(7.0), weapon(7.0)]
         self.DriverPawn = driver if driver is not None else Driver()
 
     def K2_GetActorRotation(self) -> Any:
@@ -188,8 +194,11 @@ def install() -> dict:
     unrealsdk_module.make_struct = lambda name, **fields: types.SimpleNamespace(**fields)
 
     mods_base = types.ModuleType("mods_base")
+    state['temporary_settings'] = TemporaryDirectory()
+    mods_base.SETTINGS_DIR = Path(state['temporary_settings'].name)
     mods_base.BoolOption = FakeOption
     mods_base.SliderOption = FakeOption
+    mods_base.SpinnerOption = FakeOption
     mods_base.NestedOption = FakeNestedOption
     mods_base.get_pc = lambda **kwargs: state["pc"]
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, kind, hook_identifier))

@@ -4,6 +4,10 @@ from . import panel_en, panel_fr
 
 
 def text(key, language):
+    from .vehicle_unlock_runtime import runtime
+    vehicle_text = runtime.text
+    if key in vehicle_text.EN:
+        return vehicle_text.get(key, language)
     source = panel_fr.TEXT if language == "FR" and key in panel_fr.TEXT else panel_en.TEXT
     return source[key]
 
@@ -15,6 +19,8 @@ def option_text(option, language):
 
 
 def group_text(group, key, language):
+    if key == 'vehicles':
+        return text('vehicles:description', language)
     return panel_fr.GROUPS[key] if language == "FR" else group.description
 
 

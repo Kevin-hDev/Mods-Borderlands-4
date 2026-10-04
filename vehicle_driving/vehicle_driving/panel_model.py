@@ -3,15 +3,23 @@
 import math
 
 from . import menu, panel_preferences as prefs, report
+from . import panel_toggle
+from .panel_transaction import Transaction, write_options
 
 
 class Model:
+    # The line the window shows when the ENABLED switch did not take.
+    toggle_notice = panel_toggle.FAILED
+
     def __init__(self, mod):
         self.mod = mod
         self.groups = tuple(menu.MENU)
         self.pages = tuple(group.identifier.removesuffix("_menu") for group in self.groups)
         self.options = {option.identifier: option for group in self.groups for option in group.children}
-        self._undo = ()
+        self.command_options, self.command_actions = {}, None
+        self._undo, self._command_undo = (), {}
+        self._command_plan = None
+        self.transaction = Transaction(mod, report.error_once)
 
     @property
     def language(self):
@@ -29,24 +37,54 @@ class Model:
     def can_undo(self):
         return bool(self._undo)
 
-    def save(self, changes):
-        previous = tuple((option, option.value) for option, _ in changes)
-        try:
-            for option, value in changes:
-                option.value = value
-            self.mod.save_settings()
-        except Exception:
-            for option, value in previous:
-                option.value = value
-            try:
-                self.mod.save_settings()
-            except Exception:
-                report.error_once("panel:save", "Settings could not be saved. Please retry.")
+    @property
+    def controller_icons(self):
+        return prefs.controller_icons.value
+
+    def save(self, changes, kind="save", previous=None):
+        snapshot = (tuple((option, option.value) for option, _ in changes)
+                    if previous is None else tuple(previous))
+        return self._complete(self.transaction.start(changes, snapshot, kind))
+
+    def _complete(self, outcome):
+        if outcome is None:
+            return None
+        kind, previous, success = outcome
+        if success and kind == "restore":
+            self._undo = previous
+        elif success and kind in ("write", "undo"):
+            self._undo = ()
+        return success
+
+    def advance(self):
+        outcome = self.transaction.advance()
+        if outcome is None:
+            return None
+        if self._command_plan is not None:
+            if self._command_plan[0] == "compensate":
+                self._complete(outcome)
+                self._command_plan = None
+                return "failed"
+            return self._finish_global(outcome, label=True)
+        kind = outcome[0]
+        success = self._complete(outcome)
+        return {"restore": "restored", "undo": "undone", "write": "saved"}.get(
+            kind, "saved") if success else "failed"
+
+    def cancel_transaction(self):
+        if not self.transaction.pending:
+            return True
+        outcome = self.transaction.cancel()
+        if outcome is None:
             return False
+        self._complete(outcome)
         return True
 
     def change_language(self, value):
         return value in prefs.LANGUAGES and self.save(((prefs.french, value == "FR"),))
+
+    def change_controller_icons(self, value):
+        return value in prefs.CONTROLLER_ICONS and self.save(((prefs.controller_icons, value),))
 
     def change_page(self, value):
         if type(value) is not str or value not in self.pages:
@@ -69,37 +107,94 @@ class Model:
         return int(round(result)) if option.is_integer else round(result, 6)
 
     def write(self, values):
-        if type(values) is not dict or not 0 < len(values) <= len(self.options):
+        return write_options(self, values)
+
+    def write_commands(self, values):
+        if not self._commands_ready():
             return False
-        try:
-            changes = tuple((self.options[key], self.normalize(self.options[key], value))
-                            for key, value in values.items())
-        except (KeyError, TypeError, ValueError, OverflowError):
+        success = self.command_actions.apply(values)
+        if success:
+            self._undo, self._command_undo = (), {}
+        return success
+
+    def assign_command(self, action, device, key):
+        if not self._commands_ready():
             return False
-        if not self.save(changes):
+        success = self.command_actions.assign(action, device, key)
+        if success:
+            self._undo, self._command_undo = (), {}
+        return success
+
+    def default_commands(self):
+        if not self._commands_ready():
             return False
-        self._undo = ()
-        return True
+        success = self.command_actions.defaults()
+        if success:
+            self._undo, self._command_undo = (), {}
+        return success
+
+    def _commands_ready(self):
+        return (self.command_actions is not None and not self.transaction.pending
+                and self._command_plan is None)
 
     def restore(self):
-        previous = tuple((option, option.value) for option in self.options.values())
-        if not self.save(tuple((option, option.default_value) for option, _ in previous)):
-            return False
-        self._undo = previous
-        return True
+        memory = ()
+        if self.command_actions is not None:
+            from .camera_control_config import MEMORY_OPTIONS
+            memory = MEMORY_OPTIONS
+        previous = tuple((option, option.value) for option in (*self.options.values(), *memory))
+        commands = self.command_actions.snapshot() if self.command_actions else {}
+        desired = self.command_actions.commands.defaults() if self.command_actions else {}
+        return self._start_global(tuple((option, option.default_value) for option, _ in previous),
+                                  "restore", previous, desired, commands)
 
     def undo(self):
-        if not self._undo or not self.save(self._undo):
+        if not self._undo:
             return False
-        self._undo = ()
-        return True
+        previous = tuple((option, option.value) for option, _ in self._undo)
+        commands = self.command_actions.snapshot() if self.command_actions else {}
+        return self._start_global(self._undo, "undo", previous, self._command_undo, commands)
+
+    def _start_global(self, changes, kind, previous, command_values, previous_commands):
+        self._command_plan = (kind, previous, command_values, previous_commands, self._undo)
+        outcome = self.transaction.start(changes, previous, kind)
+        if outcome is None:
+            return None
+        return self._finish_global(outcome, label=False)
+
+    def _finish_global(self, outcome, label):
+        kind, previous, command_values, previous_commands, former_undo = self._command_plan
+        success = self._complete(outcome)
+        if success and self.command_actions is not None:
+            success = self.command_actions.apply(command_values)
+        if success:
+            if kind == "restore":
+                self._command_undo = previous_commands
+            elif kind == "undo":
+                self._command_undo = {}
+            self._command_plan = None
+        else:
+            self._undo = () if kind == "restore" else former_undo
+            current = tuple((option, option.value) for option, _ in previous)
+            compensation = self.transaction.start(previous, current, "compensate")
+            if compensation is None:
+                self._command_plan = ("compensate", (), {}, {}, ())
+                return None
+            self._complete(compensation)
+            self._command_plan = None
+        if not label:
+            return success
+        return {"restore": "restored", "undo": "undone"}[kind] if success else "failed"
 
     def toggle_enabled(self):
+        if self.transaction.pending:
+            return None
         previous = self.mod.is_enabled
         try:
             (self.mod.disable if previous else self.mod.enable)()
             self.mod.save_settings()
-        except Exception:
+        except Exception as error:
+            self.toggle_notice = panel_toggle.notice(not previous, error)
             try:
                 (self.mod.enable if previous else self.mod.disable)()
                 self.mod.save_settings()

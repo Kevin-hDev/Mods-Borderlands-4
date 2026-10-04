@@ -25,12 +25,12 @@ import vehicle_driving  # noqa: E402
 from vehicle_driving import frame, menu, panel_preferences, settings  # noqa: E402
 
 mod = state["mods"][0]
-check("one mod with two visual pages and six original top-level settings",
+check("one mod with four visual pages and its settings as top-level keys",
       len(state["mods"]) == 1 and mod.kwargs["name"] == "Vehicle Driving"
       and mod.kwargs["options"] == [*settings.OPTIONS, *panel_preferences.ALL]
       and [option for group in menu.MENU for option in group.children] == settings.OPTIONS)
 check("a fresh install switches it on and says its version",
-      mod.is_enabled and state["misc"][-1] == f"[Vehicle Driving] enabled, version {vehicle_driving.__version__}")
+      mod.is_enabled and f"[Vehicle Driving] enabled, version {vehicle_driving.__version__}" in state["misc"])
 check("its one hook is the frame, under the mod's own identifier: Apex Movement's is apex_movement:frame on the same "
       "function, and two identifiers never replace each other (spec section 4)",
       mod.kwargs["hooks"] == [frame.tick] and frame.tick.identifier == "vehicle_driving:frame" and frame.tick.enabled)

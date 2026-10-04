@@ -5,6 +5,8 @@ value is always written as the game's original times its setting, never as the v
 is ever multiplied twice. The vehicle and its driver are held by weak pointers: a vehicle the game destroyed, such as
 one replaced by a vehicle summoned again, is never written again, and its values are forgotten with it.
 Spec section 3.2: what the game rewrites is followed, never fought.
+Each game object is held by its own weak pointer: the vehicle, its driver, and each weapon's firing behavior, which the
+game can destroy with its vehicle while the driver lives on (session 12, 2026-10-03).
 """
 
 from typing import Any
@@ -16,7 +18,6 @@ from . import levers
 # Game floats are 32-bit: a value read back differs from the one written by about one part in ten million. One
 # further off than this share was written by the game.
 TOLERANCE = 1e-5
-DRIVER_ATTRIBUTES = {name for _, name in levers.ATTRIBUTES}
 
 
 def same(a: float, b: float) -> bool:
@@ -35,10 +36,10 @@ class Entry:
 class Tuning:
     def __init__(self) -> None:
         self._vehicle: Any = None
-        self._driver: Any = None
+        # A weak pointer by owner name (levers.Target.owner).
+        self._owners: dict[str, Any] = {}
         self._targets: list[levers.Target] = []
-        # The driver's attributes missing at take(): looked for again at each update, since the driver may sit down
-        # after the vehicle became the pawn (the order was never measured).
+        # The levers missing at take() that may still come (levers.comes_late), looked for again at each update.
         self._waiting: set[str] = set()
         self._entries: dict[str, Entry] = {}
 
@@ -55,7 +56,7 @@ class Tuning:
         lines = self.put_back()
         self._vehicle = WeakPointer(vehicle)
         missing = self._find_levers(vehicle)
-        self._waiting = set(missing) & DRIVER_ATTRIBUTES
+        self._waiting = {name for name in missing if levers.comes_late(name)}
         lines.append(f"driving {vehicle.Name}")
         return lines + [f"{name} not found on {vehicle.Name}: left to the game" for name in missing]
 
@@ -64,7 +65,7 @@ class Tuning:
 
         What was set goes in one line, from the original: the log's proof that nothing is multiplied twice.
         """
-        lines: list[str] = self._look_for_driver()
+        lines: list[str] = self._look_again()
         written: list[str] = []
         rebased: set[str] = set()
         for target in self._targets:
@@ -111,16 +112,19 @@ class Tuning:
         self._entries.clear()
         self._targets = []
         self._waiting = set()
-        self._vehicle = self._driver = None
+        self._vehicle = None
+        self._owners = {}
         return lines
 
     def _find_levers(self, vehicle: Any) -> list[str]:
-        driver = getattr(vehicle, "DriverPawn", None)
-        self._driver = WeakPointer(driver) if driver is not None else None
         self._targets, missing = levers.targets(vehicle)
+        self._owners = {levers.VEHICLE: self._vehicle}
+        for target in self._targets:
+            if target.owner not in self._owners:
+                self._owners[target.owner] = WeakPointer(target.source)
         return missing
 
-    def _look_for_driver(self) -> list[str]:
+    def _look_again(self) -> list[str]:
         vehicle = self.vehicle()
         if not self._waiting or vehicle is None:
             return []
@@ -128,8 +132,8 @@ class Tuning:
         still = self._waiting & set(self._find_levers(vehicle))
         found = sorted(self._waiting - still)
         self._waiting = still
-        return [f"{', '.join(found)} found on {vehicle.Name} once its driver was seated"] if found else []
+        return [f"{', '.join(found)} found on {vehicle.Name} after it was taken"] if found else []
 
     def _alive(self, owner: str) -> bool:
-        pointer = self._vehicle if owner == levers.VEHICLE else self._driver
+        pointer = self._owners.get(owner)
         return pointer is not None and pointer() is not None

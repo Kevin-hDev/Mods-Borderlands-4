@@ -57,6 +57,7 @@ model = panel_model.Model(mod)
 names = ["focus", "pages", "notice", "close", "EN", "FR", "restore", "undo", "enabled"]
 names += [f"nav:{page}" for page in model.pages]
 names += [f"setting:{key}" for key in model.options]
+names += [f'vehicles:{key}' for key in ('standard', 'promotions', 'shatterland')]
 widgets = {name: Widget() for name in names}
 form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
 
