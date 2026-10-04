@@ -1,6 +1,11 @@
 # Changelog
 
-## 1.0.3 - 2026-10-04
+## 1.0.4 - 2026-10-04
+
+- Add a VEHICLES page with separate buttons for 10 standard vehicles, 4 promotional vehicles, and Trident with its rewards.
+- Promotional vehicles remain available through reloads and restarts while enabled. After disabling and re-enabling the mod, another unlock click may be needed.
+
+## 1.0.3 - 2026-10-05
 
 - New Reverse speed setting: the vehicle backs up faster (200 % by default, up to 300 %).
 - New Boost page:
@@ -13,10 +18,6 @@
   - Weapon damage: the machine gun and the rockets hit harder (300 % by default, up to 500 %).
 - At 100 % (0 % for Boost in the air), a new setting gives the game's own behavior. Your current settings are kept.
 - Internal update of the settings window shared with the Apex mods.
-
-- Add a VEHICLES page with separate buttons for 10 standard vehicles, 4 promotional vehicles, and Trident with its rewards.
-- Keep promotional vehicles through reloads and restarts while enabled. After disabling and re-enabling the mod, another unlock click may be needed.
-- Fix unlocking after both owners are disabled and re-enabled without restarting the game.
 
 ## 1.0.2 - 2026-09-25
 

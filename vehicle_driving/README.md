@@ -1,6 +1,6 @@
 # Vehicle Driving
 
-Version **1.0.3**. Open Vehicle Driving in the SDK mods menu for its English/French settings window. It works at the title screen, in a game, at the wheel and while the game is paused. The window remembers the last section you opened.
+Version **1.0.4**. Open Vehicle Driving in the SDK mods menu for its English/French settings window. It works at the title screen, in a game, at the wheel and while the game is paused. The window remembers the last section you opened.
 
 Livelier vehicles for Borderlands 4: a higher top speed, a quicker pick-up, sharper turns, higher jumps, a faster
 reverse, and a grip that keeps the vehicle going where it faces instead of sliding on through turns. The boost lasts

@@ -10,7 +10,7 @@ from mods_base import build_mod
 from . import frame, panel_open, panel_preferences, report, settings
 from .vehicle_unlock_runtime import runtime as vehicle_runtime
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 __author__ = "kevin-hDev"
 
 
