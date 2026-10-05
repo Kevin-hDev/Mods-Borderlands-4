@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.2 - 2026-10-06
+
+- Fixed a severe FPS drop when aiming in third person with additional aim zoom enabled.
+- Removed redundant per-frame checks of unchanged game code while preserving live camera and weapon validation.
+- Existing settings, weapon-specific zoom and smooth aiming transitions are preserved.
+
 ## 1.1.1 - 2026-10-06
 
 - New Camera framing controls: Aim Zoom (Wide, Standard, Close), Shoulder Spacing (Tight, Standard, Open), and Camera Height (Standard, Higher, Lower), each with a custom slider.

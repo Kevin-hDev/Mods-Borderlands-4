@@ -1,6 +1,6 @@
 # Third Person & FOV
 
-Version **1.1.1**.
+Version **1.1.2**.
 
 An over-the-shoulder camera and a wider field of view for Borderlands 4, without the movement changes from Apex
 Movement or Omni Sprint.

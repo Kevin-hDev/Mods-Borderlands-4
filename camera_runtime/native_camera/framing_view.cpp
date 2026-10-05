@@ -3,6 +3,7 @@
 #include "framing_math.h"
 #include "ads_view.h"
 #include "ads_memory.h"
+#include "view_performance.h"
 #include <cmath>
 
 namespace {
@@ -31,6 +32,7 @@ namespace apex_framing {
 Status apply(apex_ads::State& state, const apex_ads::FramingContext& context,
              void* manager, void* view, apex_view::Stats& stats,
              bool aiming, bool write, ProgressReader progress, bool* zoom_pending) {
+    apex_performance::Measurement timing(apex_performance::Stage::framing, aiming);
     if (zoom_pending) *zoom_pending = false;
     if (!state.framing_allowed(context, manager)) return Status::context_unavailable;
     Vec3 anchor{}, rotation{};

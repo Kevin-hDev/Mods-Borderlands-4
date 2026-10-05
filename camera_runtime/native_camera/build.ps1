@@ -15,10 +15,21 @@ foreach ($line in $environmentLines) {
 }
 $common = @('/nologo', '/std:c++17', '/EHsc', '/W4', '/WX', '/O2', '/MT', '/Brepro')
 $sources = @((Join-Path $sourceRoot 'view_target_math.cpp'),
+             (Join-Path $sourceRoot 'view_performance_bridge.cpp'),
              (Join-Path $sourceRoot 'view_dispatch.cpp'),
              (Join-Path $sourceRoot 'view_target_bridge.cpp'))
 Push-Location $buildRoot
 try {
+    & cl.exe @common (Join-Path $sourceRoot 'test_framing_progress.cpp') '/Fe:framing_progress_test.exe'
+    if ($LASTEXITCODE -ne 0) { throw 'Native progress test build failed' }
+    & .\framing_progress_test.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Native progress cache test failed' }
+    & .\framing_progress_test.exe 'refused'
+    if ($LASTEXITCODE -ne 0) { throw 'Native progress refusal test failed' }
+    & cl.exe @common (Join-Path $sourceRoot 'test_view_performance.cpp') (Join-Path $sourceRoot 'view_performance_bridge.cpp') '/Fe:view_performance_test.exe'
+    if ($LASTEXITCODE -ne 0) { throw 'Native timing test build failed' }
+    & .\view_performance_test.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Native timing test failed' }
     & cl.exe @common (Join-Path $sourceRoot 'framing_math.cpp') (Join-Path $sourceRoot 'test_framing_math.cpp') '/Fe:framing_math_test.exe'
     if ($LASTEXITCODE -ne 0) { throw 'Native framing math test build failed' }
     & .\framing_math_test.exe

@@ -1,5 +1,6 @@
 #include "ads_view.h"
 #include "ads_memory.h"
+#include "view_performance.h"
 #include <cmath>
 #include <limits>
 
@@ -36,15 +37,25 @@ float zoom_fov(float base, float scale) {
 }
 
 bool update_view(State& state, void* manager, void* view, float delta, Update original) {
+    apex_performance::Measurement timing(apex_performance::Stage::view, false);
     Ticket before{};
     const bool allowed = state.ticket(manager, before);
+    timing.aiming = allowed;
     // Game exceptions are never swallowed; only our extra reads have fault guards.
-    original(manager, view, delta);
+    {
+        apex_performance::Measurement original_timing(apex_performance::Stage::original, allowed);
+        original(manager, view, delta);
+    }
     if (!allowed || !state.current(before)) return false;
     float base{};
     PathsSample sample{};
-    if (!read_memory(reinterpret_cast<uintptr_t>(view), FOV_OFFSET, base)
-            || !sample_zoom(before, sample)) {
+    bool sampled = false;
+    {
+        apex_performance::Measurement zoom_timing(apex_performance::Stage::zoom, true);
+        sampled = read_memory(reinterpret_cast<uintptr_t>(view), FOV_OFFSET, base)
+            && sample_zoom(before, sample);
+    }
+    if (!sampled) {
         state.note_error(static_cast<uint32_t>(ERROR_CONTEXT));
         return false;
     }
