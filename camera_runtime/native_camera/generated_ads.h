@@ -3,8 +3,9 @@
 #include <cstdint>
 
 namespace apex_ads {
-inline constexpr uint64_t ADS_ABI = 1ULL;
-inline constexpr uint64_t VIEW_ABI = 6ULL;
+inline constexpr uint64_t PROTOCOL = 6ULL;
+inline constexpr uint64_t ADS_ABI = 2ULL;
+inline constexpr uint64_t VIEW_ABI = 8ULL;
 inline constexpr uint64_t INTERACTION_ABI = 2ULL;
 inline constexpr uint64_t CATEGORY_PISTOL = 1ULL;
 inline constexpr uint64_t CATEGORY_SMG = 2ULL;
@@ -17,6 +18,7 @@ inline constexpr uint64_t MAX_COLLECTORS = 32ULL;
 inline constexpr uint64_t MAX_TEXT = 160ULL;
 inline constexpr uint64_t MAX_TYPE_BYTES = 1000000ULL;
 inline constexpr uint64_t MIN_POINTER = 65536ULL;
+inline constexpr uint64_t CAMERA_MAX_COORDINATE = 1000000000ULL;
 inline constexpr uint64_t FOV_OFFSET = 64ULL;
 inline constexpr uint64_t MAX_ZOOM_SCALE = 2ULL;
 inline constexpr uint64_t OBJECT_INDEX_OFFSET = 12ULL;
@@ -36,6 +38,11 @@ inline constexpr uint64_t INPUTS_MIN_SIZE = 240ULL;
 inline constexpr uint64_t CONTROLLER_MIN_SIZE = 1080ULL;
 inline constexpr uint64_t WEAPON_MIN_SIZE = 3432ULL;
 inline constexpr uint64_t ZOOM_SCALE_RVA = 2347604ULL;
+inline constexpr uint64_t ZOOM_PROGRESS_RVA = 2348670ULL;
+inline constexpr uint64_t ZOOM_CAST_RVA = 74500912ULL;
+inline constexpr uint64_t ZOOM_TYPE_RVA = 213286064ULL;
+inline constexpr uint64_t ZOOM_TARGET_OFFSET = 224ULL;
+inline constexpr uint64_t ZOOM_FIND_SLOT = 648ULL;
 inline constexpr uint64_t HUD_PRODUCER_RVA = 16516506ULL;
 inline constexpr uint64_t HUD_GETTER_RVA = 16517686ULL;
 inline constexpr uint64_t HUD_GETTER_RETURN_RVA = 16516674ULL;
@@ -64,20 +71,56 @@ inline constexpr uint64_t ERROR_WRONG_THREAD = 3ULL;
 inline constexpr uint64_t ERROR_MODE = 4ULL;
 inline constexpr uint64_t ERROR_INSTALL = 5ULL;
 inline constexpr uint64_t ERROR_CONTEXT = 6ULL;
+inline constexpr uint64_t ERROR_SDK_COMPATIBILITY = 20ULL;
+inline constexpr uint64_t ERROR_GAME_COMPATIBILITY = 21ULL;
+inline constexpr uint64_t ERROR_SIGNATURE = 22ULL;
+inline constexpr uint64_t ERROR_SDK_EXPORT = 23ULL;
+inline constexpr uint64_t ERROR_OBJECT_TABLE = 24ULL;
+inline constexpr uint64_t FRAMING_APPLIED = 1ULL;
+inline constexpr uint64_t FRAMING_CONTEXT_UNAVAILABLE = 2ULL;
+inline constexpr uint64_t FRAMING_BODY_UNAVAILABLE = 3ULL;
+inline constexpr uint64_t FRAMING_POSITION_APPLIED_ZOOM_UNAVAILABLE = 4ULL;
+inline constexpr uint64_t FRAMING_REFERENCE_UNAVAILABLE = 5ULL;
+inline constexpr uint64_t FRAMING_ZOOM_APPLIED_POSITION_UNAVAILABLE = 6ULL;
 inline constexpr char SDK_SHA256[] = "d9936cbe3da434743a93e0dadc2f6a5cc82102936c1c249db014a3081fdb4433";
 inline constexpr char GAME_SHA256[] = "9c3afb7dc6a550a6c2e817846cd2c40ff11e066dc6aefeb819f802e6a4c5c3e0";
+inline constexpr char ZOOM_PROGRESS_PREFIX[] = "5657534883ec400f297c24300f297424";
+inline constexpr char ZOOM_CAST_PREFIX[] = "5657534881ec80000000488b05ff2dff";
 inline constexpr char HUD_PRODUCER_PREFIX[] = "415741564154565755534881ec80000000";
 inline constexpr char HUD_GETTER_PREFIX[] = "5657534883ec204889ce80b92a0d000001";
 inline constexpr char ZOOM_SCALE_PREFIX[] = "564881ec900000000f29b42480000000";
 inline constexpr char MODE_GETTER_PREFIX[] = "56574883ec284889d74889ce803dad65";
 inline constexpr char MODE_FINISH_PREFIX[] = "56574883ec284889cec781740a000000";
 inline constexpr char VIEW_UPDATE_PREFIX[] = "4157415641545657534881ec78030000";
+struct CollisionQuery {
+    uint64_t manager;
+    double before[3];
+    double desired[3];
+    float delta;
+    uint32_t reserved;
+    uint64_t generation;
+};
+static_assert(sizeof(CollisionQuery) == 72, "ADS contract size");
 struct ObjectId {
     uint64_t address;
     int32_t index;
     int32_t serial;
 };
 static_assert(sizeof(ObjectId) == 16, "ADS contract size");
+struct FramingContext {
+    uint32_t abi;
+    uint32_t size;
+    ObjectId references[4];
+    uint32_t actor_size;
+    uint32_t root_size;
+    uint32_t root_offset;
+    uint32_t capsule_offset;
+    uint32_t location_offset;
+    uint32_t parent_offset;
+    int32_t values[3];
+    uint32_t reserved;
+};
+static_assert(sizeof(FramingContext) == 112, "ADS contract size");
 struct PathsConfig {
     uint32_t abi;
     uint32_t reserved;

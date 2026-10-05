@@ -1,5 +1,6 @@
 #include "ads_identity.h"
 #include "ads_memory.h"
+#include "ads_sdk_exports.h"
 #include <cstring>
 #include <windows.h>
 
@@ -53,8 +54,8 @@ bool capture_id(uintptr_t table, uintptr_t object, ObjectId& identity) {
 
 uintptr_t sdk_object_table() {
     using Objects = const void* (*)();
-    const auto module = GetModuleHandleW(L"unrealsdk.dll");
-    const auto symbol = module ? GetProcAddress(module, "_unrealsdk_export__gobjects") : nullptr;
+    const auto module = GetModuleHandleW(sdk_exports::module);
+    const auto symbol = module ? GetProcAddress(module, sdk_exports::gobjects) : nullptr;
     if (!symbol) return 0;
     Objects getter{};
     static_assert(sizeof(getter) == sizeof(symbol), "SDK function pointer size");

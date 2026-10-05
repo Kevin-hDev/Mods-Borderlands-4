@@ -36,6 +36,12 @@ def options_page(owner, model, widgets, template):
     page, body = p.scrolling_body(owner, template)
     _heading(body, widgets)
     if model.camera_options:
-        sc.rows(p.card(body, widgets, "camera"), model.camera_options.values(), widgets, template)
+        rows = p.card(body, widgets, "camera")
+        controls = w.new("VerticalBox", rows)
+        widgets["camera:settings"] = controls
+        w.column(rows, controls)
+        sc.rows(controls, model.camera_options.values(), widgets, template)
+        from . import panel_framing
+        panel_framing.build(controls, widgets, template)
     _language_card(body, widgets, template)
     return page

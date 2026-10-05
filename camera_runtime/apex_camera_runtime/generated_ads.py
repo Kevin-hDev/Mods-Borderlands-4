@@ -2,8 +2,9 @@
 
 import ctypes
 
-ADS_ABI = 1
-VIEW_ABI = 6
+PROTOCOL = 6
+ADS_ABI = 2
+VIEW_ABI = 8
 INTERACTION_ABI = 2
 CATEGORY_PISTOL = 1
 CATEGORY_SMG = 2
@@ -16,6 +17,7 @@ MAX_COLLECTORS = 32
 MAX_TEXT = 160
 MAX_TYPE_BYTES = 1000000
 MIN_POINTER = 65536
+CAMERA_MAX_COORDINATE = 1000000000
 FOV_OFFSET = 64
 MAX_ZOOM_SCALE = 2
 OBJECT_INDEX_OFFSET = 12
@@ -35,6 +37,11 @@ INPUTS_MIN_SIZE = 240
 CONTROLLER_MIN_SIZE = 1080
 WEAPON_MIN_SIZE = 3432
 ZOOM_SCALE_RVA = 2347604
+ZOOM_PROGRESS_RVA = 2348670
+ZOOM_CAST_RVA = 74500912
+ZOOM_TYPE_RVA = 213286064
+ZOOM_TARGET_OFFSET = 224
+ZOOM_FIND_SLOT = 648
 HUD_PRODUCER_RVA = 16516506
 HUD_GETTER_RVA = 16517686
 HUD_GETTER_RETURN_RVA = 16516674
@@ -63,8 +70,21 @@ ERROR_WRONG_THREAD = 3
 ERROR_MODE = 4
 ERROR_INSTALL = 5
 ERROR_CONTEXT = 6
+ERROR_SDK_COMPATIBILITY = 20
+ERROR_GAME_COMPATIBILITY = 21
+ERROR_SIGNATURE = 22
+ERROR_SDK_EXPORT = 23
+ERROR_OBJECT_TABLE = 24
+FRAMING_APPLIED = 1
+FRAMING_CONTEXT_UNAVAILABLE = 2
+FRAMING_BODY_UNAVAILABLE = 3
+FRAMING_POSITION_APPLIED_ZOOM_UNAVAILABLE = 4
+FRAMING_REFERENCE_UNAVAILABLE = 5
+FRAMING_ZOOM_APPLIED_POSITION_UNAVAILABLE = 6
 SDK_SHA256 = "d9936cbe3da434743a93e0dadc2f6a5cc82102936c1c249db014a3081fdb4433"
 GAME_SHA256 = "9c3afb7dc6a550a6c2e817846cd2c40ff11e066dc6aefeb819f802e6a4c5c3e0"
+ZOOM_PROGRESS_PREFIX = "5657534883ec400f297c24300f297424"
+ZOOM_CAST_PREFIX = "5657534881ec80000000488b05ff2dff"
 HUD_PRODUCER_PREFIX = "415741564154565755534881ec80000000"
 HUD_GETTER_PREFIX = "5657534883ec204889ce80b92a0d000001"
 ZOOM_SCALE_PREFIX = "564881ec900000000f29b42480000000"
@@ -73,11 +93,38 @@ MODE_FINISH_PREFIX = "56574883ec284889cec781740a000000"
 VIEW_UPDATE_PREFIX = "4157415641545657534881ec78030000"
 
 
+class CollisionQuery(ctypes.Structure):
+    _fields_ = [
+        ("manager", ctypes.c_uint64),
+        ("before", ctypes.c_double * 3),
+        ("desired", ctypes.c_double * 3),
+        ("delta", ctypes.c_float),
+        ("reserved", ctypes.c_uint32),
+        ("generation", ctypes.c_uint64),
+    ]
+
+
 class ObjectId(ctypes.Structure):
     _fields_ = [
         ("address", ctypes.c_uint64),
         ("index", ctypes.c_int32),
         ("serial", ctypes.c_int32),
+    ]
+
+
+class FramingContext(ctypes.Structure):
+    _fields_ = [
+        ("abi", ctypes.c_uint32),
+        ("size", ctypes.c_uint32),
+        ("references", ObjectId * 4),
+        ("actor_size", ctypes.c_uint32),
+        ("root_size", ctypes.c_uint32),
+        ("root_offset", ctypes.c_uint32),
+        ("capsule_offset", ctypes.c_uint32),
+        ("location_offset", ctypes.c_uint32),
+        ("parent_offset", ctypes.c_uint32),
+        ("values", ctypes.c_int32 * 3),
+        ("reserved", ctypes.c_uint32),
     ]
 
 

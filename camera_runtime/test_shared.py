@@ -58,13 +58,37 @@ else:
     refused = False
 check("v3 cannot share the ADS native contract", refused)
 sys.modules.pop("_apex_camera_runtime_v3", None)
+old = types.ModuleType("_apex_camera_runtime_v4")
+old.protocol, old.runtime = 4, object()
+sys.modules["_apex_camera_runtime_v4"] = old
+try:
+    shared_module.shared(lambda item: item, lambda item: 1)
+except RuntimeError:
+    refused = True
+else:
+    refused = False
+check("v4 cannot share the framing contract", refused and "_apex_camera_runtime_v5" not in sys.modules)
+sys.modules.pop("_apex_camera_runtime_v4", None)
+old = types.ModuleType("_apex_camera_runtime_v5")
+old.protocol, old.runtime = 5, object()
+sys.modules["_apex_camera_runtime_v5"] = old
+try:
+    shared_module.shared(lambda item: item, lambda item: 1)
+except RuntimeError:
+    refused = True
+else:
+    refused = False
+check("v5 cannot share the per-frame collision callback", refused)
+sys.modules.pop("_apex_camera_runtime_v5", None)
 runtime = shared_module.shared(lambda item: item, lambda item: 1)
-state = sys.modules.get("_apex_camera_runtime_v4")
+state = sys.modules.get("_apex_camera_runtime_v6")
 check("all names reserve the same zoom-capable runtime",
-      shared_module.PROTOCOL == 4 and state is not None
+      shared_module.PROTOCOL == 6 and state is not None
       and sys.modules.get("_apex_camera_runtime_v1") is state
       and sys.modules.get("_apex_camera_runtime_v2") is state
-      and sys.modules.get("_apex_camera_runtime_v3") is state and state.runtime is runtime)
+      and sys.modules.get("_apex_camera_runtime_v3") is state
+      and sys.modules.get("_apex_camera_runtime_v4") is state
+      and sys.modules.get("_apex_camera_runtime_v5") is state and state.runtime is runtime)
 from apex_camera_runtime import ads_category, ads_paths_reader, generated_ads
 check("probes consume the elected package's canonical ADS readers",
       state is not None and getattr(state, "ads_category_reader", None) is ads_category.category
@@ -74,11 +98,11 @@ check("probes consume the elected package's canonical ADS readers",
        ads_paths_reader.make_config, ads_paths_reader.object_parts))
 check("old clients reject the reserved state without starting a second camera",
       getattr(sys.modules["_apex_camera_runtime_v1"], "protocol", None) != 1
-      and getattr(sys.modules["_apex_camera_runtime_v2"], "protocol", None) != 2)
+      and all(getattr(sys.modules[f"_apex_camera_runtime_v{version}"], "protocol", None) != version
+              for version in (2, 3, 4, 5)))
 shared_module.reset_for_tests()
 check("cleanup removes both shared names",
-      all(name not in sys.modules for name in
-          ("_apex_camera_runtime_v1", "_apex_camera_runtime_v2", "_apex_camera_runtime_v3", "_apex_camera_runtime_v4")))
+      all(name not in sys.modules for name in shared_module.ALL_STATES))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 raise SystemExit(1 if fails else 0)

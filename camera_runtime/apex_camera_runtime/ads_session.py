@@ -18,6 +18,8 @@ class AdsSession:
         self._published = self._thread_failed = False
         self._released = self._input_aim = False
         self._release_baseline = 0
+        self._preflight_aim = False
+        self.extra_zoom_pending = lambda: False
 
     def set_trial(self, enabled):
         if type(enabled) is not bool:
@@ -32,11 +34,11 @@ class AdsSession:
             return False
         try:
             return bool(self.native.stats().pending)
-        except Exception:
-            self.feedback.report(self._key, "cleanup_failed")
+        except Exception as error:
+            self.feedback.exception(self._key, "cleanup_failed", "pending", error)
             return True
 
-    def stop(self, stale=False):
+    def stop(self):
         previous_key = self._key
         self.wanted = self.effective = self._published = False
         self._released = self._input_aim = False
@@ -46,15 +48,15 @@ class AdsSession:
         if not self._generation or self.native is None:
             return True
         try:
-            # Native cleanup abandons only expired ownership, never by forcing an old weapon.
+            # Cleanup reports its own ownership validation, independently of the preceding frame.
             completed = self.native.clear(self._generation)
             if completed:
-                if self.native.stats().error == ERROR_IDENTITY:
+                if self.native.stats().error in (ERROR_IDENTITY, ERROR_CONTEXT):
                     self.feedback.report(previous_key, "owner_abandoned")
                 self._generation = 0
             return completed
-        except Exception:
-            self.feedback.report(None, "cleanup_failed")
+        except Exception as error:
+            self.feedback.exception(None, "cleanup_failed", "clear", error)
             return False
 
     @staticmethod
@@ -67,9 +69,13 @@ class AdsSession:
         return self.trial or value is True
 
     def prepare(self, pc, actor, manager, settings, *, foot_mode, vehicle, pending):
-        self.feedback.reason = None
+        self.feedback.begin_frame()
         previous = self.wanted
         self._input_aim = wants_to_aim(actor)
+        if not self._input_aim:
+            self._preflight_aim = False
+            # One held press stays blocked; a fresh press must recapture all native identities.
+            self._blocked_key = None
         self.effective = False
         if ((not self._input_aim and not self._published) or not self._enabled(settings)
                 or foot_mode != "ThirdPerson" or vehicle or pending):
@@ -78,38 +84,59 @@ class AdsSession:
             self.wanted = False
             return False
         if self._thread_failed:
-            self.feedback.report(None, "wrong_thread")
+            self.feedback.report(None, "wrong_thread", terminal=True)
             return False
         try:
             supported = self.native is not None and self.native.prepare()
-        except Exception:
-            supported = False
+        except Exception as error:
+            self.wanted = False
+            self.feedback.exception(None, "preparation_failed", "prepare", error)
+            return False
+        if supported is None:
+            # Never switch presentation halfway through an aim begun before verification.
+            self._preflight_aim = self._input_aim
+            self.wanted = False
+            return False
         if not supported:
             self.wanted = False
-            self.feedback.report(None, "unavailable")
+            self.feedback.report(None, getattr(self.native, "reason", None) or "unavailable", terminal=True)
             return False
-        status = self.native.stats()
+        self.feedback.reason = None
+        if self._preflight_aim:
+            # Poll terminal failures during this press, but never change its native presentation halfway through.
+            return False
+        try:
+            status = self.native.stats()
+        except Exception as error:
+            self.stop()
+            self.feedback.exception(None, "reference_unavailable", "stats", error)
+            return False
         if status.wrong_thread:
             self._thread_failed = True
             self.stop()
-            self.feedback.report(None, "wrong_thread")
+            self.feedback.report(None, "wrong_thread", terminal=True)
             return False
         if self._generation:
             if status.error in (ERROR_IDENTITY, ERROR_CONTEXT):
-                self._blocked_key = self._key
-                self.feedback.report(self._key, "reference_unavailable")
+                self._blocked_key = self._key if self._input_aim else None
+                refused_key = self._key
                 self.stop()
+                # Cleanup may log abandoned ownership; the visible status still explains the refusal.
+                self.feedback.report(refused_key, "reference_unavailable")
                 return False
             self.effective = (self._published and status.generation == self._generation
                               and status.fov_writes > self._fov_baseline and bool(status.active))
         snapshot = self.reader.read(pc, actor, manager)
         if snapshot is None:
             reason = self.reader.reason
+            error_kind = getattr(self.reader, "error_kind", None)
             self.stop()
             # An absent animation is a normal reconstruction gap, not a camera shutdown.
             self.wanted = previous and reason == "animation_pending"
             self.feedback.report(None, "animation_pending" if self.wanted else
                                  "unknown_weapon" if reason == "unknown_weapon" else "reference_unavailable")
+            if error_kind is not None:
+                self.feedback.diagnostic("context", error_kind)
             return self.wanted
         decision = decide(aiming=True, enabled=True, category=snapshot.category,
                           foot_mode=foot_mode, vehicle=vehicle, pending=pending, supported=supported)
@@ -143,12 +170,13 @@ class AdsSession:
                     self._release_baseline = status.fov_writes
                 # A fresh native write at scale 1 ends the weapon's own curve; no timer or second easing.
                 if (status.generation == self._generation and status.active
-                        and status.fov_writes > self._release_baseline and status.zoom_scale == 1.0):
+                        and status.fov_writes > self._release_baseline and status.zoom_scale == 1.0
+                        and not self.extra_zoom_pending()):
                     self.stop()
                     return False
-            except Exception:
+            except Exception as error:
                 self.stop()
-                self.feedback.report(None, "cleanup_failed")
+                self.feedback.exception(None, "cleanup_failed", "release", error)
                 return False
         return True
 
@@ -158,7 +186,21 @@ class AdsSession:
             return False
         if self._published and (not self._released or not self._input_aim):
             return True
-        status = self.native.stats()
+        if not self.reader.current(self._snapshot):
+            refused_key = self._blocked_key = self._key
+            error_kind = getattr(self.reader, "error_kind", None)
+            self.stop()
+            self.feedback.report(refused_key, "reference_unavailable")
+            if error_kind is not None:
+                self.feedback.diagnostic("confirm_context", error_kind)
+            return False
+        try:
+            status = self.native.stats()
+        except Exception as error:
+            refused_key = self._blocked_key = self._key
+            self.stop()
+            self.feedback.exception(refused_key, "reference_unavailable", "confirm_stats", error)
+            return False
         self._counter = max(self._counter, status.generation) + 1
         if self._counter >= (1 << 64) - 1:
             self.stop()
@@ -168,10 +210,10 @@ class AdsSession:
                              (ObjectId * 8)(*self._snapshot.references), self._snapshot.paths)
         try:
             self.native.publish(context)
-        except Exception:
+        except Exception as error:
             refused_key = self._blocked_key = self._key
             self.stop()
-            self.feedback.report(refused_key, "publication_refused")
+            self.feedback.exception(refused_key, "publication_refused", "publish", error)
             return False
         self._generation = self._counter
         self._fov_baseline = status.fov_writes

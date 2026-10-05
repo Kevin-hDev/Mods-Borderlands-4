@@ -1,6 +1,6 @@
 # Third Person & FOV
 
-Version **1.1.0**.
+Version **1.1.1**.
 
 An over-the-shoulder camera and a wider field of view for Borderlands 4, without the movement changes from Apex
 Movement or Omni Sprint.
@@ -44,6 +44,13 @@ Omni Sprint shows, generated from the same source; while another mod runs the ca
 menu instead of showing settings that would change nothing.
 
 No code from BL4NativeCameraToggle is included.
+
+## Camera framing
+
+Camera presets and custom sliders adjust aim zoom, shoulder spacing, and height.
+Standard adds 15% aim zoom and 10% shoulder spacing; height is unchanged.
+Weapon-specific zoom remains active. Near obstacles, collision handling may
+temporarily reduce the chosen framing. The reticle remains centered.
 
 ## Tests
 

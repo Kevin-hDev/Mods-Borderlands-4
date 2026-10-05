@@ -23,7 +23,7 @@ sys.modules["third_person_fov.camera"] = fake_camera
 import third_person_fov  # noqa: E402
 
 mod = third_person_fov.mod
-ok = third_person_fov.__version__ == "1.1.0"
+ok = third_person_fov.__version__ == "1.1.1"
 ok = ok and mod.kwargs["name"] == "Third Person & FOV" and mod.is_enabled
 ok = ok and calls == ["start"] and set(state["keybinds"]) == {"P", "Six", "Seven"}
 state["keybinds"]["P"]()

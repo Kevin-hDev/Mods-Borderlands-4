@@ -59,8 +59,9 @@ check("each setting has one short sentence in both languages, the French one tra
       all(one_sentence(panel_i18n.option_text(option, language)[1])
           for option in shown for language in ("EN", "FR"))
       and all(panel_i18n.option_text(option, "FR") != panel_i18n.option_text(option, "EN") for option in shown))
-check("the other camera mod notice is one short sentence in both languages",
-      all(one_sentence(panel_i18n.text("camera_elsewhere", language)) for language in ("EN", "FR")))
+check("the other camera mod notice says where to adjust it in both languages",
+      panel_i18n.text("camera_elsewhere", "EN") == "Another camera mod controls the camera. Use its menu to adjust it."
+      and panel_i18n.text("camera_elsewhere", "FR") == "Un autre mod contrôle la caméra. Règle-la dans son menu.")
 
 check("the saved language and page are read back", model.change_language("FR") and model.change_page("camera")
       and Model(mod).language == "FR" and Model(mod).page == "camera")
@@ -126,7 +127,8 @@ elsewhere = Model(mod)
 check("while Apex Movement is on, stable camera controls refuse writes but the sprint remains writable",
       elsewhere.camera_elsewhere and len(elsewhere.options) == 9 and len(elsewhere.command_options) == 10
       and not elsewhere.write({"fov": 130}) and elsewhere.write({"omni_sprint": False})
-      and elsewhere.command_actions is not None and not elsewhere.restore() and settings.fov.value == 120)
+      and elsewhere.command_actions is not None and elsewhere.restore() and settings.omni_sprint.value is True
+      and settings.fov.value == 120)
 check("a malformed dormant camera write is refused without an exception",
       not elsewhere.write(None))
 shared.unregister("apex_movement")

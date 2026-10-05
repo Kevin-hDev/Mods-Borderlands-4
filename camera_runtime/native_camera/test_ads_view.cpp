@@ -15,7 +15,15 @@ enum class Scenario { stable, default_mode, slide, ground_slam, transition, inva
 Scenario scenario{};
 int originals{}, zoom_calls{};
 float factor = 0.5f;
-float zoom(void*, void*, void*) { ++zoom_calls; return factor; }
+enum class ZoomFault { none, access_violation, game_failure };
+ZoomFault fault{};
+struct GameFailure {};
+float zoom(void*, void*, void*) {
+    ++zoom_calls;
+    if (fault == ZoomFault::access_violation) RaiseException(EXCEPTION_ACCESS_VIOLATION, 0, 0, nullptr);
+    if (fault == ZoomFault::game_failure) throw GameFailure{};
+    return factor;
+}
 void original(void*, void* view, float) {
     ++originals;
     const float fov = scenario == Scenario::stable ? 110.0f : 70.0f;
@@ -83,5 +91,22 @@ int main() {
         assert(read_fov(view) == 110.0f);
     }
     assert(zoom_calls > 0);
+    factor = .5f;
+    state.clear(generation);
+    assert(state.publish(fixture.context(++generation)) == 0);
+    const auto writes = state.statistics().fov_writes;
+    const int fault_calls = zoom_calls;
+    fault = ZoomFault::access_violation;
+    assert(!update_view(state, fixture.manager(), view, .016f, &original));
+    assert(read_fov(view) == 110.0f && state.statistics().fov_writes == writes);
+    assert(zoom_calls == fault_calls + 1);
+    assert(state.publish(fixture.context(++generation)) == 0);
+    fault = ZoomFault::game_failure;
+    bool propagated = false;
+    try { update_view(state, fixture.manager(), view, .016f, &original); }
+    catch (const GameFailure&) { propagated = true; }
+    assert(propagated && read_fov(view) == 110.0f);
+    assert(zoom_calls == fault_calls + 2);
+    assert(state.statistics().fov_writes == writes);
     std::cout << "RESULTAT: OK (real ADS wrapper; no double or cumulative zoom)\n";
 }

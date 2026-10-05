@@ -39,10 +39,20 @@ check("settings and keys are retained by a new menu model",
       and Model(mod).options["fov"].value == 125
       and Model(mod).command_options["zoom_in_controller"].value == "Gamepad_LeftShoulder")
 check("duplicate controller keys are refused", not model.assign_command("zoom_out", "controller", "Gamepad_LeftShoulder"))
-state["refuse_save"] = True
+original_path, original_save = mod.settings_file, mod.save_settings
+original_disk = original_path.read_bytes()
+# An opaque custom writer cannot prove that disk survived, so compensation must retry.
+def opaque_failure():
+    raise OSError("synthetic persistence failure")
+mod.settings_file, mod.save_settings = None, opaque_failure
 check("failed preference save keeps the prior page", not model.change_page("camera") and Model(mod).page == "commands")
 check("failed value save keeps the prior FOV", not model.write({"fov": 135}) and settings.fov.value == 125)
-state["refuse_save"] = False
+mod.settings_file, mod.save_settings = original_path, original_save
+check("failed compensation keeps later writes blocked", model.transaction.pending)
+check("blocked writes leave disk and FOV unchanged", original_path.read_bytes() == original_disk
+      and settings.fov.value == 125)
+model.transaction.clock = lambda: model.transaction.retry_after + 1
+check("successful compensation unlocks writes", model.advance() == "failed" and not model.transaction.pending)
 settings.zoom.option.value = 450
 check("command reset leaves zoom and FOV alone", model.default_commands()
       and settings.zoom.distance() == 450 and settings.fov.value == 125)

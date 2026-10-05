@@ -34,7 +34,7 @@ class Function:
 config = bridge.make_config(48.4)
 check("the production ABI has no probe deadline",
       (config.abi, config.duration_ms, config.slot_index, config.expected_rva)
-      == (6, 0, 264, 0x3CD4832))
+      == (8, 0, 264, 0x3CD4832))
 check("the validated framing is the single configured value", (config.right, config.up) == (48.4, 5.0))
 check("the ABI layouts are fixed", ctypes.sizeof(config) == 40 and ctypes.sizeof(bridge.Stats) == 112)
 from apex_camera_runtime import generated_ads

@@ -1,7 +1,10 @@
 """Core option and value fakes shared by the Apex Movement tests."""
 
 import enum
+import json
+import tempfile
 import types
+from pathlib import Path
 from typing import Any
 
 SLIDE_PATH = "/Game/PlayerCharacters/_Shared/Tricks/ControlledMoves/Move_Slide.Move_Slide"
@@ -68,7 +71,10 @@ class FakeMod:
 
     def __init__(self, state: dict, **kwargs: Any) -> None:
         self.kwargs, self.is_enabled = kwargs, False
-        self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
+        self._settings_directory = tempfile.TemporaryDirectory()
+        self.settings_file = Path(self._settings_directory.name) / "settings.json"
+        if state["settings_exists"]:
+            self.settings_file.write_text("{}")
         # What the settings file holds for "enabled" after the mod's last save; None while it never saved.
         self.saved_enabled: bool | None = None
         self.state = state
@@ -79,6 +85,11 @@ class FakeMod:
 
     def save_settings(self) -> None:
         self.state["settings_saves"] += 1
+        def values(options):
+            return {option.identifier: values(option.children) if hasattr(option, "children") else option.value
+                    for option in options}
+        with self.settings_file.open("w") as target:
+            json.dump({"enabled": self.is_enabled, "options": values(self.kwargs.get("options", []))}, target)
 
     def enable(self) -> None:
         if self.is_enabled:

@@ -30,6 +30,7 @@ class Function:
 
 
 library = types.SimpleNamespace(view_start=Function(), view_stop=Function(),
+                                view_set_collision=Function(),
                                 view_set_suspended=Function(), view_set_right=Function(True),
                                 view_stats=Function())
 interaction_library = types.SimpleNamespace(interaction_start=Function(), interaction_stop=Function(),
@@ -64,13 +65,15 @@ class BootstrapTests(unittest.TestCase):
 
     def test_ads_uses_the_same_library_and_stays_disabled_before_trial(self):
         exports = {name: Function() for name in
-                   ("ads_prepare", "ads_identify", "ads_publish", "ads_clear", "ads_release", "ads_stats")}
+                   ("ads_verify_files", "ads_prepare", "ads_identify", "ads_publish", "ads_clear", "ads_release", "ads_stats")}
         with patch.dict(library.__dict__, exports), \
                 patch.dict(sdk.__dict__, {"find_all": lambda _: []}):
             controller = self.attach(interaction_library)
         self.assertIsNotNone(controller.ads)
         self.assertIs(controller.ads.native.library, library)
         self.assertFalse(controller.ads.trial)
+        self.assertIsNotNone(controller.ads.native._preflight.future)
+        controller.ads.native._preflight.future.result(timeout=2)
 
     def test_missing_ads_exports_keep_existing_camera(self):
         controller = self.attach(None)
@@ -84,6 +87,18 @@ class BootstrapTests(unittest.TestCase):
         self.assert_camera_works(self.attach(types.SimpleNamespace()))
         self.assertTrue(any('interaction alignment setup failed: AttributeError' in message
                             for message in self.messages))
+
+    def test_framing_setup_failure_reports_only_error_type_and_keeps_ads(self):
+        ads = types.SimpleNamespace(start_preflight=lambda: None, identify=lambda _: None)
+        with patch.object(bootstrap, 'AdsBridge', return_value=ads), \
+                patch.object(bootstrap, 'AdsSession', return_value=types.SimpleNamespace(reader=object())), \
+                patch.dict(sdk.__dict__, {'find_all': lambda _: []}), \
+                patch.object(bootstrap, 'FramingBridge', side_effect=ValueError('private/path/setup')):
+            controller = self.attach(None)
+        self.assertIsNotNone(controller.ads)
+        self.assertIsNone(controller.framing)
+        self.assertTrue(any(message.endswith(': ValueError') for message in self.messages))
+        self.assertFalse(any('private/path/setup' in message for message in self.messages))
 
     def modules(self):
         sdk_module = types.ModuleType('unrealsdk')

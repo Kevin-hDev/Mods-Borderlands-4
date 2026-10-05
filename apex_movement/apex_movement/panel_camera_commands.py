@@ -31,9 +31,17 @@ def _device_row(rows, widgets, template, action, device):
 
 def page(owner, model, widgets, template):
     page, body = p.scrolling_body(owner, template)
+    external = w.new("VerticalBox", body)
+    widgets["commands:external"] = external
+    w.column(body, external)
+    p.card(external, widgets, "command_external")
+    external.SetVisibility(w.enum("ESlateVisibility", "Collapsed" if model.command_actions else "Visible"))
     if model.command_actions is None:
-        p.card(body, widgets, "command_external")
         return page
+    settings = w.new("VerticalBox", body)
+    widgets["commands:settings"] = settings
+    w.column(body, settings)
+    body = settings
     for command in config.COMMANDS:
         rows = p.card(body, widgets, f"command_{command.name}")
         for device in ("keyboard", "controller"):

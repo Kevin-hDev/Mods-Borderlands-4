@@ -41,7 +41,7 @@ apex_ads::Config config() {
     // Live SDK metadata locates Controller at 0xe8, not the ZoomFOV access at 0xe0.
     std::memcpy(inputs + 0xe0, &target, sizeof(target));
     std::memcpy(inputs + 0xe8, &controller, sizeof(controller));
-    return {1, 0, reinterpret_cast<uintptr_t>(state), reinterpret_cast<uintptr_t>(inputs),
+    return {static_cast<uint32_t>(apex_ads::ADS_ABI), 0, reinterpret_cast<uintptr_t>(state), reinterpret_cast<uintptr_t>(inputs),
             reinterpret_cast<uintptr_t>(pc), reinterpret_cast<uintptr_t>(weapon),
             sizeof(state), sizeof(inputs), sizeof(pc), sizeof(weapon)};
 }
@@ -89,7 +89,7 @@ int main() {
     check(apex_ads::read_paths(cfg, result, scale, crosshair) != 0);
     check(scale_calls == before);
     cfg = config();
-    cfg.abi = 2;
+    cfg.abi = static_cast<uint32_t>(apex_ads::ADS_ABI + 1);
     check(apex_ads::read_paths(cfg, result, scale, crosshair) != 0);
     cfg = config();
     cfg.reserved = 1;

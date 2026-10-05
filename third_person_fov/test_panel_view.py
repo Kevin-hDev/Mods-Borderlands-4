@@ -74,11 +74,20 @@ widgets["setting:fov"].value = 132
 assert f.click(reopened, widgets, "close")
 _, widgets, reopened = f.build()
 assert widgets["setting:fov"].value == 132
-f.state["refuse_save"] = True
+original_path, original_save = f.mod.settings_file, f.mod.save_settings
+original_disk = original_path.read_bytes()
+# Exercise bounded compensation for a custom writer whose disk state is unknown.
+def opaque_failure():
+    raise OSError("synthetic persistence failure")
+f.mod.settings_file, f.mod.save_settings = None, opaque_failure
 widgets["setting:fov"].value = 140
 assert not f.click(reopened, widgets, "close")
 assert settings.fov.value == 132 and reopened.notice == "failed"
-f.state["refuse_save"] = False
+assert original_path.read_bytes() == original_disk
+f.mod.settings_file, f.mod.save_settings = original_path, original_save
+assert reopened.model.transaction.pending
+reopened.model.transaction.clock = lambda: reopened.model.transaction.retry_after + 1
+assert not reopened.poll() and not reopened.model.transaction.pending
 assert f.click(reopened, widgets, "close")
 
 # Disabling gameplay must not make its settings window unusable.

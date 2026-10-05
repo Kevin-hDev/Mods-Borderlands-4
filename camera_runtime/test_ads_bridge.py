@@ -16,12 +16,15 @@ class BridgeTests(unittest.TestCase):
         self.calls = []
         self.code = 0
         self.pending = 0
-        self.library = NS(ads_prepare=Function(lambda: self.calls.append("prepare") or self.code),
+        self.library = NS(ads_verify_files=Function(lambda: 0),
+            ads_prepare=Function(lambda: self.calls.append("prepare") or self.code),
             ads_identify=Function(self.identify), ads_publish=Function(self.publish),
             ads_clear=Function(lambda generation: self.calls.append(("clear", generation)) or self.code),
             ads_release=Function(lambda generation: self.calls.append(("release", generation)) or self.code),
             ads_stats=Function(self.stats))
         self.bridge = AdsBridge(self.library)
+        self.bridge.start_preflight()
+        self.bridge._preflight.future.result(timeout=2)
 
     def identify(self, address, output):
         self.calls.append(("identify", address))

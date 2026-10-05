@@ -154,6 +154,9 @@ form.poll()
 widgets["close"].checked = True
 check("a failed save keeps the window open", not form.poll() and settings.third_person.value is False)
 mod.fail = False
+check("failed compensation keeps the transaction owned", model.transaction.pending)
+model.transaction.clock = lambda: model.transaction.retry_after + 1
+check("confirmed compensation unlocks the menu", not form.poll() and not model.transaction.pending)
 widgets["close"].checked = True
 check("Close saves and closes", form.poll())
 

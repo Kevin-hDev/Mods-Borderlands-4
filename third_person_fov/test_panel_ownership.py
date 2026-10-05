@@ -28,7 +28,11 @@ form.poll()
 assert shared.elected() == "omni_sprint" and form.model.camera_elsewhere
 assert widgets["camera:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
 assert widgets["commands:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
-assert not form.model.write({"fov": 130}) and not form.model.undo()
+previous_camera = tuple((option, option.value) for option in form.model.camera_options.values())
+assert not form.model.write({"fov": 130})
+assert form.model.undo() and form.model.success_notice == "undone_partial"
+assert all(option.value == value for option, value in previous_camera), "Partial Undo changed the other owner's camera"
+assert not form.model.can_undo, "Skipped camera Undo must not replay when ownership returns"
 assert widgets["undo"].calls["SetIsEnabled"] == (False,), "Dormant camera cannot undo"
 runtime.register("apex_movement", 200, object(), constants.PROTOCOL)
 f.click(form, widgets, "enabled")

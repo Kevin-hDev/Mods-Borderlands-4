@@ -48,8 +48,23 @@ events.clear()
 changed = session([False, True])
 window.get_pc = lambda **_kwargs: NS()
 changed.poll(1)
-assert not changed.closed and changed.deferred_close == "session_changed"
-changed.poll(window.POLL_NS + 1)
 assert changed.closed and "removed" in events
+
+events.clear()
+window.get_pc = lambda **_kwargs: pc
+waiting = session([False, False, False])
+waiting.form.close_abort = lambda: events.append("aborted")
+waiting.close("command")
+waiting.close_deadline = 0
+waiting.poll(window.POLL_NS + 1)
+assert waiting.closed and "aborted" in events and "removed" in events
+
+events.clear()
+context = session([False, False, False])
+context.form.close_abort = lambda: events.append("aborted")
+context.close("command")
+window.get_pc = lambda **_kwargs: NS()
+context.poll(window.POLL_NS + 1)
+assert context.closed and "aborted" in events
 
 print("RESULTAT: TOUS LES TESTS PASSENT")

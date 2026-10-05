@@ -20,6 +20,8 @@ UI_SHARED = (
     "control_window_cleanup", "control_window_hooks", "panel_assets", "panel_buttons",
     "panel_common_en", "panel_common_fr", "panel_en", "panel_entry", "panel_factory", "panel_fonts",
     "panel_form", "panel_fr", "panel_header", "panel_i18n", "panel_labels", "panel_model", "panel_transaction",
+    "panel_transaction_config", "panel_transaction_recovery", "panel_restore", "panel_form_lifecycle",
+    "control_window_config", "control_window_transaction_close", "panel_persistence",
     "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_pages", "panel_preferences",
     "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_toggle", "panel_view", "panel_widgets",
 )
@@ -29,10 +31,11 @@ UI_SHARED = (
 # lines and the slow_walk module that ends the sprint ship in the full pack only (Kevin, 2026-09-26), and a separate
 # file never walks slowly. shortcut_key serves its option and the menu's key capture in every file.
 SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", "movements", "ownership", "pack",
-          "report", "settings", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
+          "report", "settings", "settings_persistence", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
 # Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
 # its shared native runtime, so these modules belong only to the full pack.
-FULL_ONLY = ("camera", "camera_settings", "panel_ads", "camera_control_actions", "camera_control_config",
+FULL_ONLY = ("camera", "camera_settings", "panel_ads", "panel_camera_ownership", "panel_framing", "panel_framing_form", "panel_framing_text",
+             "camera_control_actions", "camera_control_config",
              "camera_control_form", "panel_camera_commands", "slow_walk")
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,

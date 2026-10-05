@@ -190,6 +190,9 @@ widgets["setting:dash_distance"].value = 230
 widgets["close"].checked = True
 assert not form.poll() and settings.dash_distance.value == 200
 mod.fail = False
+assert model.transaction.pending
+model.transaction.clock = lambda: model.transaction.retry_after + 1
+assert not form.poll() and not model.transaction.pending
 widgets["close"].checked = True
 assert form.poll()
 result.success()

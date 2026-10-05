@@ -54,6 +54,7 @@ class Native:
     def clear(self, generation):
         self.clears.append(generation)
         self.status.active = 0
+        self.status.error = 0
         return not self.status.pending
 
     def release(self, generation):

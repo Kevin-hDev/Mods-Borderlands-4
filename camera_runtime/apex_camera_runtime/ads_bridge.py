@@ -1,14 +1,18 @@
 """One generated ctypes boundary for the optional native ADS presentation."""
 import ctypes
 from .ads_category import address
+from .ads_feedback import NATIVE_FAILURES, exception_kind, native_failure_kind, native_status_code
+from .ads_preflight import Preflight
 from .generated_ads import AdsContext, AdsStats, ObjectId
 
 
 class AdsBridge:
-    def __init__(self, library):
+    def __init__(self, library, log=lambda _message: None):
         self.library = library
+        self._log, self.reason = log, None
         self._prepared = None
         for name, arguments in (
+            ("ads_verify_files", []),
             ("ads_prepare", []),
             ("ads_identify", [ctypes.c_uint64, ctypes.POINTER(ObjectId)]),
             ("ads_publish", [ctypes.POINTER(AdsContext)]),
@@ -18,12 +22,35 @@ class AdsBridge:
         ):
             function = getattr(library, name)
             function.argtypes, function.restype = arguments, ctypes.c_int
+        self._preflight = Preflight(library.ads_verify_files, log)
+
+    def start_preflight(self):
+        self._preflight.start()
 
     def prepare(self):
         if self._prepared is None:
+            ready = self._preflight.result()
+            if ready is None:
+                return None
             # A partial native installation is terminal until a fresh game launch.
             self._prepared = False
-            self._prepared = self.library.ads_prepare() == 0
+            if not ready:
+                self.reason = ("unavailable" if type(self._preflight.native_status) is int
+                               and self._preflight.native_status in NATIVE_FAILURES
+                               else "preparation_failed")
+            else:
+                try:
+                    status = self.library.ads_prepare()
+                    self._prepared = type(status) is int and status == 0
+                    if not self._prepared:
+                        self.reason = ("unavailable" if type(status) is int and status in NATIVE_FAILURES
+                                       else "preparation_failed")
+                        self._log(f"aiming installation refused reason={native_failure_kind(status)} "
+                                  f"native_status={native_status_code(status)}")
+                except Exception as error:
+                    self._log(f"aiming installation refused error_type={exception_kind(error)}")
+                if not self._prepared and self.reason is None:
+                    self.reason = "preparation_failed"
         return self._prepared
 
     def identify(self, item):

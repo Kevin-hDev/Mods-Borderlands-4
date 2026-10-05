@@ -56,14 +56,14 @@ class CameraBoolOption(BoolOption):
     def reject(self) -> None:
         self._camera_status = "refused"
 
-    def cancel_pending(self) -> bool:
+    def cancel_pending(self, *, restore: bool = True) -> bool:
         if self._camera_status == "waiting":
             self._camera_status = "refused"
             return True
         if self._camera_status != "pending":
             return False
         try:
-            accepted = self._camera_cancel() is True
+            accepted = (self._camera_cancel() if restore else self._camera_cancel(restore=False)) is True
         except Exception:
             accepted = False
         if accepted:

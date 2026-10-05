@@ -52,4 +52,5 @@ def cancel_choice(state, controller, now_ns: int) -> bool:
     if transaction is None:
         return False
     restore(state, controller, transaction[1], now_ns)
-    return not state.rollback_failed
+    # Acknowledgement concerns revoked persistence, not a promise of restored geometry.
+    return state.transaction is None

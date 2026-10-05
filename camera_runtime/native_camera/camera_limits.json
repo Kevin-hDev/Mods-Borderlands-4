@@ -1,0 +1,6 @@
+{
+  "loot_base_distance": 330.0,
+  "loot_max_distance": 990.0,
+  "shoulder_max_offset": 150.0,
+  "runtime_folder": "_apex_camera_runtime"
+}

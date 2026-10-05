@@ -3,6 +3,7 @@
 #include "ads_detours.h"
 #include "ads_identity.h"
 #include "ads_memory.h"
+#include "ads_sdk_exports.h"
 #include <intrin.h>
 
 namespace {
@@ -15,7 +16,7 @@ DWORD owning_thread{};
 uintptr_t object_table{};
 
 template<class Function> Function sdk_symbol(const char* name) {
-    const auto sdk = GetModuleHandleW(L"unrealsdk.dll");
+    const auto sdk = GetModuleHandleW(apex_ads::sdk_exports::module);
     const auto symbol = sdk ? GetProcAddress(sdk, name) : nullptr;
     Function result{};
     static_assert(sizeof(result) == sizeof(symbol), "SDK export function size");
@@ -24,7 +25,7 @@ template<class Function> Function sdk_symbol(const char* name) {
 }
 bool third_name(uint64_t& output) {
     using Init = void (*)(uint64_t*, const wchar_t*, uint32_t);
-    const auto initialize = sdk_symbol<Init>("_unrealsdk_export__fname_init");
+    const auto initialize = sdk_symbol<Init>(apex_ads::sdk_exports::fname_init);
     if (!initialize) return false;
     __try {
         initialize(&output, L"ThirdPerson", 0);
@@ -45,12 +46,17 @@ bool getter(void* weapon) {
 }
 int initialize() {
     using namespace apex_ads;
-    if (!compatible_modules()) return static_cast<int>(ERROR_UNSUPPORTED);
+    const int compatibility = compatible_modules_error();
+    if (compatibility) return compatibility;
     uint64_t name{};
-    const auto install = sdk_symbol<Detour>("_unrealsdk_export__detour");
+    const auto install = sdk_symbol<Detour>(sdk_exports::detour);
+    using Export = void (*)();
+    if (!install || !sdk_symbol<Export>(sdk_exports::fname_init)
+            || !sdk_symbol<Export>(sdk_exports::gobjects)) return static_cast<int>(ERROR_SDK_EXPORT);
     object_table = sdk_object_table();
+    if (!object_table) return static_cast<int>(ERROR_OBJECT_TABLE);
     const auto game = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-    if (!install || !object_table || !third_name(name)
+    if (!third_name(name)
             || !state.configure(object_table, name, reinterpret_cast<ZoomScale>(game + ZOOM_SCALE_RVA))) {
         return static_cast<int>(ERROR_UNSUPPORTED);
     }
@@ -62,6 +68,11 @@ int initialize() {
 }
 
 namespace apex_ads { State& shared_ads() { return state; } }
+
+int ads_verify_files() {
+    try { return apex_ads::verify_module_files_error(); }
+    catch (...) { return static_cast<int>(apex_ads::ERROR_UNSUPPORTED); }
+}
 
 int ads_prepare() {
     const LONG previous = InterlockedCompareExchange(&preparation, 1, 0);

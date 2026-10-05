@@ -175,6 +175,9 @@ mod.fail = True
 assert not model.write({"dash_distance": 240})
 assert settings.dash_distance.value == 220
 mod.fail = False
+assert model.transaction.pending
+model.transaction.clock = lambda: model.transaction.retry_after + 1
+assert model.advance() == "failed" and not model.transaction.pending
 assert model.restore() and settings.dash_distance.value == before
 assert model.can_undo
 assert model.undo() and settings.dash_distance.value == 220
@@ -182,11 +185,15 @@ assert not model.can_undo
 # If the command half of a global Restore fails, the already-saved settings half is compensated.
 settings.dash.value = False
 assert model.write_commands({"third_person_key": "K"})
-apply_commands = model.command_actions.apply
-model.command_actions.apply = lambda _values: False
-assert not model.restore()
+prepare_commands = model.command_actions.prepare
+model.command_actions.prepare = lambda _values: False
+assert model.restore() is None
+model.transaction.clock = lambda: model.transaction.deadline
+assert model.advance() == "failed"
 assert settings.dash.value is False and camera_settings.third_person_key.value == "K" and not model.can_undo
-model.command_actions.apply = apply_commands
+model.command_actions.prepare = prepare_commands
+import time
+model.transaction.clock = time.perf_counter_ns
 assert model.toggle_enabled() and not mod.is_enabled
 assert model.write({"dash_distance": 230}) and not mod.is_enabled
 assert model.toggle_enabled() and mod.is_enabled

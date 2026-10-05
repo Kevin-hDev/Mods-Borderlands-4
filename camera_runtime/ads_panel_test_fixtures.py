@@ -79,6 +79,8 @@ class AdsPanelTests:
         return widgets, package.panel_form.PanelForm(refs, model)
 
     def setUp(self):
+        # These window tests have no renderer; native confirmation is exercised separately.
+        self.settings.framing.confirm = lambda _restoring=False: True
         self.settings.third_person.value = True
         self.settings.ads.option.value = True
         self.package.panel_preferences.french.value = False

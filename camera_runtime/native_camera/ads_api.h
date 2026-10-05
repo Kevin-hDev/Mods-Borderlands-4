@@ -4,6 +4,7 @@
 namespace apex_ads { State& shared_ads(); }
 #define ADS_API extern "C" __declspec(dllexport)
 ADS_API int ads_prepare();
+ADS_API int ads_verify_files();
 ADS_API int ads_identify(uint64_t address, apex_ads::ObjectId* identity);
 ADS_API int ads_publish(const apex_ads::AdsContext* context);
 ADS_API int ads_clear(uint64_t generation);

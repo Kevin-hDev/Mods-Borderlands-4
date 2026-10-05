@@ -8,7 +8,8 @@ bool no_crosshair_read(void*) { return false; }
 bool sample_zoom(const apex_ads::Ticket& ticket, apex_ads::PathsSample& output) {
     __try {
         return apex_ads::read_paths(ticket.context.paths, output, ticket.zoom, &no_crosshair_read) == 0;
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except(GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION
+                   ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) {
         return false;
     }
 }

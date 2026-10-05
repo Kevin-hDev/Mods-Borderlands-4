@@ -8,7 +8,12 @@ from . import aiming
 def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bool,
          stale: bool = False, now_ns: int | None = None) -> None:
     errors = []
-    if controller.ads is not None and not controller.ads.stop(stale=stale):
+    if controller.framing is not None:
+        try:
+            controller.framing.stop()
+        except Exception as error:
+            errors.append(error)
+    if controller.ads is not None and not controller.ads.stop():
         moment = controller.clock() if now_ns is None else now_ns
         controller.cleanup_retry.schedule_wait(controller, moment, stale)
         return
@@ -62,8 +67,6 @@ def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bo
         controller._recovery_requested = False
         aiming.reset(controller)
         controller._suspensions.clear()
-        if controller.collision is not None and hasattr(controller.collision, "reset"):
-            controller.collision.reset()
     if errors:
         moment = controller.clock() if now_ns is None else now_ns
         controller.cleanup_retry.schedule(controller, moment, stale)

@@ -1,7 +1,8 @@
 """Values shared by every camera client."""
 
-PROTOCOL = 4
+from .generated_ads import PROTOCOL
 MAX_CLIENTS = 8
+MAX_PROTOCOL_NOTE_VALUE = (1 << 32) - 1
 GAME_MENU_MAX_FOV = 110.0
 FOV_MIN = 70.0
 FOV_MAX = 150.0

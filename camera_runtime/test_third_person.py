@@ -65,22 +65,7 @@ recovery.stop()
 check("the recovered camera mode is owned and removed on stop", recovery_manager.pops == 2)
 
 
-class Collision:
-    calls = 0
-
-    def sample(self, _now, _world, _bridge, update):
-        self.calls += 1
-        update(True)
-
-
 settings.enabled = True
-collision = Collision()
-guarded = ThirdPersonController(hooks, bridge, identifier="guarded", collision=collision)
-guarded.sync("apex_movement", pc, settings, 50_000_000)
-check("the collision guard uses the shared suspension state",
-      collision.calls == 1 and bridge.suspended[-1] is True)
-guarded.stop()
-
 stable_manager, stable_bridge = Manager(), Bridge()
 stable_pc = types.SimpleNamespace(_get_address=lambda: 21, OakCharacter=actor,
                                   PlayerCameraManager=stable_manager)

@@ -33,7 +33,10 @@ int main() {
     assert(state.publish(context) == 0);
     assert(state.ticket(fixture.manager(), ticket));
     fixture.put(4, ANIMATION_WEAPON_OFFSET, uintptr_t{0});
+    const auto identity_refusals = state.statistics().identity_refused;
     assert(!state.current(ticket));
+    assert(state.statistics().error == ERROR_CONTEXT);
+    assert(state.statistics().identity_refused == identity_refusals);
     assert(state.clear(context.generation) == 0);
     assert(!state.ticket(fixture.manager(), ticket));
     fixture.put(4, ANIMATION_WEAPON_OFFSET, fixture.pointer(3));
@@ -66,8 +69,12 @@ int main() {
     state.clear(8);
     fixture.put(0, apex_interaction::pawn_offset, uintptr_t{0});
     state.clear(8);
-    assert(!state.statistics().pending && state.statistics().error == ERROR_IDENTITY);
+    assert(!state.statistics().pending && state.statistics().error == ERROR_CONTEXT);
     fixture.put(0, apex_interaction::pawn_offset, fixture.pointer(1));
+    assert(state.publish(fixture.context(9)) == 0);
+    state.note_error(static_cast<uint32_t>(ERROR_IDENTITY));
+    assert(state.clear(9) == 0);
+    assert(state.statistics().error == 0); // A live cleanup must not inherit a prior refusal.
     context = fixture.context(UINT64_MAX);
     assert(state.publish(context) != 0);
     std::cout << "RESULTAT: OK (ADS state, generation, identity and thread)\n";

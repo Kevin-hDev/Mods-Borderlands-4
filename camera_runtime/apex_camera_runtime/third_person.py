@@ -19,13 +19,13 @@ from .transitions import THIRD_PERSON, VEHICLE_MODE, TransitionHooks
 class ThirdPersonController(ControllerActions):
     def __init__(self, hooks: Any, bridge: Any, identifier: str,
                  weak_ref: Callable | None = None, log: Callable | None = None,
-                 collision: Any = None, clock: Callable[[], int] | None = None, ads: Any = None) -> None:
+                 clock: Callable[[], int] | None = None, ads: Any = None,
+                 framing: Any = None) -> None:
         self.hooks = hooks
         self.bridge = bridge
         self.identifier = identifier
         self.weak_ref = weak_ref or (lambda item: lambda: item)
         self.log = log or (lambda _message: None)
-        self.collision = collision
         self.clock = clock or time.perf_counter_ns
         self._lifetime = CameraLifetime(self.weak_ref)
         self._transitions = None
@@ -46,6 +46,7 @@ class ThirdPersonController(ControllerActions):
         self.transition_name = TRANSITION
         self.zoom = OrbitZoom(self)
         self.ads = ads
+        self.framing = framing
         self._ads_settings = None
 
     @property
@@ -107,6 +108,8 @@ class ThirdPersonController(ControllerActions):
             self._bridge_started = True
             if not self.bridge.start(manager, signed_right(settings.shoulder_left()), pc):
                 raise RuntimeError("native camera start refused")
+            if self.framing is not None:
+                self.framing.diagnostics.rearm()
             if self._suspensions:
                 self.bridge.suspend(True)
             if not self.shoulder.apply_saved(self.bridge, settings):
@@ -209,6 +212,8 @@ class ThirdPersonController(ControllerActions):
         active_mode.sync(self, pc, actor, manager, settings, _now_ns)
         if self._bridge_started:
             ads_coordination.confirm(self, actor, manager)
+        if self.framing is not None:
+            self.framing.sync(self, pc, actor, manager, settings)
         if self._bridge_started and not self.cleanup_retry.pending:
             try:
                 self.zoom.sync(settings)

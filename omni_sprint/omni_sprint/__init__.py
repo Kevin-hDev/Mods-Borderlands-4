@@ -6,10 +6,11 @@ apply while Apex Movement's are not in use.
 """
 
 from mods_base import build_mod
+from .settings_persistence import AtomicMod
 
 from . import animation, camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __author__ = "kevin-hDev"
 
 
@@ -38,6 +39,7 @@ def _on_disable() -> None:
 
 
 mod = build_mod(
+    cls=AtomicMod,
     name="Omni Sprint",
     hooks=[frame.tick],
     keybinds=settings.commands.binds,

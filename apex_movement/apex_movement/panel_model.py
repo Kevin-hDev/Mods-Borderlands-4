@@ -7,9 +7,10 @@ from mods_base import KeybindOption
 from . import menu, pack, panel_preferences as prefs, report
 from . import panel_toggle
 from .panel_transaction import Transaction, write_options
+from .panel_restore import Restore
 
 
-class Model:
+class Model(Restore):
     # The line the window shows when the ENABLED switch did not take.
     toggle_notice = panel_toggle.FAILED
 
@@ -32,6 +33,13 @@ class Model:
         self._undo, self._command_undo = (), {}
         self._command_plan = None
         self.transaction = Transaction(mod, report.error_once)
+
+    @property
+    def camera_elsewhere(self):
+        if not self.camera_options:
+            return False
+        from . import camera
+        return camera.elected_elsewhere()
 
     @property
     def language(self):
@@ -73,10 +81,6 @@ class Model:
         if outcome is None:
             return None
         if self._command_plan is not None:
-            if self._command_plan[0] == "compensate":
-                self._complete(outcome)
-                self._command_plan = None
-                return "failed"
             return self._finish_global(outcome, label=True)
         kind = outcome[0]
         success = self._complete(outcome)
@@ -123,6 +127,9 @@ class Model:
         return int(round(result)) if option.is_integer else round(result, 6)
 
     def write(self, values):
+        if (self.camera_elsewhere and type(values) is dict
+                and any(key in self.camera_options for key in values)):
+            return False
         return write_options(self, values)
 
     def write_commands(self, values):
@@ -150,57 +157,8 @@ class Model:
         return success
 
     def _commands_ready(self):
-        return (self.command_actions is not None and not self.transaction.pending
+        return (not self.camera_elsewhere and self.command_actions is not None and not self.transaction.pending
                 and self._command_plan is None)
-
-    def restore(self):
-        memory = ()
-        if self.command_actions is not None:
-            from .camera_control_config import MEMORY_OPTIONS
-            memory = MEMORY_OPTIONS
-        previous = tuple((option, option.value) for option in (*self.options.values(), *memory))
-        commands = self.command_actions.snapshot() if self.command_actions else {}
-        desired = self.command_actions.commands.defaults() if self.command_actions else {}
-        return self._start_global(tuple((option, option.default_value) for option, _ in previous),
-                                  "restore", previous, desired, commands)
-
-    def undo(self):
-        if not self._undo:
-            return False
-        previous = tuple((option, option.value) for option, _ in self._undo)
-        commands = self.command_actions.snapshot() if self.command_actions else {}
-        return self._start_global(self._undo, "undo", previous, self._command_undo, commands)
-
-    def _start_global(self, changes, kind, previous, command_values, previous_commands):
-        self._command_plan = (kind, previous, command_values, previous_commands, self._undo)
-        outcome = self.transaction.start(changes, previous, kind)
-        if outcome is None:
-            return None
-        return self._finish_global(outcome, label=False)
-
-    def _finish_global(self, outcome, label):
-        kind, previous, command_values, previous_commands, former_undo = self._command_plan
-        success = self._complete(outcome)
-        if success and self.command_actions is not None:
-            success = self.command_actions.apply(command_values)
-        if success:
-            if kind == "restore":
-                self._command_undo = previous_commands
-            elif kind == "undo":
-                self._command_undo = {}
-            self._command_plan = None
-        else:
-            self._undo = () if kind == "restore" else former_undo
-            current = tuple((option, option.value) for option, _ in previous)
-            compensation = self.transaction.start(previous, current, "compensate")
-            if compensation is None:
-                self._command_plan = ("compensate", (), {}, {}, ())
-                return None
-            self._complete(compensation)
-            self._command_plan = None
-        if not label:
-            return success
-        return {"restore": "restored", "undo": "undone"}[kind] if success else "failed"
 
     def toggle_enabled(self):
         if self.transaction.pending:

@@ -8,10 +8,11 @@ UNAVAILABLE_MESSAGE = ('WARNING: Interaction alignment unavailable. '
 
 
 class CameraBridge:
-    def __init__(self, view, interaction, log):
+    def __init__(self, view, interaction, log, collision=None):
         self.view = view
         self.interaction = interaction
         self.log = log
+        self.collision = collision
         self._view_pending = False
         self._interaction_pending = False
         self._alignment_warned = False
@@ -34,6 +35,8 @@ class CameraBridge:
             if not self.view.start(manager, right):
                 self.stop()
                 return False
+            if self.collision is not None:
+                self.collision.start(self.library, pc, manager)
             self._start_alignment(pc, manager)
         except Exception:
             self.stop()
@@ -72,6 +75,8 @@ class CameraBridge:
                 continue
             try:
                 resource.stop()
+                if resource is self.view and self.collision is not None:
+                    self.collision.release()
                 setattr(self, flag, False)
             except Exception as error:
                 errors.append(error)
@@ -83,6 +88,8 @@ class CameraBridge:
     def suspend(self, suspended):
         # The native interaction hook reads this state on each call, including ADS/vehicle/Orbit.
         self.view.suspend(suspended)
+        if suspended and self.collision is not None:
+            self.collision.invalidate()
 
     def set_right(self, right):
         return self.view.set_right(right)

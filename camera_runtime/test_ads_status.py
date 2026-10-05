@@ -57,15 +57,66 @@ class AdsStatusTests(unittest.TestCase):
         self.assertFalse(self.prepare())
         self.assertEqual(self.notice(), "unknown_weapon")
 
-    def test_sniper_and_release_have_no_spurious_error(self):
+    def test_sniper_has_no_spurious_error(self):
         self.animation.WeaponType = Kind.Sniper
         self.assertFalse(self.prepare())
         self.assertIsNone(self.notice())
+
+    def test_terminal_unsupported_remains_visible_after_release_without_spam(self):
         self.native.supported = False
         self.prepare()
         self.actor.ZoomState.bWantsToZoom = False
+        for _ in range(10):
+            self.assertFalse(self.prepare())
+            self.assertEqual(self.notice(), "unsupported")
+        self.assertEqual(len(self.logs), 1)
+
+    def test_prepare_exception_is_not_mislabeled_as_an_unsupported_version(self):
+        def broken():
+            raise OSError("C:/private/secret.dll")
+        self.native.prepare = broken
+        for _ in range(3):
+            self.assertFalse(self.prepare())
+            self.assertEqual(self.notice(), "install_failed")
+        self.actor.ZoomState.bWantsToZoom = False
         self.prepare()
         self.assertIsNone(self.notice())
+        self.assertEqual(sum("OSError" in message for message in self.logs), 1)
+        self.assertFalse(any("private" in message or "secret" in message for message in self.logs))
+
+    def test_bridge_terminal_refusal_is_visible_before_first_press(self):
+        self.actor.ZoomState.bWantsToZoom = False
+        self.native._prepared, self.native.reason = False, "unavailable"
+        self.assertEqual(self.notice(), "unsupported")
+        self.native.reason = "preparation_failed"
+        self.assertEqual(self.notice(), "install_failed")
+        self.assertEqual(self.logs, [])
+        self.assertEqual(self.native.contexts, [])
+
+    def test_transient_exception_clears_at_idle_and_next_press_recovers(self):
+        original = self.native.prepare
+        def broken():
+            raise OSError("C:/private/secret.dll")
+        self.native.prepare = broken
+        self.assertFalse(self.prepare())
+        self.assertEqual(self.notice(), "install_failed")
+        self.actor.ZoomState.bWantsToZoom = False
+        self.prepare()
+        self.assertIsNone(self.notice())
+        self.native.prepare = original
+        self.actor.ZoomState.bWantsToZoom = True
+        self.assertTrue(self.prepare())
+        self.assertTrue(self.session.confirm("ThirdPerson"))
+
+    def test_pending_press_observes_terminal_refusal_without_switching_mid_aim(self):
+        self.native.supported = None
+        self.assertFalse(self.prepare())
+        self.native.supported = False
+        for _ in range(3):
+            self.assertFalse(self.prepare())
+            self.assertEqual(self.notice(), "unsupported")
+        self.assertEqual(len(self.logs), 1)
+        self.assertEqual(self.native.contexts, [])
 
     def test_pending_cleanup_overrides_old_error_and_effective_presentation(self):
         self.assertTrue(self.prepare())

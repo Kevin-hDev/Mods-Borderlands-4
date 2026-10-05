@@ -50,12 +50,12 @@ assert actions.snapshot() == commands.defaults()
 assert actions.apply(before)
 assert actions.snapshot() == before
 
-# Even if live bind alignment fails, the compensating save must put the old values back on disk.
+# Alignment is checked before persistence: failure leaves old values and performs no disk write.
 persisted = []
 mod.save_settings = lambda: persisted.append(actions.snapshot())
 align = commands.align
 commands.align = lambda: (_ for _ in ()).throw(RuntimeError("bind unavailable"))
 assert not actions.assign("orbit", "keyboard", "Seven")
-assert actions.snapshot() == before and persisted[-1] == before
+assert actions.snapshot() == before and persisted == []
 commands.align = align
 result.success()

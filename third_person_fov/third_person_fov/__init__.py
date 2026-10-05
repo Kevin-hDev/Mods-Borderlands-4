@@ -1,10 +1,11 @@
 """Third Person & FOV: the game's native third-person view and a wider field of view."""
 
 from mods_base import build_mod
+from .settings_persistence import AtomicMod
 
 from . import camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __author__ = "kevin-hDev"
 
 
@@ -26,6 +27,7 @@ def _on_disable() -> None:
 
 
 mod = build_mod(
+    cls=AtomicMod,
     name="Third Person & FOV",
     hooks=[frame.tick],
     keybinds=settings.commands.binds,

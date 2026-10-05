@@ -3,11 +3,14 @@
 from pathlib import Path
 from typing import Any, Callable
 
-from .collision import CollisionGuard
+from .collision import CollisionResolver
 from .ads_bridge import AdsBridge
 from .ads_context import ContextReader
 from .ads_session import AdsSession
 from .camera_bridge import CameraBridge
+from .framing_bridge import FramingBridge
+from .framing_session import FramingSession
+from .framing_status import START_FAILURE
 from .interaction_bridge import InteractionBridge, load_library as load_interaction_library
 from .generated_limits import RUNTIME_FOLDER
 from .native_bridge import Bridge, load_packaged_library
@@ -26,16 +29,24 @@ def attach(runtime: Any, library: Any, interaction_library: Any, hooks: Any, sdk
         # No native start has run yet; CameraBridge reports degraded operation on activation.
         interaction = None
         log(f"interaction alignment setup failed: {type(error).__name__}")
-    bridge = CameraBridge(Bridge(library), interaction, log)
-    collision = CollisionGuard(kismet, sdk, log)
+    collision = CollisionResolver(kismet, sdk, weak_ref, log)
+    bridge = CameraBridge(Bridge(library), interaction, log, collision=collision)
+    framing = None
     try:
-        native_ads = AdsBridge(library)
+        native_ads = AdsBridge(library, log)
         ads = AdsSession(native_ads, ContextReader(weak_ref, native_ads.identify, sdk.find_all), log)
+        native_ads.start_preflight()
     except Exception:
         ads = None
         log("Third-person aiming unavailable; native aiming retained.")
+    if ads is not None:
+        try:
+            framing = FramingSession(FramingBridge(library), native_ads, ads.reader, log)
+            ads.extra_zoom_pending = framing.bridge.zoom_pending
+        except Exception as error:
+            log(f"{START_FAILURE}: {type(error).__name__}")
     controller = ThirdPersonController(
-        hooks, bridge, IDENTIFIER, weak_ref=weak_ref, log=log, collision=collision, ads=ads)
+        hooks, bridge, IDENTIFIER, weak_ref=weak_ref, log=log, ads=ads, framing=framing)
     runtime.set_third_person(controller)
     return controller
 

@@ -11,12 +11,14 @@ struct Ticket {
     uint64_t third_name{};
     ZoomScale zoom{};
 };
-bool validate_context(uintptr_t table, const AdsContext& context);
 bool owner_alive(uintptr_t table, const AdsContext& context);
+uint32_t context_error(uintptr_t table, const AdsContext& context);
+uint32_t owner_error(uintptr_t table, const AdsContext& context);
 
 class State {
 public:
     bool configure(uintptr_t table, uint64_t third_name, ZoomScale zoom);
+    bool framing_allowed(const FramingContext& context, void* manager);
     void set_installed(bool value);
     int publish(const AdsContext& candidate);
     int publish_pointer(const AdsContext* input);

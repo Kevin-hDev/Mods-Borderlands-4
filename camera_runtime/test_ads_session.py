@@ -33,6 +33,13 @@ class SessionTests(unittest.TestCase):
         self.session.confirm("ThirdPerson")
         self.assertEqual(len(self.native.contexts), 1)
 
+    def test_clean_shutdown_does_not_reuse_a_previous_identity_failure(self):
+        self.prepare(); self.session.confirm('ThirdPerson')
+        from apex_camera_runtime.generated_ads import ERROR_IDENTITY
+        self.native.status.error = ERROR_IDENTITY
+        self.assertTrue(self.session.stop())
+        self.assertFalse(any('ownership abandoned' in line for line in self.logs))
+
     def test_precision_heavy_unknown_orbit_vehicle_and_pending_fall_back(self):
         for category in (Kind.Sniper, Kind.Precision, Kind.Heavy, True, 0):
             self.animation.WeaponType = category
@@ -95,6 +102,17 @@ class SessionTests(unittest.TestCase):
         self.native.status.fov_writes, self.native.status.zoom_scale = 3, 1.0
         self.assertFalse(self.prepare())
 
+    def test_weapon_without_optic_keeps_custom_zoom_until_its_progress_ends(self):
+        self.prepare(); self.session.confirm("ThirdPerson")
+        self.native.status.fov_writes, self.native.status.zoom_scale = 1, 1.0
+        self.actor.ZoomState.bWantsToZoom = False
+        self.session.extra_zoom_pending = lambda: True
+        self.assertTrue(self.prepare())
+        self.native.status.fov_writes = 2
+        self.assertTrue(self.prepare())
+        self.session.extra_zoom_pending = lambda: False
+        self.assertFalse(self.prepare())
+
     def test_weapon_swap_on_release_cannot_publish_a_new_hip_fire_context(self):
         from ads_sdk_test_fixtures import obj
         self.prepare(); self.session.confirm("ThirdPerson")
@@ -137,6 +155,19 @@ class SessionTests(unittest.TestCase):
         for _ in range(10): self.assertFalse(self.prepare())
         self.assertEqual(len(self.logs), 1)
         self.assertEqual(self.native.contexts, [])
+
+    def test_pending_verification_keeps_this_press_native_then_allows_next_aim(self):
+        self.native.supported = None
+        self.assertFalse(self.prepare())
+        self.assertEqual(self.logs, [])
+        self.native.supported = True
+        self.assertFalse(self.prepare())
+        self.assertFalse(self.session.confirm("ThirdPerson"))
+        self.actor.ZoomState.bWantsToZoom = False
+        self.assertFalse(self.prepare())
+        self.actor.ZoomState.bWantsToZoom = True
+        self.assertTrue(self.prepare())
+        self.assertTrue(self.session.confirm("ThirdPerson"))
 
     def test_trial_is_opt_in_without_persisting_settings(self):
         self.settings = NS()

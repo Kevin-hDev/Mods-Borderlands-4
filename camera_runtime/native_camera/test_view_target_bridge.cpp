@@ -8,6 +8,7 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
+#include <thread>
 
 #undef assert
 #define assert(condition) do { if (!(condition)) { \
@@ -52,6 +53,21 @@ Config make_config(uint32_t duration_ms = 0) {
                   static_cast<uint64_t>(function - module), 35.0, 5.0};
 }
 
+int collision_calls = 0;
+bool reject_collision = false;
+bool stop_in_collision = false;
+bool clip_collision = false;
+int resolve_collision(const apex_ads::CollisionQuery* query, double* output) {
+    ++collision_calls;
+    Stats live{};
+    assert(view_stats(&live) == 0); // The callback must run without the bridge lock held.
+    if (stop_in_collision) assert(view_stop() == 0);
+    if (reject_collision) return 1;
+    std::memcpy(output, query->desired, sizeof(query->desired));
+    if (clip_collision) output[1] = (query->before[1] + query->desired[1]) / 2;
+    return 0;
+}
+
 int main() {
     auto* table = static_cast<void**>(VirtualAlloc(nullptr, 4096, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
     assert(table);
@@ -62,6 +78,8 @@ int main() {
     auto config = make_config();
     assert(!view_set_right(0.0));
     assert(valid_config(config) && view_start(&manager, &config) == 0);
+    assert(view_set_collision(reinterpret_cast<CollisionResolver>(1)) != 0);
+    assert(view_set_collision(&resolve_collision) == 0);
 
     ViewTarget shifted{};
     write_value(shifted, view_location_offset, 10.0);
@@ -95,12 +113,47 @@ int main() {
     Stats stats{};
     assert(view_stats(&stats) == 0);
     assert(stats.active == 1 && stats.suspended == 1 && stats.writes == 3);
-    assert(close_to(stats.before[0], 5.0) && close_to(stats.after[1], -150.0));
+    assert(close_to(stats.before[0], 5.0) && close_to(stats.after[1], 0.0));
 
     assert(view_set_suspended(0) == 0);
     invoke(manager, guarded);
     assert(close_to(read_value(guarded, view_location_offset + 8), -150.0));
     assert(view_stop() == 0 && table[update_slot] == reinterpret_cast<void*>(&original_update));
+
+    config = make_config();
+    assert(view_start(&manager, &config) == 0);
+    assert(view_set_collision(&resolve_collision) == 0);
+    reject_collision = true;
+    ViewTarget collision_failed{};
+    invoke(manager, collision_failed);
+    assert(close_to(read_value(collision_failed, view_location_offset + 8), 0.0));
+    assert(view_stats(&stats) == 0 && stats.rejected == 1 && stats.suspended == 0);
+    reject_collision = false;
+    clip_collision = true;
+    invoke(manager, collision_failed);
+    assert(close_to(read_value(collision_failed, view_location_offset + 8), 17.5));
+    assert(view_stats(&stats) == 0 && close_to(stats.after[1], 17.5));
+    clip_collision = false;
+    write_value(collision_failed, view_location_offset + 8, 0.0);
+    stop_in_collision = true;
+    invoke(manager, collision_failed);
+    assert(close_to(read_value(collision_failed, view_location_offset + 8), 0.0));
+    stop_in_collision = false;
+    assert(view_stop() == 0);
+
+    assert(view_start(&manager, &config) == 0);
+    assert(view_set_collision(&resolve_collision) == 0);
+    const int previous_calls = collision_calls;
+    int foreign_stop = 0;
+    std::thread worker([&] {
+        ViewTarget threaded{};
+        invoke(manager, threaded);
+        foreign_stop = view_stop();
+        assert(close_to(read_value(threaded, view_location_offset + 8), 0.0));
+    });
+    worker.join();
+    assert(collision_calls == previous_calls && foreign_stop != 0);
+    assert(view_stop() == 0);
 
     config = make_config(1);
     assert(view_start(&manager, &config) == 0);
@@ -127,9 +180,19 @@ int main() {
     assert(close_to(read_value(aimed, view_location_offset + 8), 0.0));
     assert(view_stats(&stats) == 0 && stats.ads_effective == 1 && stats.ads_generation == 1);
     assert(ads.statistics().fov_writes == 1);
+    assert(view_set_suspended(0) == 0);
+    assert(view_set_collision(&resolve_collision) == 0);
+    reject_collision = true;
+    ViewTarget obstructed_ads{};
+    invoke(*ads_manager, obstructed_ads);
+    std::memcpy(&fov, obstructed_ads.bytes + apex_ads::FOV_OFFSET, sizeof(fov));
+    assert(std::abs(fov - 71.05929f) < 0.001f);
+    assert(close_to(read_value(obstructed_ads, view_location_offset + 8), 0.0));
+    assert(view_stats(&stats) == 0 && stats.suspended == 0 && stats.rejected == 1);
+    reject_collision = false;
     ViewTarget foreign{};
     invoke(manager, foreign);
-    assert(ads.statistics().fov_writes == 1);
+    assert(ads.statistics().fov_writes == 2);
     assert(view_stop() == 0 && ads.statistics().active == 0);
     assert(VirtualFree(table, 0, MEM_RELEASE));
     std::cout << "RESULTAT: OK - persistent bridge, suspension, expiry, restore\n";

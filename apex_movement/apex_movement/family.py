@@ -14,6 +14,7 @@ from typing import Any
 from mods_base import Mod
 
 from . import movements, pack, report
+from .settings_persistence import AtomicSettingsMixin
 
 # A sibling is any module that carries this same pack.py: it has these three names and nothing else does.
 MARKS = ("NAME", "CARRIES", "carries")
@@ -50,7 +51,7 @@ def carried() -> list[str]:
     return [movement.name for movement in movements.MOVEMENTS if pack.carries(movement.name)]
 
 
-class FamilyMod(Mod):
+class FamilyMod(AtomicSettingsMixin, Mod):
     """A mod that checks for a clash before switching on, rather than switching off again after.
 
     mods_base switches a mod on from its settings file while build_mod is still running (mod_factory.py:149, then

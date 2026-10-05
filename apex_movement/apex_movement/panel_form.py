@@ -3,6 +3,7 @@
 import time
 
 from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
+from .panel_form_lifecycle import Lifecycle
 
 # A setting that changes nothing while its switch is off: FOV under Custom FOV, the walk key's toggle and speed under
 # the walk key, the loot reach under its switch, the shoulder and the orbit camera outside third person (the runtime
@@ -11,7 +12,7 @@ DEPENDS_ON = {"fov": "custom_fov", "walk_toggle": "walk", "walk_key_speed": "wal
               "shoulder_left": "third_person", "orbit": "third_person", "third_person_ads": "third_person"}
 
 
-class PanelForm:
+class PanelForm(Lifecycle):
     keep_when_disabled = True
 
     def __init__(self, widgets, model):
@@ -39,6 +40,8 @@ class PanelForm:
 
     def sync(self, widgets):
         self.pending.clear()
+        if hasattr(self, "framing_form"):
+            self.framing_form.reset(widgets)
         active_page = len(self.model.pages) if self.options_open else self.page
         widgets["pages"].SetActiveWidgetIndex(active_page)
         for key, option in self.model.options.items():
@@ -93,19 +96,21 @@ class PanelForm:
     def flush(self, widgets):
         if self.model.transaction.pending:
             return False
+        if hasattr(self, "framing_form") and not self.framing_form.flush(widgets):
+            return False
         if not self.pending:
             return True
         success = self.model.write(self.pending)
-        self.notice = "saved" if success else "ready" if success is None else "failed"
+        waiting = success is None and not self.model.transaction.rolling_back
+        self.notice = "saved" if success else "ready" if waiting else self.failure_notice()
         self.sync(widgets)
         return success is True
-
-    def close_ready(self):
-        return self.model.cancel_transaction()
 
     def read_changes(self, widgets, now):
         for key, option in self.model.options.items():
             widget = widgets[f"setting:{key}"]
+            if self.model.camera_elsewhere and key in self.model.camera_options:
+                continue
             if key == "third_person_ads" and getattr(self, "ads_blocked", False):
                 widget.SetIsChecked(False)
                 continue
@@ -152,7 +157,7 @@ class PanelForm:
         self.refresh_aim(widgets)
         outcome = self.model.advance()
         if outcome is not None:
-            self.notice = outcome
+            self.notice = self.failure_notice() if outcome == "failed" else outcome
             self.sync(widgets)
         self.read_changes(widgets, now)
         if self.take(widgets["close"]):
@@ -195,15 +200,15 @@ class PanelForm:
                     return False
                 success = (self.model.toggle_enabled if name == "enabled"
                            else getattr(self.model, name))()
-                self.notice = ({"restore": "restored", "undo": "undone",
+                self.notice = ({"restore": self.model.success_notice, "undo": self.model.success_notice,
                                 "enabled": "saved"}[name] if success else
                                "ready" if success is None else
-                               self.model.toggle_notice if name == "enabled" else "failed")
+                               self.model.toggle_notice if name == "enabled" else self.failure_notice())
                 self.sync(widgets)
                 return False
         if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
             self.flush(widgets)
-        if (self.command_form is not None and not self.model.transaction.pending
+        if (not self.model.camera_elsewhere and self.command_form is not None and not self.model.transaction.pending
                 and self.model.pages[self.page] == "commands"):
             self.command_form.poll()
             if self.command_form.changed:

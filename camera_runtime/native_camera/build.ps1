@@ -1,6 +1,8 @@
 param([switch]$TestsOnly)
 $ErrorActionPreference = 'Stop'
 $sourceRoot = $PSScriptRoot
+$contract = Get-Content -Raw -LiteralPath (Join-Path $sourceRoot 'ads_contract.json') | ConvertFrom-Json
+$libraryStem = "apex_camera_view_v$($contract.constants.VIEW_ABI)"
 $buildRoot = Join-Path $env:TEMP 'apex_camera_runtime_build'
 New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
 $vcvars = 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat'
@@ -13,9 +15,20 @@ foreach ($line in $environmentLines) {
 }
 $common = @('/nologo', '/std:c++17', '/EHsc', '/W4', '/WX', '/O2', '/MT', '/Brepro')
 $sources = @((Join-Path $sourceRoot 'view_target_math.cpp'),
+             (Join-Path $sourceRoot 'view_dispatch.cpp'),
              (Join-Path $sourceRoot 'view_target_bridge.cpp'))
 Push-Location $buildRoot
 try {
+    & cl.exe @common (Join-Path $sourceRoot 'framing_math.cpp') (Join-Path $sourceRoot 'test_framing_math.cpp') '/Fe:framing_math_test.exe'
+    if ($LASTEXITCODE -ne 0) { throw 'Native framing math test build failed' }
+    & .\framing_math_test.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Native framing math tests failed' }
+    $framingSources = @(Get-ChildItem -LiteralPath $sourceRoot -Filter 'framing_*.cpp' | ForEach-Object { $_.FullName })
+    $framingDependencies = @('ads_state.cpp', 'ads_identity.cpp', 'ads_mode.cpp', 'ads_validation.cpp', 'ads_statistics.cpp', 'ads_view.cpp', 'ads_paths.cpp', 'ads_compat.cpp') | ForEach-Object { Join-Path $sourceRoot $_ }
+    & cl.exe @common @framingSources @framingDependencies (Join-Path $sourceRoot 'test_framing_view.cpp') '/Fe:framing_view_test.exe' 'bcrypt.lib'
+    if ($LASTEXITCODE -ne 0) { throw 'Native framing view test build failed' }
+    & .\framing_view_test.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Native framing view tests failed' }
     foreach ($unit in @('contract', 'identity', 'paths', 'mode', 'state', 'view', 'reticle', 'detours', 'compat', 'api')) {
         $testSources = @((Join-Path $sourceRoot "test_ads_$unit.cpp"))
         if ($unit -ne 'contract') { $testSources += Join-Path $sourceRoot "ads_$unit.cpp" }
@@ -37,27 +50,36 @@ try {
         $testExe = "ads_$unit`_test.exe"
         & cl.exe @common @testSources "/Fe:$testExe" 'bcrypt.lib'
         if ($LASTEXITCODE -ne 0) { throw 'Native ADS test build failed' }
-        & (Join-Path $buildRoot $testExe)
+        $testArguments = @()
+        if ($unit -eq 'compat') {
+            $testArguments += (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $buildRoot $testExe)).Hash.ToLowerInvariant()
+        }
+        & (Join-Path $buildRoot $testExe) @testArguments
         if ($LASTEXITCODE -ne 0) { throw 'Native ADS test failed' }
     }
     $adsSources = @(Get-ChildItem -LiteralPath $sourceRoot -Filter 'ads_*.cpp' | ForEach-Object { $_.FullName })
     & cl.exe @common '/LD' @adsSources '/Fe:ads_guard_test.dll' 'bcrypt.lib'
     if ($LASTEXITCODE -ne 0) { throw 'Native ADS library build failed' }
-    & python -c 'import ctypes,sys; lib=ctypes.CDLL(sys.argv[1]); assert lib.ads_prepare() != 0; print("RESULTAT: OK (DLL loaded outside game; preparation refused)")' (Join-Path $buildRoot 'ads_guard_test.dll')
+    # A saved script avoids the legacy Windows PowerShell argument quoting of Python -c.
+    & python (Join-Path $sourceRoot 'check_outside_game.py') (Join-Path $buildRoot 'ads_guard_test.dll')
     if ($LASTEXITCODE -ne 0) { throw 'Native ADS outside-game load failed' }
-    & cl.exe @common @sources @adsSources (Join-Path $sourceRoot 'test_view_target_bridge.cpp') '/Fe:view_target_test.exe' 'bcrypt.lib'
+    & cl.exe @common @sources @adsSources @framingSources (Join-Path $sourceRoot 'test_view_target_bridge.cpp') '/Fe:view_target_test.exe' 'bcrypt.lib'
     if ($LASTEXITCODE -ne 0) { throw 'Native test build failed' }
     & .\view_target_test.exe
     if ($LASTEXITCODE -ne 0) { throw 'Native bridge test failed' }
+    & cl.exe @common @sources @adsSources @framingSources (Join-Path $sourceRoot 'test_framing_dispatch.cpp') '/Fe:framing_dispatch_test.exe' 'bcrypt.lib'
+    if ($LASTEXITCODE -ne 0) { throw 'Native framing dispatch test build failed' }
+    & .\framing_dispatch_test.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Native framing dispatch tests failed' }
     if ($TestsOnly) { return }
-    & cl.exe @common '/LD' @sources @adsSources '/Fe:apex_camera_view_v6.dll' 'bcrypt.lib'
+    & cl.exe @common '/LD' @sources @adsSources @framingSources "/Fe:$libraryStem.dll" 'bcrypt.lib'
     if ($LASTEXITCODE -ne 0) { throw 'Native library build failed' }
     $assets = Join-Path (Split-Path $sourceRoot) 'apex_camera_runtime\assets'
     New-Item -ItemType Directory -Force -Path $assets | Out-Null
-    $target = Join-Path $assets 'apex_camera_view_v6.dll'
-    Copy-Item -LiteralPath (Join-Path $buildRoot 'apex_camera_view_v6.dll') -Destination $target -Force
+    $target = Join-Path $assets "$libraryStem.dll"
+    Copy-Item -LiteralPath (Join-Path $buildRoot "$libraryStem.dll") -Destination $target -Force
     $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $target).Hash.ToLowerInvariant()
-    Set-Content -LiteralPath (Join-Path $assets 'apex_camera_view_v6.sha256') -Value $hash -Encoding ascii -NoNewline
+    Set-Content -LiteralPath (Join-Path $assets "$libraryStem.sha256") -Value $hash -Encoding ascii -NoNewline
     Get-FileHash -Algorithm SHA256 -LiteralPath $target
 } finally {
     Pop-Location

@@ -8,6 +8,8 @@ write it through omni_sprint.memory once patch_memory() has swapped the Windows 
 import struct
 import sys
 import types
+import tempfile
+from pathlib import Path
 import weakref
 from pathlib import Path
 from typing import Any
@@ -114,7 +116,10 @@ class FakeMod:
 
     def __init__(self, state: dict, **kwargs: Any) -> None:
         self.state, self.kwargs, self.is_enabled = state, kwargs, False
-        self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
+        self._settings_directory = tempfile.TemporaryDirectory()
+        self.settings_file = Path(self._settings_directory.name) / "settings.json"
+        if state["settings_exists"]:
+            self.settings_file.write_text("{}")
         for option in kwargs.get("options") or []:
             option.mod = self
 
@@ -195,6 +200,7 @@ def install() -> dict:
             made.enable()
         return made
 
+    mods_base.Mod = FakeMod
     mods_base.build_mod = build_mod
 
     for name, module in {

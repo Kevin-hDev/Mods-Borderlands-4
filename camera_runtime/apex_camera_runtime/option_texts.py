@@ -18,7 +18,7 @@ FOV ={"display_name": "FOV", "description": "Field of view, up to 150."}
 ADS_NOTICES = {
     "unsupported": "Shoulder aiming is unavailable on this version. Keep first-person aiming until the mod is updated.",
     "unknown_weapon": "Weapon not recognized: first-person aiming retained. Try another weapon.",
-    "heavy_native": "Heavy weapons retain first-person aiming pending validation.",
+    "heavy_native": "Heavy weapons keep first-person aiming.",
     "wrong_thread": "Aim presentation is unavailable: first-person aiming retained. Report this issue with the log.",
     "mode_unavailable": "Aim view not confirmed: first-person aiming retained. Release and aim again.",
     "cleanup_pending": "Returning to the game view. Wait before changing camera mods.",

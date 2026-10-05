@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.1.9**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.0**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.
@@ -95,6 +95,13 @@ named after it: `apex_dash.json`, `apex_wall_climb.json`, and so on.
 - The wall climb is split by responsibility: `wall_sense` measures the wall, `wall_choice` picks the surface among what the rays met, `climb_aim` does the geometry, `climb_rules` decides whether a climb starts and keeps going, `wall_climb` moves the character, `climb_refusal` writes why a climb was refused, `climb_animation` plays the game's own climbing animation on the first-person arms `arms` finds.
 - `camera.py` and `camera_settings.py` connect the full pack to the shared camera runtime; `panel_options.py` draws the Options page, `panel_camera_commands.py` the Commands page, and `panel_shortcut.py` the key field beside the Slow walk switch.
 - `jump_report.py` and `move_watch.py` write every jump and every change of the game's own moves to the SDK log, a few hundred lines at most: on a game version not tested here, those lines show what changed.
+
+## Camera framing
+
+Camera presets and custom sliders adjust aim zoom, shoulder spacing, and height.
+Standard adds 15% aim zoom and 10% shoulder spacing; height is unchanged.
+Weapon-specific zoom remains active. Near obstacles, collision handling may
+temporarily reduce the chosen framing. The reticle remains centered.
 
 ## Tests
 

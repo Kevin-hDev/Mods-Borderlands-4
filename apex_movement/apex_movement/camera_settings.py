@@ -1,11 +1,13 @@
 """Camera options owned by the full Apex Movement pack."""
 
 import math
+from . import report
 
 from mods_base import BoolOption, SliderOption
 
 try:
     from .apex_camera_runtime.ads_options import AdsOptions
+    from .apex_camera_runtime.framing_options import FramingOptions
     from .apex_camera_runtime.loot_options import LootOptions
     from .apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
     from .apex_camera_runtime.camera_option import CameraBoolOption
@@ -16,6 +18,7 @@ except ModuleNotFoundError as error:
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
     from apex_camera_runtime.ads_options import AdsOptions
+    from apex_camera_runtime.framing_options import FramingOptions
     from apex_camera_runtime.loot_options import LootOptions
     from apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
     from apex_camera_runtime.camera_option import CameraBoolOption
@@ -27,6 +30,7 @@ loot = LootOptions()
 loot_distance = loot.distance
 zoom = OrbitZoomOptions()
 ads = AdsOptions()
+framing = FramingOptions(note=report.note)
 third_person_ads = ads.option
 
 third_person = BoolOption("third_person", False, **option_texts.THIRD_PERSON)
@@ -64,9 +68,9 @@ def _set_orbit_from_menu(value: bool) -> bool:
     return camera.set_orbit(value)
 
 
-def _cancel_orbit_from_menu() -> bool:
+def _cancel_orbit_from_menu(*, restore: bool = True) -> bool:
     from . import camera
-    return camera.cancel_orbit()
+    return camera.cancel_orbit(restore=restore)
 
 
 orbit = CameraBoolOption(
@@ -102,7 +106,7 @@ VISIBLE = (third_person, third_person_ads, shoulder_left, orbit, custom_fov, fov
 ALL = [third_person, third_person_ads, third_person_key, third_person_controller,
        shoulder_left, shoulder_key, shoulder_controller,
        orbit, orbit_key, orbit_controller, *commands.options[6:], custom_fov, fov, *loot.options, native_fov, applied_fov,
-           zoom.option]
+           zoom.option, *framing.options]
 
 
 def third_person_enabled() -> bool:

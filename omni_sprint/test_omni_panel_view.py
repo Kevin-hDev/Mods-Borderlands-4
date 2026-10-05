@@ -178,7 +178,7 @@ check("while another camera mod is on, stable camera controls are hidden and the
       and widgets["commands:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",))
 check("the camera card identifies an external owner when Apex Movement wins",
       widgets["group:camera"].calls["SetText"] ==
-      ("Un autre mod contrôle la caméra : règle-la dans son menu.",)
+      ("Un autre mod contrôle la caméra. Règle-la dans son menu.",)
       and widgets["group:omni_sprint"].calls["SetText"] == ("Le sprint du jeu, dans toutes les directions.",)
       and attached_once(root, widgets))
 runtime.reset_for_tests()
@@ -194,12 +194,12 @@ form.shown["fov"] = 120
 form.changed_at = 10**30  # Keep this draft pending while ownership changes in this poll.
 shared.register("apex_movement", 200, object(), constants.PROTOCOL)
 form.poll()
-check("an open Omni window follows camera ownership and disables Restore",
+check("an open Omni window hides the dormant camera and keeps sprint restoration available",
       model.camera_elsewhere
       and widgets["camera:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
       and widgets["commands:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
       and widgets["commands:external"].calls["SetVisibility"] == ("ESlateVisibility.Visible",)
-      and widgets["restore"].calls.get("SetIsEnabled") == (False,))
+      and widgets["restore"].calls.get("SetIsEnabled") == (True,))
 check("a live camera ownership change keeps an unsaved Omni Sprint choice",
       form.pending.get("omni_sprint") is pending_sprint and form.shown["omni_sprint"] is pending_sprint)
 check("discarded camera drafts are explained in the open window",

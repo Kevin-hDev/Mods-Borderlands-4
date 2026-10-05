@@ -55,6 +55,21 @@ struct NativeFixture {
                         0x4000, 0x4000, 0x4000, 0x4000};
         return result;
     }
+    FramingContext framing_context() {
+        FramingContext result{};
+        result.abi = static_cast<uint32_t>(VIEW_ABI);
+        result.size = sizeof(result);
+        const int indexes[] = {0, 1, 2, 5};
+        for (size_t i = 0; i < 4; ++i) result.references[i] = {pointer(indexes[i]), indexes[i], 1};
+        result.actor_size = result.root_size = 0x4000;
+        result.root_offset = 0x200; result.capsule_offset = 0x208;
+        result.location_offset = 0x100; result.parent_offset = 0x118;
+        put(1, result.root_offset, pointer(5));
+        put(1, result.capsule_offset, pointer(5));
+        const double location[] = {500, 0, 0};
+        std::memcpy(objects[5] + result.location_offset, location, sizeof(location));
+        return result;
+    }
     void recycle(size_t index) { store(items[index], OBJECT_SERIAL_OFFSET, int32_t{2}); }
     void restore(size_t index) { store(items[index], OBJECT_SERIAL_OFFSET, int32_t{1}); }
 };

@@ -88,4 +88,75 @@ if native_target[0] is True:  # A late native answer may only commit the request
 assert cancelled[2] is False and not camera_transaction.pending
 assert orbit.value is False and native_target[0] is False and camera_mod.saved == 1
 
+confirmed = [None]
+framing = Option("camera_framing_zoom", 15)
+framing.confirm_write = lambda **_kwargs: confirmed[0]
+framing_mod = Mod()
+framing_transaction = Transaction(framing_mod, lambda *_args: None, clock=lambda: now[0])
+assert framing_transaction.start(((framing, 25),), ((framing, 15),), "write") is None
+assert framing_mod.saved == 0 and framing_transaction.pending
+confirmed[0] = False
+assert framing_transaction.advance() is None
+assert framing.value == 15 and framing_transaction.pending and framing_mod.saved == 0
+confirmed[0] = True
+now[0] += TRANSACTION_TIMEOUT_NS + 1
+assert framing_transaction.advance()[2] is False
+assert not framing_transaction.pending and framing_mod.saved == 1
+
+failed_mod = Mod()
+save = failed_mod.save_settings
+failed_mod.save_settings = lambda: (_ for _ in ()).throw(OSError("private"))
+failed_transaction = Transaction(failed_mod, lambda *_args: None, clock=lambda: now[0])
+assert failed_transaction.start(((framing, 25),), ((framing, 15),), "write") is None
+assert failed_transaction.pending and framing.value == 15
+assert failed_transaction.advance() is None
+failed_mod.save_settings = save
+now[0] += TRANSACTION_TIMEOUT_NS + 1
+assert failed_transaction.advance()[2] is False
+assert not failed_transaction.pending
+
+# A native request that cannot yet cancel must not retain the settings window forever.
+# Its native owner remains responsible for safe cleanup; the menu must not save success.
+uncancelled_target = [False]
+blocked_option = CameraBoolOption("orbit", False,
+                                 route=lambda value: uncancelled_target.__setitem__(0, value) or True,
+                                 cancel=lambda: False)
+blocked_option.mod = NS(is_enabled=True)
+blocked_mod = Mod()
+blocked_transaction = Transaction(blocked_mod, lambda *_: None, clock=lambda: now[0])
+assert blocked_transaction.start(((blocked_option, True),), ((blocked_option, False),), "write") is None
+assert blocked_option.camera_status == "pending"
+now[0] += 60_000_000_000
+outcome = blocked_transaction.cancel()
+assert outcome is not None, "Unacknowledged cancellation still owns the window"
+assert outcome[2] is False and not blocked_transaction.pending
+assert blocked_mod.saved == 0
+assert blocked_option.camera_status == "refused" and uncancelled_target[0]
+
+# The failed menu choice no longer blocks unrelated settings or a subsequent Restore.
+outcome = blocked_transaction.start(((blocked_option, False),), ((blocked_option, False),), "restore")
+assert outcome is not None and outcome[2] is True
+assert blocked_option.value is False and blocked_mod.saved == 1
+
+# Earlier scalar writes must not leak into the next save after an unacknowledged cancellation.
+fov = Option("fov", 110)
+blocked_mod.saved = 0
+assert blocked_transaction.start(((fov, 120), (blocked_option, True)),
+                                 ((fov, 110), (blocked_option, False)), "write") is None
+now[0] += 60_000_000_000
+assert blocked_transaction.advance()[2] is False
+assert fov.value == 110, "Failed camera transaction leaked its earlier FOV change"
+assert blocked_option.value is False and blocked_option.camera_status == "refused"
+assert blocked_mod.saved == 0
+
+logical_calls = []
+logical_option = CameraBoolOption("orbit", False, route=lambda _: True,
+                                 cancel=lambda *, restore=True: logical_calls.append(restore) or True)
+logical_option.mod = NS(is_enabled=True)
+logical_transaction = Transaction(Mod(), lambda *_: None)
+assert logical_transaction.start(((logical_option, True),), ((logical_option, False),), "write") is None
+assert logical_transaction.abort()[2] is False
+assert logical_calls == [False], "Invalid window context issued a physical camera restore"
+assert logical_option.value is False and logical_option.camera_status == "refused"
+
 print("RESULTAT: TOUS LES TESTS PASSENT")

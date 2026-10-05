@@ -1,11 +1,16 @@
 #include "ads_compat.h"
 #include "generated_ads.h"
+#include "ads_sdk_exports.h"
 #include "camera_memory.h"
 #include <array>
 #include <bcrypt.h>
 #include <cstring>
+#include <atomic>
+#include <mutex>
 
 namespace {
+std::once_flag file_check;
+std::atomic<int> file_error{static_cast<int>(apex_ads::ERROR_UNSUPPORTED)};
 int hex(char character) {
     if (character >= '0' && character <= '9') return character - '0';
     if (character >= 'a' && character <= 'f') return character - 'a' + 10;
@@ -85,15 +90,40 @@ bool signature_matches(uintptr_t address, const char* expected) {
     }
 }
 
-bool compatible_modules() {
-    const auto sdk = GetModuleHandleW(L"unrealsdk.dll");
-    const auto game = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-    return sdk && game && module_matches(sdk, SDK_SHA256) && module_matches(nullptr, GAME_SHA256)
+int module_files_error(HMODULE sdk, const char* sdk_hash, const char* game_hash) {
+    if (!sdk || !module_matches(sdk, sdk_hash)) return static_cast<int>(ERROR_SDK_COMPATIBILITY);
+    if (!module_matches(nullptr, game_hash)) return static_cast<int>(ERROR_GAME_COMPATIBILITY);
+    return 0;
+}
+
+int verify_module_files_error() {
+    // File I/O only: no game objects, names, hooks or SDK calls from the worker.
+    std::call_once(file_check, [] {
+        const auto sdk = GetModuleHandleW(sdk_exports::module);
+        file_error.store(module_files_error(sdk, SDK_SHA256, GAME_SHA256), std::memory_order_release);
+    });
+    return file_error.load(std::memory_order_acquire);
+}
+
+int module_signatures_error(uintptr_t game) {
+    const bool matched = game
         && signature_matches(game + ZOOM_SCALE_RVA, ZOOM_SCALE_PREFIX)
         && signature_matches(game + HUD_PRODUCER_RVA, HUD_PRODUCER_PREFIX)
         && signature_matches(game + HUD_GETTER_RVA, HUD_GETTER_PREFIX)
         && signature_matches(game + MODE_GETTER_RVA, MODE_GETTER_PREFIX)
         && signature_matches(game + MODE_FINISH_RVA, MODE_FINISH_PREFIX)
         && signature_matches(game + VIEW_UPDATE_RVA, VIEW_UPDATE_PREFIX);
+    return matched ? 0 : static_cast<int>(ERROR_SIGNATURE);
+}
+
+int compatible_modules_error() {
+    // Never hash here: an unfinished or refused preflight cannot install native hooks.
+    const int verification = file_error.load(std::memory_order_acquire);
+    if (verification) return verification;
+    const auto sdk = GetModuleHandleW(sdk_exports::module);
+    const auto game = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+    if (!sdk) return static_cast<int>(ERROR_SDK_COMPATIBILITY);
+    if (!game) return static_cast<int>(ERROR_GAME_COMPATIBILITY);
+    return module_signatures_error(game);
 }
 }

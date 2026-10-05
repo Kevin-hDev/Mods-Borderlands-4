@@ -9,9 +9,9 @@ def choose(controller, pc, actor, manager, settings):
         return controller.ads.prepare(pc, actor, manager, settings,
             foot_mode=controller._desired_mode, vehicle=controller._in_vehicle,
             pending=controller.foot_mode.pending or controller.cleanup_retry.pending)
-    except Exception:
+    except Exception as error:
         controller.ads.stop()
-        controller.ads.feedback.report(None, "unavailable")
+        controller.ads.feedback.exception(None, "preparation_failed", "coordination_prepare", error)
         return False
 
 
@@ -31,9 +31,9 @@ def confirm(controller, actor, manager):
             controller.ads.stop()
             return
         controller.ads.confirm(str(manager.GetActorCameraMode(actor)))
-    except Exception:
+    except Exception as error:
         controller.ads.stop()
-        controller.ads.feedback.report(None, "publication_refused")
+        controller.ads.feedback.exception(None, "publication_refused", "coordination_confirm", error)
 
 
 def transfer_pending(controller):

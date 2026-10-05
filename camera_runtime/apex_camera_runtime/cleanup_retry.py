@@ -63,7 +63,7 @@ class CleanupRetry:
         if not getattr(controller, "cleanup_pending", False) or now_ns < self.next_ns:
             return
         if self.waiting:
-            if not controller.ads.stop(stale=self.stale):
+            if not controller.ads.stop():
                 self.next_ns = now_ns + CLEANUP_RETRY_FIRST_NS
                 return
             self.waiting = False

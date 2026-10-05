@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.7 - 2026-10-06
+
+- New Camera framing controls: Aim Zoom (Wide, Standard, Close), Shoulder Spacing (Tight, Standard, Open), and Camera Height (Standard, Higher, Lower), each with a custom slider.
+- Defaults: 15% additional aim zoom, 10% wider shoulder spacing, and standard height. Weapon-specific zoom is preserved; sniper rifles remain in first person.
+- Fixed: increasing zoom could shift the aimed point when entering aim. The reticle stays centered and framing preserves the aimed point when obstacles allow it.
+- Improved camera handling near walls, pillars, and tight spaces: smooth recovery when the view clears, with lateral centering when the shoulder side is obstructed.
+- Reduced work on the first aim to address the observed first-session stall.
+- Improved settings and menus: confirmation after saving, rollback on save failure, and clearer feedback.
+
 ## 1.0.6 - 2026-10-04
 
 - Third-person aiming with native weapon zoom and a visible reticle.

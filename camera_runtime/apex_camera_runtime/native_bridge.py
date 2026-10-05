@@ -20,8 +20,8 @@ EXPECTED_UPDATE_RVA = VIEW_UPDATE_RVA
 MAX_LIBRARY_BYTES = 2_000_000
 _FILE_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,80}\.dll$")
 MAX_RIGHT = SHOULDER_MAX_OFFSET
-LIBRARY_NAME = "apex_camera_view_v6.dll"
-HASH_NAME = "apex_camera_view_v6.sha256"
+LIBRARY_NAME = f"apex_camera_view_v{VIEW_ABI}.dll"
+HASH_NAME = f"apex_camera_view_v{VIEW_ABI}.sha256"
 
 
 def make_config(right: float) -> Config:

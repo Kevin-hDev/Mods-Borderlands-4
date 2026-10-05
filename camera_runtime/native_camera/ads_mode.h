@@ -9,4 +9,6 @@ struct ModeSnapshot {
 };
 // The SDK supplies the interned ThirdPerson FName once, not a prior frame's mode.
 bool read_mode(void* manager, uint64_t third_person_name, ModeSnapshot& output);
+// Position follows a valid ThirdPerson blend; ADS still requires read_mode's stable ticket.
+bool read_framing_mode(void* manager, uint64_t third_person_name, ModeSnapshot& output);
 }

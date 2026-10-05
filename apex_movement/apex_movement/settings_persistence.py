@@ -1,0 +1,165 @@
+"""Preserve SDK serialization while every mod save replaces its file atomically."""
+import os
+import re
+import secrets
+import threading
+import time
+from itertools import islice
+
+from mods_base import Mod
+from unrealsdk import logging
+
+_SAVE_LOCK = threading.RLock()
+_TOKEN_BYTES = 16
+_TEMP_SUFFIX = ".tmp"
+_OWNER_DIGITS = 8
+_TEMP_TOKEN = re.compile(rf"[0-9a-f]{{{_OWNER_DIGITS + _TOKEN_BYTES * 2}}}")
+_CLEANUP_SCAN_LIMIT = 128
+_CLEANUP_WARNING = "Settings temporary cleanup failed"
+_REPLACE_ATTEMPTS = 3
+_RETRY_DELAY = 0.005
+_WINDOWS_LOCK_ERRORS = (32, 33)
+_ACCESS_DENIED = 5
+_PROCESS_MISSING = 87
+_SYNCHRONIZE = 0x100000
+_DELETE_ACCESS = 0x10000
+_SHARE_ALL = 7
+_OPEN_EXISTING = 3
+_NORMAL_FILE = 0x80
+_WAIT_FINISHED = 0
+_WAIT_FAILED = 0xFFFFFFFF
+
+if os.name == "nt":
+    import ctypes
+    from ctypes import wintypes
+    _WINDOWS = ctypes.WinDLL("kernel32", use_last_error=True)
+    _WINDOWS.CreateFileW.argtypes = (wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+                                    ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD,
+                                    wintypes.HANDLE)
+    _WINDOWS.CreateFileW.restype = wintypes.HANDLE
+    _WINDOWS.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+    _WINDOWS.OpenProcess.restype = wintypes.HANDLE
+    _WINDOWS.WaitForSingleObject.argtypes = (wintypes.HANDLE, wintypes.DWORD)
+    _WINDOWS.WaitForSingleObject.restype = wintypes.DWORD
+    _WINDOWS.CloseHandle.argtypes = (wintypes.HANDLE,)
+    _WINDOWS.CloseHandle.restype = wintypes.BOOL
+
+
+def _process_finished(pid):
+    if not pid or pid == os.getpid():
+        return False
+    if os.name == "nt":
+        handle = _WINDOWS.OpenProcess(_SYNCHRONIZE, False, pid)
+        if not handle:
+            error = ctypes.get_last_error()
+            if error in (_ACCESS_DENIED, _PROCESS_MISSING):
+                return error == _PROCESS_MISSING  # Denied inspection cannot prove an orphan.
+            raise ctypes.WinError(error)
+        try:
+            status = _WINDOWS.WaitForSingleObject(handle, 0)
+            if status == _WAIT_FAILED:
+                raise ctypes.WinError(ctypes.get_last_error())
+            return status == _WAIT_FINISHED
+        finally:
+            if not _WINDOWS.CloseHandle(handle):
+                raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return True
+    except PermissionError:
+        return False
+    return False
+
+
+def _cleanup_orphans(original):
+    prefix = original.name + "."
+    # One bounded startup scan avoids frame-time work and touching unidentified old files.
+    with os.scandir(original.parent) as entries:
+        for entry in islice(entries, _CLEANUP_SCAN_LIMIT):
+            if not entry.name.startswith(prefix) or not entry.name.endswith(_TEMP_SUFFIX):
+                continue
+            token = entry.name[len(prefix):-len(_TEMP_SUFFIX)]
+            if not _TEMP_TOKEN.fullmatch(token) or not _process_finished(int(token[:_OWNER_DIGITS], 16)):
+                continue
+            if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
+                continue
+            # PID reuse keeps an orphan; that is safer than deleting any active writer.
+            original.with_name(entry.name).unlink(missing_ok=True)
+
+
+def _cleanup_once(mod, original):
+    if getattr(mod, "_settings_cleanup_done", False):
+        return
+    # Cleanup is optional: mark the attempt before it runs so any refusal is reported only once.
+    mod._settings_cleanup_done = True
+    try:
+        _cleanup_orphans(original)
+    except Exception as error:
+        name = getattr(mod, "name", type(mod).__name__)
+        logging.warning(f"[{name}] {_CLEANUP_WARNING} cause={type(error).__name__}")
+
+
+def _windows_delete_is_locked(path):
+    # WinError 5 also means durable permissions; a DELETE-access probe distinguishes sharing locks.
+    handle = _WINDOWS.CreateFileW(str(path), _DELETE_ACCESS, _SHARE_ALL, None,
+                                _OPEN_EXISTING, _NORMAL_FILE, None)
+    if handle == ctypes.c_void_p(-1).value:
+        return ctypes.get_last_error() in _WINDOWS_LOCK_ERRORS
+    if not _WINDOWS.CloseHandle(handle):
+        raise ctypes.WinError(ctypes.get_last_error())
+    return False
+
+
+def _replace_settings(temporary, original):
+    for attempt in range(_REPLACE_ATTEMPTS):
+        try:
+            os.replace(temporary, original)
+            return
+        except OSError as error:
+            code = getattr(error, "winerror", None)
+            locked = code in _WINDOWS_LOCK_ERRORS
+            if os.name == "nt" and code == _ACCESS_DENIED:
+                locked = _windows_delete_is_locked(original) or _windows_delete_is_locked(temporary)
+            if not locked or attempt == _REPLACE_ATTEMPTS - 1:
+                raise
+            # Two 5 ms waits trade rare sharing-lock tolerance against runtime FOV responsiveness.
+            time.sleep(_RETRY_DELAY)
+
+
+class AtomicSettingsMixin:
+    def save_settings(self):
+        # One guard covers menu, runtime, SDK enable/disable and nested callbacks.
+        with _SAVE_LOCK:
+            if getattr(self, "_settings_save_active", False):
+                raise RuntimeError("Settings save already in progress")
+            original = self.settings_file
+            if original is None:
+                return
+            _cleanup_once(self, original)
+            token = f"{os.getpid():0{_OWNER_DIGITS}x}" + secrets.token_hex(_TOKEN_BYTES)
+            temporary = original.with_name(original.name + "." + token + _TEMP_SUFFIX)
+            # Exclusive creation avoids ever overwriting a pre-existing neighbour.
+            with temporary.open("xb"):
+                pass
+            self._settings_save_active = True
+            cleanup = True
+            try:
+                self.settings_file = temporary
+                super().save_settings()
+                if temporary.exists():
+                    _replace_settings(temporary, original)
+                    cleanup = False
+                else:
+                    # The SDK removes settings when there is nothing to persist.
+                    cleanup = False
+                    original.unlink(missing_ok=True)
+            finally:
+                self.settings_file = original
+                self._settings_save_active = False
+                if cleanup:
+                    temporary.unlink(missing_ok=True)
+
+
+class AtomicMod(AtomicSettingsMixin, Mod):
+    """Use at construction so automatic SDK startup saves are protected too."""

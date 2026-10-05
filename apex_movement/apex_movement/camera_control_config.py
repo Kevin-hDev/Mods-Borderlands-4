@@ -6,10 +6,12 @@ from . import camera_settings
 
 try:
     from .apex_camera_runtime.camera_commands import ACTIONS, CONTROLLER, KEYBOARD
+    from .apex_camera_runtime.framing_catalog import GROUPS as FRAMING_GROUPS
 except ModuleNotFoundError as error:
     if error.name != f"{__package__}.apex_camera_runtime":
         raise
     from apex_camera_runtime.camera_commands import ACTIONS, CONTROLLER, KEYBOARD
+    from apex_camera_runtime.framing_catalog import GROUPS as FRAMING_GROUPS
 
 
 class Command(NamedTuple):
@@ -24,4 +26,5 @@ COMMANDS = tuple(Command(action.name,
                  for action in ACTIONS)
 SLOTS = tuple((command.name, device) for command in COMMANDS
               for device in (KEYBOARD, CONTROLLER))
-MEMORY_OPTIONS = (camera_settings.zoom.option,)
+FRAMING_OPTIONS = camera_settings.framing
+MEMORY_OPTIONS = (camera_settings.zoom.option, *FRAMING_OPTIONS.options)

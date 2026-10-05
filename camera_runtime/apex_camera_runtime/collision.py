@@ -1,65 +1,171 @@
-"""Suspend the shoulder offset while its final-view path crosses geometry."""
-
+"""Resolve the current rendered camera; retain the thunk until native stop."""
+import ctypes
 import math
-from typing import Any, Callable
+import threading
+import time
 
-SAMPLE_NS = 50_000_000
+from . import collision_config as config
+from .collision_path import CollisionPath
+from .collision_path import point
+from .collision_diagnostics import CollisionDiagnostics
+from .collision_sweep import SphereSweep
+from .collision_visibility import Visibility
+from .generated_ads import CollisionQuery, MIN_POINTER
+from .lifetime import CameraLifetime
+from .constants import THIRD_PERSON_MODE
+
+Callback = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(CollisionQuery), ctypes.POINTER(ctypes.c_double))
 
 
-class CollisionGuard:
-    def __init__(self, kismet: Any, sdk: Any, note: Callable[[str], None], clear_samples: int = 3) -> None:
-        if not isinstance(clear_samples, int) or not 1 <= clear_samples <= 10:
-            raise ValueError("invalid collision clear count")
-        self.kismet = kismet
-        self.sdk = sdk
-        self.note = note
-        self.clear_samples = clear_samples
-        self.next_ns = 0
-        self.clear_count = 0
-        self.blocked = False
-        self.error_reported = False
+class CollisionResolver:
+    def __init__(self, kismet, sdk, weak_ref, note):
+        self.sweep = SphereSweep(kismet, sdk)
+        self.visibility = Visibility(kismet, sdk)
+        self.path = CollisionPath()
+        self.lifetime = CameraLifetime(weak_ref)
+        self.callback = None
+        self.thread = None
+        self.busy = False
+        self.release_pending = False
+        self.reference_clear = False
+        self.margin_blocked = False
+        self.diagnostics = CollisionDiagnostics(note)
 
-    def reset(self) -> None:
-        self.next_ns = 0
-        self.clear_count = 0
-        self.blocked = False
-        self.error_reported = False
+    @property
+    def note(self):
+        return self.diagnostics.note
 
-    def _set(self, blocked: bool, update: Callable[[bool], None]) -> None:
-        if self.blocked != blocked:
-            update(blocked)
-            self.blocked = blocked
+    @note.setter
+    def note(self, value):
+        self.diagnostics.note = value
 
-    def sample(self, now_ns: int, world: Any, bridge: Any, update: Callable[[bool], None]) -> None:
-        if now_ns < self.next_ns:
+    def start(self, library, pc, manager):
+        if self.release_pending and not self.busy:
+            self.release()
+        if self.callback is not None:
+            raise RuntimeError('Camera collision cleanup required')
+        self.lifetime.bind(pc, pc.OakCharacter, manager)
+        if any(address < MIN_POINTER for address in self.lifetime.ids):
+            raise ValueError('Invalid collision identity')
+        self.invalidate()
+        self.diagnostics.reset()
+        self.thread = threading.get_ident()
+        library.view_set_collision.argtypes = [Callback]
+        library.view_set_collision.restype = ctypes.c_int
+        self.callback = Callback(self._resolve)
+        if library.view_set_collision(self.callback):
+            raise RuntimeError('Camera collision registration refused')
+
+    def release(self):
+        # Only CameraBridge calls this after the native hook has stopped successfully.
+        # A reentrant stop must not free a libffi thunk while its epilogue is executing.
+        if self.busy:
+            self.release_pending = True
+            self.reference_clear = False
             return
-        self.next_ns = now_ns + SAMPLE_NS
+        self.release_pending = False
+        self.callback = self.thread = None
+        self.lifetime.clear()
+        self.invalidate()
+
+    def invalidate(self):
+        self.reference_clear = False
+        self.margin_blocked = False
+        self.path.reset()
+
+    def _owned(self, query):
+        pc = self.lifetime.pc_ref() if self.lifetime.pc_ref else None
+        _, actor, manager, _, changed = self.lifetime.inspect(pc)
+        owned_actor, owned_manager = self.lifetime.owned()
+        if (changed or self.release_pending or owned_actor is None or owned_manager is None
+                or self.lifetime.address(owned_actor) != self.lifetime.address(actor)
+                or self.lifetime.address(owned_manager) != self.lifetime.address(manager)
+                or query.manager != self.lifetime.ids[2]):
+            raise ValueError('Camera collision identity unavailable')
+        return actor
+
+    def _resolve(self, pointer, output):
+        self.reference_clear = False
+        if self.busy or self.thread != threading.get_ident() or not pointer or not output:
+            return 1
+        self.busy = True
+        started = time.perf_counter_ns()
         try:
-            stats = bridge.stats()
-            values = tuple(float(value) for value in (*stats.before, *stats.after))
-            if len(values) != 6 or not all(math.isfinite(value) for value in values):
-                raise ValueError("invalid camera coordinates")
-            start = self.sdk.make_struct("Vector", X=values[0], Y=values[1], Z=values[2])
-            end = self.sdk.make_struct("Vector", X=values[3], Y=values[4], Z=values[5])
-            hit = bool(self.kismet.LineTraceSingle(
-                world, start, end, 1, False, [], 0, self.sdk.make_struct("HitResult"), True,
-                self.sdk.make_struct("LinearColor"), self.sdk.make_struct("LinearColor"), 0.0,
-            )[0])
-        except Exception:
-            self.clear_count = 0
-            self._set(True, update)
-            if not self.error_reported:
-                self.note("camera collision check failed; shoulder offset suspended")
-                self.error_reported = True
-            return
-        self.error_reported = False
-        if hit:
-            self.clear_count = 0
-            self._set(True, update)
-            return
-        if not self.blocked:
-            return
-        self.clear_count += 1
-        if self.clear_count >= self.clear_samples:
-            self.clear_count = 0
-            self._set(False, update)
+            query = pointer.contents
+            actor = self._owned(query)
+            manager = self.lifetime.owned()[1]
+            if str(manager.GetActorCameraMode(actor)) != THIRD_PERSON_MODE:
+                self.invalidate()
+                return 1  # ADS/vehicle/Orbit may legitimately own this frame; not an incident.
+            # The game has already resolved its own camera. Sweep only the added offset,
+            # not a second waist-to-camera path that incorrectly hits low cover.
+            anchor, desired = point(tuple(query.before)), point(tuple(query.desired))
+            if math.dist(anchor, desired) <= config.MIN_LENGTH:
+                self.invalidate()
+                position = desired
+            else:
+                self.visibility.begin_frame()
+                distance = self.sweep.distance(actor, anchor, desired)
+                length = math.dist(anchor, desired)
+                endpoint = tuple(a + (b - a) * distance / length for a, b in zip(anchor, desired))
+                if self.margin_blocked or self.sweep.reduced:
+                    extra = config.RELEASE_MARGIN if self.margin_blocked else 0.0
+                    # Release belongs to the swept target, independent of this frame's small return step.
+                    clear = self.sweep.endpoint_clear(actor, endpoint, extra)
+                    if self.margin_blocked and not clear and not self.sweep.reduced:
+                        # A shortened shoulder touches its 12 cm margin; a clear native anchor can release the latch.
+                        clear = self.sweep.endpoint_clear(actor, anchor, config.RELEASE_MARGIN)
+                    self.margin_blocked = not clear
+                if self.margin_blocked:
+                    # No sightline can permit an unsafe target; skip visibility while the wall owns the frame.
+                    self.path.reset()
+                    self.path.fraction = 0.0
+                    # Native was rendered during the latch: release is a smooth return, not a new entry.
+                    self.path.initialized = True
+                    position = anchor
+                else:
+                    target = self.visibility.target(actor)
+                    position = self._position(actor, anchor, desired, distance, target, query.delta)
+            self._owned(query)
+            if str(manager.GetActorCameraMode(actor)) != THIRD_PERSON_MODE:
+                self.invalidate()
+                return 1
+            for index, value in enumerate(position):
+                output[index] = value
+            now = time.perf_counter_ns()
+            self.diagnostics.record(now, now - started, self.path.fraction < 1.0 - config.MIN_LENGTH)
+            self.reference_clear = self.path.fraction >= 1.0 - config.MIN_LENGTH
+            return 0
+        except Exception as error:
+            self.invalidate()
+            now = time.perf_counter_ns()
+            self.diagnostics.record(now, now - started, error=error)
+            return 1
+        finally:
+            self.busy = False
+
+    def _position(self, actor, anchor, desired, distance, target, delta):
+        length = math.dist(anchor, desired)
+        previous = min(self.path.fraction, distance / length)
+        current = tuple(a + (b - a) * previous for a, b in zip(anchor, desired))
+        clear = self.visibility.clear(actor, current, target)
+        if not self.path.initialized:
+            self.path.initialized = True
+            if not clear:
+                # Entry has no passing-obstacle grace: the obstruction already exists.
+                visible = self.visibility.distance(actor, anchor, desired, distance, target)
+                self.path.fraction = visible / length
+                return tuple(a + (b - a) * self.path.fraction for a, b in zip(anchor, desired))
+        if clear:
+            self.path.obscured_for = 0.0
+            limit = self.visibility.recovery_distance(actor, anchor, desired, distance, previous, target)
+            return self.path.resolve(anchor, desired, limit, delta)
+        endpoint = tuple(a + (b - a) * distance / length for a, b in zip(anchor, desired))
+        if self.visibility.clear(actor, endpoint, target):
+            # Already hidden: escape toward the clear shoulder instead of following
+            # the passing obstacle inward. A barrier only protects an existing view.
+            self.path.obscured_for = 0.0
+            return self.path.resolve(anchor, desired, distance, delta)
+        # Aim at the current native anchor while hidden, not a moving shadow edge.
+        # Stop retracting once visible; the return-path barrier then keeps that side.
+        return self.path.resolve(anchor, desired, distance, delta, 0.0)

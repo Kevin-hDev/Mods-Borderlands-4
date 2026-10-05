@@ -140,7 +140,3 @@ def sync(controller: Any, pc: Any, actor: Any, manager: Any,
             controller, pc, actor, manager, now_ns)
         if controller._recovery_requested:
             controller.foot_mode.restorations += 1
-    if controller.collision is not None and "vehicle" not in controller._suspensions:
-        controller.collision.sample(
-            now_ns, actor, controller.bridge,
-            lambda blocked: controller._suspend("collision", blocked))

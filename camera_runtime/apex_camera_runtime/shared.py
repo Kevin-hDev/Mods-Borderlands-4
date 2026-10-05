@@ -4,13 +4,13 @@ import sys
 from types import ModuleType
 from typing import Callable
 
-from .constants import PROTOCOL
+from .constants import MAX_PROTOCOL_NOTE_VALUE, PROTOCOL
 from .fov import FovEngine
 from .runtime import CameraRuntime
 
 # ADS changes native structures and ownership: old runtimes cannot join this authority.
-STATE = "_apex_camera_runtime_v4"
-LEGACY_STATES = ("_apex_camera_runtime_v1", "_apex_camera_runtime_v2", "_apex_camera_runtime_v3")
+STATE = f"_apex_camera_runtime_v{PROTOCOL}"
+LEGACY_STATES = tuple(f"_apex_camera_runtime_v{version}" for version in range(1, PROTOCOL))
 ALL_STATES = (STATE, *LEGACY_STATES)
 
 
@@ -19,6 +19,7 @@ class IncompatibleState(RuntimeError):
 
     # The line a settings window shows for this refusal, in place of its line for an unknown cause.
     notice = "camera_outdated"
+    message = "camera unavailable: update the camera mods to matching versions and restart the game"
 
 
 def _existing_state() -> ModuleType | None:
@@ -28,7 +29,14 @@ def _existing_state() -> ModuleType | None:
     state = found[0]
     if (any(getattr(item, "protocol", None) != PROTOCOL for item in found)
             or any(item is not state for item in found[1:])):
-        raise IncompatibleState("incompatible shared camera state")
+        refusal = IncompatibleState("incompatible shared camera state")
+        # Log bounded numeric protocols, never a foreign object's repr or name.
+        protocols = tuple(getattr(item, "protocol", None) for item in found)
+        labels = tuple(str(value) if type(value) is int and 0 < value <= MAX_PROTOCOL_NOTE_VALUE
+                       else "unknown" for value in protocols)
+        refusal.message += (f"; expected_protocol={PROTOCOL}; "
+                            f"loaded_protocols={','.join(dict.fromkeys(labels))}")
+        raise refusal
     return state
 
 

@@ -25,7 +25,8 @@ int State::publish(const AdsContext& candidate) {
     const bool thread = thread_ && thread_ == GetCurrentThreadId();
     const auto table = table_;
     ReleaseSRWLockShared(&guard_);
-    const bool valid = thread && validate_context(table, candidate);
+    const auto validation = thread ? context_error(table, candidate) : static_cast<uint32_t>(ERROR_WRONG_THREAD);
+    const bool valid = validation == 0;
     AcquireSRWLockExclusive(&guard_);
     context_.enabled = 0;
     reticle_enabled_ = false;
@@ -41,7 +42,7 @@ int State::publish(const AdsContext& candidate) {
         stats_.active = 1;
         stats_.error = 0;
     } else {
-        stats_.error = static_cast<uint32_t>(thread ? ERROR_CONTEXT : ERROR_WRONG_THREAD);
+        stats_.error = valid ? static_cast<uint32_t>(ERROR_CONTEXT) : validation;
     }
     ReleaseSRWLockExclusive(&guard_);
     return accepted ? 0 : 1;
@@ -68,16 +69,19 @@ int State::clear(uint64_t generation) {
     stats_.active = 0;
     stats_.pending = touched_ ? 1U : 0U;
     const bool same = generation == context_.generation;
+    // Expose this cleanup's outcome, not a stale refusal from a preceding frame.
+    stats_.error = 0;
     const bool may_read = thread_ && thread_ == GetCurrentThreadId();
     const auto context = context_;
     const auto table = table_;
     ReleaseSRWLockExclusive(&guard_);
-    if (may_read && !owner_alive(table, context)) {
+    const auto ownership = may_read ? owner_error(table, context) : 0U;
+    if (ownership) {
         AcquireSRWLockExclusive(&guard_);
         if (context_.generation == context.generation && !context_.enabled) {
             stats_.pending = 0;
             touched_ = false;
-            stats_.error = static_cast<uint32_t>(ERROR_IDENTITY);
+            stats_.error = ownership;
         }
         ReleaseSRWLockExclusive(&guard_);
     }
@@ -123,10 +127,11 @@ bool State::ticket(void* manager, Ticket& output) {
     ReleaseSRWLockShared(&guard_);
     if (!active) return false;
     if (!thread) { note_error(static_cast<uint32_t>(ERROR_WRONG_THREAD)); return false; }
-    if (reinterpret_cast<uintptr_t>(manager) != candidate.context.references[2].address
-            || !validate_context(candidate.table, candidate.context)) {
-        note_error(static_cast<uint32_t>(ERROR_IDENTITY)); return false;
+    if (reinterpret_cast<uintptr_t>(manager) != candidate.context.references[2].address) {
+        note_error(static_cast<uint32_t>(ERROR_CONTEXT)); return false;
     }
+    const auto validation = context_error(candidate.table, candidate.context);
+    if (validation) { note_error(validation); return false; }
     if (!read_mode(manager, candidate.third_name, candidate.mode)) {
         note_error(static_cast<uint32_t>(ERROR_MODE)); return false;
     }

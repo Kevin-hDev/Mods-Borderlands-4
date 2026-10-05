@@ -4,6 +4,9 @@ from .panel_common_en import TEXT as COMMON
 
 TEXT = {
     **COMMON,
+    "camera_refused": "The camera could not confirm this change. It was not saved.",
+    "camera_timeout": "The camera did not respond. Previous settings were restored. Try again in a moment.",
+    "undone_partial": "Settings restored, except the camera: another mod controls it.",
     "options": "OPTIONS", "options_desc": "Camera and menu language.", "options_desc_menu": "Menu language.",
     "camera": "CAMERA", "camera_desc": "View, field of view and loot.",
     "change_key": "CHANGE", "press_key": "PRESS A KEY", "no_key": "NONE",
@@ -16,6 +19,9 @@ TEXT = {
     "command_tools": "COMMAND OPTIONS", "command_tools_desc": "Controller icons and camera command defaults.",
     "commands_reset": "DEFAULT KEYS", "controller_icons": "CONTROLLER ICONS",
     "camera_draft_discarded": "Camera mod changed: unsaved camera settings were discarded.",
+    "camera_elsewhere": "Another camera mod controls the camera. Use its menu to adjust it.",
+    "framing_saved_unavailable": "Saved. Framing preview is unavailable here.",
+    "framing_saved_partial": "Saved. Part of the framing preview is unavailable here; check the camera rows.",
     "camera_outdated": "Camera mods of different versions are loaded. Update Apex Movement, Omni Sprint and "
                        "Third Person & FOV, then restart the game.",
     "right": "RIGHT", "left": "LEFT",

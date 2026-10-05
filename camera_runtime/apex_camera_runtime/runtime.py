@@ -51,6 +51,7 @@ class CameraRuntime:
             raise error
 
     def set_third_person(self, controller: Any) -> None:
+        # The shared runtime must refuse replacement while the previous controller still owns HUD state.
         if self.third_person is not None and self.third_person is not controller:
             self.third_person.stop()
             if transfer_pending(self.third_person):
@@ -158,16 +159,9 @@ class CameraRuntime:
             client.settings.note("Orbit Camera zoom unavailable. Please retry.")
             return False
 
-    def cancel_orbit(self, owner: str) -> bool:
-        client = self.arbiter.active()
-        if client is None or client.owner != owner or self.third_person is None:
-            return False
-        try:
-            return bool(self.third_person.cancel_orbit(
-                client.settings, self.third_person.clock()))
-        except Exception:
-            client.settings.note("orbit setting: cancellation was refused")
-            return False
+    def cancel_orbit(self, owner: str, *, restore: bool = True) -> bool:
+        from .runtime_cancellation import cancel
+        return cancel(self, owner, restore=restore)
 
     def tick(self, context: Any, now_ns: int) -> None:
         client = self.arbiter.active()

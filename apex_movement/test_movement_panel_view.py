@@ -61,6 +61,12 @@ class Widget:
             return slot
         self.calls[name] = args
 
+    def IsChecked(self):
+        return self.calls.get("SetIsChecked", (False,))[0]
+
+    def GetValue(self):
+        return self.calls.get("SetValue", (0.0,))[0]
+
 
 unrealsdk.construct_object = Widget
 unrealsdk.find_enum = Enum
@@ -168,5 +174,6 @@ visit(root.WidgetTree.RootWidget)
 assert all(id(widget) in attached for widget in widgets.values())
 assert sum(node.kind == "ScrollBox" for node in Widget.created) == len(model.pages) + 2
 assert all(f"setting:{key}" in widgets for key in model.options)
-assert len(widgets) < 600, "the fixed widget registry must stay bounded"
+# Three fixed framing cards add 69 entries; no dynamically growing registry.
+assert len(widgets) < 700, "the fixed widget registry must stay bounded"
 result.success()

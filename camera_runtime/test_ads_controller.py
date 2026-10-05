@@ -9,14 +9,6 @@ from apex_camera_runtime.third_person import ThirdPersonController
 from apex_camera_runtime.runtime import CameraRuntime
 
 
-class Collision:
-    def __init__(self): self.calls, self.blocked = 0, False
-    def sample(self, _now, _actor, _bridge, suspend):
-        self.calls += 1
-        suspend(self.blocked)
-    def reset(self): self.blocked = False
-
-
 class ControllerTests(unittest.TestCase):
     def setUp(self):
         self.pc, self.actor, self.manager, self.animation, self.weapon, collector = player()
@@ -38,9 +30,7 @@ class ControllerTests(unittest.TestCase):
         self.native, self.bridge, self.hooks = Native(), Bridge(), Hooks()
         reader = ContextReader(lambda item: lambda: item, self.native.identify, lambda _: [collector])
         self.ads = AdsSession(self.native, reader, lambda _: None)
-        self.collision = Collision()
-        self.controller = ThirdPersonController(self.hooks, self.bridge, "ads-test", ads=self.ads,
-                                               collision=self.collision)
+        self.controller = ThirdPersonController(self.hooks, self.bridge, "ads-test", ads=self.ads)
         self.settings = Settings()
         self.settings.third_person_ads = lambda: True
         self.frame = 0
@@ -71,18 +61,12 @@ class ControllerTests(unittest.TestCase):
         self.tick()
         self.assertFalse(self.ads.wanted)
 
-    def test_collision_is_sampled_while_aim_is_held_without_canceling_ads(self):
+    def test_controller_does_not_suspend_ads_for_final_view_collision(self):
         self.start_aim()
-        previous = self.collision.calls
-        self.collision.blocked = True
-        self.tick()
-        self.assertGreater(self.collision.calls, previous)
-        self.assertIn("collision", self.controller._suspensions)
-        self.assertTrue(self.ads.wanted)
-        self.assertEqual(self.manager.mode, "ThirdPerson")
-        self.collision.blocked = False
         self.tick()
         self.assertNotIn("collision", self.controller._suspensions)
+        self.assertTrue(self.ads.wanted)
+        self.assertEqual(self.manager.mode, "ThirdPerson")
 
     def test_all_three_crouch_slide_transition_paths_follow_the_same_policy(self):
         self.start_aim()
