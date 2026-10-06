@@ -49,7 +49,7 @@ pf.f.mod.fail_save = True
 w["nav:release"].checked = True
 form.poll()
 assert form.page == 3 and preferences.last_page.value == "controls"
-assert w["pages"].index == 3 and "Échec" in w["notice"].text
+assert w["pages"].index == 3 and "Impossible d’enregistrer" in w["notice"].text
 pf.f.mod.fail_save = False
 preferences.last_page.value = "removed_page"
 w, form = pf.create()

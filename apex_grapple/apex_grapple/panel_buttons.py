@@ -7,17 +7,19 @@ change on the borders around it rather than on its own style, which Unreal does 
 from . import panel_text as tx, panel_theme as t, panel_widgets as w
 
 TOGGLE_BUTTON = 1  # ESlateCheckBoxType::ToggleButton
-# style: fill, frame, text, shadow; None is transparent. Each line is one class of the mockup's menu.css.
+# style: fill, frame, text, shadow, as theme colour names read by colours(); None is transparent. Each line is one
+# class of the mockup's menu.css. A transparent fill needs a transparent frame: the frame is a whole box under the
+# fill, not a CSS border, and would show through in the label's colour.
 STYLES = {
-    "primary": (t.COLOR_GOLD, t.COLOR_INK, t.COLOR_INK, t.COLOR_INK),
-    "secondary": (t.COLOR_INK, t.COLOR_SPARK, t.COLOR_SPARK, t.COLOR_INK),
-    "disabled": (t.COLOR_INK, t.COLOR_TEXT_DIM, t.COLOR_TEXT_DIM, None),
-    "on": (t.COLOR_GOLD, t.COLOR_INK, t.COLOR_INK, t.COLOR_INK),
-    "off": (t.COLOR_INK, t.COLOR_TEXT_DIM, t.COLOR_TEXT_DIM, None),
-    "nav_on": (t.COLOR_GOLD, t.COLOR_INK, t.COLOR_INK, t.COLOR_INK),
-    "nav_off": (None, None, t.COLOR_TEXT, None),
-    "lang_on": (t.COLOR_GOLD, t.COLOR_INK, t.COLOR_INK, None),
-    "lang_off": (t.COLOR_INK, t.COLOR_TEXT_DIM, t.COLOR_TEXT_DIM, None),
+    "primary": ("COLOR_GOLD", "COLOR_INK", "COLOR_INK", "COLOR_INK"),
+    "secondary": ("COLOR_INK", "COLOR_SPARK", "COLOR_SPARK", "COLOR_INK"),
+    "disabled": ("COLOR_OFF", "COLOR_TEXT_DIM", "COLOR_TEXT_DIM", None),
+    "on": ("COLOR_GOLD", "COLOR_INK", "COLOR_INK", "COLOR_INK"),
+    "off": ("COLOR_OFF", "COLOR_TEXT_DIM", "COLOR_TEXT_DIM", None),
+    "nav_on": ("COLOR_GOLD", "COLOR_INK", "COLOR_INK", "COLOR_INK"),
+    "nav_off": (None, None, "COLOR_TEXT", None),
+    "lang_on": ("COLOR_GOLD", "COLOR_INK", "COLOR_INK", None),
+    "lang_off": ("COLOR_OFF", "COLOR_TEXT_DIM", "COLOR_TEXT_DIM", None),
 }
 # Movement's Options gear lives here too, because Grapple is the generated menus' visual authority.
 # kind: label kind, frame width, shadow offset, padding (CSS order), centred label, minimum width
@@ -27,6 +29,8 @@ KINDS = {
     "master": ("button", t.STROKE, t.SHADOW_SM, (t.SPACE_2, t.SPACE_3), True, t.MASTER_WIDTH),
     "nav": ("nav", t.STROKE, t.SHADOW_MD, (t.SPACE_3, t.SPACE_4), False, None),
     "lang": ("small_button", t.STROKE_THIN, 0, (t.SPACE_1, t.SPACE_3), True, t.STATE_WIDTH),
+    # Apex Movement's Options tabs: a switch, wider for its word (sketch A of 2026-10-06, options_onglets).
+    "tab": ("button", t.STROKE, t.SHADOW_SM, (t.SPACE_2, t.SPACE_5), True, None),
 }
 _STATES = (("UncheckedImage", None), ("UncheckedHoveredImage", t.HOVER_OVERLAY),
            ("UncheckedPressedImage", t.PRESS_OVERLAY), ("CheckedImage", None),
@@ -90,14 +94,21 @@ def gear(owner, widgets, template):
     check.SetIsChecked(False)
     fill.SetContent(check)
     layers, shade = w.shadowed(owner, frame, t.SHADOW_MD)
+    # Slanted, icon included, as every other button and its word (Kevin, 2026-10-06: the only square button).
+    w.slant(layers)
     widgets.update({"options": check, "options_fill": fill, "options_frame": frame,
                     "options_shadow": shade})
     paint_gear(widgets, False)
     return w.sized(owner, layers, t.KEY_ICON_SIZE + t.SHADOW_MD, t.KEY_ICON_SIZE + t.SHADOW_MD)
 
 
+def colours(style):
+    """A style's fill, frame, text and shadow in the current theme."""
+    return tuple(t.colour(name) for name in STYLES[style])
+
+
 def paint(widgets, name, style):
-    fill, frame, text, shadow = STYLES[style]
+    fill, frame, text, shadow = colours(style)
     for part, tint in (("fill", fill), ("frame", frame), ("shadow", shadow)):
         widgets[f"{name}_{part}"].SetBrushColor(w.linear(tint or t.COLOR_INK, 1.0 if tint else 0.0))
     widgets[f"{name}_label"].SetColorAndOpacity(w.slate(text))
@@ -105,7 +116,7 @@ def paint(widgets, name, style):
 
 def paint_gear(widgets, active):
     colour = t.COLOR_INK if active else t.COLOR_TEXT_DIM
-    fill = t.COLOR_GOLD if active else t.COLOR_INK
+    fill = t.COLOR_GOLD if active else t.COLOR_OFF
     widgets["options_fill"].SetBrushColor(w.linear(fill))
     widgets["options_frame"].SetBrushColor(w.linear(colour))
     widgets["options_shadow"].SetBrushColor(w.linear(t.COLOR_INK))

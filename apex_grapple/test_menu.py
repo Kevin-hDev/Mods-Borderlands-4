@@ -1,4 +1,4 @@
-"""Tests the menu: three lines that follow a grapple, and every setting shown exactly once."""
+"""Tests the menu: three lines that follow a grapple, the hold mode, and every setting shown exactly once."""
 
 import pathlib
 import sys
@@ -22,15 +22,15 @@ def check(label: str, condition: bool) -> None:
 
 
 visible = [line for line in menu.MENU if not getattr(line, "is_hidden", False)]
-check("the menu has the three phases, controls and reset", len(visible) == 5)
+check("the menu has the three phases, the hold mode, controls and reset", len(visible) == 6)
 check("named the way a player would say them",
       [line.display_name for line in visible] ==
-      ["The shot", "The pull", "Letting go", "Grapple controls", "Restore defaults"])
+      ["The shot", "The pull", "Letting go", "Hold to grapple", "Grapple controls", "Restore defaults"])
 check("each line says what it holds", all(line.description for line in visible))
 check("controls opens the window directly, without another submenu",
-      callable(getattr(visible[3], "on_press", None)) and not hasattr(visible[3], "children"))
+      callable(getattr(visible[4], "on_press", None)) and not hasattr(visible[4], "children"))
 
-shown = [option for line in menu.MENU[:3] for option in line.children]
+shown = [option for line in menu.MENU[:4] for option in line.children]
 check("every setting is on a line", len(shown) == len(settings.ALL))
 check("none of them twice", len({option.identifier for option in shown}) == len(shown))
 check("and none of them missing",
@@ -40,6 +40,8 @@ check("the shot line holds the range, the reserve cost and the punch rule",
       {option.identifier for option in menu.shot.children} ==
       {"grapple_range", "hook_speed", "stamina_cost", "melee_wins", "punch_range", "keep_game_grapple",
        "show_rope"})
+check("the hold line holds the two switches and the hold time, which the window shows with the keys",
+      [option.identifier for option in menu.hold.children] == ["keyboard_hold", "controller_hold", "hold_time"])
 check("the pull line holds the two forces and their caps",
       {option.identifier for option in menu.pull.children} ==
       {"pull_strength", "pull_speed_cap", "rope_carry", "steer_strength", "steer_speed_cap"})

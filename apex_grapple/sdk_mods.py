@@ -1,6 +1,8 @@
 """Test doubles for mod registration and input binding."""
 
 import types
+import tempfile
+from pathlib import Path
 from typing import Any
 
 
@@ -65,7 +67,10 @@ class FakeMod:
         self.state, self.kwargs = state, kwargs
         self.name = kwargs.get("name", "")
         self.is_enabled = False
-        self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
+        self._settings_directory = tempfile.TemporaryDirectory()
+        self.settings_file = Path(self._settings_directory.name) / "settings.json"
+        if state["settings_exists"]:
+            self.settings_file.write_text("{}")
         self.options = kwargs.get("options", [])
         self.saved = 0
         self.fail_save = False

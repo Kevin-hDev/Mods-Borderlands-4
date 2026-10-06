@@ -11,7 +11,7 @@ from mods_base import build_mod
 from . import attack, bar, bounce, catch, control_config, damage, enemy, foes, frame, hand, keys, lock, panel_open
 from . import panel_preferences, report, settings
 
-__version__ = "1.1.0"
+__version__ = "1.0.3"
 __author__ = "kevin-hDev"
 
 
@@ -41,9 +41,8 @@ mod = build_mod(
     name="Benefix Ohm Attack",
     hooks=[frame.tick],
     keybinds=[keys.keyboard_bind, keys.controller_bind],
-    # The window's language, icons and page are hidden options: the SDK's menu lists the settings and the keys.
-    options=[*settings.ALL, *control_config.ALL,
-             panel_preferences.language, panel_preferences.controller_icons, panel_preferences.last_page],
+    # The window's language, icons, page and theme are hidden options: the SDK's menu lists the settings and the keys.
+    options=[*settings.ALL, *control_config.ALL, *panel_preferences.ALL],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )

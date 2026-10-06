@@ -65,7 +65,8 @@ def opened(frontend: bool = False):
     """A window as the real opening leaves it: its timer running, its close command registered, the input taken."""
     events.clear()
     pc.bShowMouseCursor, pc.OakCharacter = True, None if frontend else character
-    root = NS(RemoveFromParent=lambda: events.append("widget removed"))
+    root = NS(RemoveFromParent=lambda: events.append("widget removed"),
+              HasKeyboardFocus=lambda: False, HasFocusedDescendants=lambda: True)
     library = NS(SetInputMode_GameOnly=lambda *asked: events.append("input back to the game"),
                  SetInputMode_GameAndUIEx=lambda *asked: events.append("input back to the menu"),
                  SetInputMode_UIOnlyEx=lambda *asked: events.append("input taken"))

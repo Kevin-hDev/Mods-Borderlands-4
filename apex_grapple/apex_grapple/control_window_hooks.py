@@ -11,7 +11,12 @@ MAX_PARAMS = 16
 
 
 def note(message):
-    unrealsdk.logging.info(f"{PREFIX} {message}")
+    try:
+        unrealsdk.logging.info(f"{PREFIX} {message}")
+        return True
+    except Exception:
+        # Diagnostics must never prevent this window from releasing the player's input.
+        return False
 
 
 def require_signature(cls, method, expected):

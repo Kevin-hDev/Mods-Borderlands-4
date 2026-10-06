@@ -1,4 +1,6 @@
-"""Manual closure and context cleanup do not cancel normal key capture."""
+"""Manual closure and context cleanup do not cancel normal key capture; Escape closes as the Close button does,
+once released, never during a key choice nor when the form keeps the window open; a focus the game took comes
+back to the window."""
 
 from ui_test_loader import load
 import sys
@@ -20,6 +22,22 @@ base.get_pc = lambda **kwargs: pc
 import ui_clock_fixture
 ui_clock_fixture.install(sdk)
 window = load("control_window")
+escape = load("control_escape")
+
+
+class Keyboard:
+    """The fake user32 every session reads Escape from: nothing pressed unless a check says so."""
+    held = pressed = False
+
+    def GetAsyncKeyState(self, key):
+        assert key == escape.VK_ESCAPE
+        answer = (escape.DOWN if self.held else 0) | (escape.PRESSED if self.pressed else 0)
+        self.pressed = False
+        return answer
+
+
+keyboard = Keyboard()
+escape.user32 = lambda: keyboard
 
 
 def session(frontend=False):
@@ -27,12 +45,13 @@ def session(frontend=False):
     pc.bShowMouseCursor = True
     pc.OakCharacter = None if frontend else character
     root = NS(RemoveFromParent=lambda: events.append("removed"),
-              GetIsSelectingKey=lambda: False, SetKeyboardFocus=lambda: events.append("focus"))
+              GetIsSelectingKey=lambda: False, SetKeyboardFocus=lambda: events.append("focus"),
+              HasKeyboardFocus=lambda: False, HasFocusedDescendants=lambda: True)
     library = NS(SetInputMode_GameOnly=lambda *args: events.append("game_input"),
                  SetInputMode_GameAndUIEx=lambda *args: events.append("menu_input"),
                  SetInputMode_UIOnlyEx=lambda *args: events.append("ui_input"))
     form = NS(widgets={"first": lambda: root}, poll=lambda: False,
-              selecting=lambda: root.GetIsSelectingKey())
+              selecting=lambda: root.GetIsSelectingKey(), escape=lambda: events.append("form_escape") or True)
     bindings = NS(ready=lambda: True)
     item = window.Session(lambda: pc, lambda: root, lambda: library, False,
                           form, bindings, lambda: None if frontend else character)
@@ -84,6 +103,14 @@ assert pc.bShowMouseCursor is False
 root.GetIsSelectingKey = lambda: False
 item.poll(window.POLL_NS + 1)
 assert not item.closed  # Escape ends capture, not the whole panel.
+
+item, root = session()
+root.HasFocusedDescendants = lambda: False  # The game took the focus (Kevin, 2026-10-06).
+item.poll(1)
+assert "ui_input" not in events  # A focus just given may land a frame later.
+item.poll(window.POLL_NS + 1)
+assert not item.closed and "ui_input" in events and "focus" in events
+assert any("focus_restored=1" in x for x in events)
 
 item, root = session()
 item.poll(120_000_000_000)
@@ -163,4 +190,42 @@ sdk.hooks.remove_hook = lambda *args: registered.pop("callback", None)
 sdk.hooks.add_hook = lambda *args: registered.update(callback=args[-1])
 callback = lambda *args: None
 assert window.install_listener(callback) and registered["callback"] is callback
-print("OK | manual close, no expiry, cursor, capture, travel, disable and error cleanup")
+
+def turns(item, start, count):
+    for turn in range(start, start + count):
+        item.poll(turn * window.POLL_NS + 1)
+
+
+item, root = session()
+keyboard.held = True
+turns(item, 0, 3)
+assert not item.closed and "form_escape" not in events  # Never while the key is down.
+keyboard.held = False
+turns(item, 3, 1)
+assert not item.closed  # The release turn: the key may still reach the game.
+turns(item, 4, 1)
+assert item.closed and "form_escape" in events and any("escape_released=true" in x for x in events)
+assert any("closed=button" in x for x in events)  # The Close button's way out, back to the mods list.
+
+item, root = session()
+item.form.escape = lambda: events.append("form_escape") or False
+keyboard.pressed = True
+turns(item, 0, 3)
+assert not item.closed and "form_escape" in events  # The form keeps it open, as when Close cannot save.
+
+item, root = session()
+root.GetIsSelectingKey = lambda: True
+keyboard.held = True
+turns(item, 0, 2)
+root.GetIsSelectingKey = lambda: False  # Escape cancelled the key choice in its field.
+turns(item, 2, 2)
+keyboard.held = False
+turns(item, 4, 3)
+assert not item.closed and "form_escape" not in events
+
+item, root = session()
+keyboard.pressed = True
+item.form.poll = lambda: True
+turns(item, 0, 1)
+assert item.closed and "form_escape" not in events  # A click on Close in the same turn closes at once.
+print("OK | manual close, no expiry, cursor, focus, capture, travel, disable, error cleanup and Escape")

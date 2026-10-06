@@ -9,6 +9,8 @@ each behaviour of mods_base is imitated once, as mods_base/options.py and mod.py
 import pathlib
 import sys
 import types
+import tempfile
+from pathlib import Path
 from typing import Any
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -121,7 +123,10 @@ class FakeMod:
 
     def __init__(self, state: dict, **kwargs: Any) -> None:
         self.state, self.kwargs, self.is_enabled = state, kwargs, False
-        self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
+        self._settings_directory = tempfile.TemporaryDirectory()
+        self.settings_file = Path(self._settings_directory.name) / "settings.json"
+        if state["settings_exists"]:
+            self.settings_file.write_text("{}")
         for option in kwargs.get("options") or []:
             option.mod = self
 

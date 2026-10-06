@@ -1,0 +1,45 @@
+"""An open window keeps the player's input: its focus comes back from the game, its cursor shows again.
+
+Kevin, 2026-10-06: the window behaved as a desktop window, losing its focus to the game. The clear layer around it
+(panel_modal) keeps the clicks; this watch takes the focus back from whatever else takes it while the window is idle,
+such as the console closing just after the window opened, or a return to the game from another program.
+"""
+
+import unrealsdk
+
+from .control_window_hooks import note
+
+MAX_LOGS = 3
+
+
+class FocusWatch:
+    def __init__(self):
+        self.lost = False
+        self.restored = self.shown = 0
+
+    def keep(self, session, busy):
+        """One turn of an open window. Busy is a key choice, or the turn after one: the choice owns the input."""
+        if busy or session.closed or not session.input_changed:
+            self.lost = False
+            return
+        root = session.root()
+        if not (root.HasKeyboardFocus() or root.HasFocusedDescendants()):
+            # Lost two turns in a row: a focus just given can land a frame later, and must not be given twice.
+            if self.lost:
+                self.lost = False
+                session.focus()
+                self.restored += 1
+                if self.restored <= MAX_LOGS:
+                    note(f"focus_restored={self.restored}")
+            else:
+                self.lost = True
+            return
+        self.lost = False
+        pc = session.pc()
+        if not pc.bShowMouseCursor:
+            # A hidden cursor alone is not a lost focus (live click trace, 2026-09-21): only its visibility comes back.
+            pc.bShowMouseCursor = True
+            pc.CurrentMouseCursor = unrealsdk.find_enum("EMouseCursor").Default
+            self.shown += 1
+            if self.shown <= MAX_LOGS:
+                note(f"cursor_visible_restored={self.shown}")

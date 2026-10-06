@@ -15,7 +15,7 @@ from . import family, frame, heirloom, heirloom_settings, holster_settings, keys
 from . import heirloom_choices, inspect_keys
 from . import panel_preferences, parts, restriction, settings
 
-__version__ = "1.0.3"
+__version__ = "1.0.5"
 __author__ = "kevin-hDev"
 
 # Set here: heirloom_settings is read by heirloom, which it cannot import back.
@@ -48,9 +48,9 @@ mod = build_mod(
     description=DESCRIPTIONS[pack.PARTS],
     hooks=[hook for part in parts.PARTS for hook in _BROUGHT[part][0]],
     keybinds=[bind for part in parts.PARTS for bind in _BROUGHT[part][1]],
-    # The window's language, icons and page are hidden options: the SDK menu lists the settings and the keys.
+    # The window's language, icons, page and theme are hidden options: the SDK menu lists the settings and the keys.
     options=[*settings.ALL, *(option for part in parts.PARTS for option in _BROUGHT[part][2]),
-             panel_preferences.language, panel_preferences.controller_icons, panel_preferences.last_page],
+             *panel_preferences.ALL],
     on_enable=parts.mod_on,
     on_disable=parts.mod_off,
 )

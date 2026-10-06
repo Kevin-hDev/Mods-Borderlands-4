@@ -74,5 +74,35 @@ settings.keep_in_bounds()
 check("a value that is not a number goes back to its default", settings.max_speed.value == 125)
 check("a switch is left alone", settings.grip.value is True)
 
+# The camera views (spec section 3.8, Kevin, 2026-10-06).
+check("the six camera views, in the key's order, the game's own by default",
+      settings.VIEWS == ("Far", "Default", "Close", "Closer", "Closest", "Custom")
+      and settings.vehicle_view.identifier == "vehicle_view" and settings.vehicle_view.value == "Default"
+      and settings.vehicle_view.choices == list(settings.VIEWS) and settings.vehicle_view.wrap_enabled)
+check("each fixed view's share of the game's distance to the top of the driver, trial 4's and Closest",
+      settings.VIEW_SHARES == {"Far": 1.35, "Close": 0.7, "Closer": 0.5, "Closest": 0.35})
+custom = [(option.identifier, option.display_name, option.value, option.args, option.kwargs.get("step"))
+          for option in settings.CUSTOM]
+check("the Custom view's three sliders, at 0, by tens", custom == [
+    ("custom_forward", "Custom forward/back", 0, (-500, 500), 10),
+    ("custom_side", "Custom left/right", 0, (-300, 300), 10),
+    ("custom_height", "Custom up/down", 0, (-300, 300), 10),
+])
+check("the camera settings: the view, then the three sliders",
+      settings.CAMERA_OPTIONS == [settings.vehicle_view, *settings.CUSTOM])
+check("the key goes through every view and comes back to the first",
+      [settings.next_view(view) for view in settings.VIEWS] == ["Default", "Close", "Closer", "Closest", "Custom", "Far"])
+check("a view the file does not know counts as the game's", settings.next_view("Hood") == "Close")
+settings.vehicle_view.value = "Hood"
+check("and is shown as the game's own", settings.current_view() == "Default")
+settings.vehicle_view.value = "Default"
+settings.custom_forward.value, settings.custom_side.value, settings.custom_height.value = 200, -30, 90
+check("the Custom offset: forward, right, up", settings.custom_offset() == (200.0, -30.0, 90.0))
+settings.custom_height.value = 900
+told = settings.keep_in_bounds()
+check("a Custom slider beyond its bounds is brought back too, and said so",
+      settings.custom_height.value == 300 and told == ["setting custom_height=900 outside -300-300, set to 300"])
+check("the view is never taken for a slider", settings.vehicle_view.value == "Default")
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

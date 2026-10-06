@@ -1,6 +1,6 @@
 # Apex Grapple
 
-Version **1.0.6** — an Apex Legends inspired grapple for Borderlands 4.
+Version **1.0.7** — an Apex Legends inspired grapple for Borderlands 4.
 
 Aim at a surface and pull toward it while steering in the air. Let go to carry your momentum. The mod uses the game's grapple effects and hand animation with its own pulling movement.
 
@@ -17,6 +17,7 @@ Each Apex shot uses the game's existing stamina bar, shared with dash and glide.
 - Adjust shooting, pulling and letting go, or restore the defaults. The window remembers your last tab when reopened, including after a game restart.
 - English is the default interface language; French is available in the menu.
 - In Controls, capture a keyboard, mouse or controller button directly. Extra mouse buttons are supported when reported by the game. You can also configure two buttons held together; individual buttons retain their normal action when pressed alone.
+- In Controls, you can also grapple by holding the key: one switch for keyboard and one for controller, both off by default, with a hold time of 0.4 s by default. A quick tap on the melee key still punches, and a grapple fired by a hold pulls all the way.
 - Escape and the configured console-opening keys are reserved. PlayStation and Xbox button display styles are available, with PlayStation as the default.
 
 ## Installation

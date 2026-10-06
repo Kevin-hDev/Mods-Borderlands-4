@@ -1,5 +1,5 @@
 """Every setting of the mod, with its default and bounds (spec section 2, validated by Kevin on 2026-09-18, the 1.0.3
-ones on 2026-10-03).
+ones on 2026-10-03, the camera views on 2026-10-06).
 
 Percentages of the game's own value, 100 being the game's, so that each effect turns off on its own: Kevin's rule for
 Apex Movement, every movement can be turned off alone. The defaults are session 9's ("c'est nickel, on a ce qu'il
@@ -9,7 +9,7 @@ push in the air adds to the game's, so 0 is the game's.
 
 import math
 
-from mods_base import BoolOption, SliderOption
+from mods_base import BoolOption, SliderOption, SpinnerOption
 
 # Up to 300 (Kevin, 2026-09-19), once 250 typed past the old top of 200 had been driven with.
 max_speed = SliderOption(
@@ -84,6 +84,38 @@ OPTIONS = [max_speed, acceleration, turn_speed, jump_height, reverse_speed, grip
 FACTORS = {"max_speed": max_speed, "acceleration": acceleration, "turn_speed": turn_speed, "jump_height": jump_height,
            "reverse_speed": reverse_speed, "weapon_damage": weapon_damage}
 
+# The camera views at the wheel, in the order the view key goes through them (spec section 3.8, Kevin, 2026-10-06).
+VIEWS = ("Far", "Default", "Close", "Closer", "Closest", "Custom")
+DEFAULT_VIEW = "Default"
+CUSTOM_VIEW = "Custom"
+# Each fixed view's camera distance to the top of the driver, in share of the game's. Far, Close and Closer are trial
+# 4's (docs/investigations/vehicle_driving/camera/2026-10-06-distance-camera-vehicule.md, Kevin: "c'est parfait");
+# Closest was added after it, one more step of about 0.7.
+VIEW_SHARES = {"Far": 1.35, "Close": 0.7, "Closer": 0.5, "Closest": 0.35}
+vehicle_view = SpinnerOption(
+    "vehicle_view", DEFAULT_VIEW, list(VIEWS), wrap_enabled=True,
+    display_name="Vehicle view",
+    description="The camera view at the wheel.",
+)
+# In game units, 1 = 1 cm: the game's camera sits about 650 from the top of the driver (trial 4).
+custom_forward = SliderOption(
+    "custom_forward", 0, -500, 500, step=10, is_integer=True,
+    display_name="Custom forward/back",
+    description="Custom view: camera forward (+) or back (-).",
+)
+custom_side = SliderOption(
+    "custom_side", 0, -300, 300, step=10, is_integer=True,
+    display_name="Custom left/right",
+    description="Custom view: camera right (+) or left (-).",
+)
+custom_height = SliderOption(
+    "custom_height", 0, -300, 300, step=10, is_integer=True,
+    display_name="Custom up/down",
+    description="Custom view: camera up (+) or down (-).",
+)
+CUSTOM = [custom_forward, custom_side, custom_height]
+CAMERA_OPTIONS = [vehicle_view, *CUSTOM]
+
 
 def keep_in_bounds() -> list[str]:
     """Brings every slider back within its bounds, and a value that is not a number back to its default.
@@ -92,7 +124,7 @@ def keep_in_bounds() -> list[str]:
     [100-200], was taken and driven with (2026-09-19). Run before the values are read, so none outside reaches the game.
     """
     told: list[str] = []
-    for option in OPTIONS:
+    for option in (*OPTIONS, *CUSTOM):
         if getattr(option, "min_value", None) is None:
             continue
         value = float(option.value)
@@ -121,3 +153,19 @@ def push_strength() -> float:
 def loss_per_degree() -> float:
     """The share of speed lost for each degree the grip turns, so that a 90 degree turn loses turn_loss percent."""
     return 1.0 - (1.0 - turn_loss.value / 100.0) ** (1.0 / 90.0)
+
+
+def current_view() -> str:
+    """The view to show at the wheel; a name the settings file does not know is the game's own."""
+    return vehicle_view.value if vehicle_view.value in VIEWS else DEFAULT_VIEW
+
+
+def next_view(view: str) -> str:
+    """The view the key goes to after this one; after the last comes the first."""
+    index = VIEWS.index(view) if view in VIEWS else VIEWS.index(DEFAULT_VIEW)
+    return VIEWS[(index + 1) % len(VIEWS)]
+
+
+def custom_offset() -> tuple[float, float, float]:
+    """The Custom view's offset in the camera's axes: forward, right, up."""
+    return float(custom_forward.value), float(custom_side.value), float(custom_height.value)

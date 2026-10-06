@@ -25,6 +25,11 @@ class Form:
         widgets = self.resolve()
         return any(widgets[name].GetIsSelectingKey() for name in ("first", "second"))
 
+    @staticmethod
+    def escape():
+        """Escape closes the window as the Close button does (control_escape): each key is saved when chosen."""
+        return True
+
     def clear(self, widgets):
         empty = unrealsdk.make_struct("InputChord", Key=unrealsdk.make_struct("Key", KeyName="None"))
         for name in ("first", "second"):

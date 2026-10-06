@@ -1,16 +1,17 @@
 """Vehicle Driving: livelier vehicles in Borderlands 4, with top speed, acceleration, turning, jump height, grip,
-reverse, boost, toughness and weapon damage.
+reverse, boost, toughness, weapon damage and camera views.
 
-Installs beside Apex Movement: its own package name, hook identifier and settings file, no key bound, and no game
-value in common (spec section 4, Kevin's requirement of 2026-09-18).
+Installs beside Apex Movement: its own package name, hook identifier and settings file, one key of its own (the camera
+view's, never blocked), and no game value in common (spec section 4, Kevin's requirement of 2026-09-18).
 """
 
 from mods_base import build_mod
+from .settings_persistence import AtomicMod
 
-from . import frame, panel_open, panel_preferences, report, settings
+from . import command_keys, frame, panel_open, panel_preferences, report, settings, view_key
 from .vehicle_unlock_runtime import runtime as vehicle_runtime
 
-__version__ = "1.0.4"
+__version__ = "1.0.6"
 __author__ = "kevin-hDev"
 
 
@@ -18,6 +19,8 @@ def _on_enable() -> None:
     report.reset()
     for line in settings.keep_in_bounds():
         report.warning(line)
+    # mods_base enables the mod after loading its settings: the view key's bind takes its option's key.
+    command_keys.KEYS.align()
     report.note(f"enabled, version {__version__}")
     vehicle_runtime.protection_runtime.start('vehicle_driving')
 
@@ -33,10 +36,12 @@ def _on_disable() -> None:
 
 
 mod = build_mod(
+    cls=AtomicMod,
     name="Vehicle Driving",
     # Every setting stays a top-level key: the six of 1.0 load unchanged, and a 1.0 file leaves the new ones at their
     # defaults (mods_base's load_options_dict skips a key the file lacks).
-    options=[*settings.OPTIONS, *panel_preferences.ALL],
+    options=[*settings.OPTIONS, *settings.CAMERA_OPTIONS, *view_key.OPTIONS, *panel_preferences.ALL],
+    keybinds=view_key.BINDS,
     hooks=[frame.tick],
     on_enable=_on_enable,
     on_disable=_on_disable,

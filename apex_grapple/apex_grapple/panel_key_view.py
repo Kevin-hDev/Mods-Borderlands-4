@@ -17,7 +17,7 @@ def selector(owner, widgets, name):
     native = widgets[name]
     w.layer(overlay, native)
     w.layer(overlay, icon(overlay, widgets, f"{name}:icon"), halign="Center", valign="Center")
-    label = tx.text(overlay, "", "gold", center=True)
+    label = tx.text(overlay, "", "key", center=True)
     label.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
     widgets[f"{name}:key_label"] = label
     w.layer(overlay, label, halign="Center", valign="Center")

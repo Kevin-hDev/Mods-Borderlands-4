@@ -42,11 +42,14 @@ movement.control_window_clock.shared = lambda: clock
 factory = ModuleType(f"{name}.panel_factory")
 factory.PanelBindings = lambda: NS(prepare=lambda: True, ready=lambda: True)
 root = NS(RemoveFromParent=lambda: f.events.append("movement_removed"),
-          SetKeyboardFocus=lambda: f.events.append("movement_focus"))
+          SetKeyboardFocus=lambda: f.events.append("movement_focus"),
+          HasKeyboardFocus=lambda: False, HasFocusedDescendants=lambda: True)
 form = NS(focus=lambda: root, poll=lambda: False, selecting=lambda: False)
 factory.build = lambda *args: (root, form)
-factory.panel_view = NS(viewport_slot=lambda: NS())
 sys.modules[factory.__name__] = factory
+modal = ModuleType(f"{name}.panel_modal")
+modal.viewport_slot = lambda: NS()
+sys.modules[modal.__name__] = modal
 movement.control_console_handoff.create = f.window.control_console_handoff.create
 f.state.pc = NS(OakCharacter=object(), bShowMouseCursor=True, CurrentMouseCursor=0)
 f.events.clear()

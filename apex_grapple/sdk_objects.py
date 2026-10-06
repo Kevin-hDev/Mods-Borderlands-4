@@ -157,6 +157,7 @@ class FakeArms:
 def player(character: Any, mappings: list) -> Any:
     return types.SimpleNamespace(
         OakCharacter=character,
+        Player=types.SimpleNamespace(Name="LocalPlayer"),
         PlayerInput=types.SimpleNamespace(EnhancedActionMappings=mappings),
         # None on purpose: game.aim then falls back to the eyes, the path every test walks unless it
         # sets a camera of its own.

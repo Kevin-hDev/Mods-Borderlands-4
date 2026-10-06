@@ -40,17 +40,20 @@ sys.modules["console_mod_menu"].screens = screens
 page = ModScreen(f.mod)
 screens.screen_stack = [page]
 f.control_menu.MENU.on_press = lambda button: opened.append(button)
+# Lines by position, as the console numbers them: a page added before the button moves it (hold_menu, 2026-10-06).
+MENU_LINE = str(page.drawn_options.index(f.control_menu.MENU) + 1)
+RESET_LINE = str(next(i for i, o in enumerate(page.drawn_options, 1) if o.identifier == "restore_defaults"))
 
 # The real SDK adds a Press page before invoking ButtonOption.on_press.
-assert page.handle_option_input("4") and len(pushed) == 1 and not opened
+assert page.handle_option_input(MENU_LINE) and len(pushed) == 1 and not opened
 pushed.clear()
 tuple(f.mod.iter_display_options())
-assert page.handle_option_input("4") and opened == [f.control_menu.MENU] and not pushed
+assert page.handle_option_input(MENU_LINE) and opened == [f.control_menu.MENU] and not pushed
 assert screens.screen_stack == [page]
 handler = page.handle_option_input
 tuple(f.mod.iter_display_options())
 assert page.handle_option_input is handler
-assert page.handle_option_input("5") and len(pushed) == 1  # Reset keeps its normal confirmation page.
+assert page.handle_option_input(RESET_LINE) and len(pushed) == 1  # Reset keeps its normal confirmation page.
 assert not page.handle_option_input("unknown")
 
 other = ModScreen(object())

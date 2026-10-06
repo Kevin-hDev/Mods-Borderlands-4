@@ -40,14 +40,14 @@ def running() -> tuple[bool, bool]:
 
 mod = state["mods"][0]
 check("one mod is built, Apex Heirloom 1.0.3", len(state["mods"]) == 1 and mod.kwargs["name"] == "Apex Heirloom"
-      and apex_heirloom.__version__ == "1.0.3")
+      and apex_heirloom.__version__ == "1.0.5")
 check("the heirloom's two inspection keys, then the holster's two keys, are given to the SDK",
       mod.kwargs["keybinds"] == [inspect_keys.keyboard_bind, inspect_keys.controller_bind, keys.keyboard_bind,
                                  keys.controller_bind])
 check("both parts' settings and all four keys are given to the SDK, the window's own preferences last",
       mod.kwargs["options"] == [*settings.ALL, inspect_keys.keyboard_key, inspect_keys.controller_key,
                                 keys.keyboard_key, keys.controller_key, prefs.language, prefs.controller_icons,
-                                prefs.last_page]
+                                prefs.last_page, prefs.theme]
       and heirloom_settings.heirloom in settings.ALL and holster_settings.holster in settings.ALL)
 check("no inspection key by default, neither keyboard nor controller (Kevin, 2026-09-30)",
       inspect_keys.keyboard_bind.key is None and inspect_keys.controller_bind.key is None

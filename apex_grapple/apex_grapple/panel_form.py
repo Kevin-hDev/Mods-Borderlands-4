@@ -4,7 +4,7 @@ import time
 
 from .control_form import Form
 from .control_bindings import RESERVED
-from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t
+from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t, panel_theme_choice
 from . import panel_key_display
 
 
@@ -16,6 +16,7 @@ class PanelForm(Form):
         self.model, self.page, self.notice = model, t.PAGES.index(model.page), "ready"
         self.pending, self.shown = {}, {}
         self.changed_at = 0
+        self.redraw = False  # set by a theme change; the window's session then draws it again
         self.focus = widgets["focus"]
         self.key_display = panel_key_display.Display()
         self.sync(self.resolve())
@@ -48,6 +49,10 @@ class PanelForm(Form):
         self.notice = "saved" if success else "failed"
         self.sync(widgets)
         return success
+
+    def escape(self):
+        """Escape closes the window as the Close button does, saving what is still pending (control_escape)."""
+        return self.flush(self.resolve())
 
     def read_changes(self, widgets, now):
         for key, option in self.model.options.items():
@@ -88,6 +93,7 @@ class PanelForm(Form):
         key = "controls_saved" if success else "invalid_keys"
         if message == "Default grapple controls restored.":
             key = "controls_reset"
+            self.sync(widgets)  # The reset also put back the hold rows shown above the keys.
         elif message == "Could not save. Previous controls kept.":
             key = "failed"
         elif message == RESERVED:
@@ -101,6 +107,9 @@ class PanelForm(Form):
         self.read_changes(widgets, now)
         if self.take(widgets["close"]):
             return self.flush(widgets)
+        if self.take(widgets["theme"]):
+            panel_theme_choice.choose(self, widgets)
+            return False
         for language in ("EN", "FR"):
             if self.take(widgets[language]):
                 if self.flush(widgets) and self.model.change_language(language):
@@ -130,7 +139,8 @@ class PanelForm(Form):
                     return False
                 operation = self.model.toggle_enabled if name == "enabled" else getattr(self.model, name)
                 success = operation()
-                self.notice = {"restore": "restored", "undo": "undone", "enabled": "saved"}[name] if success else "failed"
+                self.notice = ({"restore": "restored", "undo": "undone", "enabled": "saved"}[name] if success
+                               else self.model.toggle_notice if name == "enabled" else "failed")
                 if success and name in ("restore", "undo"):
                     self.two = False
                     widgets["two"].SetIsChecked(False)

@@ -49,7 +49,7 @@ class Rope:
         rope_effects.reset()
         self.state = IDLE
         self.anchor = (0.0, 0.0, 0.0)
-        self.key_down = False
+        self._release_lets_go = True
         self._pressed_ns = 0
         self._contact_ns = 0
         self._started_ns = 0
@@ -69,9 +69,8 @@ class Rope:
     def busy(self) -> bool:
         return self.state != IDLE
 
-    def fire(self, character: Any, now_ns: int, native_action: bool = True) -> bool:
+    def fire(self, character: Any, now_ns: int, native_action: bool = True, held: bool = False) -> bool:
         """Answers whether the mod takes the key. False leaves it to the game, which punches."""
-        self.key_down = True
         if self.busy:
             # A second press during a shot calls it off rather than stacking a second rope.
             self.let_go("cancelled", now_ns)
@@ -97,6 +96,8 @@ class Rope:
         self.anchor = shot.anchor
         self.state = FLYING
         self._pressed_ns = now_ns
+        # A shot fired by a hold pulls all the way: the hold was its trigger (Kevin, 2026-10-06).
+        self._release_lets_go = not held
         self._started_ns = now_ns
         flight_s = shot.distance / max(1.0, float(settings.hook_speed.value))
         self._contact_ns = now_ns + int(flight_s * NS_PER_S)
@@ -106,8 +107,8 @@ class Rope:
 
     def key_up(self, now_ns: int) -> None:
         """A tap keeps its pull at any distance; releasing a held key ends an attached pull."""
-        self.key_down = False
-        if self.holds and bool(settings.release_on_key_up.value) and release.held_key(self._pressed_ns, now_ns):
+        lets_go = self._release_lets_go and bool(settings.release_on_key_up.value)
+        if self.holds and lets_go and release.held_key(self._pressed_ns, now_ns):
             self.let_go("key released", now_ns)
 
     def update(self, character: Any, now_ns: int) -> None:

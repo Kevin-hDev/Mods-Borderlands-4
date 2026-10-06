@@ -83,7 +83,7 @@ def names(model):
     its selector, its NONE and its value, then the icons and the reset."""
     found = {"focus", "pages", "settings_caption", "meta", "notice", "escape_hint", "tag", "icons_label",
              "commands_status"}
-    buttons = ["EN", "FR", "close", "restore", "undo", "enabled", "commands_reset", "icons:PS5", "icons:XSX"]
+    buttons = ["theme", "EN", "FR", "close", "restore", "undo", "enabled", "commands_reset", "icons:PS5", "icons:XSX"]
     buttons += [f"nav:{page}" for page in panel_theme.PAGES]
     for cards in menu.CARDS.values():
         for card, _ in cards:

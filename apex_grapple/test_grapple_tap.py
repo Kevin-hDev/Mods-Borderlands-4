@@ -34,7 +34,7 @@ for distance in (50, 75, 101, 150, 203, 256, 441, 2000):
     if contact <= lifted:
         rope.update(player, contact)
     rope.key_up(lifted)
-    check(f"{distance} cm: a 110 ms tap keeps the shot alive", rope.busy and not rope.key_down)
+    check(f"{distance} cm: a 110 ms tap keeps the shot alive", rope.busy)
     if contact > lifted:
         rope.update(player, contact)
     check(f"{distance} cm: tap preserves hands and rope",
@@ -73,6 +73,18 @@ rope.update(player, 4 * SECOND + int(.03 * SECOND))
 rope.key_up(4 * SECOND + int(.11 * SECOND))
 check("a new shot after reset gets its own press duration", rope.holds)
 rope.reset()
+
+# Hold mode fires once the key was held: that hold was the trigger, so its release, however late, keeps the pull.
+rope.fire(player, 6 * SECOND, held=True)
+rope.update(player, 6 * SECOND + int(.03 * SECOND))
+rope.key_up(7 * SECOND)
+check("a shot fired by a hold keeps pulling after its key is released", rope.holds)
+rope.fire(player, 7 * SECOND + int(.1 * SECOND))
+check("and a new press still lets it go", not rope.busy)
+rope.fire(player, 8 * SECOND)
+rope.update(player, 8 * SECOND + int(.03 * SECOND))
+rope.key_up(9 * SECOND)
+check("the next normal shot lets go on a held release again", not rope.busy)
 
 print(f"RESULTAT: {len(failures)} failures")
 sys.exit(bool(failures))

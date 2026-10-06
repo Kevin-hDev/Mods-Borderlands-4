@@ -10,7 +10,7 @@ TEXT = {
     "refused_part": "Another installed file already runs this part. Turn it off first.",
     # The COMMANDS page's cards (sketch I1, 2026-09-30), each row worded by its device, as the sketch.
     "command_put_away": "PUT AWAY",
-    "command_put_away_desc": "The key that puts your weapon away. Greyed out while Holster is OFF.",
+    "command_put_away_desc": "The key that puts your weapon away, held or pressed. Greyed out while Holster is OFF.",
     "command_inspect": "ANIMATION",
     "command_inspect_desc": "Spin your heirloom in your hand while your weapon is put away. Greyed out while Heirloom "
                             "is OFF.",

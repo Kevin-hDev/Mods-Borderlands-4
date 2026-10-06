@@ -220,5 +220,47 @@ check("and the grip goes on", len(pusher.Mesh.sets) > 1)
 state["ground"].below = 60.0
 frame.stop_all()
 
+# The camera views (spec section 3.8).
+watcher = sdk_stubs.Vehicle("OakVehicle_8", driver, yaw=90.0)
+camera = sdk_stubs.CameraManager()
+held = camera.CameraModeState.CameraLocationOffset
+state["pc"] = types.SimpleNamespace(Pawn=watcher, PlayerCameraManager=camera)
+frame.on_frame(30_000 * MS)
+check("in the game's view the camera is left alone", (held.X, held.Y, held.Z) == (0.0, 0.0, 0.0))
+settings.vehicle_view.value = "Close"
+frame.on_frame(30_050 * MS)
+check("a view chosen is written at the next frame, and said once",
+      held.X != 0.0 and state["misc"].count("[Vehicle Driving] camera view Close") == 1)
+settings.vehicle_view.value = "Custom"
+settings.custom_forward.value = 900
+camera.draw()
+frame.on_frame(30_500 * MS)
+check("Custom's sliders are read at the check, brought back within bounds",
+      settings.custom_forward.value == 500 and held.X == 500.0)
+state["pc"] = ON_FOOT
+frame.on_frame(31_000 * MS)
+check("getting out takes our value back", (held.X, held.Y, held.Z) == (0.0, 0.0, 0.0))
+
+settings.vehicle_view.value = "Close"
+faulty = sdk_stubs.CameraManager()
+faulty.CameraModeState = None
+state["pc"] = types.SimpleNamespace(Pawn=watcher, PlayerCameraManager=faulty)
+frame.on_frame(32_000 * MS)
+frame.on_frame(32_050 * MS)
+check("a camera that raises stops alone and is reported once",
+      sum("camera stopped until the next vehicle" in line for line in state["errors"]) == 1)
+check("and the values still hold", jump(watcher) == 330.0)
+
+ninth = sdk_stubs.Vehicle("OakVehicle_9", driver, yaw=90.0)
+kept = sdk_stubs.CameraManager()
+state["pc"] = types.SimpleNamespace(Pawn=ninth, PlayerCameraManager=kept)
+frame.on_frame(33_000 * MS)
+written = kept.CameraModeState.CameraLocationOffset.X
+frame.stop_all()
+check("switching the mod off takes the camera's value back too",
+      written != 0.0 and kept.CameraModeState.CameraLocationOffset.X == 0.0)
+settings.vehicle_view.value = "Default"
+settings.custom_forward.value = 0
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

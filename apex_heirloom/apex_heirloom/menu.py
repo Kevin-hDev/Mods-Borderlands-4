@@ -14,8 +14,8 @@ heirloom_page = NestedOption(
     display_name="Heirloom", description="Your heirloom in your right hand when your weapon is put away.",
 )
 holster_page = NestedOption(
-    "holster_menu", list(holster_settings.ALL),
-    display_name="Holster", description="How each key puts your weapon away.",
+    "holster_menu", [holster_settings.holster],
+    display_name="Holster", description="Whether your keys put your weapon away.",
 )
 ALL = MENU = [heirloom_page, holster_page]
 
@@ -43,6 +43,11 @@ DEPENDS_ON = {**(_HEIRLOOM_ROWS if _RUNS_HEIRLOOM else {}), **(_HOLSTER_ROWS if 
 # (Kevin, 2026-09-26: « oui on grise aussi »), INSPECT with the heirloom (Kevin, 2026-09-30, sketch I1). By command,
 # as DEPENDS_ON: one of each tuple's switches on.
 COMMANDS_DEPEND_ON = {command.name: ((command.part,),) for command in control_config.COMMANDS}
+# The settings of a card's keys, shown on it under its rows and put back with the keys by RESET CONTROLS (Kevin,
+# 2026-10-06: the hold is a key setting, « ce sont des réglages de touches assignables »). By command, those this file
+# runs only, as COMMANDS_DEPEND_ON.
+COMMAND_SETTINGS = {command.name: holster_settings.HOLD_SETTINGS for command in control_config.COMMANDS
+                    if command.name == "put_away"}
 # Said at the top of a page, always in view: the heirloom's settings wait for the next weapon change (Kevin,
 # 2026-09-26, sketch A). By page, the text's key in panel_en.py and panel_fr.py.
 NOTICES = {"heirloom": "applies"}

@@ -38,8 +38,8 @@ check("the pages are named in both languages, each with its description",
       panel_i18n.text("holster", "EN") == "HOLSTER" and panel_i18n.text("holster", "FR") == "RANGEMENT"
       and panel_i18n.text("controls", "EN") == "CONTROLS" and panel_i18n.text("controls", "FR") == "COMMANDES"
       and panel_i18n.text("heirloom", "EN") == panel_i18n.text("heirloom", "FR") == "HEIRLOOM"
-      and panel_i18n.group_text(menu.holster_page, "holster", "EN") == "How each key puts your weapon away."
-      and panel_i18n.group_text(menu.holster_page, "holster", "FR") == "Comment chaque touche range ton arme."
+      and panel_i18n.group_text(menu.holster_page, "holster", "EN") == "Whether your keys put your weapon away."
+      and panel_i18n.group_text(menu.holster_page, "holster", "FR") == "Si tes touches rangent ton arme."
       and panel_i18n.group_text(menu.heirloom_page, "heirloom", "FR")
       == "Ton heirloom dans ta main droite quand ton arme est rangée.")
 check("every setting of both parts has its French words",

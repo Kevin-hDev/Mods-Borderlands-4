@@ -1,7 +1,8 @@
 """Binds the grapple key and the jump key through the SDK, so the mod sees each press before the game.
 
 The grapple key is the one the mod must answer for: a press that ends in a grapple is kept from the
-game, and a press that does not is handed straight to it, which is how the punch survives.
+game, and a press that does not is handed straight to it, which is how the punch survives. In hold mode
+(key_hold.py) the press is kept until the hold time decides, and a tap is given back as a press of its action.
 
 Jump releases an attached rope. By default that press is consumed so it spends no extra jump;
 the next press jumps normally. JumpCurrentCount and JumpMaxCount remain owned by Apex Movement.
@@ -18,7 +19,8 @@ from typing import Any
 from mods_base import keybind
 from unrealsdk.hooks import Block
 
-from . import control_window, control_config, game, game_grapple, game_target, input_list, report, session, settings
+from . import control_window, control_config, game, game_grapple, game_target, input_list, key_hold, melee_press
+from . import report, session, settings
 from .control_chords import Chords
 
 PRESSED = "IE_Pressed"
@@ -59,7 +61,9 @@ def _on_grapple(key: str, native_action: bool) -> Any:
             name = _event_name(event)
             if name != PRESSED:
                 _, released = _chords.feed(key, name)
-                if released:
+                if released and key_hold.pending():
+                    key_hold.released()
+                elif released:
                     _rope.key_up(time.perf_counter_ns())
                 return _after_press(key, name)
             now_ns = time.perf_counter_ns()
@@ -75,6 +79,11 @@ def _on_grapple(key: str, native_action: bool) -> Any:
                 # when that point is really there — otherwise the mod's own grapple runs as before.
                 _blocked.discard(key)
                 return None
+            if key_hold.wanted(key) and not _rope.busy:
+                # A press during a shot still calls it off at once; only a new shot waits for the hold time.
+                key_hold.start(key, now_ns, native_action)
+                _blocked.add(key)
+                return Block
             if not _rope.fire(character, now_ns, native_action=native_action):
                 _blocked.discard(key)
                 return None
@@ -185,6 +194,8 @@ def unbind() -> None:
     _keys = (frozenset(), frozenset())
     _blocked.clear()
     _chords.clear()
+    key_hold.forget()
+    melee_press.forget()
     count = len(_binds)
     for bound in tuple(_binds):
         try:
@@ -201,13 +212,16 @@ def forget_input() -> None:
     """No held chord may survive a possession change or a stopped session."""
     _chords.clear()
     _blocked.clear()
+    key_hold.forget()
 
 
 def observe(now_ns: int) -> None:
-    """Menus suppress SDK releases; discard incomplete chords after menus or suspended frames."""
+    """Menus suppress SDK releases; discard incomplete chords and held presses after menus or suspended frames."""
     global _input_frame_ns
     gap = _input_frame_ns and now_ns - _input_frame_ns > control_config.INPUT_GAP_NS
     _input_frame_ns = now_ns
+    if key_hold.pending() and (gap or bool(getattr(game.controller(), "bShowMouseCursor", False))):
+        key_hold.forget()
     if _chords.down and any(len(group) == 2 for group in _groups):
         if gap or bool(getattr(game.controller(), "bShowMouseCursor", False)):
             # Preserve release ownership for an existing pull, but require a fresh combination.

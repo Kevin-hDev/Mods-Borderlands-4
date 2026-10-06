@@ -30,8 +30,11 @@ def visit(node):
 
 
 # The garbage collector removed a bare ScaleBox 35 to 50 s after opening: a UserWidget must hold the window.
-check(root.kind == "UserWidget" and root.WidgetTree.RootWidget.kind == "ScaleBox", "A UserWidget holds the window")
-visit(root.WidgetTree.RootWidget)
+screen = root.WidgetTree.RootWidget
+check(root.kind == "UserWidget" and screen.kind == "CanvasPanel"
+      and [child.kind for child in screen.children] == ["BackgroundBlur", "ScaleBox"],
+      "A UserWidget holds the window, over the blurring layer of panel_modal (test_panel_modal.py)")
+visit(screen)
 icon_overlays = [node for node in fixture.created if node.kind == "Overlay" and node.children
                 and node.children[0].kind == "InputKeySelector"]
 check(len(icon_overlays) == 2, "One controller icon overlay per native selector")
@@ -83,10 +86,6 @@ form.poll()
 check(widgets["close_label"].text == "FERMER" and widgets["setting:show_rope_label"].text == "OUI", "French texts")
 check(widgets["FR_fill"].brush == gold, "The active language is the gold one")
 check(widgets["first"].placeholder == "1. CHOISIR UNE TOUCHE" and not widgets["second"].enabled, "Key capture")
-slot = panel_view.viewport_slot()
-width = (t.WINDOW_WIDTH + t.SHADOW_XL) / t.STAGE_WIDTH
-check(abs(slot.Anchors.Minimum.X - (1 - width) / 2) < 1e-9 and abs(slot.Anchors.Maximum.X - (1 + width) / 2) < 1e-9,
-      "The window keeps the mockup's share of the screen")
 check(t.rgba("000000") == (0.0, 0.0, 0.0, 1.0) and t.rgba("ffffff") == (1.0, 1.0, 1.0, 1.0), "sRGB conversion")
 check("settings window: fonts=body+title, avatar=hidden" in " ".join(fixture.pf.f.state["misc"]), "Load report line")
 w.cosmetic("probe", lambda: (_ for _ in ()).throw(AttributeError("missing")))
@@ -120,6 +119,29 @@ check(all(brush is not None and brush.DrawAs == "ESlateBrushDrawType.RoundedBox"
           and brush.OutlineSettings.RoundingType == "ESlateBrushRoundingType.HalfHeightRadius"
           for brush in round_parts), "The gear's ring and hole are discs, as in the mockup")
 check("choice" not in b.KINDS, "Language choices reuse the ON/OFF switch, as in the mockup")
+
+
+def inside(node, widget):
+    return node is widget or any(inside(child, widget) for child in node.children)
+
+
+slanted = [node for node in fixture.created if node.attributes.get("SetRenderShear") == (w.vector(t.SLANT, 0.0),)]
+check(any(inside(node, shared["options"]) for node in slanted),
+      "The gear is slanted as every other button, its icon with it (2026-10-06)")
+# Kevin, 2026-10-06: the room right of a card's plate was empty and its sentence took a line of its own under it.
+heads = [node for node in fixture.created if node.kind == "HorizontalBox" and widgets["group:shot"] in node.children]
+check(len(heads) == 1 and heads[0].children.index(widgets["group:shot"]) == 1
+      and inside(heads[0].children[0], widgets["heading:shot"]) and heads[0].children[0] in slanted,
+      "A card's sentence sits right of its slanted title plate, on the same line")
+check(len(heads) == 1 and "SetSize" in heads[0].slots[1].attributes
+      and widgets["group:shot"].attributes.get("SetAutoWrapText") == (True,),
+      "The sentence takes the rest of the line and wraps there")
+
+# Kevin, 2026-10-06: the hold mode is a key setting, shown on the CONTROLS page under the controller icons.
+pages = widgets["pages"].children
+check(all(inside(pages[3], widgets[f"setting:{name}"]) and not inside(pages[0], widgets[f"setting:{name}"])
+          for name in ("keyboard_hold", "controller_hold", "hold_time")),
+      "The hold mode's rows are on the CONTROLS page, not THE SHOT")
 
 for message in failures:
     print("FAILED |", message)

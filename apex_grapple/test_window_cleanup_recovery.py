@@ -25,7 +25,7 @@ original = item.same_context
 item.same_context = fail
 item.close("error")
 assert "removed" in f.events and not registered["command"]
-assert registered["hook"]  # The owned callback drives bounded recovery.
+assert "game_input" in f.events and not registered["hook"]
 item.same_context = original
 item.poll(f.window.time.perf_counter_ns() + 1_000_000_000)
 assert "game_input" in f.events and not registered["hook"]

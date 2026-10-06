@@ -53,7 +53,7 @@ pf.f.mod.fail_save = True
 w["close"].checked = True
 assert not form.poll()
 assert settings.pull_strength.value == 2.6 and w["setting:pull_strength"].value == 2.6
-assert "Échec" in w["notice"].text
+assert "Impossible d’enregistrer" in w["notice"].text
 pf.f.mod.fail_save = False
 w["restore"].checked = True
 form.poll()
@@ -64,4 +64,25 @@ form.poll()
 assert settings.pull_strength.value == 2.6 and not w["undo"].enabled
 w["close"].checked = True
 assert form.poll()
-print("OK | full menu: no opening writes, delayed save, navigation, FR, chords, failures, reset undo")
+# Escape closes as the Close button does (control_escape): a failed save keeps the window open, a pending change is
+# saved before it closes.
+w["setting:pull_strength"].value = 3.0
+form.poll()
+pf.f.mod.fail_save = True
+assert not form.escape() and settings.pull_strength.value == 2.6
+pf.f.mod.fail_save = False
+w["setting:pull_strength"].value = 3.0
+form.poll()
+assert form.escape() and settings.pull_strength.value == 3.0
+# The hold mode sits on the CONTROLS page and the keys' reset puts it back, its switch redrawn (Kevin, 2026-10-06).
+assert form.page == panel_theme.PAGES.index("controls")
+w["setting:controller_hold"].checked = True
+form.poll()
+clock[0] += panel_theme.SAVE_DELAY_NS
+form.poll()
+assert settings.controller_hold.value is True and w["setting:controller_hold_label"].text == "OUI"
+w["reset"].checked = True
+form.poll()
+assert settings.controller_hold.value is False and w["setting:controller_hold_label"].text == "NON"
+assert w["status"].text == "Commandes du grappin restaurées."
+print("OK | full menu: no opening writes, delayed save, navigation, FR, chords, failures, reset undo, Escape, hold reset")

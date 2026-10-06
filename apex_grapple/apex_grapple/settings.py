@@ -123,6 +123,26 @@ punch_range = SliderOption(
     display_name="Punch range",
     description="An enemy closer than this gets punched.",
 )
+# Hold mode (key_hold.py), one switch per device as Tidy Weapons, both off so the press keeps grappling at once. Shown
+# on the CONTROLS page (Kevin, 2026-10-06: "ce sont des réglages de touches assignables"), and put back with the keys.
+keyboard_hold = BoolOption(
+    "keyboard_hold", False,
+    display_name="Keyboard: Hold to grapple",
+    description="Hold the key to grapple; a tap on the melee key punches.",
+)
+controller_hold = BoolOption(
+    "controller_hold", False,
+    display_name="Controller: Hold to grapple",
+    description="Hold the button to grapple; a tap on the melee button punches.",
+)
+# 0.4 s by default (Kevin, 2026-10-06: "0,2 seconde c'est quasiment rien, un clic peut facilement durer autant"), within
+# Tidy Weapons' bounds.
+hold_time = SliderOption(
+    "hold_time", 0.4, 0.2, 1.0, step=0.05, is_integer=False,
+    display_name="Hold time",
+    description="How long to hold, in seconds.",
+)
+HOLD = (keyboard_hold, controller_hold, hold_time)
 
 # The reserve the dash and the glide already spend, measured on 2026-09-22: full at 100, a dash takes
 # half of it, and the game refills it 3.2 s later at about a quarter a second. Kevin set three shots
@@ -137,7 +157,7 @@ ALL = (grapple_range, hook_speed, pull_strength, pull_speed_cap, steer_strength,
        release_on_key_up, arrival_distance, longest_pull, rope_carry, takeoff_lift, ground_grace,
        release_on_landing,
        block_jump,
-       melee_wins, keep_game_grapple, punch_range, show_rope, stamina_cost)
+       melee_wins, keep_game_grapple, punch_range, show_rope, stamina_cost, *HOLD)
 
 
 def summary() -> str:

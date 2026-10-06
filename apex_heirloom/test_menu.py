@@ -36,8 +36,10 @@ check("two settings pages, HEIRLOOM then HOLSTER", menu.MENU == menu.ALL == [men
       and [page.identifier for page in menu.MENU] == ["heirloom_menu", "holster_menu"])
 check("HEIRLOOM holds its switch, the heirloom, each one's skin, the glow, the mode, each one's size and the draw",
       menu.heirloom_page.children == list(h.ALL) and h.ALL[:2] == (h.heirloom, h.model))
-check("HOLSTER holds its switch, then the two hold switches and the hold time",
-      menu.holster_page.children == [k.holster, k.keyboard_hold, k.controller_hold, k.hold_time])
+check("HOLSTER holds its switch alone: the hold is a key setting (Kevin, 2026-10-06)",
+      menu.holster_page.children == [k.holster])
+check("... shown on the PUT AWAY card of the COMMANDS page, and on no other card",
+      menu.COMMAND_SETTINGS == {"put_away": (k.keyboard_hold, k.controller_hold, k.hold_time)})
 check("the keys, the inspection's too, are chosen on the COMMANDS page that follows, on neither page",
       panel_theme.PAGES == ("heirloom", "holster", "controls")
       and not {keys.keyboard_key, keys.controller_key, inspect_keys.keyboard_key, inspect_keys.controller_key}

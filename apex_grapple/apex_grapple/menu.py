@@ -1,7 +1,8 @@
 """The menu: three lines, one per part of a grapple — the shot, the pull, and letting go.
 
 One line per setting made Apex Movement's menu hard to follow (Kevin, 2026-09-17), so the settings
-are grouped the way a grapple happens rather than the way the code is laid out.
+are grouped the way a grapple happens rather than the way the code is laid out. A fourth line holds the hold
+mode, which the window shows with the keys.
 """
 
 from mods_base import NestedOption
@@ -30,5 +31,12 @@ release = NestedOption(
     description="What ends a pull. Whatever ends it, you keep the speed you reached.",
 )
 
-MENU = [shot, pull, release, control_menu.MENU, control_menu.RESTORE, control_menu.STORAGE,
-        panel_preferences.language, panel_preferences.controller_icons, panel_preferences.last_page]
+# Key settings: the window shows them on its CONTROLS page, above the key choice (panel_pages.controls_page).
+hold = NestedOption(
+    "hold_menu", list(settings.HOLD),
+    display_name="Hold to grapple",
+    description="Hold the grapple key to grapple; a tap on the melee key still punches.",
+)
+
+MENU = [shot, pull, release, hold, control_menu.MENU, control_menu.RESTORE, control_menu.STORAGE,
+        *panel_preferences.ALL]

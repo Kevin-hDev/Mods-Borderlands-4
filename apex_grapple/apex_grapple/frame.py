@@ -13,7 +13,7 @@ from typing import Any
 from mods_base import hook
 from unrealsdk.hooks import Type
 
-from . import control_window, game, game_grapple, grapple, input_list, keys, report, session, settings
+from . import control_window, game, game_grapple, grapple, input_list, key_hold, keys, report, session, settings
 
 KEYS_NS = 1_000_000_000
 
@@ -49,6 +49,7 @@ def on_frame(obj: Any, now_ns: int) -> None:
             game_grapple.aim_target(character, now_ns)
         for line in settings.keep_in_bounds():
             report.warning(line)
+        key_hold.tick(rope, character, now_ns)
         rope.update(character, now_ns)
     except Exception:
         session.reset(rope)

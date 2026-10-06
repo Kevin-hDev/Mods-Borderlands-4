@@ -162,7 +162,8 @@ form.poll()
 check("COMMANDS is the third page: PUT AWAY then ANIMATION, each a keyboard/mouse row and a controller row",
       w["pages"].index == 2 and w["heading:command_put_away"].text == "PUT AWAY"
       and w["heading:command_inspect"].text == "ANIMATION"
-      and w["group:command_put_away"].text == "The key that puts your weapon away. Greyed out while Holster is OFF."
+      and w["group:command_put_away"].text
+      == "The key that puts your weapon away, held or pressed. Greyed out while Holster is OFF."
       and w["device:inspect:keyboard"].text == "KEYBOARD / MOUSE"
       and w["device:inspect:controller"].text == "CONTROLLER")
 check("each row asks for its own device's key, and NONE clears it",
@@ -239,6 +240,18 @@ check("RESET CONTROLS gives the put-away keys back, A (the key right of Tab) and
       keys.keyboard_bind.key == keys.keyboard_bind.default_key and keys.controller_bind.key == "Gamepad_FaceButton_Left"
       and inspect_keys.keyboard_bind.key is None and inspect_keys.controller_bind.key is None
       and w["commands_status"].text == "Default controls restored.")
+# The hold is a key setting on the PUT AWAY card (Kevin, 2026-10-06): the keys' reset puts it back, its rows redrawn.
+check("... and the hold of the put-away keys too, shown on the card",
+      holster_settings.keyboard_hold.value is True and holster_settings.controller_hold.value is True
+      and holster_settings.hold_time.value == 0.4 and w["setting:keyboard_hold_label"].text == "ON"
+      and w["setting:hold_time"].value == 0.4)
+w["setting:keyboard_hold"].checked = True
+w["setting:hold_time"].value = 0.6
+form.poll()
+clock[0] += panel_theme.SAVE_DELAY_NS
+form.poll()
+check("the hold is set again from the COMMANDS page", holster_settings.keyboard_hold.value is False
+      and holster_settings.hold_time.value == 0.6)
 
 w["FR"].checked = True
 form.poll()
@@ -249,7 +262,8 @@ check("in French, the pages speak French", panel_preferences.language.value == "
       and w["choice:skin_axe"].text == "COUTEAU JAKOBS")
 check("... and the COMMANDS page speaks the sketch's words",
       w["heading:command_put_away"].text == "RANGER L'ARME" and w["heading:command_inspect"].text == "ANIMATION"
-      and w["group:command_put_away"].text == "La touche qui range ton arme. Grisée quand le Rangement est sur NON."
+      and w["group:command_put_away"].text
+      == "La touche qui range ton arme, maintenue ou appuyée. Grisée quand le Rangement est sur NON."
       and w["group:command_inspect"].text == "Fais tourner ton heirloom dans ta main quand ton arme est rangée. "
                                              "Grisée quand le Heirloom est sur NON."
       and w["device:inspect:keyboard"].text == "CLAVIER / SOURIS" and w["device:inspect:controller"].text == "MANETTE"

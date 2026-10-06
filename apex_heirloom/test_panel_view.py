@@ -18,7 +18,7 @@ heirloom_stubs.install()
 import unrealsdk  # noqa: E402
 
 from apex_heirloom import menu, mod, panel_assets, panel_factory, panel_fonts, panel_form, panel_model  # noqa: E402
-from apex_heirloom import panel_theme as theme, panel_view  # noqa: E402
+from apex_heirloom import panel_preferences, panel_theme as theme, panel_view  # noqa: E402
 
 fails: list[str] = []
 
@@ -134,6 +134,15 @@ check("the heirloom is a button per heirloom; the skin, two arrows around its na
       and widgets["value:skin_axe"] not in walk(widgets["setting:skin_axe"]))
 commands = list(walk(widgets["pages"].children[2]))
 cards = [widgets["card:command_put_away"], widgets["card:command_inspect"]]
+# Kevin, 2026-10-06: the hold is a key setting, on the PUT AWAY card under its two rows, no longer on HOLSTER.
+put_away = list(walk(widgets["card:command_put_away"]))
+check("the PUT AWAY card ends with the hold: the two switches then the hold time, after the controller's row",
+      all(widgets[f"row:{name}"] in put_away and widgets[f"row:{name}"] not in walk(widgets["pages"].children[1])
+          for name in ("keyboard_hold", "controller_hold", "hold_time"))
+      and put_away.index(widgets["command:put_away:controller"]) < put_away.index(widgets["row:keyboard_hold"])
+      < put_away.index(widgets["row:controller_hold"]) < put_away.index(widgets["row:hold_time"])
+      and not any(widgets[f"row:{name}"] in walk(widgets["card:command_inspect"])
+                  for name in ("keyboard_hold", "controller_hold", "hold_time")))
 check("the COMMANDS page: the PUT AWAY card, then INSPECT, then the icons, the reset, its status and the Esc hint",
       all(card in commands for card in cards) and commands.index(cards[0]) < commands.index(cards[1])
       < commands.index(widgets["icons:PS5"]) < commands.index(widgets["commands_reset"])
@@ -207,8 +216,27 @@ root, widgets = panel_view.build_view(SimpleNamespace(), model)
 page = list(walk(widgets["pages"].children[0]))
 check("pictures that do not load leave no empty frame: the page as before",
       not any(name.startswith("picture") for name in widgets) and widgets["notice:heirloom"] in page
-      and not any(node.kind == "HorizontalBox" and widgets["heading:heirloom"] in walk(node) for node in page)
+      and not any(node.kind == "HorizontalBox" and widgets["heading:heirloom"] in walk(node)
+                  and any(child.kind == "Overlay" for child in node.children) for node in page)
       and attached_once(root, widgets))
+
+
+# Each theme changes colours only, read when the window is drawn: no colour of another theme stays (2026-10-06).
+veils = {tuple(theme.HOVER_OVERLAY), tuple(theme.PRESS_OVERLAY)}
+original_rgba = theme.rgba
+for theme_name in theme.THEMES:
+    panel_preferences.theme.value = theme_name
+    used = []
+    theme.rgba = lambda colour, alpha=1.0: used.append((colour, alpha)) or original_rgba(colour, alpha)
+    try:
+        _root, drawn = panel_view.build_view(SimpleNamespace(), model)
+        panel_form.PanelForm({name: (lambda item=item: item) for name, item in drawn.items()}, model)
+    finally:
+        theme.rgba = original_rgba
+    allowed = {*{**theme._EMBER, **theme.PALETTES[theme_name]}.values()}
+    stray = {(colour, alpha) for colour, alpha in used if colour not in allowed and (colour, alpha) not in veils}
+    check(f"{theme_name}: no colour kept from another theme {sorted(stray)}", not stray)
+panel_preferences.theme.value = "EMBER"
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

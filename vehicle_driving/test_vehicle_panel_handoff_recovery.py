@@ -33,7 +33,8 @@ def redraw():
 handoff = control_console_handoff.Handoff(Native(), 0xC0, 0, redraw)
 pc = object()
 session = NS(input_changed=True, pc=lambda: pc, same_context=lambda current: current is pc,
-             handoff=handoff, hooked=False)
+             handoff=handoff, hooked=False, controller_address=id(pc))
+control_window_cleanup.get_pc = lambda **_: pc
 cleanup = control_window_cleanup.Cleanup(session, "button")
 cleanup.done.update(("root", "input", "cursor", "shape", "command"))
 

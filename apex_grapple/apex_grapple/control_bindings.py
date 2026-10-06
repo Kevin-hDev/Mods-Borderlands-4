@@ -10,8 +10,10 @@ RESERVED = "Not saved. Escape and console shortcuts are reserved. Previous contr
 class Bindings:
     def __init__(self):
         # Import the running mod, not a second copy from source.
-        from . import control_actions, control_config, mod
+        from . import control_actions, control_config, mod, settings
         self.actions, self.config, self.mod = control_actions, control_config, mod
+        # Key settings put back with the keys (Kevin, 2026-10-06): the hold mode lives on the CONTROLS page.
+        self.reset_too = settings.HOLD
 
     def ready(self):
         return bool(self.mod.is_enabled)
@@ -51,7 +53,7 @@ class Bindings:
     def reset(self):
         if not self.ready():
             return False, DISABLED
-        values = tuple((option, option.default_value) for option in self.config.ALL)
+        values = tuple((option, option.default_value) for option in (*self.config.ALL, *self.reset_too))
         return (True, RESET) if self.actions.save_values(self.mod, values) else (False, FAILED)
 
     def summary(self):

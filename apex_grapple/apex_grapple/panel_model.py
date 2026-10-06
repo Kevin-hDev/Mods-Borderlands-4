@@ -6,15 +6,21 @@ from . import control_actions, control_config, settings
 from .panel_preferences import LANGUAGES, language
 from .panel_preferences import CONTROLLER_ICONS, controller_icons
 from .panel_preferences import PAGES, last_page
+from .panel_preferences import THEMES, theme
+from . import panel_toggle
 
 MAX_CHANGES = len(settings.ALL)
 
 
 class Model:
+    # The line the window shows when the ENABLED switch did not take.
+    toggle_notice = panel_toggle.FAILED
+
     def __init__(self, mod):
         from . import menu
         self.mod = mod
         self.groups = (menu.shot, menu.pull, menu.release)
+        self.controls = tuple(menu.hold.children)
         self.options = {option.identifier: option for option in settings.ALL}
         self._undo = ()
 
@@ -61,6 +67,13 @@ class Model:
 
     def change_language(self, value):
         return value in LANGUAGES and self.save(((language, value),))
+
+    @property
+    def theme(self):
+        return theme.value if theme.value in THEMES else theme.default_value
+
+    def change_theme(self, value):
+        return value in THEMES and self.save(((theme, value),))
 
     def normalize(self, option, value):
         if type(option.default_value) is bool:
@@ -113,7 +126,8 @@ class Model:
         try:
             (self.mod.disable if previous else self.mod.enable)()
             self.mod.save_settings()
-        except Exception:
+        except Exception as error:
+            self.toggle_notice = panel_toggle.notice(not previous, error)
             try:
                 (self.mod.enable if previous else self.mod.disable)()
                 self.mod.save_settings()

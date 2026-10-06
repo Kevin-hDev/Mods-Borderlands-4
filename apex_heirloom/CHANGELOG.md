@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.5 - 2026-10-06
+
+- The menu now opens from the console whatever your console key is, for example "+". With some keys, the console does not reopen by itself when the menu closes: just press your console key.
+- Tidy Weapons: "Keyboard: Hold", "Controller: Hold" and "Hold Time" move from the HOLSTER page to the CONTROLS page, under PUT AWAY. RESET CONTROLS also resets them. Your settings are kept.
+
+## 1.0.4 - 2026-10-06
+
+- New THEME button at the top of the menu: four colour themes, EMBER, DARK, LIGHT and BL4. Each mod keeps its own.
+- Escape closes the menu, like the CLOSE button.
+- The game is slightly blurred behind the menu, and the menu keeps control: a click beside it no longer goes to the game.
+- Card descriptions now sit beside their title.
+- Improved settings: confirmation after saving, rollback to the previous value on failure, and clearer messages.
+
 ## 1.0.3 - 2026-10-02
 
 - With Vortex, the knife's and the axe's files now go to the right game folder.

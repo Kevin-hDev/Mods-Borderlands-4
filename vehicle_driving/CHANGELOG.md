@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.6 - 2026-10-06
+
+- The menu now opens from the console whatever your console key is, for example "+". With some keys, the console does not reopen by itself when the menu closes: just press your console key.
+
+## 1.0.5 - 2026-10-06
+
+- New CAMERA page: six views at the wheel, Far, Default, Close, Closer, Closest and Custom, with three sliders for the Custom view.
+- Change view while driving with a key, L by default; a controller button can be set too. The chosen view is kept.
+- New THEME button at the top of the menu: four colour themes, EMBER, DARK, LIGHT and BL4. Each mod keeps its own.
+- Escape closes the menu, like the CLOSE button.
+- The game is slightly blurred behind the menu, and the menu keeps control: a click beside it no longer goes to the game.
+- Card descriptions now sit beside their title.
+- Improved settings: confirmation after saving, rollback to the previous value on failure, and clearer messages.
+
 ## 1.0.4 - 2026-10-04
 
 - Add a VEHICLES page with separate buttons for 10 standard vehicles, 4 promotional vehicles, and Trident with its rewards.

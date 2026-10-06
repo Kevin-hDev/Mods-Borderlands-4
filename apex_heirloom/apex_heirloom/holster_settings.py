@@ -36,9 +36,10 @@ hold_time = SliderOption(
     "hold_time", 0.4, 0.2, 1.0, step=0.05, is_integer=False, display_name="Hold Time",
     description="How long to hold the key or button, in seconds.",
 )
-# The window's HOLSTER page shows these, the switch first; the keys themselves are chosen on its CONTROLS page
-# (control_config.py).
-ALL = (holster, keyboard_hold, controller_hold, hold_time)
+# The window's HOLSTER page shows the switch; the hold, a key setting, shows on the PUT AWAY card of its COMMANDS page
+# with the keys themselves (Kevin, 2026-10-06: « ce sont des réglages de touches assignables »), menu.COMMAND_SETTINGS.
+HOLD_SETTINGS = (keyboard_hold, controller_hold, hold_time)
+ALL = (holster, *HOLD_SETTINGS)
 _SWITCHES = {KEYBOARD: keyboard_hold, CONTROLLER: controller_hold}
 
 

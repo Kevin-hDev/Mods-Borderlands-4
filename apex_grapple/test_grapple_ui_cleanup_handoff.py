@@ -10,6 +10,9 @@ messages = []
 sdk = ModuleType("unrealsdk")
 sdk.logging = NS(info=messages.append)
 sys.modules["unrealsdk"] = sdk
+base = ModuleType("mods_base")
+base.get_pc = lambda **_: pc
+sys.modules["mods_base"] = base
 
 Handoff = load("control_console_handoff").Handoff
 module = load("control_window_cleanup")
@@ -28,7 +31,7 @@ class Native:
 handoff = Handoff(Native(), 0xC0, 0, lambda: events.append("redraw"))
 pc = object()
 session = NS(input_changed=True, pc=lambda: pc, same_context=lambda current: current is pc,
-             handoff=handoff, hooked=False)
+             handoff=handoff, hooked=False, controller_address=id(pc))
 cleanup = Cleanup(session, "button")
 cleanup.done.update(("root", "input", "cursor", "shape", "command"))
 

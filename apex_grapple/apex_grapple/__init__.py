@@ -13,11 +13,12 @@ docs/candidats/grappin.md holds the numbers and where each came from.
 """
 
 from mods_base import build_mod
+from .settings_persistence import AtomicMod
 
 from . import control_console_menu, control_menu, frame, menu, report, settings
 
 # Research observers are archived: their synchronous scans caused first-shot stalls.
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __author__ = "kevin-hDev"
 
 
@@ -36,6 +37,7 @@ def _on_disable() -> None:
 
 
 mod = build_mod(
+    cls=AtomicMod,
     name="Apex Grapple",
     options=menu.MENU,
     hooks=[frame.tick],

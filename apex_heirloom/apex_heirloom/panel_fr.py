@@ -15,7 +15,8 @@ TEXT = {
     "applies": "Quitte le menu et change d'arme pour appliquer le changement.",
     "refused_part": "Un autre fichier installé fait déjà tourner cette partie. Éteins-le d'abord.",
     "command_put_away": "RANGER L'ARME",
-    "command_put_away_desc": "La touche qui range ton arme. Grisée quand le Rangement est sur NON.",
+    "command_put_away_desc": "La touche qui range ton arme, maintenue ou appuyée. Grisée quand le Rangement est sur "
+                             "NON.",
     "command_inspect": "ANIMATION",
     "command_inspect_desc": "Fais tourner ton heirloom dans ta main quand ton arme est rangée. Grisée quand le "
                             "Heirloom est sur NON.",
@@ -33,7 +34,7 @@ TEXT = {
     "invalid_controller": "Non enregistré : choisis un bouton de la manette. Bouton précédent gardé.",
 }
 GROUPS = {"heirloom": "Ton heirloom dans ta main droite quand ton arme est rangée.",
-          "holster": "Comment chaque touche range ton arme."}
+          "holster": "Si tes touches rangent ton arme."}
 OPTIONS = {
     "heirloom": ("Heirloom", "NON : tes mains restent vides quand ton arme est rangée, comme dans le jeu."),
     "model": ("Modèle", "Le heirloom que tu tiens."),

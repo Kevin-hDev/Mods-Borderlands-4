@@ -65,8 +65,20 @@ def install() -> dict:
         def __call__(self) -> Any:
             return None if getattr(self.obj, "destroyed", False) else self.obj
 
+    # Enhanced Input: the players' subsystems and every press injected for the player (melee_press.py).
+    state["subsystems"], state["injections"] = [], []
+
+    class BoundFunction:
+        def __init__(self, function: Any, target: Any) -> None:
+            self.function, self.target = function, target
+
+        def __call__(self, Action: Any, Value: Any, Modifiers: Any, Triggers: Any) -> None:
+            # Every parameter is required, as the SDK requires them (refused on 2026-10-05 for a missing one).
+            state["injections"].append((self.function, self.target, Action, Value, Modifiers, Triggers))
+
     unreal_module = types.ModuleType("unrealsdk.unreal")
     unreal_module.WeakPointer = WeakPointer
+    unreal_module.BoundFunction = BoundFunction
     unreal_module.FGbxDefPtr = lambda name, kind: types.SimpleNamespace(_name=name, _kind=kind)
 
     hooks_module = types.ModuleType("unrealsdk.hooks")
@@ -93,6 +105,8 @@ def install() -> dict:
     def find_class(name: str) -> Any:
         if name in state["extra_classes"]:
             return state["extra_classes"][name]
+        if name == "EnhancedInputSubsystemInterface":
+            return types.SimpleNamespace(_find=lambda function: f"{name}:{function}")
         if name == "GameResourcePoolFunctionLibrary":
             return pool_library
         if name == "NiagaraFunctionLibrary":
@@ -117,6 +131,8 @@ def install() -> dict:
             if state["classes_raise"]:
                 raise RuntimeError("the game is still loading")
             return iter([types.SimpleNamespace(Name=n) for n in state["classes"]])
+        if class_name == "/Script/EnhancedInput.EnhancedInputLocalPlayerSubsystem":
+            return iter(list(state["subsystems"]))
         if class_name in state["by_class"]:
             return iter(list(state["by_class"][class_name]))
         if class_name == "NiagaraComponent":
@@ -150,8 +166,8 @@ def install() -> dict:
     mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(
         state, identifier, key, callback)
 
-    def build_mod(**kwargs: Any) -> FakeMod:
-        made = FakeMod(state, **kwargs)
+    def build_mod(cls: type = FakeMod, **kwargs: Any) -> FakeMod:
+        made = cls(state, **kwargs)
         state["mods"].append(made)
         return made
 

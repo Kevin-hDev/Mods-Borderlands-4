@@ -12,7 +12,7 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 from vehicle_driving import menu, mod, panel_preferences as prefs, settings  # noqa: E402
-from vehicle_driving import control_window, panel_i18n  # noqa: E402
+from vehicle_driving import control_window, panel_choices, panel_i18n  # noqa: E402
 from vehicle_driving.panel_model import Model  # noqa: E402
 
 fails = []
@@ -25,18 +25,26 @@ def check(label, condition):
 
 
 model = Model(mod)
-check("five pages preserve all settings and append vehicle unlocks",
-      model.pages == ("driving", "handling", "boost", "combat", "vehicles") and len(model.options) == 12
-      and [option for group in menu.MENU for option in group.children] == settings.OPTIONS)
+check("six pages: the settings, vehicle unlocks still fifth, then the camera page with the view and the Custom sliders",
+      model.pages == ("driving", "handling", "boost", "combat", "vehicles", "camera") and len(model.options) == 16
+      and [option for group in menu.MENU for option in group.children] == [*settings.OPTIONS,
+                                                                          *settings.CAMERA_OPTIONS])
+check("the view is chosen with arrows, the key's card under it (Kevin, 2026-10-06)",
+      menu.ARROWS == frozenset(("vehicle_view",)))
 check("English and French pages use the approved menu labels",
       panel_i18n.text("driving", "EN") == "DRIVING"
       and panel_i18n.text("handling", "FR") == "TENUE DE ROUTE"
       and panel_i18n.text("boost", "EN") == "BOOST" and panel_i18n.text("boost", "FR") == "TURBO"
       and panel_i18n.text("combat", "EN") == panel_i18n.text("combat", "FR") == "COMBAT"
-      and panel_i18n.option_text(settings.unlimited_boost, "FR")[0] == "Turbo illimité")
+      and panel_i18n.option_text(settings.unlimited_boost, "FR")[0] == "Turbo illimité"
+      and panel_i18n.text("camera", "EN") == "CAMERA" and panel_i18n.text("camera", "FR") == "CAMÉRA"
+      and panel_i18n.option_text(settings.custom_forward, "FR")[0] == "Avant / arrière"
+      and panel_i18n.option_text(settings.vehicle_view, "FR")[0] == "Vue du véhicule"
+      and panel_i18n.text("command_view", "FR") == "CHANGER DE VUE"
+      and panel_choices.label("Closest", "FR") == "AU PLUS PRÈS" and panel_choices.label("Closest", "EN") == "CLOSEST")
 # Kevin, 2026-09-23: a description says what the player gets in one plain sentence.
 descriptions = [panel_i18n.option_text(option, language)[1]
-                for option in settings.OPTIONS for language in ("EN", "FR")]
+                for option in (*settings.OPTIONS, *settings.CAMERA_OPTIONS) for language in ("EN", "FR")]
 check("every option has one short sentence in both languages",
       all(0 < len(text) <= 60 and text.count(".") == 1 and text.endswith(".") for text in descriptions)
       and panel_i18n.option_text(settings.grip, "FR")[1] != settings.grip.description)
@@ -48,6 +56,12 @@ check("valid slider change is saved", model.write({"max_speed": 150})
       and settings.max_speed.value == 150)
 check("reset and undo restore the previous value", model.restore() and settings.max_speed.value == 125
       and model.undo() and settings.max_speed.value == 150)
+check("a view the page does not offer cannot change the setting",
+      not model.write({"vehicle_view": "Hood"}) and not model.write({"vehicle_view": 2})
+      and settings.vehicle_view.value == "Default")
+check("a view chosen in the page is saved", model.write({"vehicle_view": "Closest"})
+      and settings.vehicle_view.value == "Closest")
+settings.vehicle_view.value = "Default"
 
 vehicle = object()
 pc = types.SimpleNamespace(Pawn=vehicle, OakCharacter=None, CurrentMouseCursor="Default")

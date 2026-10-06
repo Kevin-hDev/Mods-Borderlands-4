@@ -23,6 +23,17 @@ combat = NestedOption(
     "combat_menu", [settings.toughness, settings.weapon_damage],
     display_name="Combat", description="Vehicle toughness and weapon damage.",
 )
+# The view and the Custom view's sliders; the window puts the view key's card under them (Kevin, 2026-10-06, spec
+# section 2).
+camera = NestedOption(
+    "camera_menu", settings.CAMERA_OPTIONS,
+    display_name="Camera", description="The camera view at the wheel, and where the Custom view sits.",
+)
 
 vehicles = runtime.menu.option(NestedOption)
-ALL = MENU = [driving, handling, boost, combat, vehicles]
+# CAMERA after VEHICLES: the window reopens on the page saved by its rank (panel_preferences.last_page), and a player
+# whose last page was VEHICLES must find it again, as Save Editor appends its WEAPONS page (2026-10-06).
+ALL = MENU = [driving, handling, boost, combat, vehicles, camera]
+# The choices the window shows with two arrows around the chosen name (panel_choices.py): six names do not fit on one
+# line of buttons.
+ARROWS = frozenset((settings.vehicle_view.identifier,))

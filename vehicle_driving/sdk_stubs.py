@@ -1,7 +1,8 @@
 """Fake SDK modules so Vehicle Driving's logic can be tested outside the game.
 
 Installed into sys.modules before importing vehicle_driving. Cut down from Apex Movement's to what this mod calls:
-options, the frame hook, the mod, weak pointers, the log, one trace and the player controller. The vehicle and its
+options, keys, the frame hook, the mod, weak pointers, the log, one trace, the player controller and its camera
+manager. The vehicle and its
 driver carry the values sessions 1 to 9 read on Kevin's vehicle (2026-09-18), and the boost, the damage and the
 weapons sessions 11 and 12 read (2026-10-03).
 """
@@ -12,8 +13,11 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+from sdk_stubs_camera import CameraManager  # noqa: F401  (the tests reach it as sdk_stubs.CameraManager)
 from sdk_stubs_pointers import WeakPointer, destroy
-from sdk_stubs_options import FakeOption, FakeNestedOption, FakeHook
+from sdk_stubs_options import (FakeOption, FakeNestedOption, FakeHook, FakeKeybind, FakeKeybindOption,
+                               FakeSpinnerOption)
+from sdk_mod_fixture import FakeMod
 
 # Tests run in both the private source tree and the public sibling-package layout.
 _shared_source = Path(__file__).resolve().parents[2] / 'vehicle_unlocks' / 'source'
@@ -22,36 +26,6 @@ if not _shared_source.is_dir():
 sys.path.insert(0, str(_shared_source))
 
 
-class FakeMod:
-    """As mods_base.Mod where this mod depends on it: hooks on before on_enable, off before on_disable."""
-
-    def __init__(self, state: dict, **kwargs: Any) -> None:
-        self.state, self.kwargs, self.is_enabled = state, kwargs, False
-        self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
-
-    def enable(self) -> None:
-        if self.is_enabled:
-            return
-        self.is_enabled = True
-        for hook in self.kwargs.get("hooks") or []:
-            hook.enable()
-        if self.kwargs.get("on_enable"):
-            self.kwargs["on_enable"]()
-
-    def disable(self) -> None:
-        if not self.is_enabled:
-            return
-        self.is_enabled = False
-        for hook in self.kwargs.get("hooks") or []:
-            hook.disable()
-        if self.kwargs.get("on_disable"):
-            self.kwargs["on_disable"]()
-
-    def save_settings(self) -> None:
-        self.state["saves"] = self.state.get("saves", 0) + 1
-
-    def iter_display_options(self):
-        yield from self.kwargs.get("options", ())
 
 
 class Ground:
@@ -129,10 +103,16 @@ class Driver:
 
     def __init__(self) -> None:
         self.Name = "OakCharacter_1"
-        attributes = types.SimpleNamespace(maxspeed=pair(51.3194, 50.0), BoostMaxSpeed=pair(66.3425, 65.0),
+        # Seated on the vehicle; the top of its capsule is the camera views' target (spec section 3.8).
+        self.location = vector(100.0, 200.0, 170.0)
+        self.CapsuleComponent = types.SimpleNamespace(GetScaledCapsuleHalfHeight=lambda: 80.0)
+        attributes =types.SimpleNamespace(maxspeed=pair(51.3194, 50.0), BoostMaxSpeed=pair(66.3425, 65.0),
                                            MaxAccel=pair(1286.48, 1000.0), BoostMaxAccel=pair(1615.08, 1200.0),
                                            ReverseSpeed=pair(26.23, 25.0), BoostConsumptionRateScalar=pair(0.906, 1.0))
         self.VehicleDriverComponent = types.SimpleNamespace(VehicleAttributesState=attributes)
+
+    def K2_GetActorLocation(self) -> Any:
+        return self.location
 
 
 class Vehicle:
@@ -169,6 +149,10 @@ def install() -> dict:
                    "settings_enabled": False, "mods": [], "keybinds": [], "ground": Ground(), "class_finds": 0}
 
     def find_class(name: str) -> Any:
+        if name == "InputSettings":
+            # The game's console keys, which the CAMERA page's key card refuses (command_keys.py).
+            keys = [types.SimpleNamespace(KeyName="Tilde")]
+            return types.SimpleNamespace(ClassDefaultObject=types.SimpleNamespace(ConsoleKeys=keys))
         state["class_finds"] += 1
         if name != "KismetSystemLibrary":
             raise ValueError(f"no class {name}")
@@ -198,11 +182,17 @@ def install() -> dict:
     mods_base.SETTINGS_DIR = Path(state['temporary_settings'].name)
     mods_base.BoolOption = FakeOption
     mods_base.SliderOption = FakeOption
-    mods_base.SpinnerOption = FakeOption
+    mods_base.SpinnerOption = FakeSpinnerOption
+    mods_base.KeybindOption = FakeKeybindOption
     mods_base.NestedOption = FakeNestedOption
     mods_base.get_pc = lambda **kwargs: state["pc"]
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, kind, hook_identifier))
-    mods_base.keybind = lambda *args, **kwargs: state["keybinds"].append((args, kwargs))
+    def keybind(identifier: str, key: str | None = None, callback: Any = None, **kwargs: Any) -> FakeKeybind:
+        made = FakeKeybind(identifier, key, callback, **kwargs)
+        state["keybinds"].append(made)
+        return made
+
+    mods_base.keybind = keybind
 
     def build_mod(cls: type = FakeMod, **kwargs: Any) -> FakeMod:
         # As mods_base: registered, then its settings loaded, and a file that says enabled enables it right here.
@@ -212,6 +202,7 @@ def install() -> dict:
             made.enable()
         return made
 
+    mods_base.Mod = FakeMod
     mods_base.build_mod = build_mod
 
     for name, module in {

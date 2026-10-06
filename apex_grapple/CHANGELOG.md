@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.7 - 2026-10-06
+
+- New: hold the key to grapple, on the CONTROLS page. A quick tap on the melee key still punches, and a grapple fired by a hold pulls all the way. One switch for keyboard and one for controller, both off by default; adjustable hold time, 0.4 s by default.
+- Fixed: the menu now opens whatever your console key is. With some keys, such as +, it did not open at all; with those, you reopen the console yourself after closing the menu.
+- New THEME button at the top of the menu: four colour themes, EMBER, DARK, LIGHT and BL4. Each mod keeps its own.
+- Escape closes the menu, like the CLOSE button.
+- The game is slightly blurred behind the menu, and the menu keeps control: a click beside it no longer goes to the game.
+- Card descriptions now sit beside their title.
+- Improved settings: confirmation after saving, rollback to the previous value on failure, and clearer messages.
+
 ## 1.0.6 - 2026-09-25
 
 - Fix a possible crash on very long grapple shots: the game no longer removes the rope while the grapple still

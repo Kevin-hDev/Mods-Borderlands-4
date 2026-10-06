@@ -6,7 +6,10 @@ TEXT = {
     "enabled": "ENABLED", "disabled": "DISABLED", "on": "ON", "off": "OFF",
     "by": "BY", "version": "VERSION", "settings": "SETTINGS",
     "ready": "Changes are saved automatically. Close returns to the mod list.",
-    "saved": "Saved.", "failed": "Could not save. Previous settings kept. Please try again.",
+    "saved": "Saved.", "failed": "Settings could not be saved. Please try again.",
+    "rollback_abandoned": "The change was cancelled. Recovery could not be confirmed; restart the game before changing settings.",
+    "toggle_failed": "The mod could not be switched on or off. Nothing was changed. The reason is in unrealsdk.log.",
+    "refused": "Assignment refused. This input is reserved or already used.",
     "restored": "Default settings restored. You can undo this reset.", "undone": "Previous settings restored.",
     "controls_intro": "Choose a slot, then press a keyboard, mouse or controller button. Complete choices save automatically.",
     "two": "Two keys held together", "first": "1. CHOOSE A KEY", "second": "2. CHOOSE SECOND KEY",
@@ -21,4 +24,6 @@ TEXT = {
     "controller_icons": "CONTROLLER ICONS", "PS5": "PLAYSTATION", "XSX": "XBOX",
     "game_controls_pending": "Game controls (available in a session)",
     "reserved_key": "Not saved: this key is reserved for the console or cancel. Previous controls kept.",
+    "theme": "THEME:", "theme:EMBER": "EMBER", "theme:DARK": "DARK", "theme:LIGHT": "LIGHT", "theme:BL4": "BL4",
+    "theme_later": "Theme saved. It will show the next time you open this menu.",
 }
