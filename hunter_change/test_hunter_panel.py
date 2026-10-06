@@ -15,7 +15,7 @@ state = sdk_stubs.install()
 
 import panel_fixture  # noqa: E402
 from hunter_change import hunters, panel_assets, panel_fonts, panel_hunters, panel_hunters_theme as ht  # noqa: E402
-from hunter_change import panel_model, panel_theme as theme, panel_view  # noqa: E402
+from hunter_change import panel_model, panel_preferences, panel_theme as theme, panel_view  # noqa: E402
 
 fails: list[str] = []
 
@@ -41,7 +41,9 @@ panel_fonts.build = lambda _root: {"title": object(), "body": object()}
 model = panel_model.Model(SimpleNamespace(is_enabled=True))
 root, widgets = panel_view.build_view(SimpleNamespace(), model)
 check("built whole in the plain frame, under the mod's name",
-      root.WidgetTree.RootWidget.kind == "ScaleBox" and theme.BRAND == "HUNTER CHANGE"
+      root.WidgetTree.RootWidget.kind == "CanvasPanel"
+      and [child.kind for child in root.WidgetTree.RootWidget.children] == ["BackgroundBlur", "ScaleBox"]
+      and theme.BRAND == "HUNTER CHANGE"
       and model.pages[0] == "appearance" and len(widgets["pages"].children) == len(model.pages))
 grid = widgets["hunter_grid"]
 check("six hunter cards in three columns", [len(line.children) for line in grid.children] == [3, 3]
@@ -153,6 +155,23 @@ def take(widget):
 
 check("a card clicked read once", panel_hunters.taken(take, widgets) == "Paladin"
       and panel_hunters.taken(take, widgets) is None)
+
+
+# Each theme changes colours only, read when the window is drawn: no colour of another theme stays (2026-10-06).
+veils = {tuple(theme.HOVER_OVERLAY), tuple(theme.PRESS_OVERLAY)}
+original_rgba = theme.rgba
+for theme_name in theme.THEMES:
+    panel_preferences.theme.value = theme_name
+    used = []
+    theme.rgba = lambda colour, alpha=1.0: used.append((colour, alpha)) or original_rgba(colour, alpha)
+    try:
+        panel_view.build_view(SimpleNamespace(), model)
+    finally:
+        theme.rgba = original_rgba
+    allowed = {*{**theme._EMBER, **theme.PALETTES[theme_name]}.values(), *map(theme.on_card, ht.CLASS_COLOURS.values())}
+    stray = {(colour, alpha) for colour, alpha in used if colour not in allowed and (colour, alpha) not in veils}
+    check(f"{theme_name}: no colour kept from another theme, hunter tags included {sorted(stray)}", not stray)
+panel_preferences.theme.value = "EMBER"
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

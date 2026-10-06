@@ -2,11 +2,12 @@
 skill tree; or only wear another hunter's look."""
 
 from mods_base import build_mod
+from .settings_persistence import AtomicMod
 
 from . import leave, lifecycle, panel_open, panel_preferences, report, wardrobe
 from .pack import NAME
 
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 __author__ = "kevin-hDev"
 
 
@@ -30,6 +31,7 @@ def _on_disable() -> None:
 
 
 mod = build_mod(
+    cls=AtomicMod,
     name=NAME,
     # The window's own preferences (language, last page), hidden in the SDK's menu.
     options=[*panel_preferences.ALL],

@@ -4,6 +4,8 @@ import pathlib
 import sys
 import tempfile
 import types
+import tempfile
+from pathlib import Path
 import weakref
 from typing import Any
 
@@ -67,7 +69,10 @@ class FakeHook:
 class FakeMod:
     def __init__(self, state: dict, **kwargs: Any) -> None:
         self.state, self.kwargs, self.is_enabled = state, kwargs, False
-        self.settings_file = types.SimpleNamespace(exists=lambda: state["settings_exists"])
+        self._settings_directory = tempfile.TemporaryDirectory()
+        self.settings_file = Path(self._settings_directory.name) / "settings.json"
+        if state["settings_exists"]:
+            self.settings_file.write_text("{}")
         for option in kwargs.get("options", ()):
             option.mod = self
 
@@ -137,11 +142,12 @@ def install() -> dict:
     mods_base.get_pc = lambda **_kwargs: state["pc"]
     mods_base.hook = lambda _path, _kind, hook_identifier="": (lambda fn: FakeHook(fn, hook_identifier))
 
-    def build_mod(**kwargs: Any) -> FakeMod:
-        made = FakeMod(state, **kwargs)
+    def build_mod(cls: type = FakeMod, **kwargs: Any) -> FakeMod:
+        made = cls(state, **kwargs)
         state["mods"].append(made)
         return made
 
+    mods_base.Mod = FakeMod
     mods_base.build_mod = build_mod
     # No test reads the real registry: Steam's connected account stays unknown unless a test fakes it
     # (steam_account.py; final review of 2026-09-29 found one test reading it).

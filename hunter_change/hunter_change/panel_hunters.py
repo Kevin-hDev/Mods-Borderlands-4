@@ -20,8 +20,8 @@ from . import panel_i18n as i18n, panel_notice, panel_pages as p, panel_text as 
 from . import panel_widgets as w
 
 APPLIES = "applies"
-# The two tags of sketch B2: (part, fill, outline, letters).
-TAGS = (("own", t.COLOR_INK, t.COLOR_SPARK, t.COLOR_SPARK), ("chosen", t.COLOR_GOLD, t.COLOR_GOLD, t.COLOR_INK))
+# The two tags of sketch B2: (part, fill, outline, letters), as theme colour names read when the card is drawn.
+TAGS = (("own", "COLOR_INK", "COLOR_SPARK", "COLOR_SPARK"), ("chosen", "COLOR_GOLD", "COLOR_GOLD", "COLOR_INK"))
 
 
 def _picture(owner: Any, widgets: dict, name: str, code: str, world: Any) -> Any:
@@ -39,7 +39,8 @@ def _picture(owner: Any, widgets: dict, name: str, code: str, world: Any) -> Any
 def _tags(owner: Any, widgets: dict, name: str) -> Any:
     """The card's tags, top right as B2 has them: laid over the card, they never push its name or class aside."""
     tags = w.new("HorizontalBox", owner)
-    for part, fill, outline, letters in TAGS:
+    for part, *names in TAGS:
+        fill, outline, letters = (t.colour(name) for name in names)
         frame, inner = w.framed(tags, fill, t.STROKE_THIN, w.pad(0, t.SPACE_2), frame=outline)
         widgets[f"{name}_{part}"] = tx.text(inner, "", "tag")
         widgets[f"{name}_{part}"].SetColorAndOpacity(w.slate(letters))
@@ -145,7 +146,7 @@ def paint_card(widgets: dict, prefix: str, hunter: hunters.Hunter, language: str
     name = f"{prefix}:{hunter.code}"
     widgets[f"{name}_name"].SetText(hunter.name.upper())
     widgets[f"{name}_class"].SetText(i18n.text(f"class:{hunter.code}", language))
-    widgets[f"{name}_class"].SetColorAndOpacity(w.slate(ht.CLASS_COLOURS[hunter.code]))
+    widgets[f"{name}_class"].SetColorAndOpacity(w.slate(t.on_card(ht.CLASS_COLOURS[hunter.code])))
     widgets[f"{name}_own"].SetText(i18n.text("your_hunter", language))
     show(widgets[f"{name}_own_tag"], own)
     widgets[f"{name}_chosen"].SetText(i18n.text("chosen", language))
