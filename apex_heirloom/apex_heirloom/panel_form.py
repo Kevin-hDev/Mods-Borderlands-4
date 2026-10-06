@@ -9,6 +9,7 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t, pane
 from . import panel_choices, panel_rows, slider_values
 from .family import blocked
 from .menu import COMMANDS_DEPEND_ON, DEPENDS_ON
+from . import panel_size_choice
 
 
 class PanelForm:
@@ -133,6 +134,9 @@ class PanelForm:
             return self.flush(widgets)
         if self.take(widgets["theme"]):
             panel_theme_choice.choose(self, widgets)
+            return False
+        if self.take(widgets["window_size"]):
+            panel_size_choice.choose(self, widgets)
             return False
         for language in ("EN", "FR"):
             if self.take(widgets[language]):

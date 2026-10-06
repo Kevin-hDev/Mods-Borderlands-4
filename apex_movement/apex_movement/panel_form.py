@@ -3,13 +3,15 @@
 import time
 
 from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
+from . import panel_options_tabs as tabs, panel_theme_choice
+from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
 
 # A setting that changes nothing while its switch is off: FOV under Custom FOV, the walk key's toggle and speed under
-# the walk key, the loot reach under its switch, the shoulder and the orbit camera outside third person (the runtime
-# takes neither before it, runtime.camera_ready; review, 2026-09-26).
+# the walk key, loot reach under its switch and the shoulder outside third person. Orbit and the common camera
+# animation remain available in first person; Orbit returns to its entry view (Kevin, 2026-10-06).
 DEPENDS_ON = {"fov": "custom_fov", "walk_toggle": "walk", "walk_key_speed": "walk", "loot_reach": "extended_loot",
-              "shoulder_left": "third_person", "orbit": "third_person", "third_person_ads": "third_person"}
+              "shoulder_left": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth", "orbit": None, "third_person_ads": "third_person"}
 
 
 class PanelForm(Lifecycle):
@@ -23,6 +25,7 @@ class PanelForm(Lifecycle):
         self.notice = "ready"
         self.pending, self.shown = {}, {}
         self.changed_at = 0
+        self.redraw = False  # set by a theme change; the window's session then draws it again
         self.focus = widgets["focus"]
         self.command_form = self.command_catalogue = None
         if model.command_actions is not None:
@@ -31,12 +34,6 @@ class PanelForm(Lifecycle):
             self.command_form = Form(widgets, model)
             self.command_catalogue = Catalogue()
         self.sync(self.resolve())
-
-    def resolve(self):
-        widgets = {name: reference() for name, reference in self.widgets.items()}
-        if any(widget is None for widget in widgets.values()):
-            raise ValueError("Window widget unavailable")
-        return widgets
 
     def sync(self, widgets):
         self.pending.clear()
@@ -59,10 +56,14 @@ class PanelForm(Lifecycle):
             self.command_form.set_enabled(not self.model.transaction.pending)
 
     def refresh_dependency(self, widgets):
+        if 'third_person' in self.model.options:
+            widgets['setting:third_person'].SetIsEnabled(not self.model.options['third_person'].locked)
         for name, switch in DEPENDS_ON.items():
             if name not in self.model.options:
                 continue
-            active = self.shown[switch] is True
+            active = switch is None or self.shown[switch] is True
+            if name == 'shoulder_seconds':
+                active = (active and self.shown.get('third_person') is True) or self.shown.get('orbit_smooth') is True
             widgets[f"setting:{name}"].SetIsEnabled(active)
             # The whole row fades, label and value included, as the mockup's .row.muted does.
             for part in ("row", "description"):
@@ -110,6 +111,9 @@ class PanelForm(Lifecycle):
         for key, option in self.model.options.items():
             widget = widgets[f"setting:{key}"]
             if self.model.camera_elsewhere and key in self.model.camera_options:
+                continue
+            if key == 'third_person' and option.locked:
+                widget.SetIsChecked(False)
                 continue
             if key == "third_person_ads" and getattr(self, "ads_blocked", False):
                 widget.SetIsChecked(False)
@@ -162,13 +166,13 @@ class PanelForm(Lifecycle):
         self.read_changes(widgets, now)
         if self.take(widgets["close"]):
             return self.flush(widgets)
-        if self.take(widgets["options"]):
-            if self.flush(widgets) and self.model.change_page("options"):
-                self.options_open = True
-                widgets["pages"].SetActiveWidgetIndex(len(self.model.pages))
-                self.refresh_labels(widgets)
-            else:
-                self.report(widgets, "failed")
+        if self.take(widgets["theme"]):
+            panel_theme_choice.choose(self, widgets)
+            return False
+        if self.take(widgets["window_size"]):
+            panel_size_choice.choose(self, widgets)
+            return False
+        if tabs.poll(self, widgets):
             return False
         for language in ("EN", "FR"):
             if self.take(widgets[f"language:{language}"]):

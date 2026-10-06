@@ -15,8 +15,9 @@ try:
     from .apex_camera_runtime.framing_options import FramingOptions
     from .apex_camera_runtime.loot_options import LootOptions
     from .apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
-    from .apex_camera_runtime.camera_option import CameraBoolOption
+    from .apex_camera_runtime.camera_option import BaseViewOption, CameraBoolOption
     from .apex_camera_runtime.camera_commands import CameraCommands
+    from .apex_camera_runtime.shoulder_transition_options import ShoulderTransitionOptions
     from .apex_camera_runtime.constants import FOV_DEFAULT, FOV_MAX, FOV_MIN
     from .apex_camera_runtime.key_option import normalize_keyboard_key
     from .apex_camera_runtime import option_texts
@@ -27,8 +28,9 @@ except ModuleNotFoundError as error:
     from apex_camera_runtime.framing_options import FramingOptions
     from apex_camera_runtime.loot_options import LootOptions
     from apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
-    from apex_camera_runtime.camera_option import CameraBoolOption
+    from apex_camera_runtime.camera_option import BaseViewOption, CameraBoolOption
     from apex_camera_runtime.camera_commands import CameraCommands
+    from apex_camera_runtime.shoulder_transition_options import ShoulderTransitionOptions
     from apex_camera_runtime.constants import FOV_DEFAULT, FOV_MAX, FOV_MIN
     from apex_camera_runtime.key_option import normalize_keyboard_key
     from apex_camera_runtime import option_texts
@@ -45,9 +47,15 @@ loot_distance = loot.distance
 zoom = OrbitZoomOptions()
 ads = AdsOptions()
 framing = FramingOptions(note=report.note)
+shoulder_transition = ShoulderTransitionOptions()
 third_person_ads = ads.option
 
-third_person = BoolOption("third_person", False, **option_texts.THIRD_PERSON)
+def _base_view_locked() -> bool:
+    from . import camera
+    return camera.base_view_locked()
+
+
+third_person = BaseViewOption("third_person", False, locked=_base_view_locked, **option_texts.THIRD_PERSON)
 
 
 def _toggle_third_person() -> None:
@@ -117,7 +125,7 @@ fov = SliderOption("fov", FOV_DEFAULT, FOV_MIN, FOV_MAX, step=1, is_integer=True
 native_fov = SliderOption("native_fov", 0, 0, 180, step=1, is_integer=False, is_hidden=True)
 applied_fov = SliderOption("applied_fov", 0, 0, 180, step=1, is_integer=False, is_hidden=True)
 OPTIONS = [omni_sprint, third_person, third_person_ads, third_person_key, third_person_controller,
-           shoulder_left, shoulder_key, shoulder_controller,
+           shoulder_left, *shoulder_transition.options, shoulder_key, shoulder_controller,
            orbit, orbit_key, orbit_controller, *commands.options[6:], custom_fov, fov, *loot.options, native_fov, applied_fov,
            zoom.option, *framing.options]
 

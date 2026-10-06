@@ -10,6 +10,7 @@ from .panel_glyphs import Catalogue
 from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t, panel_theme_choice
 from . import panel_choices, panel_rows, slider_values
 from .menu import COMMANDS_DEPEND_ON, DEPENDS_ON
+from . import panel_size_choice
 
 
 class PanelForm:
@@ -135,6 +136,9 @@ class PanelForm:
         if self.take(widgets["theme"]):
             panel_theme_choice.choose(self, widgets)
             return False
+        if self.take(widgets["window_size"]):
+            panel_size_choice.choose(self, widgets)
+            return False
         for language in ("EN", "FR"):
             if self.take(widgets[language]):
                 if self.flush(widgets) and self.model.change_language(language):
@@ -172,7 +176,9 @@ class PanelForm:
             self.flush(widgets)
         if self.page == t.PAGES.index("controls"):
             self.command_form.poll()
-            if self.command_form.changed:
+            if self.command_form.changed and self.command_form.notice == "controls_reset":
+                self.sync(widgets)  # The reset also put back the rows of the cards.
+            elif self.command_form.changed:
                 self.refresh_labels(widgets)
         return False
 

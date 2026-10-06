@@ -7,14 +7,28 @@ import panel_fixture as f
 from third_person_fov import panel_preferences as prefs, settings
 from apex_camera_runtime import shared, constants
 
+CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot")
 root, widgets, form = f.build()
-assert len(widgets["pages"].children) == 2
+assert len(widgets["pages"].children) == 5, "four camera pages then COMMANDS (Kevin, 2026-10-06)"
 assert widgets["focus"] is widgets["nav:camera"]
 assert "EN" in widgets and "FR" in widgets and "options" not in widgets
-assert all(f"row:{key}" in widgets for key in ("third_person", "shoulder_left", "orbit", "fov", "extended_loot", "loot_reach"))
+assert all(f"row:{key}" in widgets for key in ("third_person", "shoulder_left", "orbit", "orbit_distance", "fov",
+                                                "extended_loot", "loot_reach"))
+placement = {"camera": ("setting:third_person", "setting:shoulder_left", "setting:shoulder_smooth", "setting:orbit_smooth", "setting:shoulder_seconds", "setting:fov", "heading:framing:horizontal",
+                        "heading:framing:height"),
+             "aiming": ("setting:third_person_ads", "heading:framing:zoom"),
+             "orbit_camera": ("setting:orbit", "setting:orbit_distance"),
+             "loot": ("setting:extended_loot", "setting:loot_reach")}
+for key, names in placement.items():
+    page = widgets["pages"].children[form.model.pages.index(key)]
+    inside = {id(node) for node in f.walk(page)}
+    assert all(id(widgets[name]) in inside for name in names), key
+assert widgets["setting:orbit_distance"].calls["SetIsEnabled"] == (False,), "the distance waits for the orbit camera"
+assert widgets["value:orbit_distance"].calls["SetText"] == ("3 m",)
 assert "row:custom_fov" not in widgets and "SetIsEnabled" not in widgets["setting:fov"].calls, "the FOV has no switch"
 # The shoulder and the orbit camera wait for third person, the loot reach for its switch (review, 2026-09-26).
-assert all(widgets[f"setting:{key}"].calls["SetIsEnabled"] == (False,) for key in ("shoulder_left", "orbit"))
+assert widgets['setting:shoulder_left'].calls['SetIsEnabled'] == (False,)
+assert widgets['setting:orbit'].calls['SetIsEnabled'] == (True,)
 assert widgets["setting:loot_reach"].calls["SetIsEnabled"] == (True,)
 f.click(form, widgets, "setting:third_person")
 assert all(widgets[f"setting:{key}"].calls["SetIsEnabled"] == (True,) for key in ("shoulder_left", "orbit"))
@@ -22,11 +36,11 @@ f.click(form, widgets, "setting:extended_loot")
 assert widgets["setting:loot_reach"].calls["SetIsEnabled"] == (False,)
 f.click(form, widgets, "setting:third_person")
 f.click(form, widgets, "setting:extended_loot")
-assert not form.pending and widgets["setting:orbit"].calls["SetIsEnabled"] == (False,)
+assert not form.pending and widgets["setting:orbit"].calls["SetIsEnabled"] == (True,)
 nodes = list(f.walk(root.WidgetTree.RootWidget))
 assert len({id(node) for node in nodes}) == len(nodes), "Widget has multiple parents"
 assert all(id(widget) in {id(node) for node in nodes} for widget in widgets.values())
-assert sum(node.kind == "ScrollBox" for node in nodes) == 3
+assert sum(node.kind == "ScrollBox" for node in nodes) == len(form.model.pages) + 1
 for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out"):
     for device in ("keyboard", "controller"):
         assert f"command:{action}:{device}" in widgets
@@ -53,7 +67,8 @@ assert widgets["command:zoom_in:keyboard"].calls["SetNoKeySpecifiedText"] == ("M
 widgets["command:orbit:controller"].selecting = True
 assert f.click(form, widgets, "close") and form.close_ready()
 root, widgets, reopened = f.build()
-assert reopened.page == 1 and widgets["pages"].calls["SetActiveWidgetIndex"] == (1,)
+commands_index = reopened.model.pages.index("commands")
+assert reopened.page == commands_index and widgets["pages"].calls["SetActiveWidgetIndex"] == (commands_index,)
 assert reopened.model.language == "FR" and reopened.model.controller_icons == "XSX"
 assert not reopened.selecting() and settings.commands.option("orbit_controller").value is None
 assert widgets["value:zoom_in:controller"].calls["SetText"] == ("LB",)
@@ -114,7 +129,8 @@ runtime.register("apex_movement", 200, object(), constants.PROTOCOL)
 _, widgets, elsewhere = f.build()
 assert "heading:command_external" in widgets
 assert widgets["commands:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
-assert widgets["camera:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+assert all(widgets[f"{key}:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+           for key in CAMERA_PAGES)
 assert widgets["restore"].calls["SetIsEnabled"] == (False,), "Restore must be disabled without owned settings"
 assert f.click(elsewhere, widgets, "close")
 shared.reset_for_tests()

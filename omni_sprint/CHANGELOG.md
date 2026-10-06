@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.0.10 - 2026-10-06
+
+- New WINDOW button at the top of the menu, beside THEME: three sizes, LARGE (default), FULL SCREEN and NORMAL (the previous size). More room, same text size. Each mod keeps its own.
+- The Orbit camera now opens from first person too. Leaving it brings back the view you had: in third person, the same shoulder and settings.
+- Smooth camera transitions: switching between first person, third person and the Orbit camera glides instead of jumping. On by default, with its own switch. Its duration, Transition animation, is shared with the shoulder switch.
+- Aiming in the Orbit camera follows your Aim View setting: over the shoulder or first person. Release to go back to Orbit.
+
+## 1.0.9 - 2026-10-06
+
+- The menu now opens from the console whatever your console key is, for example "+". With some keys, the console does not reopen by itself when the menu closes: just press your console key.
+
+## 1.0.8 - 2026-10-06
+
+- Fixed the switch to first person during native wall climbing and the camera jump when pulling over the ledge.
+- Added smooth shoulder switching, enabled by default, with an on/off option and a 0.05–1 second duration slider in Camera; default duration: 0.20 seconds.
+- Added smooth camera recentering during native climbing.
+- Reduced redundant game-code checks while aiming to avoid the severe FPS drop with additional aim zoom.
+- Organized Camera settings into four tabs and improved the menus: themes, Escape to close, retained focus and background blur.
+- Existing saved settings, weapon-specific zoom and the aim-view selection are preserved.
+
 ## 1.0.7 - 2026-10-06
 
 - New Camera framing controls: Aim Zoom (Wide, Standard, Close), Shoulder Spacing (Tight, Standard, Open), and Camera Height (Standard, Higher, Lower), each with a custom slider.

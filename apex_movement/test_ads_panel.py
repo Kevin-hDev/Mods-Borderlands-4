@@ -10,9 +10,10 @@ import apex_movement
 from apex_movement import camera_settings, panel_assets, panel_fonts, panel_model, panel_form, panel_view
 from apex_movement import panel_preferences
 from ads_panel_test_fixtures import AdsPanelTests
+from orbit_panel_test_fixtures import OrbitPanelTests
 
 
-class PanelTests(AdsPanelTests, unittest.TestCase):
+class PanelTests(OrbitPanelTests, AdsPanelTests, unittest.TestCase):
     package = apex_movement
     settings = camera_settings
 

@@ -3,12 +3,12 @@
 Kevin, 2026-10-06: a click beside the window handed the mouse to the game, as a desktop window loses its focus.
 Slate gives a click's keyboard focus to the nearest focusable widget under the pointer, and outside the buttons that
 was the game's own viewport. Now a layer covers the screen, blurring the game behind, and the window's holder can
-take the focus, so no click reaches the game. The window keeps the mockup's share of the 1920 x 1080 screen, centred.
+take the focus, so no click reaches the game. The window keeps its size's share of the screen, centred.
 """
 
 import unrealsdk
 
-from . import panel_theme as t, panel_widgets as w
+from . import panel_theme as t, panel_widgets as w, panel_window_size as size
 
 
 def held(pc, window):
@@ -28,8 +28,7 @@ def held(pc, window):
     layer.SetVisibility(w.enum("ESlateVisibility", "Visible"))  # hit, though it draws nothing: it takes the clicks
     layer.SetCursor(w.enum("EMouseCursor", "Default"))
     _span(screen.AddChildToCanvas(layer), 0.0, 0.0)
-    width = (t.WINDOW_WIDTH + t.SHADOW_XL) / t.STAGE_WIDTH
-    height = (t.WINDOW_HEIGHT + t.SHADOW_XL) / t.STAGE_HEIGHT
+    width, height = size.share()
     _span(screen.AddChildToCanvas(window), (1 - width) / 2, (1 - height) / 2)
     return holder
 

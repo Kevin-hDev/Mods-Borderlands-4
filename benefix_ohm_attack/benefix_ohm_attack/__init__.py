@@ -11,7 +11,7 @@ from mods_base import build_mod
 from . import attack, bar, bounce, catch, control_config, damage, enemy, foes, frame, hand, keys, lock, panel_open
 from . import panel_preferences, report, settings
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 __author__ = "kevin-hDev"
 
 

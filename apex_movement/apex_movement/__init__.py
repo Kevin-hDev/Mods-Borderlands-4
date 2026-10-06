@@ -32,7 +32,7 @@ if pack.is_full():
     from . import slow_walk
     walk_keybinds = [walk_key.bind]
 
-__version__ = "1.2.0"
+__version__ = "1.2.3"
 __author__ = "kevin-hDev"
 
 

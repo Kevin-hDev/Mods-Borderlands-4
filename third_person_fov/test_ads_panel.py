@@ -10,9 +10,10 @@ import third_person_fov
 from third_person_fov import settings, panel_assets, panel_fonts, panel_model, panel_form, panel_view
 from third_person_fov import panel_preferences
 from ads_panel_test_fixtures import AdsPanelTests
+from orbit_panel_test_fixtures import OrbitPanelTests
 
 
-class PanelTests(AdsPanelTests, unittest.TestCase):
+class PanelTests(OrbitPanelTests, AdsPanelTests, unittest.TestCase):
     package = third_person_fov
     settings = settings
 

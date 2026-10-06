@@ -42,10 +42,27 @@ check("Python uses the generated view contract without a duplicate", bridge.Conf
       and bridge.Stats is generated_ads.ViewStats)
 
 start, stop, suspend, set_right, stats = Function(), Function(), Function(), Function(True), Function()
+offset = Function()
 library = types.SimpleNamespace(view_start=start, view_stop=stop,
                                 view_set_suspended=suspend, view_set_right=set_right,
-                                view_stats=stats)
+                                view_stats=stats, view_set_offset_suspended=offset)
 api = bridge.Bridge(library)
+check('the generic offset suspension API exists', callable(getattr(api, 'suspend_offset', None)))
+if callable(getattr(api, 'suspend_offset', None)):
+    api.suspend_offset(True, 0.75)
+    check('offset suspension passes its independent duration', offset.calls == [(1, 0.75)])
+    for value in (-1, 1.01, True, '0.2', float('nan')):
+        try:
+            api.suspend_offset(False, value)
+            check('invalid offset timing is refused', False)
+        except ValueError:
+            check('invalid offset timing never reaches native code', offset.calls == [(1, 0.75)])
+    offset.result = 1
+    try:
+        api.suspend_offset(False, 0.2)
+        check('native offset refusal propagates', False)
+    except RuntimeError:
+        check('native offset refusal propagates', True)
 manager = types.SimpleNamespace(_get_address=lambda: 0x12345678)
 check("a finite signed shoulder offset starts the bridge", api.start(manager, 48.4) is True)
 started_config = ctypes.cast(start.calls[0][1], ctypes.POINTER(bridge.Config)).contents

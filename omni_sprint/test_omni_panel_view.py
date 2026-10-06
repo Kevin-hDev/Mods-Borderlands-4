@@ -1,4 +1,4 @@
-"""Omni Sprint's window: its sprint and camera pages, or one accurate notice while another camera mod owns them."""
+"""Omni Sprint's window: its sprint and four camera pages, or one accurate notice while another camera mod owns them."""
 
 import pathlib
 import sys
@@ -27,61 +27,7 @@ def check(label: str, condition: bool) -> None:
         fails.append(label)
 
 
-class Struct:
-    def __getattr__(self, name):
-        if name.startswith("__"):
-            raise AttributeError(name)
-        value = Struct()
-        setattr(self, name, value)
-        return value
-
-
-class Enum:
-    def __init__(self, name):
-        self.name = name
-
-    def __getattr__(self, member):
-        return f"{self.name}.{member}"
-
-
-class Widget:
-    created = []
-
-    def __init__(self, kind, owner):
-        self.kind, self.owner = kind, owner
-        self.children, self.slots, self.calls = [], [], {}
-        self.checked = self.selecting = False
-        self.value = 0.0
-        self.Font = Struct()
-        self.created.append(self)
-
-    def __getattr__(self, name):
-        if name.startswith("Set") or name.startswith("AddChild"):
-            return lambda *args: self.call(name, args)
-        if name[:1].isupper():
-            value = Struct()
-            setattr(self, name, value)
-            return value
-        raise AttributeError(name)
-
-    def call(self, name, args):
-        if name == "SetContent":
-            self.children[:] = [args[0]]
-        elif name.startswith("AddChild"):
-            self.children.append(args[0])
-            slot = Widget("Slot", self)
-            self.slots.append(slot)
-            return slot
-        self.calls[name] = args
-
-    def IsChecked(self):
-        return self.checked
-
-    def GetValue(self):
-        return self.value
-
-    def GetIsSelectingKey(self):
-        return self.selecting
+from omni_panel_view_test_fixtures import Enum, Widget
 
 
 def walk(node):
@@ -113,8 +59,9 @@ panel_assets.texture = lambda _world: None
 panel_fonts.build = lambda _root: {"title": object(), "body": object()}
 
 model, root, widgets, form = build()
-check("three pages, opened on OMNI SPRINT, under the mod's name",
-      len(widgets["pages"].children) == len(model.pages) == 3 and widgets["focus"] is widgets["nav:omni_sprint"]
+CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot")
+check("six pages, opened on OMNI SPRINT, under the mod's name",
+      len(widgets["pages"].children) == len(model.pages) == 6 and widgets["focus"] is widgets["nav:omni_sprint"]
       and theme.BRAND == "OMNI SPRINT")
 check("EN and FR sit in the header, with no gear nor Options page",
       "EN" in widgets and "FR" in widgets and "options" not in widgets and "language:EN" not in widgets)
@@ -150,7 +97,34 @@ check("the real Omni form explains a refused duplicate",
 check("the sprint's page holds its switch, and each card says what its page sets",
       "row:omni_sprint" in widgets and widgets["label:omni_sprint"].calls["SetText"] == ("SPRINT IN ALL DIRECTIONS",)
       and widgets["group:omni_sprint"].calls["SetText"] == ("The game's sprint, in every direction.",)
-      and widgets["group:camera"].calls["SetText"] == ("View, field of view and loot.",))
+      and widgets["group:camera"].calls["SetText"] == ("View on foot, shoulder and field of view.",))
+
+
+def page_of(widget):
+    return next(key for key, page in zip(model.pages, widgets["pages"].children)
+                if any(node is widget for node in walk(page)))
+
+
+placement = {"camera": ("setting:third_person", "setting:shoulder_left", "setting:custom_fov", "setting:fov",
+                        "heading:framing:horizontal", "heading:framing:height"),
+             "aiming": ("setting:third_person_ads", "heading:framing:zoom"),
+             "orbit_camera": ("setting:orbit", "setting:orbit_distance"),
+             "loot": ("setting:extended_loot", "setting:loot_reach")}
+check("each camera setting sits on its page (Kevin, 2026-10-06), spacing and height with the view on foot",
+      all(page_of(widgets[name]) == key for key, names in placement.items() for name in names))
+hint = "Turn on third person in the CAMERA tab."
+check("only AIMING requires third person; Orbit is also available from first person",
+      widgets['group:aiming'].calls['SetText'][0].endswith('\n' + hint)
+      and all(hint not in widgets[f"group:{key}"].calls["SetText"][0] for key in ("camera", "orbit_camera", "loot")))
+form.shown["third_person"] = True
+form.refresh_labels(form.resolve())
+check("with third person on, the line goes away",
+      widgets["group:aiming"].calls["SetText"] == ("Third-person aiming and zoom.",)
+      and widgets["group:orbit_camera"].calls["SetText"] == ("Circles the character at the distance you choose.",))
+form.shown["third_person"] = model.options["third_person"].value
+check("the Orbit distance reads in metres, its bounds too",
+      [widgets[f"{part}:orbit_distance"].calls["SetText"] for part in ("value", "low", "high")]
+      == [("3 m",), ("0.75 m",), ("6 m",)])
 check("the shoulder uses side labels instead of generic on/off",
       widgets["setting:shoulder_left_label"].calls["SetText"] == ("RIGHT",))
 panel_preferences.french.value = True
@@ -161,6 +135,9 @@ check("in French, the fields say MODIFIER, APPUIE SUR UNE TOUCHE and AUCUNE",
       and widgets["clear:third_person:keyboard_label"].calls["SetText"] == ("AUCUNE",))
 check("the French shoulder side is explicit",
       widgets["setting:shoulder_left_label"].calls["SetText"] == ("DROITE",))
+check("in French, the Orbit distance has a decimal comma",
+      widgets["low:orbit_distance"].calls["SetText"] == ("0,75 m",)
+      and widgets["group:aiming"].calls["SetText"][0].endswith("\nActive la troisième personne dans l'onglet CAMÉRA."))
 check("every widget is attached once", attached_once(root, widgets))
 check("one scroll area per page, one for the sidebar",
       sum(node.kind == "ScrollBox" for node in Widget.created) == len(model.pages) + 1)
@@ -174,11 +151,12 @@ check("while another camera mod is on, stable camera controls are hidden and the
           ("setting:third_person", "setting:shoulder_left", "setting:orbit", "setting:fov",
            "label:omni_sprint", "setting:omni_sprint", "row:omni_sprint", "heading:command_external",
            "command:third_person:keyboard"))
-      and widgets["camera:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+      and all(widgets[f"{key}:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+              for key in CAMERA_PAGES)
       and widgets["commands:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",))
-check("the camera card identifies an external owner when Apex Movement wins",
-      widgets["group:camera"].calls["SetText"] ==
-      ("Un autre mod contrôle la caméra. Règle-la dans son menu.",)
+check("every camera card identifies an external owner when Apex Movement wins",
+      all(widgets[f"group:{key}"].calls["SetText"] ==
+          ("Un autre mod contrôle la caméra. Règle-la dans son menu.",) for key in CAMERA_PAGES)
       and widgets["group:omni_sprint"].calls["SetText"] == ("Le sprint du jeu, dans toutes les directions.",)
       and attached_once(root, widgets))
 runtime.reset_for_tests()
@@ -196,7 +174,8 @@ shared.register("apex_movement", 200, object(), constants.PROTOCOL)
 form.poll()
 check("an open Omni window hides the dormant camera and keeps sprint restoration available",
       model.camera_elsewhere
-      and widgets["camera:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+      and all(widgets[f"{key}:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+              for key in CAMERA_PAGES)
       and widgets["commands:settings"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
       and widgets["commands:external"].calls["SetVisibility"] == ("ESlateVisibility.Visible",)
       and widgets["restore"].calls.get("SetIsEnabled") == (True,))
@@ -210,9 +189,26 @@ shared.unregister("apex_movement")
 form.poll()
 check("the same Omni window restores camera controls when ownership returns",
       not model.camera_elsewhere
-      and widgets["camera:settings"].calls["SetVisibility"] == ("ESlateVisibility.Visible",)
+      and all(widgets[f"{key}:settings"].calls["SetVisibility"] == ("ESlateVisibility.Visible",)
+              for key in CAMERA_PAGES)
       and widgets["restore"].calls["SetIsEnabled"] == (True,))
 runtime.reset_for_tests()
+
+# Each theme changes colours only, read when the window is drawn: no colour of another theme stays (2026-10-06).
+veils = {tuple(theme.HOVER_OVERLAY), tuple(theme.PRESS_OVERLAY)}
+original_rgba = theme.rgba
+for theme_name in theme.THEMES:
+    panel_preferences.theme.value = theme_name
+    used = []
+    theme.rgba = lambda colour, alpha=1.0: used.append((colour, alpha)) or original_rgba(colour, alpha)
+    try:
+        build()
+    finally:
+        theme.rgba = original_rgba
+    allowed = {*{**theme._EMBER, **theme.PALETTES[theme_name]}.values()}
+    stray = {(colour, alpha) for colour, alpha in used if colour not in allowed and (colour, alpha) not in veils}
+    check(f"{theme_name}: no colour kept from another theme, camera pages included {sorted(stray)}", not stray)
+panel_preferences.theme.value = "EMBER"
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -5,6 +5,7 @@ from typing import Any
 from .arbitration import Arbiter, Client
 from .constants import PROTOCOL
 from .ads_coordination import transfer_pending
+from .orbit_entry import OrbitEntry
 
 CHECK_NS = 500_000_000
 
@@ -19,6 +20,7 @@ class CameraRuntime:
         self._next_fov_ns = 0
         self._setup_owner: str | None = None
         self._setup_failed = False
+        self.orbit_entry = OrbitEntry()
 
     def register(self, owner: str, priority: int, settings: Any, protocol: int = PROTOCOL) -> None:
         self.arbiter.register(Client(owner, priority, settings), protocol)
@@ -31,7 +33,9 @@ class CameraRuntime:
         ads = getattr(self.third_person, "ads", None)
         if ads is not None and ads.pending:
             return "cleanup_pending"
-        if not active.settings.third_person_enabled() or not active.settings.third_person_ads():
+        camera_enabled = (active.settings.third_person_enabled()
+                          or getattr(active.settings, 'orbit_enabled', lambda: False)())
+        if not camera_enabled or not active.settings.third_person_ads():
             return None
         return notice(self.third_person)
 
@@ -64,7 +68,8 @@ class CameraRuntime:
             return None
         if self._setup_owner != owner:
             self._setup_owner, self._setup_failed = owner, False
-        if not enabled:
+        if not (enabled or getattr(active.settings, 'orbit_enabled', lambda: False)()
+                or self.orbit_entry.pending):
             self._setup_failed = False
             return None
         if self.third_person is not None or self._setup_failed:
@@ -73,6 +78,7 @@ class CameraRuntime:
             setup(self)
         except Exception as error:
             self._setup_failed = True
+            self.orbit_entry.cancel(active)
             return error
         return None
 
@@ -82,18 +88,23 @@ class CameraRuntime:
         if client is None or client.owner != owner:
             return False
         try:
+            if self.base_view_locked(owner):
+                return False
             client.settings.set_third_person(not client.settings.third_person_enabled())
         except Exception:
             client.settings.note("third person shortcut: setting could not be saved")
             return False
         return True
 
+    def base_view_locked(self, owner: str) -> bool:
+        return self.orbit_entry.base_view_locked(self, owner)
+
     def camera_ready(self, owner: str) -> bool:
         client = self.arbiter.active()
-        if (client is None or client.owner != owner or self.third_person is None
-                or not client.settings.third_person_enabled()):
+        if client is None or client.owner != owner:
             return False
-        return bool(self.third_person.orbit_available())
+        return bool((self.third_person is not None and self.third_person.orbit_available())
+                    or self.orbit_entry.ready(self, client))
 
     def toggle_shoulder(self, owner: str) -> bool:
         client = self.arbiter.active()
@@ -121,26 +132,23 @@ class CameraRuntime:
 
     def toggle_orbit(self, owner: str) -> bool:
         client = self.arbiter.active()
-        if client is None or client.owner != owner or self.third_person is None:
+        if client is None or client.owner != owner:
             return False
         try:
-            if (not client.settings.third_person_enabled()
-                    or not self.third_person.orbit_available()):
-                return False
-            return bool(self.third_person.toggle_orbit(client.settings, self.third_person.clock()))
+            if self.third_person is not None and self.third_person.orbit_available():
+                return bool(self.third_person.toggle_orbit(client.settings, self.third_person.clock()))
+            return self.orbit_entry.request(self, client, not client.settings.orbit_enabled())
         except Exception:
             client.settings.note("orbit shortcut: setting could not be saved")
             return False
 
     def set_orbit(self, owner: str, enabled: bool) -> bool:
         client = self.arbiter.active()
-        if (type(enabled) is not bool or client is None or client.owner != owner
-                or self.third_person is None):
+        if type(enabled) is not bool or client is None or client.owner != owner:
             return False
         try:
-            if (not client.settings.third_person_enabled()
-                    or not self.third_person.orbit_available()):
-                return False
+            if self.third_person is None or not self.third_person.orbit_available():
+                return self.orbit_entry.request(self, client, enabled)
             return bool(self.third_person.set_orbit(
                 client.settings, enabled, self.third_person.clock()))
         except Exception:
@@ -150,7 +158,6 @@ class CameraRuntime:
     def adjust_orbit_zoom(self, owner: str, direction: int) -> bool:
         client = self.arbiter.active()
         if (client is None or client.owner != owner or self.third_person is None
-                or not client.settings.third_person_enabled()
                 or self.third_person.zoom.settings is not client.settings):
             return False
         try:
@@ -183,10 +190,10 @@ class CameraRuntime:
                 return
         if client is None:
             return
+        self.orbit_entry.observe(client, context)
         if self.loot is not None:
             self.loot.sync(client.owner, context, client.settings, now_ns)
-        if self.third_person is not None:
-            self.third_person.sync(client.owner, context, client.settings, now_ns)
+        self.orbit_entry.sync(self, client, context, now_ns)
         player = context
         if hasattr(context, "Player"):
             player = context.Player if getattr(context, "OakCharacter", None) is not None else None
@@ -198,6 +205,8 @@ class CameraRuntime:
             self.fov.apply(client.owner, player, client.settings)
 
     def _stop_active(self) -> None:
+        self.orbit_entry.retirement.retire(self.third_person)
+        self.orbit_entry.reset()
         errors = []
         if self.loot is not None:
             try:

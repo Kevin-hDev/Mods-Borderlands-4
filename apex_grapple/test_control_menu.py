@@ -43,6 +43,7 @@ assert current.pop("menu_language") == "EN", "Older settings gain English withou
 assert current.pop("controller_icons") == "PS5", "Older settings gain Kevin's chosen icon default"
 assert current.pop("menu_last_page") == "shot", "Older settings start on the first tab without a migration"
 assert current.pop("menu_theme") == "EMBER", "Older settings keep the menus' first theme without a migration"
+assert current.pop("menu_window_size") == "LARGE", "Older settings open in the new default size, LARGE"
 assert current["shot_menu"].pop("stamina_cost") == 33, "Older settings gain the reserve cost at its default"
 assert current.pop("hold_menu") == {"keyboard_hold": False, "controller_hold": False, "hold_time": 0.4},     "Older settings gain the hold mode, off"
 assert current == saved["options"], "Existing controls and gameplay settings must survive"

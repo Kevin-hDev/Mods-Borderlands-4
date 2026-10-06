@@ -1,6 +1,6 @@
 # Third Person & FOV
 
-Version **1.1.2**.
+Version **1.1.5**.
 
 An over-the-shoulder camera and a wider field of view for Borderlands 4, without the movement changes from Apex
 Movement or Omni Sprint.
@@ -46,6 +46,12 @@ menu instead of showing settings that would change nothing.
 No code from BL4NativeCameraToggle is included.
 
 ## Camera framing
+
+Native wall climbing stays in third person, including the pull over the ledge.
+Shoulder switching is smooth by default; its animation can be disabled and its
+duration adjusted from 0.05 to 1 second in Camera (0.20 seconds by default).
+Native climbing has its own smooth recentering, independent of this duration.
+Camera controls are grouped into four tabs.
 
 Camera presets and custom sliders adjust aim zoom, shoulder spacing, and height.
 Standard adds 15% aim zoom and 10% shoulder spacing; height is unchanged.

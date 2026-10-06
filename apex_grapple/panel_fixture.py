@@ -77,7 +77,7 @@ def names(model):
     found.update(("icons_label", "pad_summary", "pad_label", "pad_first", "pad_second",
                   "pad_separator", "pad_second_box", "first:icon", "second:icon",
                   "first:key_label", "second:key_label"))
-    buttons = ["theme", "EN", "FR", "close", "restore", "undo", "enabled", "two", "reset"]
+    buttons = ["window_size", "theme", "EN", "FR", "close", "restore", "undo", "enabled", "two", "reset"]
     buttons += [f"nav:{page}" for page in panel_theme.PAGES]
     buttons += ["icons:PS5", "icons:XSX"]
     for page in panel_theme.PAGES:

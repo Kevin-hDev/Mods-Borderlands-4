@@ -7,14 +7,14 @@ from .foot_mode_rollback import restore
 
 def cancel(state, controller, priority: str, restore_layers: bool) -> bool:
     transaction = state.transaction
-    if not state.pending or priority not in ("aim", "vehicle"):
+    if not state.pending or priority not in ("aim", "vehicle", "climb"):
         return False
     if transaction is None:
         requested_mode = state.pending_mode
         restore_orbit = controller._desired_mode == ORBIT_MODE
     else:
         enabled, previous = transaction
-        requested_mode = ORBIT_MODE if enabled else THIRD_PERSON_MODE
+        requested_mode = ORBIT_MODE if enabled else state.origin(controller._ads_settings)
         restore_orbit = previous
     actor, manager = controller._lifetime.owned()
     try:
@@ -23,9 +23,10 @@ def cancel(state, controller, priority: str, restore_layers: bool) -> bool:
                 mode_layers.remove_all(controller, actor, manager)
             controller.set_desired_mode(ORBIT_MODE)
         else:
-            controller.set_desired_mode(THIRD_PERSON_MODE)
+            base = state.origin(controller._ads_settings)
+            controller.set_desired_mode(base)
             if (restore_layers and actor is not None and manager is not None
-                    and not controller._mode_pushes):
+                    and not controller._mode_pushes and base == THIRD_PERSON_MODE):
                 mode_layers.push_one(controller, actor, manager)
     except Exception as error:
         state.clear_pending()

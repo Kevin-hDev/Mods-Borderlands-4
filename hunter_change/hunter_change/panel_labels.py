@@ -3,6 +3,7 @@
 
 from . import panel_buttons as b, panel_hunters as hunter_page, panel_i18n as i18n, panel_slider as s, panel_switch, panel_theme as t
 from . import panel_theme_choice
+from . import panel_size_choice
 
 
 def apply(form, widgets):
@@ -10,6 +11,7 @@ def apply(form, widgets):
     language = form.model.language
     for name in ("close",):
         widgets[f"{name}_label"].SetText(i18n.text(name, language))
+    panel_size_choice.paint(widgets, form.model.window_size, language)
     panel_theme_choice.paint(widgets, form.model.theme, language)
     for lang in ("EN", "FR"):
         widgets[f"{lang}_label"].SetText(lang)

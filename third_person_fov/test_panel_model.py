@@ -25,9 +25,11 @@ def check(label, condition):
 
 model = Model(mod)
 check("SDK entry opens the custom window", getattr(mod, panel_open.MARKER, False))
-check("only camera settings and five separate command pairs are exposed",
-      model.pages == ("camera", "commands") and model.page == "camera"
-      and list(model.options) == ["third_person", "third_person_ads", "shoulder_left", "orbit", "fov", "extended_loot", "loot_reach"]
+check("only camera settings, over four pages (Kevin, 2026-10-06), and five separate command pairs are exposed",
+      model.pages == ("camera", "aiming", "orbit_camera", "loot", "commands") and model.page == "camera"
+      and list(model.options) == ["third_person", "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "fov", "third_person_ads", "orbit",
+                                  "orbit_distance", "extended_loot", "loot_reach"]
+      and set(model.camera_options) == set(model.options)
       and len(model.command_options) == 10)
 check("preferences belong to the mod's existing save file",
       all(option in mod.kwargs["options"] and option.mod is mod for option in prefs.ALL))
@@ -59,7 +61,8 @@ check("command reset leaves zoom and FOV alone", model.default_commands()
 model.assign_command("zoom_out", "keyboard", "H")
 check("global restore also resets distance and commands", model.restore()
       and settings.zoom.distance() == 300 and settings.fov.value == 110
-      and settings.commands.option("zoom_out_key").value is None)
+      and settings.commands.option("zoom_out_key").value is None
+      and [option.identifier for option, _ in model._undo].count("orbit_distance") == 1)
 check("Undo restores the whole preceding setup", model.undo()
       and settings.zoom.distance() == 450 and settings.fov.value == 125
       and settings.commands.option("zoom_out_key").value == "H")

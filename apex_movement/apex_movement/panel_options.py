@@ -1,7 +1,19 @@
-"""The gear page from mockup V2: camera choices and the menu language."""
+"""The gear page from mockup V2, in three tabs since 2026-10-06: camera, commands and the menu language.
+
+Kevin found the single page too long (docs/mokup/menu_mods/decisions.md, sketch A of options_onglets): each tab is a
+page of the window's switcher with the same head, the tilted OPTIONS title and the three tab buttons, then its own
+sentence. "options" stays the camera tab's page key, the one a saved page already names.
+"""
 
 from . import panel_buttons as b, panel_pages as p, panel_shortcut as sc
 from . import panel_text as tx, panel_theme as t, panel_widgets as w
+
+# The page each tab shows, in the order of its buttons. Without the camera, Apex Movement's separate files keep one
+# page, the language under the OPTIONS title, and no tab.
+TABS = ("options", "commands", "language")
+# Each tab's button and the sentence under the title.
+NAMES = {"options": "camera", "commands": "commands", "language": "languages"}
+SENTENCES = {"options": "camera_tab_desc", "commands": "commands_tab_desc", "language": "options_desc_menu"}
 
 
 def _language_card(body, widgets, template):
@@ -20,28 +32,57 @@ def _language_card(body, widgets, template):
     w.column(rows, line, padding=w.pad(t.SPACE_3, 0, t.SPACE_3))
 
 
-def _heading(body, widgets):
-    """The mockup's page head: a tilted inked title, then a plain sentence (menu.css .mod-head)."""
-    title = tx.text(body, "", "hero")
+def head(body, widgets, template, page, tabs):
+    """The mockup's page head: the tilted inked title and its tabs on one line, then a plain sentence."""
+    line = w.new("HorizontalBox", body)
+    title = tx.text(line, "", "hero")
     title.SetRenderTransformPivot(w.vector(0.0, 0.5))
     title.SetRenderTransformAngle(float(t.TILT_TITLE))
+    w.row(line, title, valign="Center")
+    for index, tab in enumerate(tabs):
+        w.row(line, b.button(line, widgets, f"tab:{page}:{tab}", "tab", template, "off"),
+              padding=w.pad(0, 0, 0, t.SPACE_7 if index == 0 else t.SPACE_3), valign="Center")
     description = tx.text(body, "", "body", wrap=True)
-    widgets["options_title"], widgets["options_description"] = title, description
-    w.column(body, title)
+    widgets[f"options_title:{page}"], widgets[f"options_description:{page}"] = title, description
+    w.column(body, line)
     w.column(body, w.sized(body, description, width=t.DESC_MAX_WIDTH),
              padding=w.pad(t.SPACE_1, 0, t.SPACE_6), halign="Left")
 
 
+def tab_page(owner, widgets, template, page, tabs=TABS):
+    """A tab's page: its head stays at the top, always in reach, while the cards scroll under it (Kevin,
+    2026-10-06)."""
+    frame = w.new("VerticalBox", owner)
+    top = w.new("VerticalBox", frame)
+    head(top, widgets, template, page, tabs)
+    w.column(frame, top, padding=w.pad(t.SPACE_7, t.SPACE_8, 0))
+    scroll, body = p.scrolling_body(frame, template, top=0)
+    w.column(frame, scroll, fill=True)
+    return frame, body
+
+
 def options_page(owner, model, widgets, template):
-    page, body = p.scrolling_body(owner, template)
-    _heading(body, widgets)
-    if model.camera_options:
-        rows = p.card(body, widgets, "camera")
-        controls = w.new("VerticalBox", rows)
-        widgets["camera:settings"] = controls
-        w.column(rows, controls)
-        sc.rows(controls, model.camera_options.values(), widgets, template)
-        from . import panel_framing
-        panel_framing.build(controls, widgets, template)
+    if not model.camera_options:
+        page, body = tab_page(owner, widgets, template, "options", ())
+        _language_card(body, widgets, template)
+        return page
+    page, body = tab_page(owner, widgets, template, "options")
+    rows = p.card(body, widgets, "camera")
+    controls = w.new("VerticalBox", rows)
+    widgets["camera:settings"] = controls
+    w.column(rows, controls)
+    sc.rows(controls, model.camera_options.values(), widgets, template)
+    from . import panel_framing
+    panel_framing.build(controls, widgets, template)
+    return page
+
+
+def language_page(owner, widgets, template):
+    page, body = tab_page(owner, widgets, template, "language")
     _language_card(body, widgets, template)
     return page
+
+
+def commands_frame(widgets, template):
+    """How the commands page is built here: as an Options tab (panel_camera_commands.page)."""
+    return lambda owner: tab_page(owner, widgets, template, "commands")

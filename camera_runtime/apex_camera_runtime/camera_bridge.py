@@ -88,8 +88,40 @@ class CameraBridge:
     def suspend(self, suspended):
         # The native interaction hook reads this state on each call, including ADS/vehicle/Orbit.
         self.view.suspend(suspended)
+        if self.collision is not None:
+            self.collision.offset_permission = None
+            self.collision.climbing = False
         if suspended and self.collision is not None:
             self.collision.invalidate()
+
+    def suspend_climb(self, suspended):
+        self.view.suspend_climb(suspended)
+        if self.collision is not None:
+            self.collision.offset_permission = None
+            self.collision.climbing = suspended
+            self.collision.invalidate()
+
+    def suspend_orbit(self, suspended, seconds, permission):
+        self.view.suspend_offset(suspended, seconds)
+        if self.collision is not None:
+            self.collision.climbing = False
+            def temporary_permission(manager, actor):
+                if not self.view.offset_transition_active():
+                    self.collision.offset_permission = None
+                    return None  # Finished: resume the normal ThirdPerson/ADS rule.
+                return permission(manager, actor)
+            self.collision.offset_permission = temporary_permission if seconds else None
+            self.collision.invalidate()
+
+    def cancel_orbit_transition(self, suspended):
+        if self.collision is not None and self.collision.offset_permission is not None:
+            self.suspend(suspended)
+
+    def offset_transition_active(self):
+        return self.view.offset_transition_active()
+
+    def transition_duration(self, seconds):
+        self.view.transition_duration(seconds)
 
     def set_right(self, right):
         return self.view.set_right(right)

@@ -115,6 +115,22 @@ class CollisionTests(unittest.TestCase):
         self.assertEqual(self.physics.calls, 0)
         self.assertEqual(self.resolver.diagnostics.errors, 0)
 
+    def test_elected_orbit_fade_checks_partial_wall_and_rechecks_takeover(self):
+        self.manager.GetActorCameraMode = lambda _: 'Orbit'
+        self.resolver.offset_permission = lambda *_: True
+        self.physics.hit = True
+        self.assertEqual(self.invoke(), (0, (20, 0, 0)))
+        self.resolver.offset_permission = lambda *_: False
+        self.manager.GetActorCameraMode = lambda _: 'ThirdPerson'
+        before = self.physics.calls
+        self.assertEqual(self.invoke()[0], 1)
+        self.assertEqual(self.physics.calls, before)
+        allowed = iter((True, False))
+        self.resolver.offset_permission = lambda *_: next(allowed)
+        self.assertEqual(self.invoke()[0], 1)
+        self.resolver.release()
+        self.assertIsNone(self.resolver.offset_permission)
+
     def test_callback_is_pinned_until_native_stop_is_confirmed(self):
         view = NS(library=self.library, start=lambda *_: True, stop=lambda: None)
         bridge = CameraBridge(view, None, self.messages.append, collision=self.resolver)
@@ -156,6 +172,17 @@ class CollisionTests(unittest.TestCase):
         self.query.before[:] = self.query.desired[:]
         self.assertEqual(self.invoke(), (0, (100, 0, 0)))
         self.assertEqual(self.physics.calls, 0)
+
+    def test_only_explicit_climb_fade_may_trace_the_climbing_camera(self):
+        self.manager.GetActorCameraMode = lambda _: 'ThirdPersonClimbing'
+        self.assertEqual(self.invoke()[0], 1)
+        self.resolver.climbing = True
+        self.physics.hit = True
+        self.assertEqual(self.invoke(), (0, (20, 0, 0)))
+        self.manager.GetActorCameraMode = lambda _: 'ThirdPersonVehicle'
+        self.assertEqual(self.invoke()[0], 1)
+        self.resolver.release()
+        self.assertFalse(self.resolver.climbing)
 
     def test_late_collision_failure_is_logged_after_a_long_session(self):
         # A periodic report must not exhaust the separate error diagnostics.

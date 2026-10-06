@@ -28,7 +28,8 @@ class Model(Restore):
             self.camera_options = {option.identifier: option for option in camera_settings.VISIBLE}
             self.command_options = {option.identifier: option for option in camera_settings.commands.options}
             self.command_actions = Actions(camera_settings.commands, mod)
-            self.pages += ("commands",)
+            # The Options tabs past the camera's (panel_options.TABS), pages without a sidebar button.
+            self.pages += ("commands", "language")
         self.options = {**movement, **self.camera_options}
         self._undo, self._command_undo = (), {}
         self._command_plan = None
@@ -98,6 +99,21 @@ class Model(Restore):
 
     def change_language(self, value):
         return value in prefs.LANGUAGES and self.save(((prefs.french, value == "FR"),))
+
+    @property
+    def theme(self):
+        return prefs.theme.value if prefs.theme.value in prefs.THEMES else prefs.theme.default_value
+
+    def change_theme(self, value):
+        return value in prefs.THEMES and self.save(((prefs.theme, value),))
+
+    @property
+    def window_size(self):
+        size = prefs.window_size
+        return size.value if size.value in prefs.SIZES else size.default_value
+
+    def change_window_size(self, value):
+        return value in prefs.SIZES and self.save(((prefs.window_size, value),))
 
     def change_controller_icons(self, value):
         return value in prefs.CONTROLLER_ICONS and self.save(((prefs.controller_icons, value),))

@@ -1,13 +1,8 @@
 """The camera window presents existing SDK options without changing their saved identifiers."""
 
-from mods_base import NestedOption
-
-from . import panel_camera_text, settings
+from . import panel_camera_pages, settings
 
 # Presentation groups are not registered with the SDK: old flat saves remain authoritative.
-camera = NestedOption(
-    "camera_menu", [settings.third_person, settings.third_person_ads, settings.shoulder_left, settings.orbit,
-                    settings.fov, *settings.loot.options],
-    display_name="Camera", description=panel_camera_text.EN["camera_desc"],
-)
-ALL = MENU = [camera]
+# This mod's FOV has no Custom FOV switch: it always applies while the mod owns the camera.
+CAMERA = panel_camera_pages.groups(settings, fov=[settings.fov])
+ALL = MENU = [*CAMERA]

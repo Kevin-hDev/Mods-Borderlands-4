@@ -3,9 +3,23 @@
 from typing import Any
 
 from . import active_mode, foot_preemption
+from .constants import CAMERA_TRANSITION, ORBIT_MODE, THIRD_PERSON_MODE
 
 
 class ControllerActions:
+    def set_desired_mode(self, mode: str, release_orbit: bool = True) -> None:
+        if mode not in (THIRD_PERSON_MODE, ORBIT_MODE, CAMERA_TRANSITION):
+            raise ValueError('unsupported foot camera mode')
+        if mode == ORBIT_MODE or release_orbit:
+            self._suspend('orbit', mode != THIRD_PERSON_MODE)
+        self._desired_mode = mode
+
+    def confirm_desired_mode(self) -> None:
+        self._suspend('orbit', self._desired_mode != THIRD_PERSON_MODE)
+
+    def presentation_mode(self):
+        return self.orbit_aim.mode(self.climb.transition_mode(self))
+
     def shoulder_available(self) -> bool:
         return self.shoulder.available(self)
 

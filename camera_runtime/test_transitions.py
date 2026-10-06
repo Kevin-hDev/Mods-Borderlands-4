@@ -10,6 +10,7 @@ sys.path.insert(0, str(HERE))
 from apex_camera_runtime.transitions import TransitionHooks  # noqa: E402
 from apex_camera_runtime.foot_mode import ORBIT_MODE  # noqa: E402
 from camera_test_fixtures import Bound, Hooks, args  # noqa: E402
+from native_climb_test_fixture import NativeClimbFixture  # noqa: E402
 
 fails = []
 
@@ -126,6 +127,76 @@ check("a ground slam landing preserves Orbit when it is the selected third-perso
 check("no transition path calls CameraTransition with Orbit",
       orbit_pc.client_modes == [ORBIT_MODE] * 4)
 orbit.remove()
+
+for scenario in ("reattach", "already_climbing", "unrelated", "finished", "vehicle", "unreadable"):
+    for suffix in (":CameraTransition", ":ServerCameraTransition", ":ClientSetCameraMode"):
+        fixture = NativeClimbFixture()
+        fixture.make(orbit=True)
+        if scenario != "unrelated":
+            fixture.enter()
+            fixture.frame(3)
+            fixture.ladder.CurrentClimbable = None
+            fixture.animation.CurrentType = 4
+            fixture.frame(4)
+            if scenario == "finished":
+                fixture.animation.CurrentType = 0
+                fixture.frame(5)
+                fixture.frame(6)
+            else:
+                fixture.ladder.CurrentClimbable = object()
+                fixture.animation.CurrentType = 3
+        fixture.actor.ZoomState.bWantsToZoom = True
+        fixture.controller._transitions.set_first_person_allowed(True)
+        if scenario == "reattach":
+            fixture.manager.mode = "ladder"
+        before = fixture.manager.mode
+        if scenario == "vehicle":
+            fixture.controller._in_vehicle = True
+        if scenario == "unreadable":
+            def unreadable(_actor):
+                raise RuntimeError("unavailable")
+            fixture.manager.GetActorCameraMode = unreadable
+        fixture.requests.clear()
+        climb_path = next(key for key in fixture.controller.hooks.items if key[0].endswith(suffix))
+        parameters = (types.SimpleNamespace(NewCamMode="ladder")
+                      if suffix == ":ClientSetCameraMode" else args("ladder"))
+
+        def apply_native(*values):
+            fixture.pc.ClientSetCameraMode(values[0])
+
+        result = fixture.controller.hooks.items[climb_path](fixture.pc, parameters, None, apply_native)
+        if scenario in ("reattach", "already_climbing", "unreadable"):
+            check(f"{suffix[1:]} keeps native reattachment in third person ({scenario})",
+                  result is fixture.controller.hooks.Block
+                  and fixture.manager.mode == "ThirdPersonClimbing"
+                  and fixture.requests == (["ThirdPersonClimbing"] if scenario == "reattach" else []))
+            check("climbing guard never changes saved Orbit or adds camera layers",
+                  fixture.settings.orbit and fixture.settings.orbit_saves == 0
+                  and (fixture.manager.pushes, fixture.manager.pops) == (0, 0))
+            fixture.requests.clear()
+            if scenario != "unreadable":
+                fixture.frame(7)
+            check("reattachment hold does not restart camera on each frame", fixture.requests == [])
+        else:
+            check(f"{suffix[1:]} leaves ladder alone outside native traversal ({scenario})",
+                  result is None and fixture.requests == [] and fixture.manager.mode == before)
+        outsider = types.SimpleNamespace(_get_address=lambda: 11)
+        check("climbing rewrite never touches another controller",
+              fixture.controller.hooks.items[climb_path](outsider, parameters, None, apply_native) is None)
+
+from orbit_aim_test_fixture import OrbitAimFixture
+
+orbit_fixture = OrbitAimFixture()
+orbit_fixture.make()
+orbit_fixture.raise_modes = ('ThirdPerson',)
+orbit_fixture.actor.ZoomState.bWantsToZoom = True
+orbit_fixture.pc.CameraTransition('Default')
+check("an Orbit ADS entry exception yields native aim before the next frame",
+      orbit_fixture.manager.mode == 'Default'
+      and list(orbit_fixture.requests) == ['ThirdPerson', 'Default']
+      and not orbit_fixture.ads.wanted
+      and not orbit_fixture.controller.foot_mode.pending
+      and orbit_fixture.controller._desired_mode == 'Orbit')
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

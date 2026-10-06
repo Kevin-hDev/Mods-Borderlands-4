@@ -41,13 +41,14 @@ shown = {}  # What the labels would show beside each setting: for the shortcut, 
 panel_labels.value = lambda _widgets, option, current, _language: shown.__setitem__(option.identifier, current)
 mod = Mod()
 model = panel_model.Model(mod)
-names = ["focus", "pages", "notice", "close", "options", "language:EN", "language:FR",
+names = ["focus", "pages", "notice", "close", "theme", "window_size", "options", "language:EN", "language:FR",
          "restore", "undo", "enabled", "row:fov", "description:fov",
          "row:walk_toggle", "description:walk_toggle", "row:walk_key_speed", "description:walk_key_speed",
          "row:loot_reach", "description:loot_reach", "row:shoulder_left", "description:shoulder_left",
          "row:orbit", "description:orbit", "row:third_person_ads", "description:third_person_ads"]
 names += [f"nav:{page}" for page in model.pages]
 names += [f"setting:{key}" for key in model.options]
+names += [f"{part}:{key}" for key in ('shoulder_smooth', 'orbit_smooth', 'shoulder_seconds') for part in ('row', 'description')]
 for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out"):
     names += [f"heading:command_{action}", f"group:command_{action}"]
     for device in ("keyboard", "controller"):
@@ -70,11 +71,12 @@ assert widgets["setting:walk_toggle"].enabled is False and widgets["row:walk_tog
 widgets["setting:walk"].checked = True
 assert not form.poll() and "walk" not in form.pending and widgets["row:walk_key_speed"].opacity == 1.0
 assert widgets["row:walk_toggle"].opacity == 1.0
-# The loot reach greys under its switch, the shoulder and the orbit camera outside third person (review, 2026-09-26).
+# Orbit is independent of third person; the shoulder still requires it (Kevin, 2026-10-06).
 assert widgets["setting:loot_reach"].enabled is True and widgets["row:loot_reach"].opacity == 1.0
-for name in ("shoulder_left", "orbit"):
+for name in ("shoulder_left",):
     assert widgets[f"setting:{name}"].enabled is False and widgets[f"row:{name}"].opacity < 1
     assert widgets[f"description:{name}"].opacity < 1
+assert widgets['setting:orbit'].enabled is True and widgets['row:orbit'].opacity == 1.0
 widgets["setting:extended_loot"].checked = True
 assert not form.poll() and form.pending["extended_loot"] is False
 assert widgets["setting:loot_reach"].enabled is False and widgets["row:loot_reach"].opacity < 1
@@ -85,7 +87,7 @@ assert not form.poll() and form.pending["third_person"] is True
 assert all(widgets[f"setting:{name}"].enabled is True and widgets[f"row:{name}"].opacity == 1.0
            for name in ("shoulder_left", "orbit"))
 widgets["setting:third_person"].checked = True
-assert not form.poll() and "third_person" not in form.pending and widgets["setting:orbit"].enabled is False
+assert not form.poll() and "third_person" not in form.pending and widgets["setting:orbit"].enabled is True
 
 widgets["options"].checked = True
 assert not form.poll() and widgets["pages"].active == len(model.pages)
@@ -195,4 +197,17 @@ model.transaction.clock = lambda: model.transaction.retry_after + 1
 assert not form.poll() and not model.transaction.pending
 widgets["close"].checked = True
 assert form.poll()
+
+# Escape closes as the Close button does (control_escape): a failed save keeps the window open, and the change still
+# pending is saved before it closes.
+mod.fail = True
+widgets["setting:dash_distance"].value = 230
+assert not form.poll() and form.pending == {"dash_distance": 230}
+assert not form.escape() and settings.dash_distance.value == 200
+mod.fail = False
+model.transaction.clock = lambda: model.transaction.retry_after + 1
+assert not form.poll() and not model.transaction.pending
+widgets["setting:dash_distance"].value = 240
+assert not form.poll() and form.pending == {"dash_distance": 240}
+assert form.escape() and settings.dash_distance.value == 240 and not form.pending
 result.success()

@@ -27,7 +27,7 @@ def check(label: str, condition: bool) -> None:
 
 mod = hunter_change.mod
 check("built under its public name with its version and the frame hook",
-      mod.kwargs["name"] == "Hunter Change" and hunter_change.__version__ == "1.0.2"
+      mod.kwargs["name"] == "Hunter Change" and hunter_change.__version__ == "1.0.3"
       and mod.kwargs["hooks"] == [lifecycle.tick])
 check("on at its first launch", mod.is_enabled and lifecycle.tick.enabled)
 check("its window opened from the SDK's mod menu, its preferences kept with the mod",

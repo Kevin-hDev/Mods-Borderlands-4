@@ -5,7 +5,7 @@ from .settings_persistence import AtomicMod
 
 from . import camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.1.2"
+__version__ = "1.1.5"
 __author__ = "kevin-hDev"
 
 

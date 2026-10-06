@@ -2,6 +2,7 @@
 """Read the elected runtime's aiming notice; never create or control a camera."""
 
 from . import camera, panel_i18n as i18n, panel_theme as t, panel_camera_ownership
+from . import panel_camera_pages as pages
 
 
 def refresh(form, widgets):
@@ -12,7 +13,7 @@ def refresh(form, widgets):
     elsewhere = camera.elected_elsewhere()
     if camera.framing_status() == "camera_outdated":
         # All three menus disclose the same protocol refusal, including hidden camera rows.
-        for name in ("group:camera", "group:command_external"):
+        for name in (*(f"group:{key}" for key in pages.PAGES), "group:command_external"):
             if name in widgets:
                 widgets[name].SetText(i18n.text("camera_outdated", form.model.language))
     form.ads_blocked = elsewhere or form.shown["third_person"] is not True

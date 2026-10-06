@@ -2,7 +2,7 @@
 """Hunter Change in Grapple's approved frame, with a scrolling movement list."""
 
 from . import panel_buttons as b, panel_fonts as fonts, panel_header as h
-from . import panel_modal as modal
+from . import panel_modal as modal, panel_window_size as size
 from . import panel_hunters as hunter_page, panel_pages as p, panel_switch
 from . import panel_text as tx, panel_theme as t, panel_widgets as w, report
 
@@ -42,8 +42,8 @@ def _footer(owner, widgets, template):
 def _window(root, world, model, widgets, template):
     frame, body = w.framed(root, t.COLOR_WINDOW, t.STROKE_THICK)
     frame.SetCursor(w.enum("EMouseCursor", "Default"))
-    layers, _ = w.shadowed(root, frame, t.SHADOW_XL)
-    root.SetContent(w.sized(root, layers, t.WINDOW_WIDTH + t.SHADOW_XL, t.WINDOW_HEIGHT + t.SHADOW_XL))
+    layers, _ = w.shadowed(root, frame, size.SHADOW)
+    root.SetContent(w.sized(root, layers, size.WIDTH + size.SHADOW, size.HEIGHT + size.SHADOW))
     stack = w.new("VerticalBox", body)
     body.SetContent(stack)
     w.column(stack, h.hazard(stack))
@@ -67,6 +67,7 @@ def _window(root, world, model, widgets, template):
 
 def build_view(pc, model, _return_to_menu=True):
     t.use(model.theme)  # every colour below, and every later repaint, reads this theme
+    size.use(model.window_size, pc)  # the drawing's size, read below, by the header and the layer
     root = w.new("ScaleBox", pc)
     root.SetStretch(w.enum("EStretch", "ScaleToFit"))
     template = w.new("InputKeySelector", root).WidgetStyle.Normal

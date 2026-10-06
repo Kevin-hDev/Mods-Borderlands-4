@@ -18,7 +18,7 @@ from .settings_persistence import AtomicMod
 from . import control_console_menu, control_menu, frame, menu, report, settings
 
 # Research observers are archived: their synchronous scans caused first-shot stalls.
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 __author__ = "kevin-hDev"
 
 

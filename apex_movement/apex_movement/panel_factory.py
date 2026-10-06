@@ -19,8 +19,9 @@ class PanelBindings:
         return True
 
 
-def build(pc, bindings, return_to_menu):
-    model = Model(bindings.mod)
+def build(pc, bindings, return_to_menu, model=None):
+    # A theme change draws the window again around the same model: its undo, page and transactions carry over.
+    model = model or Model(bindings.mod)
     root, widgets = panel_view.build_view(pc, model, return_to_menu)
     weak = unrealsdk.unreal.WeakPointer
     return root, PanelForm({name: weak(widget) for name, widget in widgets.items()}, model)

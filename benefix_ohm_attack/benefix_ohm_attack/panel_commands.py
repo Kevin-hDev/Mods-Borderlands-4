@@ -4,7 +4,7 @@
 """Benefix Ohm Attack's command cards, each with one keyboard/mouse and one controller row, from Apex Movement's
 (outils/sync_menu_heirloom_commands.py)."""
 
-from . import control_config as config, panel_buttons as b, panel_glyphs, panel_i18n as i18n
+from . import control_config as config, menu, panel_buttons as b, panel_glyphs, panel_i18n as i18n
 from . import panel_key_view as keys, panel_pages as p, panel_text as tx, panel_theme as t, panel_widgets as w
 
 
@@ -42,6 +42,7 @@ def page(owner, model, widgets, template, frame=None):
         widgets[f"card:command_{command.name}"] = rows
         for device in ("keyboard", "controller"):
             _device_row(rows, widgets, template, command.name, device)
+        p.setting_rows(rows, menu.COMMAND_SETTINGS.get(command.name, ()), widgets, template, expose_rows=True)
     rows = p.plain_card(body)
     w.column(rows, keys.family_choice(rows, widgets, template), padding=w.pad(t.SPACE_2, 0))
     w.column(rows, b.button(rows, widgets, "commands_reset", "action", template, "secondary"), halign="Left")

@@ -1,4 +1,5 @@
-"""A theme change draws the open window again: new window first, old one out, never two left, old kept on failure."""
+"""A theme or size change draws the open window again: new window first, old one out, never two left, old kept on
+failure, saying which change shows at the next opening."""
 
 import sys
 from types import ModuleType, SimpleNamespace as NS
@@ -78,8 +79,8 @@ check(events[:3] == [("build", "the model", True), "add:new", "remove:old"],
 check(session.root() is new_root and session.form is new_form and session.selector is new_form.focus,
       "The session now closes, polls and focuses the new window")
 check("focus" in events and old_form.redraw is False and not reports, "Focus returns to the new window")
-check(theme.current() == "LIGHT" and any("redrawn=true theme=LIGHT" in str(line) for line in events),
-      "The log says which theme the window was drawn again in")
+check(theme.current() == "LIGHT" and any("redrawn=true theme=LIGHT size=" in str(line) for line in events),
+      "The log says which theme and size the window was drawn again in")
 
 for case, arguments, removed in (("build", {"build_fails": True}, []), ("viewport", {"accept": False}, []),
                                  ("swap", {"old_fails": True}, ["remove:old", "remove:new"])):
@@ -91,6 +92,12 @@ for case, arguments, removed in (("build", {"build_fails": True}, []), ("viewpor
     check(theme.current() == "DARK", f"{case}: the old window repaints in the colours it was drawn in")
     check(reports == ["theme_later"], f"{case}: it says the theme will show at the next opening")
     check(any("redraw_error=" in str(line) for line in events), f"{case}: the cause is in the log")
+
+session, old_form, new_form, new_root, reports = setup(build_fails=True)
+old_form.redraw_notice = "window_size_later"
+check(redraw_module.redraw(session) is False and reports == ["window_size_later"],
+      "A size that cannot be drawn says the size, not the theme, shows at the next opening")
+check(old_form.redraw_notice is None, "The notice serves once: a later theme click keeps the theme's line")
 
 # The session asks for the drawing after the form's poll, and never instead of a close.
 calls, closed = [], []

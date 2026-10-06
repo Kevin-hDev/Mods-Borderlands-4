@@ -90,6 +90,14 @@ class Model(Restore):
     def change_theme(self, value):
         return value in prefs.THEMES and self.save(((prefs.theme, value),))
 
+    @property
+    def window_size(self):
+        size = prefs.window_size
+        return size.value if size.value in prefs.SIZES else size.default_value
+
+    def change_window_size(self, value):
+        return value in prefs.SIZES and self.save(((prefs.window_size, value),))
+
     def change_controller_icons(self, value):
         return value in prefs.CONTROLLER_ICONS and self.save(((prefs.controller_icons, value),))
 

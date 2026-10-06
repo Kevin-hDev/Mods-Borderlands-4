@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .collision import CollisionResolver
+from .climb_anchor import ClimbAnchorSession
 from .ads_bridge import AdsBridge
 from .ads_context import ContextReader
 from .ads_session import AdsSession
@@ -45,8 +46,13 @@ def attach(runtime: Any, library: Any, interaction_library: Any, hooks: Any, sdk
             ads.extra_zoom_pending = framing.bridge.zoom_pending
         except Exception as error:
             log(f"{START_FAILURE}: {type(error).__name__}")
+    try:
+        anchor = ClimbAnchorSession(library, weak_ref, log)
+    except Exception as error:
+        anchor = None
+        log(f'native climb animated anchor unavailable: {type(error).__name__}')
     controller = ThirdPersonController(
-        hooks, bridge, IDENTIFIER, weak_ref=weak_ref, log=log, ads=ads, framing=framing)
+        hooks, bridge, IDENTIFIER, weak_ref=weak_ref, log=log, ads=ads, framing=framing, anchor=anchor)
     runtime.set_third_person(controller)
     return controller
 

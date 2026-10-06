@@ -42,6 +42,8 @@ class Settings:
     third_person_enabled = staticmethod(camera_settings.third_person_enabled)
     set_third_person = staticmethod(camera_settings.set_third_person)
     shoulder_left = staticmethod(camera_settings.shoulder_left_enabled)
+    shoulder_transition = staticmethod(camera_settings.shoulder_transition.seconds)
+    orbit_transition = staticmethod(camera_settings.shoulder_transition.orbit_seconds)
     set_shoulder_left = staticmethod(camera_settings.set_shoulder_left)
     orbit_enabled = staticmethod(camera_settings.orbit_enabled)
     set_orbit = staticmethod(camera_settings.set_orbit)
@@ -85,6 +87,10 @@ def on_frame(now_ns: int) -> None:
 
 def toggle_third_person() -> bool:
     return bool(_registered and _runtime.toggle_third_person(OWNER))
+
+
+def base_view_locked() -> bool:
+    return bool(_registered and _runtime.base_view_locked(OWNER))
 
 
 def toggle_shoulder() -> bool:

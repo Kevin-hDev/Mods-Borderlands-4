@@ -5,6 +5,7 @@ Selection shows as in the mockup: the chosen page and language become gold plate
 
 from . import panel_buttons as b, panel_i18n as i18n, panel_slider as s, panel_theme as t, panel_controls
 from . import panel_theme_choice
+from . import panel_size_choice
 
 
 def controls_summary(bindings, language):
@@ -16,6 +17,7 @@ def _buttons(form, widgets, language):
         widgets[f"{name}_label"].SetText(i18n.text("reset_controls" if name == "reset" else name, language))
     widgets["undo"].SetIsEnabled(form.model.can_undo)
     b.paint(widgets, "undo", "secondary" if form.model.can_undo else "disabled")
+    panel_size_choice.paint(widgets, form.model.window_size, language)
     panel_theme_choice.paint(widgets, form.model.theme, language)
     for lang in ("EN", "FR"):
         widgets[f"{lang}_label"].SetText(lang)

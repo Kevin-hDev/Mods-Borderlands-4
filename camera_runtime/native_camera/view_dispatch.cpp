@@ -69,7 +69,12 @@ void dispatch(void* manager, void* view_target, float delta_time) {
                 // Obstruction affects only position. Native ADS and extra FOV stay independent.
                 std::memcpy(static_cast<unsigned char*>(view_target) + apex_ads::FOV_OFFSET,
                             preview + apex_ads::FOV_OFFSET, sizeof(float));
-                if (!suspended) {
+                if (!suspended || (offset_smoothing && offset_blend.active())) {
+                    double target[3]{}, correction[3]{};
+                    for (size_t i = 0; i < 3; ++i)
+                        target[i] = suspended ? 0 : stats.after[i] - stats.before[i];
+                    offset_blend.apply(target, stats.yaw, delta_time, correction);
+                    for (size_t i = 0; i < 3; ++i) stats.after[i] = stats.before[i] + correction[i];
                     query.manager = reinterpret_cast<uintptr_t>(manager);
                     std::memcpy(query.before, stats.before, sizeof(query.before));
                     std::memcpy(query.desired, stats.after, sizeof(query.desired));
@@ -94,7 +99,7 @@ void dispatch(void* manager, void* view_target, float delta_time) {
     // Physics may execute hooks: holding guard here would deadlock stats/stop/reentry.
     const bool accepted = resolve(callback, query, output);
     AcquireSRWLockExclusive(&guard);
-    if (stats.active && !suspended && manager == target_manager
+    if (stats.active && (!suspended || offset_smoothing) && manager == target_manager
         && generation == query.generation
         && apex_camera::memory_access(view_target, view_required_size, true)) {
         if (accepted) {
@@ -102,9 +107,14 @@ void dispatch(void* manager, void* view_target, float delta_time) {
                         output, sizeof(output));
             std::memcpy(stats.after, output, sizeof(stats.after));
             ++stats.writes;
+            double correction[3]{};
+            for (size_t i = 0; i < 3; ++i) correction[i] = output[i] - stats.before[i];
+            offset_blend.commit(correction, stats.yaw);
             framing_status = candidate_framing_status;
         } else {
             ++stats.rejected;
+            const double correction[3]{};
+            offset_blend.commit(correction, stats.yaw);
             // Preview position was refused; only already committed extra FOV may be acknowledged.
             framing_status = candidate_framing_status == apex_framing::Status::disabled
                 ? apex_framing::Status::disabled

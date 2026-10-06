@@ -9,12 +9,14 @@ import unrealsdk
 
 from . import control_console_handoff, control_window_clock
 from .control_window_transaction_close import defer
+from .control_escape import EscapeWatch
+from .control_window_focus import FocusWatch
 from .control_window_hooks import install_listener, note, require_signature
 from .control_window_cleanup import COMMAND, Cleanup, address
+from .control_window_redraw import redraw
 
 POLL_NS = 50_000_000
 MAX_INSTANCES = 32
-MAX_CURSOR_LOGS = 3
 _active = None
 
 
@@ -45,16 +47,18 @@ class Session:
         self.selector = form.focus
         self.cursor_shape = pc().CurrentMouseCursor
         self.controller_address = address(pc())
-        self.cursor_recoveries = 0
         self.cursor = cursor
         self.next_poll = 0
         self.closed = self.selecting = False
+        self.escape, self.watch = EscapeWatch(), FocusWatch()
         self.hooked = self.commanded = self.input_changed = False
         self.handoff = None
         self.deferred_close = ""
         self.close_deadline = None
         self.cleanup = None
         self.claimed = False
+        # What a theme change needs to draw the window again (control_window_redraw).
+        self.viewport, self.return_to_menu = lambda: None, False
 
     def same_context(self, pc):
         character = self.character()
@@ -112,18 +116,16 @@ class Session:
         if self.form.poll():
             self.close("button")
             return
+        if getattr(self.form, "redraw", False):
+            redraw(self)
         selecting = self.form.selecting()
         if selecting and not self.selecting:
             note("selecting=true")
-        self.selecting = selecting
-        if not self.closed and not selecting and self.input_changed and not self.pc().bShowMouseCursor:
-            # A hidden cursor is not proof of lost input ownership (live click trace).
-            # Only restore visibility while idle; never refocus, flush or cancel capture.
-            self.pc().bShowMouseCursor = True
-            self.pc().CurrentMouseCursor = unrealsdk.find_enum("EMouseCursor").Default
-            if self.cursor_recoveries < MAX_CURSOR_LOGS:
-                self.cursor_recoveries += 1
-                note(f"cursor_visible_restored={self.cursor_recoveries}")
+        busy, self.selecting = selecting or self.selecting, selecting
+        if self.escape.released(selecting) and self.form.escape():
+            self.close("button")  # The Close button's way out, back to the mods list (control_escape).
+            return
+        self.watch.keep(self, busy)
 
     def focus(self):
         pc, selector, library = self.pc(), self.selector(), self.library()
@@ -162,7 +164,7 @@ def start(return_to_menu=False):
         handoff = None
         if return_to_menu:
             handoff = control_console_handoff.create(time.perf_counter_ns())
-        from . import panel_factory
+        from . import panel_factory, panel_modal
         bindings = panel_factory.PanelBindings()
         if not bindings.prepare():
             note("mod_not_ready=true")
@@ -193,9 +195,10 @@ def start(return_to_menu=False):
         session = Session(weak(pc), weak(root), weak(library), pc.bShowMouseCursor, form, bindings, character_ref)
         session.handoff = handoff
         session.claimed = True
+        session.viewport, session.return_to_menu = weak(viewport), return_to_menu
         _active = session
         stage = "layout"
-        slot = panel_factory.panel_view.viewport_slot()
+        slot = panel_modal.viewport_slot()
         stage = "add_to_viewport"
         if not viewport.AddWidget(root, slot):
             raise RuntimeError("Viewport rejected widget")

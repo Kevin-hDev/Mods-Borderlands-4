@@ -30,6 +30,8 @@ _refusal = None
 
 
 class Settings:
+    shoulder_transition = staticmethod(settings.shoulder_transition.seconds)
+    orbit_transition = staticmethod(settings.shoulder_transition.orbit_seconds)
     framing_values = staticmethod(settings.framing.snapshot)
     third_person_ads = staticmethod(settings.ads.enabled)
     orbit_distance = staticmethod(settings.zoom.distance)
@@ -118,6 +120,10 @@ def on_frame(now_ns: int) -> None:
 
 def toggle_third_person() -> bool:
     return bool(_registered and _runtime.toggle_third_person(OWNER))
+
+
+def base_view_locked() -> bool:
+    return bool(_registered and _runtime.base_view_locked(OWNER))
 
 
 def toggle_shoulder() -> bool:

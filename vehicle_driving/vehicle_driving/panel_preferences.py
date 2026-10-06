@@ -4,7 +4,7 @@
 from mods_base import BoolOption, SliderOption, SpinnerOption
 
 from . import menu
-from .panel_theme import THEMES
+from .panel_theme import SIZES, THEMES
 
 LANGUAGES = ("EN", "FR")
 _COMMANDS = ()
@@ -18,4 +18,6 @@ last_page = SliderOption("menu_last_page", 0, 0, max(1, len(PAGE_KEYS) - 1),
                          step=1, is_integer=True, is_hidden=True)
 # Each mod keeps its own theme, as it keeps its language (Kevin, 2026-10-06).
 theme = SpinnerOption("menu_theme", THEMES[0], list(THEMES), is_hidden=True)
-ALL = (french, controller_icons, last_page, theme)
+# Each mod keeps its own window size, as its theme (Kevin, 2026-10-06).
+window_size = SpinnerOption("menu_window_size", SIZES[0], list(SIZES), is_hidden=True)
+ALL = (french, controller_icons, last_page, theme, window_size)

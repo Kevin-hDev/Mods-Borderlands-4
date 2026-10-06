@@ -31,7 +31,7 @@ class OrbitZoom:
         manager_id = owner._lifetime.address(getattr(pc, "PlayerCameraManager", None))
         return (not self.faulted and owner._bridge_started and owner._hooks_installed
                 and not owner.cleanup_retry.pending and not owner.cleanup_retry.exhausted
-                and self.settings is not None and self.settings.third_person_enabled()
+                and self.settings is not None
                 and self.settings.orbit_enabled() and pc is not None and actor is not None
                 and actor_id == owner._lifetime.ids[1]
                 and manager_id == owner._lifetime.ids[2]

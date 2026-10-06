@@ -1,6 +1,7 @@
 #pragma once
 #include "view_target_bridge.h"
 #include "framing_view.h"
+#include "offset_blend.h"
 #include <windows.h>
 
 // One owner for view state; the dispatch releases this lock before calling SDK physics.
@@ -20,6 +21,10 @@ extern bool framing_zoom_pending;
 extern CollisionResolver collision;
 extern DWORD owner_thread;
 extern uint64_t generation;
+extern OffsetBlend offset_blend;
+extern double shoulder_seconds;
+extern bool offset_smoothing;
+extern bool shoulder_blending;
 int stop_locked();
 void dispatch(void* manager, void* view_target, float delta_time);
 }

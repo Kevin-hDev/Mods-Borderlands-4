@@ -6,11 +6,13 @@ import time
 from . import panel_ownership
 
 from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
+from . import panel_theme_choice
+from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
 
 # A setting that changes nothing while its switch is off; the walk key's rows are Apex Movement's.
-DEPENDS_ON = {"fov": "custom_fov", "loot_reach": "extended_loot", "shoulder_left": "third_person",
-              "orbit": "third_person", "third_person_ads": "third_person"}
+DEPENDS_ON = {"fov": "custom_fov", "loot_reach": "extended_loot", "shoulder_left": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth",
+              "orbit": None, "third_person_ads": "third_person", "orbit_distance": "orbit"}
 
 
 class PanelForm(Lifecycle):
@@ -22,6 +24,7 @@ class PanelForm(Lifecycle):
         self.notice = "ready"
         self.pending, self.shown = {}, {}
         self.changed_at = 0
+        self.redraw = False  # set by a theme change; the window's session then draws it again
         self.focus = widgets["focus"]
         self.command_form = self.command_catalogue = None
         if model.command_actions is not None:
@@ -31,12 +34,6 @@ class PanelForm(Lifecycle):
             self.command_catalogue = Catalogue()
         self.sync(self.resolve())
         panel_ownership.refresh(self, self.resolve())
-
-    def resolve(self):
-        widgets = {name: reference() for name, reference in self.widgets.items()}
-        if any(widget is None for widget in widgets.values()):
-            raise ValueError("Window widget unavailable")
-        return widgets
 
     def sync(self, widgets):
         self.pending.clear()
@@ -58,10 +55,16 @@ class PanelForm(Lifecycle):
             self.command_form.set_enabled(not self.model.transaction.pending and not self.model.camera_elsewhere)
 
     def refresh_dependency(self, widgets):
+        if 'third_person' in self.model.options:
+            widgets['setting:third_person'].SetIsEnabled(not self.model.options['third_person'].locked)
         for name, switch in DEPENDS_ON.items():
             if name not in self.model.options:
                 continue
-            active = self.shown[switch] is True
+            # The Orbit distance waits on Orbit, independently of the base view.
+            parent = DEPENDS_ON.get(switch)
+            active = switch is None or (self.shown[switch] is True and (parent is None or self.shown[parent] is True))
+            if name == 'shoulder_seconds':
+                active = (active and self.shown.get('third_person') is True) or self.shown.get('orbit_smooth') is True
             widgets[f"setting:{name}"].SetIsEnabled(active)
             # The whole row fades, label and value included, as the mockup's .row.muted does.
             for part in ("row", "description"):
@@ -110,6 +113,9 @@ class PanelForm(Lifecycle):
             widget = widgets[f"setting:{key}"]
             if self.model.camera_elsewhere and key in self.model.camera_options:
                 continue
+            if key == 'third_person' and option.locked:
+                widget.SetIsChecked(False)
+                continue
             if key == "third_person_ads" and getattr(self, "ads_blocked", False):
                 widget.SetIsChecked(False)
                 continue
@@ -153,17 +159,7 @@ class PanelForm(Lifecycle):
 
     def poll(self):
         widgets, now = self.resolve(), time.perf_counter_ns()
-        ownership = panel_ownership.refresh(self, widgets)
-        if ownership:
-            # A live camera owner change must not discard drafts outside the camera section.
-            drafts = dict(self.pending)
-            self.sync(widgets)
-            self.pending.update(drafts)
-            self.shown.update(drafts)
-            self.refresh_dependency(widgets)
-            self.refresh_labels(widgets)
-            if ownership == "discarded":
-                self.report(widgets, "camera_draft_discarded")
+        panel_ownership.update(self, widgets)
         self.refresh_aim(widgets)
         outcome = self.model.advance()
         if outcome is not None:
@@ -172,6 +168,12 @@ class PanelForm(Lifecycle):
         self.read_changes(widgets, now)
         if self.take(widgets["close"]):
             return self.flush(widgets)
+        if self.take(widgets["theme"]):
+            panel_theme_choice.choose(self, widgets)
+            return False
+        if self.take(widgets["window_size"]):
+            panel_size_choice.choose(self, widgets)
+            return False
         for language in ("EN", "FR"):
             if self.take(widgets[language]):
                 if self.flush(widgets) and self.model.change_language(language):

@@ -1,6 +1,6 @@
 """Keep only the local player's selected on-foot camera mode."""
 
-from .constants import FFYL_MODE, GROUND_SLAM_EXIT_MODE, ORBIT_MODE, THIRD_PERSON_MODE
+from .constants import CLIMB_MODE, FFYL_MODE, GROUND_SLAM_EXIT_MODE, LADDER_MODE, ORBIT_MODE, THIRD_PERSON_MODE
 
 REQUESTS = {
     "/Script/OakGame.OakPlayerController:CameraTransition":
@@ -66,9 +66,13 @@ class TransitionHooks:
                 return None
             values = [getattr(args, name) for name in names]
             requested = str(values[0])
+            first_person = requested in ON_FOOT_MODES and self._wants_first_person()
             desired = self.desired_mode()
-            effective = (desired if requested in ON_FOOT_MODES
-                         and not self._wants_first_person()
+            # Immediate reattachment can request ladder before the previous traversal ends.
+            # Only the active climb owner may replace it; native ladders elsewhere stay native.
+            climb_reattachment = desired == CLIMB_MODE and requested.casefold() == LADDER_MODE
+            effective = (desired if climb_reattachment or (requested in ON_FOOT_MODES
+                         and not first_person)
                          else requested)
             values[0] = effective
             try:

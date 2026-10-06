@@ -21,8 +21,8 @@ def one_sentence(text: str) -> bool:
     return 0 < len(text) <= 60 and text.count(".") == 1 and text.endswith(".")
 
 
-TEXTS = (option_texts.THIRD_PERSON, option_texts.SHOULDER, option_texts.ORBIT, option_texts.CUSTOM_FOV,
-         option_texts.FOV)
+TEXTS = (option_texts.THIRD_PERSON, option_texts.SHOULDER, option_texts.ORBIT, option_texts.ORBIT_DISTANCE,
+         option_texts.CUSTOM_FOV, option_texts.FOV)
 check("every camera option has a name and one short sentence",
       all(texts["display_name"] and one_sentence(texts["description"]) for texts in TEXTS))
 check("the SDK's text menu names the shoulder's side, never On or Off",

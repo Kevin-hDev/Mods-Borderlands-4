@@ -191,7 +191,7 @@ class ZoomTests(unittest.TestCase):
     def test_disabled_setting_stops_frame_writes_before_next_sync(self):
         self.runtime.adjust_orbit_zoom("test", -1)
         self.frame()
-        self.settings.enabled = False
+        self.settings.orbit = False
         self.frame()
         self.assertEqual(self.manager.CameraModeState.CameraLocationOffset.X, 0)
 

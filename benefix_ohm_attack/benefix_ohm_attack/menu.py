@@ -38,9 +38,11 @@ ARROWS = frozenset((settings.element.identifier,))
 # bounce act with the lock off, and are not greyed.
 _LOCK = (settings.lock.identifier,)
 DEPENDS_ON = {settings.lock_delay.identifier: (_LOCK,), settings.lock_angle.identifier: (_LOCK,)}
-# What the heirloom's window can also do and this one has no use for: a command's card greyed with a switch, a
-# sentence at the top of a page, a row hidden or greyed by the window's values, a picture beside the title.
+# What the heirloom's window can also do and this one has no use for: a command's card greyed with a switch, settings
+# on a command's card, a sentence at the top of a page, a row hidden or greyed by the window's values, a picture
+# beside the title.
 COMMANDS_DEPEND_ON: dict = {}
+COMMAND_SETTINGS: dict = {}
 NOTICES: dict = {}
 ACTIVE_WHEN: dict = {}
 SHOWN_WHEN: dict = {}

@@ -5,6 +5,37 @@ from typing import Any, Callable
 from mods_base import BoolOption
 
 
+class BaseViewOption(BoolOption):
+    """Keep the entry view stable while Orbit owns the camera (Kevin, 2026-10-06)."""
+
+    def __init__(self, identifier, value, *, locked, **kwargs):
+        if type(value) is not bool or not callable(locked):
+            raise ValueError('invalid base view option')
+        super().__init__(identifier, value, **kwargs)
+        self._base_locked = locked
+        self._base_commit = False
+
+    @property
+    def locked(self):
+        return self._base_locked() is True
+
+    def __setattr__(self, name, value):
+        if name == 'value' and hasattr(self, '_base_locked'):
+            if type(value) is not bool:
+                raise ValueError('invalid base view value')
+            if (not self._base_commit and getattr(getattr(self, 'mod', None), 'is_enabled', False)
+                    and value is not self.value and self.locked):
+                raise ValueError('camera change unavailable')
+        super().__setattr__(name, value)
+
+    def commit(self, value):
+        self._base_commit = True
+        try:
+            self.value = value
+        finally:
+            self._base_commit = False
+
+
 class CameraBoolOption(BoolOption):
     def __init__(self, identifier: str, value: bool, *, route: Callable[[bool], Any],
                  ready: Callable[[], bool] = lambda: True,

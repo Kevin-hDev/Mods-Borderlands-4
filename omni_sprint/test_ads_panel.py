@@ -10,9 +10,10 @@ import omni_sprint
 from omni_sprint import settings, panel_assets, panel_fonts, panel_model, panel_form, panel_view
 from omni_sprint import panel_preferences
 from ads_panel_test_fixtures import AdsPanelTests
+from orbit_panel_test_fixtures import OrbitPanelTests
 
 
-class PanelTests(AdsPanelTests, unittest.TestCase):
+class PanelTests(OrbitPanelTests, AdsPanelTests, unittest.TestCase):
     package = omni_sprint
     settings = settings
 

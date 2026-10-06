@@ -5,6 +5,20 @@ from . import panel_widgets as w
 from .panel_camera_ownership import refresh
 
 
+def update(form, widgets):
+    ownership = refresh(form, widgets)
+    if ownership:
+        # A live camera owner change preserves drafts outside the camera section.
+        drafts = dict(form.pending)
+        form.sync(widgets)
+        form.pending.update(drafts)
+        form.shown.update(drafts)
+        form.refresh_dependency(widgets)
+        form.refresh_labels(widgets)
+        if ownership == "discarded":
+            form.report(widgets, "camera_draft_discarded")
+
+
 def section(parent, widgets, name):
     body = w.new("VerticalBox", parent)
     widgets[name] = body

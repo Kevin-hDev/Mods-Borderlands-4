@@ -10,8 +10,9 @@ movement_ui_fixture.install()
 
 from apex_movement import camera_settings, menu, panel_i18n, panel_theme
 
-assert len(panel_theme.PAGES) == 11 and panel_theme.PAGES[-1] == "commands"
-for group, page in zip(menu.MENU, panel_theme.PAGES[:-1]):
+# Two Options tabs close the list: their pages have no sidebar button (2026-10-06).
+assert len(panel_theme.PAGES) == 12 and panel_theme.PAGES[-2:] == ("commands", "language")
+for group, page in zip(menu.MENU, panel_theme.PAGES[:-2]):
     assert panel_i18n.text(page, "FR")
     assert panel_i18n.group_text(group, page, "FR")
     for option in group.children:
@@ -20,7 +21,8 @@ for group, page in zip(menu.MENU, panel_theme.PAGES[:-1]):
         assert title != option.identifier
 assert panel_i18n.text("saved", "FR") != panel_i18n.text("saved", "EN")
 assert panel_i18n.text("restore", "unknown") == panel_i18n.text("restore", "EN")
-for key in ("options", "options_desc", "camera", "camera_desc", "language", "menu_language",
+for key in ("options", "options_desc_menu", "camera_tab_desc", "commands_tab_desc", "languages",
+            "camera", "camera_desc", "language", "menu_language",
             "change_key", "press_key", "no_key", "right", "left", "commands", "keyboard", "controller",
             "command_third_person", "command_third_person_desc", "command_shoulder", "command_shoulder_desc",
             "command_orbit", "command_orbit_desc", "command_tools", "command_tools_desc", "commands_reset"):

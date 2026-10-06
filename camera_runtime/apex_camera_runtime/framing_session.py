@@ -16,7 +16,8 @@ def confirm_settings(runtime, owner, settings, restoring=False):
     controller = runtime.third_person
     if controller is None or not controller._bridge_started:
         return True
-    if (controller._in_vehicle or controller._aiming or controller._aim_returning
+    if (getattr(getattr(controller, "climb", None), "busy", False)
+            or controller._in_vehicle or controller._aiming or controller._aim_returning
             or controller._desired_mode != "ThirdPerson"):
         return True
     framing = controller.framing
@@ -60,7 +61,8 @@ class FramingSession:
         read = getattr(settings, "framing_values", None)
         if (not callable(read) or not controller._bridge_started or controller._in_vehicle
                 or controller._aiming or controller._aim_returning
-                or controller._desired_mode != "ThirdPerson" or controller.foot_mode.pending
+                or getattr(controller, 'presentation_mode', lambda: controller._desired_mode)() != "ThirdPerson"
+                or controller.foot_mode.pending
                 or controller.cleanup_retry.pending or controller._suspensions):
             self.stop()
             return

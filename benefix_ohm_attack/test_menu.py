@@ -69,10 +69,10 @@ check("a setting's name fits the label's column: short, as the sketch wrote it",
       and all(len(name) <= 22 for name, _ in panel_fr.OPTIONS.values()))
 check("each element has its name in both languages", set(panel_en.CHOICES) == set(panel_fr.CHOICES) == set(settings.ELEMENTS))
 check("the bar shows by default", settings.show_bar.default_value is True)
-check("the mod saves the window's language, icons, page and theme with its settings",
-      mod.options[-4:] == [panel_preferences.language, panel_preferences.controller_icons, panel_preferences.last_page,
-                           panel_preferences.theme]
-      and all(option.is_hidden for option in mod.options[-4:]))
+check("the mod saves the window's language, icons, page, theme and size with its settings",
+      mod.options[-5:] == [panel_preferences.language, panel_preferences.controller_icons, panel_preferences.last_page,
+                           panel_preferences.theme, panel_preferences.window_size]
+      and all(option.is_hidden for option in mod.options[-5:]))
 check("the mod's settings page is the one that opens the window (test_panel_entry.py opens it)",
       mod.iter_display_options.__name__ == "display")
 

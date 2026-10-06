@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.2.0**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.3**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.
@@ -97,6 +97,13 @@ named after it: `apex_dash.json`, `apex_wall_climb.json`, and so on.
 - `jump_report.py` and `move_watch.py` write every jump and every change of the game's own moves to the SDK log, a few hundred lines at most: on a game version not tested here, those lines show what changed.
 
 ## Camera framing
+
+Native wall climbing stays in third person, including the pull over the ledge.
+Shoulder switching is smooth by default; its animation can be disabled and its
+duration adjusted from 0.05 to 1 second in Camera (0.20 seconds by default).
+Native climbing has its own smooth recentering, independent of this duration.
+Camera controls are grouped into four tabs. These camera features belong to
+the full pack, not the separate movement files.
 
 Camera presets and custom sliders adjust aim zoom, shoulder spacing, and height.
 Standard adds 15% aim zoom and 10% shoulder spacing; height is unchanged.

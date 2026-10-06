@@ -12,7 +12,15 @@ def signed_right(left: bool) -> float:
 
 
 class ShoulderState:
+    @staticmethod
+    def configure(bridge, settings):
+        timing = getattr(settings, 'shoulder_transition', None)
+        if timing is not None:
+            bridge.transition_duration(timing())
+
     def available(self, controller: Any) -> bool:
+        if getattr(getattr(controller, "climb", None), "busy", False):
+            return False
         ads = getattr(controller, "ads", None)
         if ads is not None and (ads.pending or (ads.wanted and not ads.effective)):
             return False
@@ -41,6 +49,7 @@ class ShoulderState:
             if type(old_left) is not bool or old_left is new_left:
                 return False
             old_right = signed_right(old_left)
+            self.configure(bridge, settings)
             if not bridge.set_right(signed_right(new_left)):
                 return False
         except Exception:

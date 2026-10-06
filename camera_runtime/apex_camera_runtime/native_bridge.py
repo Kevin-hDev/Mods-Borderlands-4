@@ -82,6 +82,15 @@ class Bridge:
         library.view_set_right.restype = ctypes.c_bool
         library.view_stats.argtypes = [ctypes.POINTER(Stats)]
         library.view_stats.restype = ctypes.c_int
+        for name, arguments in (('view_set_transition_duration', [ctypes.c_double]),
+                                ('view_set_climb_suspended', [ctypes.c_uint32]),
+                                ('view_set_offset_suspended', [ctypes.c_uint32, ctypes.c_double])):
+            function = getattr(library, name, None)
+            if function is not None:
+                function.argtypes, function.restype = arguments, ctypes.c_int
+        active = getattr(library, 'view_offset_transition_active', None)
+        if active is not None:
+            active.argtypes, active.restype = [], ctypes.c_bool
 
     def start(self, manager: Any, right: float) -> bool:
         try:
@@ -106,6 +115,30 @@ class Bridge:
         status = self.library.view_stop()
         if status:
             raise RuntimeError(f"native camera stop refused ({status})")
+
+    def transition_duration(self, seconds: float) -> None:
+        from .transition_catalog import SHOULDER_SECONDS_MAX
+        if type(seconds) not in (int, float) or not math.isfinite(seconds) or not 0 <= seconds <= SHOULDER_SECONDS_MAX:
+            raise ValueError('Invalid camera transition duration')
+        if self.library.view_set_transition_duration(float(seconds)):
+            raise RuntimeError('Camera transition configuration refused')
+
+    def suspend_climb(self, suspended: bool) -> None:
+        if type(suspended) is not bool:
+            raise ValueError('Invalid climbing suspension')
+        if self.library.view_set_climb_suspended(int(suspended)):
+            raise RuntimeError('Camera climbing transition refused')
+
+    def suspend_offset(self, suspended: bool, seconds: float) -> None:
+        from .transition_catalog import SHOULDER_SECONDS_MAX
+        if (type(suspended) is not bool or type(seconds) not in (int, float)
+                or not math.isfinite(seconds) or not 0 <= seconds <= SHOULDER_SECONDS_MAX):
+            raise ValueError('Invalid camera offset transition')
+        if self.library.view_set_offset_suspended(int(suspended), float(seconds)):
+            raise RuntimeError('Camera offset transition refused')
+
+    def offset_transition_active(self) -> bool:
+        return bool(self.library.view_offset_transition_active())
 
     def suspend(self, suspended: bool) -> None:
         status = self.library.view_set_suspended(1 if suspended else 0)

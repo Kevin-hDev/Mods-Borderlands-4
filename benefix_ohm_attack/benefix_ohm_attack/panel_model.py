@@ -12,6 +12,7 @@ from .panel_preferences import LANGUAGES, language
 from .panel_preferences import CONTROLLER_ICONS, controller_icons
 from .panel_preferences import last_page
 from .panel_preferences import THEMES, theme
+from .panel_preferences import SIZES, window_size
 from . import panel_toggle
 
 MAX_CHANGES = len(settings.ALL)
@@ -24,6 +25,9 @@ class Model:
     def __init__(self, mod):
         self.mod = mod
         self.groups = tuple(menu.MENU)
+        # Shown on the COMMANDS page's cards and put back with the keys (menu.COMMAND_SETTINGS).
+        self.command_settings = tuple(option for options in menu.COMMAND_SETTINGS.values()
+                                      for option in options)
         self.options = {option.identifier: option for option in settings.ALL}
         self._undo = ()
         self.command_actions = Actions(KEYS, mod)
@@ -79,6 +83,13 @@ class Model:
     def change_theme(self, value):
         return value in THEMES and self.save(((theme, value),))
 
+    @property
+    def window_size(self):
+        return window_size.value if window_size.value in SIZES else window_size.default_value
+
+    def change_window_size(self, value):
+        return value in SIZES and self.save(((window_size, value),))
+
     def normalize(self, option, value):
         if type(option.default_value) is bool:
             if type(value) is not bool:
@@ -128,7 +139,9 @@ class Model:
         return self._command_saved(self.command_actions.assign(action, device, key))
 
     def default_commands(self):
-        return self._command_saved(self.command_actions.defaults())
+        # The settings shown on the cards are key settings, put back with the keys (Kevin, 2026-10-06).
+        held = tuple((option, option.default_value) for option in self.command_settings)
+        return self._command_saved(self.command_actions.defaults() and (not held or self.save(held)))
 
     def _command_saved(self, success):
         if success:

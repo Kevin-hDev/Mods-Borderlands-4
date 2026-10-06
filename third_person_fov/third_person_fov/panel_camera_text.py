@@ -36,7 +36,15 @@ EN = {'camera_refused': 'The camera could not confirm this change. It was not sa
  'camera_elsewhere': 'Another camera mod controls the camera. Use its menu to adjust it.',
  'framing_saved_unavailable': 'Saved. Framing preview is unavailable here.',
  'framing_saved_partial': 'Saved. Part of the framing preview is unavailable here; check the '
-                          'camera rows.'}
+                          'camera rows.',
+ 'camera_page': 'View on foot, shoulder and field of view.',
+ 'aiming': 'AIMING',
+ 'aiming_page': 'Third-person aiming and zoom.',
+ 'orbit_camera': 'ORBIT CAMERA',
+ 'orbit_camera_page': 'Circles the character at the distance you choose.',
+ 'loot': 'LOOT',
+ 'loot_page': 'Pick up loot from farther away.',
+ 'third_person_needed': 'Turn on third person in the CAMERA tab.'}
 FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a pas été enregistré.',
  'camera_timeout': 'La caméra n’a pas répondu. Les réglages précédents ont été rétablis. Réessaie '
                    'dans un moment.',
@@ -73,6 +81,14 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
  'framing_saved_unavailable': 'Enregistré. Aperçu du cadrage indisponible ici.',
  'framing_saved_partial': 'Enregistré. Aperçu du cadrage partiel ici ; consulte les lignes de la '
                           'caméra.',
+ 'camera_page': 'Vue à pied, épaule et champ de vision.',
+ 'aiming': 'VISÉE',
+ 'aiming_page': 'Visée en troisième personne et zoom.',
+ 'orbit_camera': 'CAMÉRA ORBITALE',
+ 'orbit_camera_page': 'Tourne autour du personnage, à la distance de ton choix.',
+ 'loot': 'LOOT',
+ 'loot_page': 'Ramasse le loot de plus loin.',
+ 'third_person_needed': "Active la troisième personne dans l'onglet CAMÉRA.",
  'aim_third': 'Troisième personne',
  'aim_first': 'Première personne',
  'ads_unsupported': "Visée à l'épaule indisponible avec cette version. Garde la visée première "
@@ -92,7 +108,14 @@ FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrièr
                       'Les fusils de précision et les armes lourdes gardent la visée en première '
                       'personne.'),
  'shoulder_left': ('Épaule', 'Place la caméra à gauche ou à droite du personnage.'),
+ 'shoulder_smooth': ("Changement d'épaule fluide",
+                     'Déplace progressivement la caméra entre les deux épaules.'),
+ 'orbit_smooth': ('Transitions caméra fluides',
+                  'Anime le décalage ajouté entre première et troisième personne et pour Orbit.'),
+ 'shoulder_seconds': ('Animation de transition',
+                      "Durée commune du décalage d'épaule et des transitions caméra, en secondes."),
  'orbit': ('Caméra orbitale', 'La caméra tourne librement autour du personnage.'),
+ 'orbit_distance': ('Distance', 'Distance de la caméra, aussi réglée par les touches de zoom.'),
  'custom_fov': ('FOV personnalisé', 'Utilise le FOV ci-dessous à la place de celui du jeu.'),
  'fov': ('FOV', "Champ de vision, jusqu'à 150."),
  'extended_loot': ('Portée du loot augmentée',

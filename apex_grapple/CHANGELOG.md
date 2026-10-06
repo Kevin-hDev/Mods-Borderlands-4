@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.8 - 2026-10-06
+
+- New WINDOW button at the top of the menu, beside THEME: three sizes, LARGE (default), FULL SCREEN and NORMAL (the previous size). More room, same text size. Each mod keeps its own.
+
 ## 1.0.7 - 2026-10-06
 
 - New: hold the key to grapple, on the CONTROLS page. A quick tap on the melee key still punches, and a grapple fired by a hold pulls all the way. One switch for keyboard and one for controller, both off by default; adjustable hold time, 0.4 s by default.

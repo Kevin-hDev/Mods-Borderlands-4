@@ -3,13 +3,17 @@
 from typing import Any
 
 from . import aiming, foot_preemption, mode_layers
-from .constants import ORBIT_MODE
+from .constants import CAMERA_TRANSITION, ORBIT_MODE
 from .foot_mode import CONFIRMATION_TIMEOUT_NS
 from .orbit_feedback import note_refusal
 from .transitions import RECOVERABLE_MODES, THIRD_PERSON, VEHICLE_MODE
 
 
 def available(controller: Any) -> bool:
+    if getattr(getattr(controller, 'orbit_aim', None), 'busy', False):
+        return False
+    if getattr(getattr(controller, "climb", None), "busy", False):
+        return False
     ads = getattr(controller, "ads", None)
     if ads is not None and ads.pending:
         return False
@@ -22,7 +26,7 @@ def available(controller: Any) -> bool:
     except Exception:
         return False
     return mode == controller._desired_mode and (
-        (mode == ORBIT_MODE and controller._mode_pushes == 0)
+        (mode in (ORBIT_MODE, CAMERA_TRANSITION) and controller._mode_pushes == 0)
         or (mode == THIRD_PERSON and controller._mode_pushes == 1))
 
 
@@ -35,10 +39,10 @@ def _request_recovery(controller: Any, pc: Any, actor: Any,
         return False
     try:
         mode_layers.remove_all(controller, actor, manager)
-        if target == ORBIT_MODE:
-            pc.ClientSetCameraMode(ORBIT_MODE)
-        else:
+        if target == THIRD_PERSON:
             mode_layers.push_one(controller, actor, manager)
+        else:
+            pc.ClientSetCameraMode(target)
     except Exception:
         state.clear_pending()
         controller.stop(now_ns=now_ns)
@@ -64,7 +68,7 @@ def _settle_request(controller: Any, settings: Any, pc: Any, actor: Any,
         return True
     if state.timed_out and controller._desired_mode == ORBIT_MODE:
         controller._orbit_blocked_identity = controller._lifetime.ids
-        controller.set_desired_mode(THIRD_PERSON)
+        controller.set_desired_mode(state.origin(settings))
         note_refusal(settings)
         _request_recovery(controller, pc, actor, manager, now_ns)
         return True

@@ -8,6 +8,7 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t
 from . import panel_choices, panel_theme_choice
 from .command_form import Form
 from .panel_glyphs import Catalogue
+from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
 
 
@@ -25,12 +26,6 @@ class PanelForm(Lifecycle):
         self.focus = widgets["focus"]
         self.command_form, self.command_catalogue = Form(widgets, model), Catalogue()
         self.sync(self.resolve())
-
-    def resolve(self):
-        widgets = {name: reference() for name, reference in self.widgets.items()}
-        if any(widget is None for widget in widgets.values()):
-            raise ValueError("Window widget unavailable")
-        return widgets
 
     def sync(self, widgets):
         self.pending.clear()
@@ -117,6 +112,9 @@ class PanelForm(Lifecycle):
             return self.flush(widgets)
         if self.take(widgets["theme"]):
             panel_theme_choice.choose(self, widgets)
+            return False
+        if self.take(widgets["window_size"]):
+            panel_size_choice.choose(self, widgets)
             return False
         for language in ("EN", "FR"):
             if self.take(widgets[language]):

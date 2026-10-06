@@ -7,8 +7,17 @@ TEXT = {
     "camera_refused": "The camera could not confirm this change. It was not saved.",
     "camera_timeout": "The camera did not respond. Previous settings were restored. Try again in a moment.",
     "undone_partial": "Settings restored, except the camera: another mod controls it.",
-    "options": "OPTIONS", "options_desc": "Camera and menu language.", "options_desc_menu": "Menu language.",
+    "options": "OPTIONS", "options_desc_menu": "Menu language.", "languages": "LANGUAGES",
+    # The sentence under the Options title on its camera and commands tabs (Kevin, 2026-10-06).
+    "camera_tab_desc": "View, aiming, orbit camera and loot.",
+    "commands_tab_desc": "Camera keys, on keyboard and controller.",
     "camera": "CAMERA", "camera_desc": "View, field of view and loot.",
+    # Omni Sprint and Third Person & FOV spread the camera settings over four pages (Kevin, 2026-10-06).
+    "camera_page": "View on foot, shoulder and field of view.",
+    "aiming": "AIMING", "aiming_page": "Third-person aiming and zoom.",
+    "orbit_camera": "ORBIT CAMERA", "orbit_camera_page": "Circles the character at the distance you choose.",
+    "loot": "LOOT", "loot_page": "Pick up loot from farther away.",
+    "third_person_needed": "Turn on third person in the CAMERA tab.",
     "change_key": "CHANGE", "press_key": "PRESS A KEY", "no_key": "NONE",
     "commands": "COMMANDS", "keyboard": "KEYBOARD / MOUSE", "controller": "CONTROLLER",
     "command_third_person": "THIRD PERSON", "command_third_person_desc": "Turn third person on or off.",

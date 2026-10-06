@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.6 - 2026-10-06
+
+- New WINDOW button at the top of the menu, beside THEME: three sizes, LARGE (default), FULL SCREEN and NORMAL (the previous size). More room, same text size. Each mod keeps its own.
+
 ## 1.0.5 - 2026-10-06
 
 - The menu now opens from the console whatever your console key is, for example "+". With some keys, the console does not reopen by itself when the menu closes: just press your console key.

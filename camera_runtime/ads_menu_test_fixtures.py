@@ -26,3 +26,23 @@ class AdsSettingsTests:
             self.assertIs(choice.value, previous)
         finally:
             self.mod.save_settings = save
+
+    def test_real_sdk_base_option_keeps_the_orbit_entry_view(self):
+        import sys
+        from types import SimpleNamespace as NS
+        camera = sys.modules[self.adapter.__class__.__module__]
+        previous = camera._runtime, camera._registered, self.mod.is_enabled
+        base = self.settings.third_person
+        original = base.value
+        try:
+            camera._runtime = NS(base_view_locked=lambda _owner: True)
+            camera._registered = self.mod.is_enabled = True
+            with self.assertRaises(ValueError):
+                base.value = not original
+            self.assertIs(base.value, original)
+            camera._runtime = NS(base_view_locked=lambda _owner: False)
+            base.value = not original
+            self.assertIs(base.value, not original)
+        finally:
+            base.commit(original)
+            camera._runtime, camera._registered, self.mod.is_enabled = previous

@@ -29,6 +29,7 @@ class CollisionResolver:
         self.release_pending = False
         self.reference_clear = False
         self.margin_blocked = False
+        self.offset_permission = None
         self.diagnostics = CollisionDiagnostics(note)
 
     @property
@@ -40,6 +41,7 @@ class CollisionResolver:
         self.diagnostics.note = value
 
     def start(self, library, pc, manager):
+        self.climbing = False
         if self.release_pending and not self.busy:
             self.release()
         if self.callback is not None:
@@ -57,6 +59,8 @@ class CollisionResolver:
             raise RuntimeError('Camera collision registration refused')
 
     def release(self):
+        self.climbing = False
+        self.offset_permission = None
         # Only CameraBridge calls this after the native hook has stopped successfully.
         # A reentrant stop must not free a libffi thunk while its epilogue is executing.
         if self.busy:
@@ -72,6 +76,16 @@ class CollisionResolver:
         self.reference_clear = False
         self.margin_blocked = False
         self.path.reset()
+
+    def _mode_allowed(self, manager, actor):
+        # Check the elected owner's permission before ThirdPerson too: ADS may
+        # already want the camera while its native mode name has not changed yet.
+        if self.offset_permission is not None:
+            permitted = self.offset_permission(manager, actor)
+            if permitted is not None:
+                return permitted is True
+        mode = str(manager.GetActorCameraMode(actor))
+        return mode == THIRD_PERSON_MODE or (getattr(self, 'climbing', False) and mode == 'ThirdPersonClimbing')
 
     def _owned(self, query):
         pc = self.lifetime.pc_ref() if self.lifetime.pc_ref else None
@@ -94,7 +108,7 @@ class CollisionResolver:
             query = pointer.contents
             actor = self._owned(query)
             manager = self.lifetime.owned()[1]
-            if str(manager.GetActorCameraMode(actor)) != THIRD_PERSON_MODE:
+            if not self._mode_allowed(manager, actor):
                 self.invalidate()
                 return 1  # ADS/vehicle/Orbit may legitimately own this frame; not an incident.
             # The game has already resolved its own camera. Sweep only the added offset,
@@ -127,7 +141,7 @@ class CollisionResolver:
                     target = self.visibility.target(actor)
                     position = self._position(actor, anchor, desired, distance, target, query.delta)
             self._owned(query)
-            if str(manager.GetActorCameraMode(actor)) != THIRD_PERSON_MODE:
+            if not self._mode_allowed(manager, actor):
                 self.invalidate()
                 return 1
             for index, value in enumerate(position):

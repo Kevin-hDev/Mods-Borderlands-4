@@ -29,6 +29,12 @@ class View:
     def suspend(self, value):
         self.suspended = value
 
+    def suspend_offset(self, value, _seconds):
+        self.suspended = value
+
+    def offset_transition_active(self):
+        return self.blending
+
     def set_right(self, value):
         return abs(value) == 48.4
 
@@ -75,6 +81,18 @@ class BridgeTests(unittest.TestCase):
         self.assertTrue(self.bridge.set_right(-48.4))
         self.bridge.stop()
         self.assertFalse(self.view.active or self.interaction.active or self.bridge.pending)
+
+    def test_orbit_permission_expires_before_normal_third_person_aiming(self):
+        from apex_camera_runtime.collision import CollisionResolver
+        resolver = CollisionResolver(None, None, lambda x: lambda: x, self.messages.append)
+        self.bridge.collision = resolver
+        self.view.blending = True
+        manager = NS(GetActorCameraMode=lambda _: 'ThirdPerson')
+        self.bridge.suspend_orbit(False, 0.2, lambda *_: False)
+        self.assertFalse(resolver._mode_allowed(manager, self.actor))
+        self.view.blending = False
+        self.assertTrue(resolver._mode_allowed(manager, self.actor))
+        self.assertIsNone(resolver.offset_permission)
 
     def test_failed_alignment_start_keeps_view_and_cleans_partial_alignment(self):
         self.interaction.refuse_start = True

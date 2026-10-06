@@ -25,6 +25,9 @@ uint64_t generation = 0;
 int stop_locked() {
     ++generation;
     stats.active = 0;
+    offset_blend.reset();
+    offset_smoothing = false;
+    shoulder_blending = false;
     framing = {};
     framing_status = apex_framing::Status::disabled;
     framing_zoom_pending = false;
@@ -68,6 +71,10 @@ int start_locked(void* manager, const Config& candidate) {
     stats.slot_index = candidate.slot_index;
     deadline = candidate.duration_ms ? GetTickCount64() + candidate.duration_ms : 0;
     suspended = false;
+    offset_blend.reset();
+    shoulder_seconds = 0;
+    offset_smoothing = false;
+    shoulder_blending = false;
     if (apex_camera::replace_slot(slot, expected, reinterpret_cast<void*>(&dispatch)) != 0) return 4;
     installed = true;
     stats.active = 1;
@@ -119,6 +126,10 @@ int view_set_suspended(uint32_t value) {
         return 1;
     }
     suspended = value != 0;
+    // Strong camera authorities (vehicle/native aiming) cancel interpolation immediately.
+    offset_blend.reset();
+    offset_smoothing = false;
+    shoulder_blending = false;
     stats.suspended = suspended ? 1U : 0U;
     ++generation;
     ReleaseSRWLockExclusive(&guard);
@@ -130,6 +141,10 @@ bool view_set_right(double right) {
     if (!installed || !std::isfinite(right) || std::abs(right) > max_offset) {
         ReleaseSRWLockExclusive(&guard);
         return false;
+    }
+    if (config.right != right) {
+        offset_blend.begin(suspended ? 0 : shoulder_seconds);
+        shoulder_blending = !suspended;
     }
     config.right = right;
     ++generation;

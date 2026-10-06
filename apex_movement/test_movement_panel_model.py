@@ -37,15 +37,15 @@ mod = Mod()
 model = panel_model.Model(mod)
 assert not ({option.identifier for option in camera_settings.VISIBLE}
             & {option.identifier for option in camera_settings.commands.options})
-assert len(model.groups) == 10 and len(model.pages) == 11
+assert len(model.groups) == 10 and len(model.pages) == 12
 assert model.pages == panel_theme.PAGES
-assert model.pages[-1] == "commands"
-assert tuple(model.camera_options) == ("third_person", "third_person_ads", "shoulder_left", "orbit", "custom_fov", "fov", "extended_loot", "loot_reach")
+assert model.pages[-2:] == ("commands", "language")  # the Options tabs past the camera's
+assert tuple(model.camera_options) == ("third_person", "third_person_ads", "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "orbit", "custom_fov", "fov", "extended_loot", "loot_reach")
 assert tuple(model.command_options) == (
     "third_person_key", "third_person_controller", "shoulder_key", "shoulder_controller",
     "orbit_key", "orbit_controller", "zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller")
-# Movement, walk and eight camera/loot choices; commands have their own page.
-assert len(model.options) == 42
+# Movement, walk and ten camera/loot choices; commands have their own page.
+assert len(model.options) == 45
 assert ([key for key in model.options if key.startswith("walk")]
         == ["walk_speed", "walk", "walk_key", "walk_toggle", "walk_key_speed"])
 assert "native_fov" not in model.options and "applied_fov" not in model.options
@@ -54,11 +54,13 @@ assert model.controller_icons == "PS5"
 assert model.change_controller_icons("XSX") and model.controller_icons == "XSX"
 assert not model.change_controller_icons("other")
 assert panel_preferences.french.default_value is False
-assert panel_preferences.PAGE_KEYS[-1] == "options"
+# A page index saved before the language tab still names the same page.
+assert panel_preferences.PAGE_KEYS[-2:] == ("options", "language")
 assert model.change_language("FR") and model.language == "FR"
 assert not model.change_language("other")
 assert model.change_page("dash") and model.page == "dash"
 assert model.change_page("options") and model.page == "options"
+assert model.change_page("language") and model.page == "language"
 panel_preferences.last_page.value = float(panel_preferences.PAGE_KEYS.index("glide"))
 assert model.page == "glide"  # A JSON number can load as float without losing the saved page.
 panel_preferences.last_page.value = float("nan")

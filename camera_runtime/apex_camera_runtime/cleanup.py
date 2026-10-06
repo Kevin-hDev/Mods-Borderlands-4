@@ -8,6 +8,11 @@ from . import aiming
 def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bool,
          stale: bool = False, now_ns: int | None = None) -> None:
     errors = []
+    if controller.anchor is not None:
+        try:
+            controller.anchor.stop()
+        except Exception as error:
+            errors.append(error)
     if controller.framing is not None:
         try:
             controller.framing.stop()
@@ -27,10 +32,13 @@ def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bo
             controller._hooks_installed = False
         except Exception as error:
             errors.append(error)
+    # A cancelled FP entry owns no layer: yielding must not replace a stronger native view.
+    yield_native = (controller._desired_mode == transition and not controller._mode_pushes
+                    and (controller._in_vehicle or controller._aiming or controller.climb.busy))
     controller.foot_mode.reset()
     try:
         pc = controller._lifetime.pc_ref() if controller._lifetime.pc_ref is not None else None
-        if pc is not None and callable(getattr(pc, "ClientSetCameraMode", None)):
+        if not yield_native and pc is not None and callable(getattr(pc, "ClientSetCameraMode", None)):
             # Default is requested after hook removal so shutdown has one native end state.
             pc.ClientSetCameraMode(transition)
     except Exception as error:
@@ -66,6 +74,10 @@ def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bo
         controller._vehicle_reassert_ns = 0
         controller._recovery_requested = False
         aiming.reset(controller)
+        controller.climb.reset()
+        orbit_aim = getattr(controller, 'orbit_aim', None)
+        if orbit_aim is not None:
+            orbit_aim.reset()
         controller._suspensions.clear()
     if errors:
         moment = controller.clock() if now_ns is None else now_ns

@@ -5,8 +5,10 @@ from . import panel_framing_text as labels, panel_slider as s, panel_text as tx
 from . import panel_theme as t, panel_widgets as w
 
 
-def build(body, widgets, template):
+def build(body, widgets, template, keys):
     for index, group in enumerate(config.FRAMING_GROUPS):
+        if group.key not in keys:
+            continue
         key = "framing:" + group.key
         option = config.FRAMING_OPTIONS.options[index * 2]
         rows = p.card(body, widgets, key)

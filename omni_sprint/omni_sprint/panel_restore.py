@@ -9,7 +9,8 @@ class Restore:
         memory = ()
         if self.command_actions is not None and not self.camera_elsewhere:
             from .camera_control_config import MEMORY_OPTIONS
-            memory = MEMORY_OPTIONS
+            # The Orbit distance is a page setting here, not only a value remembered beside them.
+            memory = tuple(option for option in MEMORY_OPTIONS if option.identifier not in self.options)
         previous = tuple((option, option.value) for option in (*self.options.values(), *memory)
                          if not self.camera_elsewhere or option.identifier not in self.camera_options)
         if not previous:

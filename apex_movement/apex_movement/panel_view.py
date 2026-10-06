@@ -1,29 +1,35 @@
 """Apex Movement in Grapple's approved frame, with a scrolling movement list."""
 
-import unrealsdk
-
 from . import panel_buttons as b, panel_fonts as fonts, panel_header as h, panel_shortcut as sc
+from . import panel_modal as modal, panel_window_size as size
 from . import panel_options as o, panel_pages as p
 from . import panel_text as tx, panel_theme as t, panel_widgets as w, report
 
 
 def _sidebar(owner, widgets, template):
-    panel = w.border(owner, t.COLOR_SIDEBAR, w.pad(t.SPACE_5, t.SPACE_4))
+    # The side padding lies inside the scrolling list, as in the mockup's nav: a ScrollBox cuts whatever leaves it,
+    # and the slanted page buttons lean past their box (corners cut, Kevin's screenshot of 2026-10-06).
+    panel = w.border(owner, t.COLOR_SIDEBAR, w.pad(t.SPACE_5, 0))
     column = w.new("VerticalBox", panel)
     panel.SetContent(column)
     widgets["settings_caption"] = tx.text(column, "", "caption")
-    w.column(column, widgets["settings_caption"], padding=w.pad(0, t.SPACE_2, t.SPACE_3))
+    w.column(column, widgets["settings_caption"], padding=w.pad(0, t.SPACE_4 + t.SPACE_2, t.SPACE_3))
     scroll = w.new("ScrollBox", column)
     w.cosmetic("nav_scrollbar", lambda: p._scrollbar(scroll, template))
     nav = w.new("VerticalBox", scroll)
-    scroll.AddChild(nav)
+    scroll.AddChild(nav).SetPadding(w.pad(0, t.SPACE_4))
     for page in t.PAGES:
-        w.column(nav, b.button(nav, widgets, f"nav:{page}", "nav", template, "nav_off"),
-                 padding=w.pad(0, 0, t.SPACE_2))
+        button = b.button(nav, widgets, f"nav:{page}", "nav", template, "nav_off")
+        w.column(nav, button, padding=w.pad(0, 0, t.SPACE_2))
+        # An Options tab's page is opened from the gear: collapsed rather than left out, its button stays in the
+        # tree for the code that reads every page's (Kevin, 2026-10-06).
+        if page in o.TABS:
+            button.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
     w.column(column, scroll, fill=True)
     widgets["meta"] = tx.text(column, "", "meta", wrap=True)
-    w.column(column, widgets["meta"], padding=w.pad(t.SPACE_5, t.SPACE_2, t.SPACE_3))
-    w.column(column, b.button(column, widgets, "enabled", "master", template, "on"), halign="Left")
+    w.column(column, widgets["meta"], padding=w.pad(t.SPACE_5, t.SPACE_4 + t.SPACE_2, t.SPACE_3))
+    w.column(column, b.button(column, widgets, "enabled", "master", template, "on"), halign="Left",
+             padding=w.pad(0, t.SPACE_4))
     return w.sized(owner, panel, width=t.SIDEBAR_WIDTH)
 
 
@@ -42,8 +48,8 @@ def _footer(owner, widgets, template):
 def _window(root, world, model, widgets, template):
     frame, body = w.framed(root, t.COLOR_WINDOW, t.STROKE_THICK)
     frame.SetCursor(w.enum("EMouseCursor", "Default"))
-    layers, _ = w.shadowed(root, frame, t.SHADOW_XL)
-    root.SetContent(w.sized(root, layers, t.WINDOW_WIDTH + t.SHADOW_XL, t.WINDOW_HEIGHT + t.SHADOW_XL))
+    layers, _ = w.shadowed(root, frame, size.SHADOW)
+    root.SetContent(w.sized(root, layers, size.WIDTH + size.SHADOW, size.HEIGHT + size.SHADOW))
     stack = w.new("VerticalBox", body)
     body.SetContent(stack)
     w.column(stack, h.hazard(stack))
@@ -63,7 +69,9 @@ def _window(root, world, model, widgets, template):
         switcher.AddChild(page)
     if "commands" in model.pages:
         from . import panel_camera_commands as commands
-        switcher.AddChild(commands.page(switcher, model, widgets, template))
+        switcher.AddChild(commands.page(switcher, model, widgets, template, o.commands_frame(widgets, template)))
+    if "language" in model.pages:
+        switcher.AddChild(o.language_page(switcher, widgets, template))
     switcher.AddChild(o.options_page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))
@@ -71,15 +79,9 @@ def _window(root, world, model, widgets, template):
     return avatar
 
 
-def _held(pc, content):
-    holder = w.new("UserWidget", pc)
-    tree = w.new("WidgetTree", holder)
-    holder.WidgetTree = tree
-    tree.RootWidget = content
-    return holder
-
-
 def build_view(pc, model, _return_to_menu=True):
+    t.use(model.theme)  # every colour below, and every later repaint, reads this theme
+    size.use(model.window_size, pc)  # the drawing's size, read below, by the header and the layer
     root = w.new("ScaleBox", pc)
     root.SetStretch(w.enum("EStretch", "ScaleToFit"))
     template = w.new("InputKeySelector", root).WidgetStyle.Normal
@@ -90,16 +92,8 @@ def build_view(pc, model, _return_to_menu=True):
         avatar = _window(root, pc, model, widgets, template)
     finally:
         tx.use({})
-    widgets["focus"] = widgets["options" if model.page == "options" else f"nav:{model.page}"]
+    widgets["focus"] = widgets["options" if model.page in o.TABS else f"nav:{model.page}"]
     report.note(f"settings window: fonts={'+'.join(sorted(loaded)) or 'engine'}, "
                 f"avatar={'shown' if avatar else 'hidden'}")
-    return _held(pc, root), widgets
+    return modal.held(pc, root), widgets
 
-
-def viewport_slot():
-    width = (t.WINDOW_WIDTH + t.SHADOW_XL) / t.STAGE_WIDTH
-    height = (t.WINDOW_HEIGHT + t.SHADOW_XL) / t.STAGE_HEIGHT
-    anchors = unrealsdk.make_struct("Anchors", Minimum=w.vector((1 - width) / 2, (1 - height) / 2),
-                                    Maximum=w.vector((1 + width) / 2, (1 + height) / 2))
-    return unrealsdk.make_struct("GameViewportWidgetSlot", ZOrder=t.ORDER, bAutoRemoveOnWorldRemoved=True,
-                                 Alignment=w.vector(0.0, 0.0), Anchors=anchors, Offsets=w.pad(0))

@@ -27,6 +27,9 @@ TEXT = {
     "reserved_key": "Non enregistré : cette touche est réservée à la console ou à l’annulation. Commandes précédentes conservées.",
     "theme": "THÈME :", "theme:EMBER": "BRAISE", "theme:DARK": "SOMBRE", "theme:LIGHT": "CLAIR", "theme:BL4": "BL4",
     "theme_later": "Thème enregistré. Il s’affichera à la prochaine ouverture du menu.",
+    "window_size": "FENÊTRE :", "window_size:LARGE": "GRANDE", "window_size:FULL": "PLEIN ÉCRAN",
+    "window_size:NORMAL": "NORMALE",
+    "window_size_later": "Taille de la fenêtre enregistrée. Elle s’affichera à la prochaine ouverture du menu.",
 }
 OPTIONS = {
     "grapple_range": ("Portée", "Distance max. du crochet. 3000 = 30 mètres."),

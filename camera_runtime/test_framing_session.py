@@ -68,6 +68,16 @@ class Tests(unittest.TestCase):
         self.sync()
         self.assertIsNone(self.writes[-1])
 
+    def test_orbit_borrow_uses_existing_presets_only_while_third_person_is_displayed(self):
+        self.controller._desired_mode = 'Orbit'
+        self.controller.presentation_mode = lambda: 'ThirdPerson'
+        self.sync()
+        self.assertEqual(tuple(self.writes[-1].values), (15, 10, 0))
+        self.assertEqual(self.controller._desired_mode, 'Orbit')
+        self.manager.GetActorCameraMode = lambda _: 'Orbit'
+        self.sync()
+        self.assertIsNone(self.writes[-1])
+
     def test_stop_then_same_owner_republishes_and_invalid_settings_clear(self):
         self.sync(); self.session.stop(); self.sync()
         self.assertEqual(len(self.writes), 3)

@@ -1,6 +1,6 @@
 """Keep Orbit refusal feedback generic and emitted only at state boundaries."""
 
-ORBIT_REFUSAL = "Orbit Camera unavailable; Third Person remains active."
+ORBIT_REFUSAL = "Orbit Camera change unavailable."
 ORBIT_SAVE_FAILURE = "Orbit Camera setting could not be saved."
 
 

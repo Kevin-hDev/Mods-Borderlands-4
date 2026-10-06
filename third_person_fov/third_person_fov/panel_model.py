@@ -21,7 +21,8 @@ class Model(Restore):
         self.pages = tuple(group.identifier.removesuffix("_menu") for group in self.groups)
         # While another higher-priority camera mod is on, these settings would change nothing.
         # The page then shows where to set the camera instead (Kevin, 2026-09-25).
-        self.camera_options = {option.identifier: option for option in menu.camera.children}
+        self.camera_options = {option.identifier: option for group in menu.CAMERA
+                               for option in group.children}
         self.options = {option.identifier: option for group in self.groups for option in group.children}
         self.command_options = {option.identifier: option for option in settings.commands.options}
         from .camera_control_actions import Actions
@@ -95,6 +96,21 @@ class Model(Restore):
 
     def change_language(self, value):
         return value in prefs.LANGUAGES and self.save(((prefs.french, value == "FR"),))
+
+    @property
+    def theme(self):
+        return prefs.theme.value if prefs.theme.value in prefs.THEMES else prefs.theme.default_value
+
+    def change_theme(self, value):
+        return value in prefs.THEMES and self.save(((prefs.theme, value),))
+
+    @property
+    def window_size(self):
+        size = prefs.window_size
+        return size.value if size.value in prefs.SIZES else size.default_value
+
+    def change_window_size(self, value):
+        return value in prefs.SIZES and self.save(((prefs.window_size, value),))
 
     def change_controller_icons(self, value):
         return value in prefs.CONTROLLER_ICONS and self.save(((prefs.controller_icons, value),))

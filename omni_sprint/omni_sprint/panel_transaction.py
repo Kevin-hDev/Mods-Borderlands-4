@@ -30,7 +30,8 @@ def _priority(change):
     if option.identifier == "third_person":
         return 0 if target is True else 4
     if option.identifier == "orbit":
-        return 1 if target is False else 3
+        # Leave Orbit before restoring its locked entry view.
+        return -1 if target is False else 3
     return 2
 
 

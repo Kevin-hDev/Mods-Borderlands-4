@@ -97,8 +97,8 @@ check("an inactive owner cannot report a ready camera",
 apex.enabled = False
 check("disabled third person cannot change shoulder",
       not runtime.toggle_shoulder("apex") and third.calls == 0)
-check("disabled third person is not camera-ready",
-      not runtime.camera_ready("apex"))
+check("a stable Orbit entry is not gated by the third-person preference",
+      runtime.camera_ready("apex"))
 apex.enabled = True
 third.available = False
 check("ADS or vehicle state blocks shoulder", not runtime.toggle_shoulder("apex") and third.calls == 0)
@@ -127,15 +127,15 @@ check("an inactive menu cannot request a shoulder side",
 check("an inactive owner cannot change Orbit",
       not runtime.toggle_orbit("omni") and third.orbit_calls == 0)
 apex.enabled = False
-check("disabled third person cannot change Orbit",
-      not runtime.toggle_orbit("apex") and third.orbit_calls == 0)
+check("a stable Orbit entry accepts the first-person base preference",
+      runtime.toggle_orbit("apex") and third.orbit_calls == 1)
 apex.enabled = True
 third.orbit_ready = False
-check("Default, Slide or another pending transition blocks Orbit",
-      not runtime.toggle_orbit("apex") and third.orbit_calls == 0)
+check("an unavailable camera blocks Orbit",
+      not runtime.toggle_orbit("apex") and third.orbit_calls == 1)
 third.orbit_ready = True
 check("the elected effective owner changes Orbit once",
-      runtime.toggle_orbit("apex") and third.orbit_calls == 1)
+      runtime.toggle_orbit("apex") and third.orbit_calls == 2)
 check("the elected menu can request one exact Orbit state",
       runtime.set_orbit("apex", True) and third.orbit_values == [(True, 123)] and apex.orbit)
 check("the elected menu can cancel its unfinished Orbit request",

@@ -14,12 +14,19 @@ foreach ($line in $environmentLines) {
     }
 }
 $common = @('/nologo', '/std:c++17', '/EHsc', '/W4', '/WX', '/O2', '/MT', '/Brepro')
+$anchorSources = @('anchor_pose.cpp', 'anchor_identity.cpp', 'anchor_bridge.cpp') | ForEach-Object { Join-Path $sourceRoot $_ }
+& (Join-Path $sourceRoot 'build_anchor.ps1') -TestsOnly
 $sources = @((Join-Path $sourceRoot 'view_target_math.cpp'),
+             (Join-Path $sourceRoot 'offset_transition.cpp'),
              (Join-Path $sourceRoot 'view_performance_bridge.cpp'),
              (Join-Path $sourceRoot 'view_dispatch.cpp'),
              (Join-Path $sourceRoot 'view_target_bridge.cpp'))
 Push-Location $buildRoot
 try {
+    & cl.exe @common (Join-Path $sourceRoot 'test_offset_blend.cpp') '/Fe:offset_blend_test.exe'
+    if ($LASTEXITCODE -ne 0) { throw 'Camera offset transition test build failed' }
+    & .\offset_blend_test.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Camera offset transition test failed' }
     & cl.exe @common (Join-Path $sourceRoot 'test_framing_progress.cpp') '/Fe:framing_progress_test.exe'
     if ($LASTEXITCODE -ne 0) { throw 'Native progress test build failed' }
     & .\framing_progress_test.exe
@@ -74,16 +81,20 @@ try {
     # A saved script avoids the legacy Windows PowerShell argument quoting of Python -c.
     & python (Join-Path $sourceRoot 'check_outside_game.py') (Join-Path $buildRoot 'ads_guard_test.dll')
     if ($LASTEXITCODE -ne 0) { throw 'Native ADS outside-game load failed' }
-    & cl.exe @common @sources @adsSources @framingSources (Join-Path $sourceRoot 'test_view_target_bridge.cpp') '/Fe:view_target_test.exe' 'bcrypt.lib'
+    & cl.exe @common @sources @adsSources @framingSources @anchorSources (Join-Path $sourceRoot 'test_view_target_bridge.cpp') '/Fe:view_target_test.exe' 'bcrypt.lib'
     if ($LASTEXITCODE -ne 0) { throw 'Native test build failed' }
     & .\view_target_test.exe
     if ($LASTEXITCODE -ne 0) { throw 'Native bridge test failed' }
-    & cl.exe @common @sources @adsSources @framingSources (Join-Path $sourceRoot 'test_framing_dispatch.cpp') '/Fe:framing_dispatch_test.exe' 'bcrypt.lib'
+    & cl.exe @common @sources @adsSources @framingSources @anchorSources (Join-Path $sourceRoot 'test_framing_dispatch.cpp') '/Fe:framing_dispatch_test.exe' 'bcrypt.lib'
     if ($LASTEXITCODE -ne 0) { throw 'Native framing dispatch test build failed' }
     & .\framing_dispatch_test.exe
     if ($LASTEXITCODE -ne 0) { throw 'Native framing dispatch tests failed' }
+    & cl.exe @common @sources @adsSources @framingSources @anchorSources (Join-Path $sourceRoot 'test_view_transitions.cpp') '/Fe:view_transitions_test.exe' 'bcrypt.lib'
+    if ($LASTEXITCODE -ne 0) { throw 'Native transitions test build failed' }
+    & .\view_transitions_test.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Native transitions test failed' }
     if ($TestsOnly) { return }
-    & cl.exe @common '/LD' @sources @adsSources @framingSources "/Fe:$libraryStem.dll" 'bcrypt.lib'
+    & cl.exe @common '/LD' @sources @adsSources @framingSources @anchorSources "/Fe:$libraryStem.dll" 'bcrypt.lib'
     if ($LASTEXITCODE -ne 0) { throw 'Native library build failed' }
     $assets = Join-Path (Split-Path $sourceRoot) 'apex_camera_runtime\assets'
     New-Item -ItemType Directory -Force -Path $assets | Out-Null

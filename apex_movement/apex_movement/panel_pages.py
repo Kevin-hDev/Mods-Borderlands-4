@@ -6,33 +6,48 @@ import unrealsdk
 from . import panel_buttons as b, panel_slider as s, panel_text as tx, panel_theme as t, panel_widgets as w
 from . import panel_key_view as keys
 
-_SCROLL_THUMBS = (("NormalThumbImage", t.COLOR_GOLD), ("HoveredThumbImage", t.COLOR_GOLD_HI),
-                  ("DraggedThumbImage", t.COLOR_GOLD_HI))
+# Colours by theme name, read when the window is drawn (panel_theme.use).
+_SCROLL_THUMBS = (("NormalThumbImage", "COLOR_GOLD"), ("HoveredThumbImage", "COLOR_GOLD_HI"),
+                  ("DraggedThumbImage", "COLOR_GOLD_HI"))
 _SCROLL_TRACK = ("VerticalBackgroundImage", "VerticalTopSlotImage", "VerticalBottomSlotImage")
-_SELECTOR_STATES = (("Normal", t.COLOR_INK), ("Hovered", t.COLOR_HOVER), ("Pressed", t.COLOR_HOVER),
-                    ("Disabled", t.COLOR_INK))
+_SELECTOR_STATES = (("Normal", "COLOR_INK"), ("Hovered", "COLOR_HOVER"), ("Pressed", "COLOR_HOVER"),
+                    ("Disabled", "COLOR_INK"))
 
 
 def _scrollbar(scroll, template):
     style = scroll.WidgetBarStyle
     size = (t.SCROLLBAR_WIDTH, t.SCROLLBAR_WIDTH)
     for field, tint in _SCROLL_THUMBS:
-        w.style_brush(style, field, template, tint, outline=t.STROKE, size=size)
+        w.style_brush(style, field, template, t.colour(tint), outline=t.STROKE, size=size)
     for field in _SCROLL_TRACK:
         w.style_brush(style, field, template, t.COLOR_SIDEBAR, size=size)
     scroll.SetScrollbarThickness(w.vector(t.SCROLLBAR_WIDTH, t.SCROLLBAR_WIDTH))
     scroll.SetScrollbarPadding(w.pad(0))
 
 
-def scrolling_body(owner, template):
-    """One scroll area whose padding leaves its scrollbar against the window edge."""
+def scrolling_body(owner, template, top=t.SPACE_7):
+    """One scroll area whose padding leaves its scrollbar against the window edge; top is 0 under a head that stays
+    above it (Apex Movement's Options tabs)."""
     scroll = w.new("ScrollBox", owner)
     body = w.new("VerticalBox", scroll)
-    scroll.AddChild(body).SetPadding(w.pad(t.SPACE_7, t.SPACE_8, t.SPACE_9))
+    scroll.AddChild(body).SetPadding(w.pad(top, t.SPACE_8, t.SPACE_9))
     w.cosmetic("scrollbar", lambda: _scrollbar(scroll, template))
     # Depending on the engine version the bar's width is read from its style or from the setter above: both are set.
     w.cosmetic("scrollbar_width", lambda: setattr(scroll.WidgetBarStyle, "Thickness", float(t.SCROLLBAR_WIDTH)))
     return scroll, body
+
+
+def heading(rows, widgets, key):
+    """A card's orange title plate, its sentence on its right: Kevin found the room right of the plate empty and
+    the sentence a line of its own under it (2026-10-06). A long sentence wraps there, still right of the plate."""
+    line = w.new("HorizontalBox", rows)
+    plate, fill = w.framed(line, t.COLOR_SPARK, t.STROKE, w.pad(tx.inset(t.SPACE_1, "plate"), t.SPACE_4))
+    widgets[f"heading:{key}"] = tx.text(fill, "", "plate")
+    fill.SetContent(widgets[f"heading:{key}"])
+    w.row(line, w.slant(plate), padding=w.pad(0, 0, 0, t.SPACE_1), valign="Center")
+    widgets[f"group:{key}"] = tx.text(line, "", "desc", wrap=True)
+    w.row(line, widgets[f"group:{key}"], padding=w.pad(0, 0, 0, t.SPACE_5), fill=True, valign="Center")
+    w.column(rows, line, padding=w.pad(0, 0, t.SPACE_2))
 
 
 def card(body, widgets, key):
@@ -42,12 +57,7 @@ def card(body, widgets, key):
     w.column(body, layers, padding=w.pad(0, 0, t.SPACE_5))
     rows = w.new("VerticalBox", inner)
     inner.SetContent(rows)
-    plate, fill = w.framed(rows, t.COLOR_SPARK, t.STROKE, w.pad(tx.inset(t.SPACE_1, "plate"), t.SPACE_4))
-    widgets[f"heading:{key}"] = tx.text(fill, "", "plate")
-    fill.SetContent(widgets[f"heading:{key}"])
-    w.column(rows, w.slant(plate), padding=w.pad(0, 0, 0, t.SPACE_1), halign="Left")
-    widgets[f"group:{key}"] = tx.text(rows, "", "desc", wrap=True)
-    w.column(rows, widgets[f"group:{key}"], padding=w.pad(t.SPACE_3, 0, t.SPACE_1))
+    heading(rows, widgets, key)
     return rows
 
 
@@ -99,19 +109,21 @@ def selector(owner, listening, template):
 
 def _selector_style(widget, template):
     for field, tint in _SELECTOR_STATES:
-        w.style_brush(widget.WidgetStyle, field, template, tint)
+        w.style_brush(widget.WidgetStyle, field, template, t.colour(tint))
     tx.configure(widget.TextStyle.Font, "button")
     widget.TextStyle.ColorAndOpacity = w.slate(t.COLOR_GOLD)
     widget.Margin = w.pad(t.SPACE_2, t.SPACE_6)
 
 
-def controls_page(owner, widgets, template):
+def controls_page(owner, widgets, template, options=()):
+    """options: settings rows shown under the controller icons, before the key choice (Apex Grapple's hold mode)."""
     page, body = scrolling_body(owner, template)
     rows = card(body, widgets, "controls")
     widgets["current"] = tx.text(rows, "", "gold", wrap=True)
     w.column(rows, widgets["current"], padding=w.pad(t.SPACE_2, 0))
     w.column(rows, keys.summary(rows, widgets), padding=w.pad(t.SPACE_1, 0))
     w.column(rows, keys.family_choice(rows, widgets, template), padding=w.pad(t.SPACE_3, 0))
+    setting_rows(rows, options, widgets, template)
     widgets["two_text"] = tx.text(rows, "", "label", wrap=True)
     _row(rows, widgets["two_text"], b.button(rows, widgets, "two", "switch", template, "off"))
     for name in ("first", "second"):

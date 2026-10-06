@@ -21,4 +21,16 @@ TEXT = {'close': 'FERMER',
  'undone': 'Réglages précédents rétablis.',
  'refused': 'Attribution refusée. Cette touche est réservée ou déjà utilisée.',
  'rollback_abandoned': 'Changement annulé. Le rétablissement n’a pas été confirmé ; relance le jeu '
-                       'avant de changer les réglages.'}
+                       'avant de changer les réglages.',
+ 'theme': 'THÈME :',
+ 'theme:EMBER': 'BRAISE',
+ 'theme:DARK': 'SOMBRE',
+ 'theme:LIGHT': 'CLAIR',
+ 'theme:BL4': 'BL4',
+ 'theme_later': 'Thème enregistré. Il s’affichera à la prochaine ouverture du menu.',
+ 'window_size': 'FENÊTRE :',
+ 'window_size:LARGE': 'GRANDE',
+ 'window_size:FULL': 'PLEIN ÉCRAN',
+ 'window_size:NORMAL': 'NORMALE',
+ 'window_size_later': 'Taille de la fenêtre enregistrée. Elle s’affichera à la prochaine ouverture '
+                      'du menu.'}

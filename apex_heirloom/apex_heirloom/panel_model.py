@@ -10,6 +10,7 @@ from .panel_preferences import LANGUAGES, language
 from .panel_preferences import CONTROLLER_ICONS, controller_icons
 from .panel_preferences import last_page
 from .panel_preferences import THEMES, theme
+from .panel_preferences import SIZES, window_size
 from . import panel_toggle
 
 MAX_CHANGES = len(settings.ALL)
@@ -79,6 +80,13 @@ class Model:
 
     def change_theme(self, value):
         return value in THEMES and self.save(((theme, value),))
+
+    @property
+    def window_size(self):
+        return window_size.value if window_size.value in SIZES else window_size.default_value
+
+    def change_window_size(self, value):
+        return value in SIZES and self.save(((window_size, value),))
 
     def normalize(self, option, value):
         if type(option.default_value) is bool:

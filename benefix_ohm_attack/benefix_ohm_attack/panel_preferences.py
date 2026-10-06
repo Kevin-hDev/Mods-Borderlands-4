@@ -4,7 +4,7 @@
 """Presentation preference stored by the SDK alongside existing mod options."""
 
 from mods_base import SpinnerOption
-from .panel_theme import PAGES, THEMES
+from .panel_theme import PAGES, SIZES, THEMES
 
 LANGUAGES = ("EN", "FR")
 language = SpinnerOption("menu_language", "EN", list(LANGUAGES), is_hidden=True)
@@ -16,4 +16,6 @@ last_page = SpinnerOption("menu_last_page", PAGES[0], list(PAGES), is_hidden=Tru
 # Each mod keeps its own theme, as it keeps its language (Kevin, 2026-10-06).
 theme = SpinnerOption("menu_theme", THEMES[0], list(THEMES), is_hidden=True)
 # Every preference the mod registers with the SDK.
-ALL = (language, controller_icons, last_page, theme)
+# Each mod keeps its own window size, as its theme (Kevin, 2026-10-06).
+window_size = SpinnerOption("menu_window_size", SIZES[0], list(SIZES), is_hidden=True)
+ALL = (language, controller_icons, last_page, theme, window_size)

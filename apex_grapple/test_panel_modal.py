@@ -9,7 +9,7 @@ from types import SimpleNamespace as NS
 
 import panel_render_fixture as fixture
 import unrealsdk
-from apex_grapple import panel_modal, panel_theme as t, panel_widgets as w
+from apex_grapple import panel_modal, panel_theme as t, panel_widgets as w, panel_window_size as size
 
 failures = []
 
@@ -24,6 +24,7 @@ def corners(anchors):
 
 
 fixture.install()
+size.use("NORMAL")  # the window as it was; the other sizes' shares: test_panel_window_size
 window = unrealsdk.construct_object("ScaleBox", None)
 holder = panel_modal.held(NS(), window)
 screen = holder.WidgetTree.RootWidget

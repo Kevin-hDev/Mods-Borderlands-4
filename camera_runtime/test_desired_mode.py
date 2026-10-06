@@ -20,7 +20,7 @@ class DesiredModeTests(unittest.TestCase):
     def test_unknown_mode_is_rejected_without_mutation(self):
         controller = ThirdPersonController(Hooks(), Bridge(), "desired_mode_invalid")
         with self.assertRaises(ValueError):
-            controller.set_desired_mode("Default")
+            controller.set_desired_mode("Vehicle")
         self.assertEqual(controller._desired_mode, THIRD_PERSON_MODE)
         self.assertNotIn("orbit", controller._suspensions)
 

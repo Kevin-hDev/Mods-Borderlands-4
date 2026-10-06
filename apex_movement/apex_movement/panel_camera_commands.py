@@ -29,8 +29,9 @@ def _device_row(rows, widgets, template, action, device):
     p._row(rows, widgets[f"device:{name}"], controls, _value(rows, widgets, name))
 
 
-def page(owner, model, widgets, template):
-    page, body = p.scrolling_body(owner, template)
+def page(owner, model, widgets, template, frame=None):
+    """The commands page; frame builds the page around its cards, Apex Movement's Options tab with its fixed head."""
+    page, body = p.scrolling_body(owner, template) if frame is None else frame(owner)
     external = w.new("VerticalBox", body)
     widgets["commands:external"] = external
     w.column(body, external)

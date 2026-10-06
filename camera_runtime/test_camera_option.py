@@ -87,5 +87,25 @@ check("a pending native request can be cancelled before its menu closes",
       cancellable.cancel_pending() and cancelled == [True]
       and cancellable.value is False and cancellable.camera_status == "refused")
 
+from apex_camera_runtime.camera_option import BaseViewOption
+
+locked = [True]
+base = BaseViewOption('third_person', False, locked=lambda: locked[0])
+base.mod = types.SimpleNamespace(is_enabled=True)
+try:
+    base.value = True
+except ValueError:
+    pass
+check('Orbit locks the SDK base view without changing its saved value', base.value is False and base.locked)
+locked[0] = False
+base.value = True
+check('the SDK base view becomes editable after Orbit ends', base.value is True and not base.locked)
+locked[0] = True
+base.commit(False)
+check('runtime rollback uses a non-routed base commit', base.value is False)
+base.mod.is_enabled = False
+base.value = True
+check('disabled settings loading is not blocked', base.value is True)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 raise SystemExit(1 if fails else 0)

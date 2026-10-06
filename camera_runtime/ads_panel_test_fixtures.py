@@ -81,7 +81,8 @@ class AdsPanelTests:
     def setUp(self):
         # These window tests have no renderer; native confirmation is exercised separately.
         self.settings.framing.confirm = lambda _restoring=False: True
-        self.settings.third_person.value = True
+        self.settings.orbit.commit(False)
+        self.settings.third_person.commit(True)
         self.settings.ads.option.value = True
         self.package.panel_preferences.french.value = False
 
@@ -101,6 +102,22 @@ class AdsPanelTests:
         self.settings.third_person.value = False
         widgets, _form = self.build()
         self.assertEqual(widgets["setting:third_person_ads"].calls["SetIsEnabled"], (False,))
+
+    def test_first_person_keeps_orbit_and_common_animation_controls_available(self):
+        self.settings.third_person.value = False
+        self.settings.orbit.commit(False)
+        self.settings.shoulder_transition.orbit_smooth.value = True
+        widgets, form = self.build()
+        for key in ('orbit', 'orbit_smooth', 'shoulder_seconds'):
+            self.assertEqual(widgets[f'setting:{key}'].calls['SetIsEnabled'], (True,))
+        self.assertEqual(widgets['setting:shoulder_smooth'].calls['SetIsEnabled'], (False,))
+        self.settings.shoulder_transition.orbit_smooth.value = False
+        form.sync(widgets)
+        self.assertEqual(widgets['setting:shoulder_seconds'].calls['SetIsEnabled'], (False,))
+        self.settings.orbit.commit(True)
+        form.sync(widgets)
+        if 'orbit_distance' in form.model.options:
+            self.assertEqual(widgets['setting:orbit_distance'].calls['SetIsEnabled'], (True,))
 
     def test_restore_and_undo_include_the_aim_choice(self):
         _widgets, form = self.build()

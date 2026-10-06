@@ -1,6 +1,6 @@
 # Omni Sprint
 
-Version **1.0.7**.
+Version **1.0.10**.
 
 Sprint in every direction in Borderlands 4: sideways, diagonally and backwards, while the camera stays free. Omni
 Sprint keeps the game's sprint speed, supplies a backward running animation in third person, and offers an optional
@@ -75,6 +75,12 @@ If a game update changes the movement definition, the mod leaves the sprint limi
 SDK log. If a matching backward animation is unavailable, that animation change is skipped.
 
 ## Camera framing
+
+Native wall climbing stays in third person, including the pull over the ledge.
+Shoulder switching is smooth by default; its animation can be disabled and its
+duration adjusted from 0.05 to 1 second in Camera (0.20 seconds by default).
+Native climbing has its own smooth recentering, independent of this duration.
+Camera controls are grouped into four tabs.
 
 Camera presets and custom sliders adjust aim zoom, shoulder spacing, and height.
 Standard adds 15% aim zoom and 10% shoulder spacing; height is unchanged.

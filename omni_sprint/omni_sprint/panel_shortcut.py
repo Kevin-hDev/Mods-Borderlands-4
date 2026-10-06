@@ -71,7 +71,7 @@ def _key_field(owner, widgets, name, template):
 def _change_button(owner, widgets, name, template):
     """The menu's secondary button, with the switch's frame, shadow and height, around the capturing selector."""
     role, stroke, offset, padding, _centred, _minimum = b.KINDS["switch"]
-    fill, frame, text, shadow = b.STYLES["secondary"]
+    fill, frame, text, shadow = b.colours("secondary")
     outer, inner = w.framed(owner, fill, stroke, frame=frame)
     selector = _selector(inner, template, role, text, w.pad(tx.inset(padding[0], role), padding[1]))
     inner.SetContent(selector)

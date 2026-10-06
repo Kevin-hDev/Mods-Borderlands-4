@@ -29,4 +29,9 @@ TEXT = {'close': 'CLOSE',
  'theme:DARK': 'DARK',
  'theme:LIGHT': 'LIGHT',
  'theme:BL4': 'BL4',
- 'theme_later': 'Theme saved. It will show the next time you open this menu.'}
+ 'theme_later': 'Theme saved. It will show the next time you open this menu.',
+ 'window_size': 'WINDOW:',
+ 'window_size:LARGE': 'LARGE',
+ 'window_size:FULL': 'FULL SCREEN',
+ 'window_size:NORMAL': 'NORMAL',
+ 'window_size_later': 'Window size saved. It will show the next time you open this menu.'}

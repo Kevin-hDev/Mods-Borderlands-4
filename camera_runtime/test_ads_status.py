@@ -157,6 +157,20 @@ class AdsStatusTests(unittest.TestCase):
         self.settings.third_person_enabled = lambda: False
         self.assertEqual(runtime.ads_status("camera"), "cleanup_pending")
 
+    def test_orbit_from_first_person_keeps_aim_refusal_visible_to_its_owner(self):
+        from apex_camera_runtime.runtime import CameraRuntime
+        runtime = CameraRuntime(NS())
+        runtime.register('camera', 200, self.settings)
+        runtime.third_person = self.controller
+        self.native.supported = False
+        self.prepare()
+        self.settings.third_person_enabled = lambda: False
+        self.settings.orbit_enabled = lambda: True
+        self.assertEqual(runtime.ads_status('camera'), 'unsupported')
+        self.assertIsNone(runtime.ads_status('other'))
+        self.settings.orbit_enabled = lambda: False
+        self.assertIsNone(runtime.ads_status('camera'))
+
 
 if __name__ == "__main__":
     result = unittest.main(exit=False).result

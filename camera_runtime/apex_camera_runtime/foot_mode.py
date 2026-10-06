@@ -1,13 +1,13 @@
 """One confirmed transaction for the elected on-foot camera mode."""
 
 from . import mode_layers
-from .constants import ORBIT_MODE, THIRD_PERSON_MODE
+from .constants import CAMERA_TRANSITION, ORBIT_MODE, THIRD_PERSON_MODE
 from .foot_mode_rollback import restore
 from .orbit_feedback import note_refusal, note_save_failure
 
 RESTORE_EXPECTED_NS = 300_000_000
 CONFIRMATION_TIMEOUT_NS = 800_000_000
-ALLOWED_MODES = frozenset((ORBIT_MODE, THIRD_PERSON_MODE))
+ALLOWED_MODES = frozenset((ORBIT_MODE, THIRD_PERSON_MODE, CAMERA_TRANSITION))
 
 
 class FootModeState:
@@ -25,6 +25,16 @@ class FootModeState:
         self.confirmations = 0
         self.restorations = 0
         self.refusals = 0
+        self.return_mode = None
+
+    def base(self, settings: object) -> str:
+        enabled = getattr(settings, 'third_person_enabled', lambda: True)()
+        if type(enabled) is not bool:
+            raise ValueError('invalid base camera choice')
+        return THIRD_PERSON_MODE if enabled else CAMERA_TRANSITION
+
+    def origin(self, settings: object) -> str:
+        return self.return_mode or self.base(settings)
 
     @property
     def pending(self) -> bool:
@@ -40,8 +50,8 @@ class FootModeState:
         try:
             enabled = settings.orbit_enabled()
         except Exception:
-            return THIRD_PERSON_MODE
-        return ORBIT_MODE if enabled is True else THIRD_PERSON_MODE
+            return self.base(settings)
+        return ORBIT_MODE if enabled is True else self.origin(settings)
 
     def begin(self, mode: str, now_ns: int, choice=None, previous=None,
               rollback: bool = False) -> bool:
@@ -129,7 +139,9 @@ class FootModeState:
                 return False
             controller._orbit_blocked_identity = None
             return True
-        target = ORBIT_MODE if enabled else THIRD_PERSON_MODE
+        if enabled:
+            self.return_mode = self.base(settings)
+        target = ORBIT_MODE if enabled else self.origin(settings)
         if not self.begin(target, now_ns, enabled, previous):
             return False
         try:
@@ -139,9 +151,13 @@ class FootModeState:
                 pc.ClientSetCameraMode(ORBIT_MODE)
                 controller._orbit_blocked_identity = None
             else:
-                mode_layers.push_one(controller, actor, manager)
-                # Orbit remains on screen until the game confirms this request.
-                controller.set_desired_mode(THIRD_PERSON_MODE, release_orbit=False)
+                # Publish the exit target before our hooks inspect the native request.
+                # Keep Orbit's offset suspended until the game confirms the exit.
+                controller.set_desired_mode(target, release_orbit=False)
+                if target == THIRD_PERSON_MODE:
+                    mode_layers.push_one(controller, actor, manager)
+                else:
+                    pc.ClientSetCameraMode(target)
         except Exception:
             self._clear_pending()
             note_refusal(settings)
@@ -193,6 +209,7 @@ class FootModeState:
         self._clear_pending()
 
     def reset(self) -> None:
+        self.return_mode = None
         self._clear_pending()
         self.timed_out = False
         self.rollback_failed = False

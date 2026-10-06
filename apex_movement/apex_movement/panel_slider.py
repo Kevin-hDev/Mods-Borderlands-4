@@ -8,8 +8,9 @@ made invisible so only its handle shows (mockup menu.css, .slider).
 from . import panel_i18n as i18n, panel_text as tx, panel_theme as t, panel_widgets as w
 
 _BARS = ("NormalBarImage", "HoveredBarImage", "DisabledBarImage")
-_THUMBS = (("NormalThumbImage", t.COLOR_GOLD), ("HoveredThumbImage", t.COLOR_GOLD_HI),
-           ("DisabledThumbImage", t.COLOR_TEXT_DIM))
+# Colours by theme name, read when the window is drawn (panel_theme.use).
+_THUMBS = (("NormalThumbImage", "COLOR_GOLD"), ("HoveredThumbImage", "COLOR_GOLD_HI"),
+           ("DisabledThumbImage", "COLOR_TEXT_DIM"))
 
 
 def _track_style(bar, template):
@@ -24,7 +25,7 @@ def _handle_style(knob, template):
     for field in _BARS:
         w.style_brush(style, field, template, t.COLOR_INK, alpha=0.0)
     for field, tint in _THUMBS:
-        w.style_brush(style, field, template, tint, outline=t.STROKE,
+        w.style_brush(style, field, template, t.colour(tint), outline=t.STROKE,
                       size=(t.SLIDER_THUMB_WIDTH, t.SLIDER_THUMB_HEIGHT))
     style.BarThickness = float(t.SLIDER_TRACK)
 

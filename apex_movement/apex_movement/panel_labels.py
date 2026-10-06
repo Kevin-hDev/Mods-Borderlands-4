@@ -1,6 +1,8 @@
 """Refresh the same button colours and text roles used by Grapple's window."""
 
 from . import panel_buttons as b, panel_i18n as i18n, panel_shortcut as sc, panel_slider as s, panel_theme as t
+from . import panel_options_tabs as tabs, panel_theme_choice
+from . import panel_size_choice
 
 
 def apply(form, widgets):
@@ -10,7 +12,8 @@ def apply(form, widgets):
         widgets[f"{name}_label"].SetText(i18n.text(name, language))
     widgets["undo"].SetIsEnabled(form.model.can_undo)
     b.paint(widgets, "undo", "secondary" if form.model.can_undo else "disabled")
-    b.paint_gear(widgets, form.options_open)
+    panel_size_choice.paint(widgets, form.model.window_size, language)
+    panel_theme_choice.paint(widgets, form.model.theme, language)
     for lang in ("EN", "FR"):
         # Each language is named in its own words, so a player lost in the other one still finds theirs.
         name = f"language:{lang}"
@@ -27,14 +30,7 @@ def apply(form, widgets):
     widgets["settings_caption"].SetText(i18n.text("settings", language))
     widgets["meta"].SetText(f"{i18n.text('version', language)} {__version__} · "
                             f"{i18n.text('by', language)} {t.AUTHOR}")
-    widgets["options_title"].SetText(i18n.text("options", language))
-    description = "options_desc" if form.model.camera_options else "options_desc_menu"
-    widgets["options_description"].SetText(i18n.text(description, language))
-    widgets["heading:language"].SetText(i18n.text("language", language))
-    widgets["menu_language"].SetText(i18n.text("menu_language", language))
-    if form.model.camera_options:
-        widgets["heading:camera"].SetText(i18n.text("camera", language))
-        widgets["group:camera"].SetText(i18n.text("camera_desc", language))
+    tabs.refresh(form, widgets, language)
     for group, key in zip(form.model.groups, form.model.pages):
         widgets[f"heading:{key}"].SetText(i18n.text(key, language))
         widgets[f"group:{key}"].SetText(i18n.group_text(group, key, language))

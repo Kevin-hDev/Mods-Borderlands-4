@@ -8,8 +8,9 @@ made invisible so only its handle shows (mockup menu.css, .slider).
 from . import panel_i18n as i18n, panel_text as tx, panel_theme as t, panel_widgets as w
 
 _BARS = ("NormalBarImage", "HoveredBarImage", "DisabledBarImage")
-_THUMBS = (("NormalThumbImage", t.COLOR_GOLD), ("HoveredThumbImage", t.COLOR_GOLD_HI),
-           ("DisabledThumbImage", t.COLOR_TEXT_DIM))
+# Colours by theme name, read when the window is drawn (panel_theme.use).
+_THUMBS = (("NormalThumbImage", "COLOR_GOLD"), ("HoveredThumbImage", "COLOR_GOLD_HI"),
+           ("DisabledThumbImage", "COLOR_TEXT_DIM"))
 
 
 def _track_style(bar, template):
@@ -24,7 +25,7 @@ def _handle_style(knob, template):
     for field in _BARS:
         w.style_brush(style, field, template, t.COLOR_INK, alpha=0.0)
     for field, tint in _THUMBS:
-        w.style_brush(style, field, template, tint, outline=t.STROKE,
+        w.style_brush(style, field, template, t.colour(tint), outline=t.STROKE,
                       size=(t.SLIDER_THUMB_WIDTH, t.SLIDER_THUMB_HEIGHT))
     style.BarThickness = float(t.SLIDER_TRACK)
 
@@ -48,13 +49,16 @@ def slider(owner, widgets, option, template):
     w.slant(knob)
     w.layer(stack, knob)
     ends = w.new("HorizontalBox", owner)
-    w.row(ends, tx.text(ends, i18n.number(option, option.min_value), "ends"))
+    low = tx.text(ends, i18n.number(option, option.min_value), "ends")
+    high = tx.text(ends, i18n.number(option, option.max_value), "ends")
+    w.row(ends, low)
     w.row(ends, w.new("Spacer", ends), fill=True)
-    w.row(ends, tx.text(ends, i18n.number(option, option.max_value), "ends"))
+    w.row(ends, high)
     control = w.new("VerticalBox", owner)
     w.column(control, w.sized(control, stack, height=t.SLIDER_HEIGHT))
     w.column(control, ends, padding=w.pad(0, t.SLIDER_THUMB_WIDTH / 2))
     widgets[f"setting:{key}"], widgets[f"fill:{key}"] = knob, bar
+    widgets[f"low:{key}"], widgets[f"high:{key}"] = low, high
     return control
 
 

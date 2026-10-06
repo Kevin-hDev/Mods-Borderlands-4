@@ -30,13 +30,17 @@ def restore(state, controller, orbit: bool, now_ns: int) -> None:
             state.clear_pending()
             state.rollback_failed = True
         return
-    # Orbit can still be visible here: release its native suspension only after ThirdPerson is observed.
-    controller.set_desired_mode(THIRD_PERSON_MODE, release_orbit=False)
-    if not state.begin(THIRD_PERSON_MODE, now_ns, rollback=True):
+    # Keep the offset suspended until the saved base view is observed.
+    target = state.origin(controller._ads_settings)
+    controller.set_desired_mode(target, release_orbit=False)
+    if not state.begin(target, now_ns, rollback=True):
         state.rollback_failed = True
         return
     try:
-        if not controller._mode_pushes:
+        if target != THIRD_PERSON_MODE:
+            mode_layers.remove_all(controller, actor, manager)
+            pc.ClientSetCameraMode(target)
+        elif not controller._mode_pushes:
             mode_layers.push_one(controller, actor, manager)
     except Exception:
         state.clear_pending()

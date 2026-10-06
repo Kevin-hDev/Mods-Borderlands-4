@@ -5,7 +5,11 @@ def cancel(runtime, owner, *, restore=True):
     if type(restore) is not bool:
         return False
     client = runtime.arbiter.active() if restore else runtime._active_client or runtime.arbiter.active()
-    if client is None or client.owner != owner or runtime.third_person is None:
+    if client is None or client.owner != owner:
+        return False
+    if runtime.orbit_entry.cancel(client):
+        return True
+    if runtime.third_person is None:
         return False
     if not restore:
         # Context loss revokes persistence only: no query or write against the previous world.
@@ -13,6 +17,7 @@ def cancel(runtime, owner, *, restore=True):
         runtime.third_person.foot_mode.rollback_failed = True
         return True
     try:
+        runtime.orbit_entry.retire(client, runtime.third_person)
         return bool(runtime.third_person.cancel_orbit(client.settings, runtime.third_person.clock()))
     except Exception:
         client.settings.note("orbit setting: cancellation was refused")

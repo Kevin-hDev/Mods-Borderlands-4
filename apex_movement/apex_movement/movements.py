@@ -15,15 +15,16 @@ from dataclasses import dataclass
 # arms only serves the wall climb, but game drops it whenever the player changes, and game is shared. dash_lookup
 # only serves the dash, and is shared for the same reason: game forgets it when the character changes (2026-09-21).
 UI_SHARED = (
-    "control_timer_native", "control_window_clock",
+    "control_timer_native", "control_window_clock", "control_escape", "control_window_focus", "panel_modal",
     "control_console_handoff", "control_console_keys", "control_reserved", "control_window",
-    "control_window_cleanup", "control_window_hooks", "panel_assets", "panel_buttons",
+    "control_window_cleanup", "control_window_hooks", "control_window_redraw", "panel_assets", "panel_buttons",
     "panel_common_en", "panel_common_fr", "panel_en", "panel_entry", "panel_factory", "panel_fonts",
     "panel_form", "panel_fr", "panel_header", "panel_i18n", "panel_labels", "panel_model", "panel_transaction",
     "panel_transaction_config", "panel_transaction_recovery", "panel_restore", "panel_form_lifecycle",
     "control_window_config", "control_window_transaction_close", "panel_persistence",
-    "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_pages", "panel_preferences",
-    "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_toggle", "panel_view", "panel_widgets",
+    "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_options_tabs", "panel_pages",
+    "panel_preferences", "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_theme_choice",
+    "panel_toggle", "panel_view", "panel_widgets", "panel_size_choice", "panel_window_size",
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.

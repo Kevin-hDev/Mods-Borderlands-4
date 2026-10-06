@@ -107,6 +107,8 @@ SLIDER_THUMB_HEIGHT = 34
 # Kevin's themes (2026-10-06, docs/mokup/menu_mods/decisions.md): the colours above are EMBER, and each other theme
 # lists the colours it changes. A theme changes colours only; shapes, fonts and sizes stay the menus' own.
 THEMES = ("EMBER", "DARK", "LIGHT", "BL4")
+# Kevin's window sizes (2026-10-06, decisions.md), in the order the header's button goes through them.
+SIZES = ("LARGE", "FULL", "NORMAL")
 PALETTES = {
     "EMBER": {},
     "DARK": {"COLOR_WINDOW": "16171b", "COLOR_HEADER": "1e2025", "COLOR_SIDEBAR": "101114", "COLOR_CARD": "0b0c0e",
@@ -128,7 +130,7 @@ _EMBER = {name: value for name, value in globals().items() if name.startswith("C
 # Game-only values, not design tokens: the exporter skips names that start with an underscore or are listed here.
 GAME_ONLY = ("ORDER", "SAVE_DELAY_NS", "PAGES", "BRAND", "AUTHOR", "PX_TO_POINTS", "SPARKS", "HOVER_OVERLAY",
              "PRESS_OVERLAY", "SELECTOR_WIDTH", "KEY_CHANGE_WIDTH", "FONT_LINE_HEIGHT", "GAME_ONLY", "THEMES",
-             "PALETTES", "BACKDROP_BLUR")
+             "PALETTES", "BACKDROP_BLUR", "SIZES")
 ORDER = 10000
 # The game behind an open window is blurred a little, as behind an app's pop-up (Kevin, 2026-10-06). Unreal's
 # BackgroundBlur strength, which runs from 0 (sharp) to 100.
