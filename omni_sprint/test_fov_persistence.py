@@ -33,8 +33,9 @@ settings.fov.value = 140
 first = sdk_stubs.player(sdk_stubs.BASE, fov=103.0)
 state["pc"] = first
 step()
+# The saved top includes the speed FOV's gain (7 by default): a sprint's value kept by the game is recognised.
 check("the native value is recorded before the mod applies", first.Player.BaseFOV == 140
-      and settings.native_fov.value == 103.0 and settings.applied_fov.value == 140.0
+      and settings.native_fov.value == 103.0 and settings.applied_fov.value == 147.0
       and state["settings_saves"] > 0)
 
 # The game's profile may reintroduce the mod's angle before the new player loads.

@@ -164,10 +164,10 @@ class ZoomTests(unittest.TestCase):
         for now in range(3):
             controller.sync("test", pc, settings, now)
         self.assertTrue(controller.cleanup_pending)
-        self.assertFalse(any(name.endswith(":orbit_zoom") for _, _, name in hooks.items))
+        self.assertFalse(any(name.endswith(":camera_offset") for _, _, name in hooks.items))
         animation[0] = object()
         controller.sync("test", pc, settings, 4)
-        self.assertEqual(sum(name.endswith(":orbit_zoom") for _, _, name in hooks.items), 1)
+        self.assertEqual(sum(name.endswith(":camera_offset") for _, _, name in hooks.items), 1)
         controller.stop()
 
     def test_owner_handoff_uses_each_saved_distance_without_an_early_write(self):
@@ -205,7 +205,7 @@ class ZoomTests(unittest.TestCase):
             raise RuntimeError("hook removal refused")
         self.hooks.remove_hook = fail
         callback = next(cb for (_path, _kind, name), cb in self.hooks.items.items()
-                        if name.endswith(":orbit_zoom"))
+                        if name.endswith(":camera_offset"))
         callback(self.animation, None, None, None)
         self.manager.CameraModeState = original
         self.manager.mode = "Orbit"

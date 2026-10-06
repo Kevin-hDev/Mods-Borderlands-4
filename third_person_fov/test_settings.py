@@ -27,7 +27,9 @@ check("the public settings keep their exact camera order",
       ["third_person", "third_person_ads", "third_person_key", "third_person_controller",
        "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "shoulder_key", "shoulder_controller",
        "orbit", "orbit_key", "orbit_controller", "zoom_in_key", "zoom_in_controller",
-       "zoom_out_key", "zoom_out_controller", "fov", "extended_loot", "loot_reach"])
+       "zoom_out_key", "zoom_out_controller", "fov", "extended_loot", "loot_reach",
+       "speed_fov", "speed_fov_gain", "speed_fov_seconds",
+       "action_framing", "action_framing_strength", "camera_motion", "camera_motion_strength"])
 check("the standalone pack always applies its FOV while enabled",
       settings.custom_fov_enabled() is True and not hasattr(settings, "custom_fov"))
 check("third person stays off by default", settings.third_person.value is False)

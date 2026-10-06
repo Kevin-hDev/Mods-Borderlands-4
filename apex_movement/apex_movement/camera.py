@@ -35,6 +35,8 @@ class Settings:
     orbit_distance = staticmethod(camera_settings.zoom.distance)
     set_orbit_distance = staticmethod(camera_settings.zoom.save)
     loot_distance = staticmethod(camera_settings.loot_distance)
+    speed_fov = staticmethod(camera_settings.speed_fov.values)
+    dynamic_camera = staticmethod(camera_settings.dynamic.values)
     fov_enabled = staticmethod(camera_settings.custom_fov_enabled)
     fov_value = staticmethod(camera_settings.fov_value)
     saved_fov_pair = staticmethod(camera_settings.saved_fov_pair)

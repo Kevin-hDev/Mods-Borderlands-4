@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.2.3**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.4**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.
@@ -50,6 +50,9 @@ The full pack also carries an optional camera, on the Options page:
 - **Custom FOV**: a field of view from 70 to 150, off by default. Switched off, the game's own FOV is used.
 - **Extended loot reach**: pick up loot and open containers from farther away, from 1× to 3×, 2× by default. Vendors,
   characters and vehicles keep the game's own reach.
+- **Dynamic camera**, on by default: the view widens while sprinting or sliding, the camera moves back while
+  running, in the air or driving fast and closer when crouched, and it follows your changes of speed softly. Each
+  effect has its own switch and strength. With Vehicle Driving, its chosen view stays and the driving framing adds to it.
 
 The **Commands** page sets each camera key twice, once for keyboard and mouse and once for controller: third person
 (P by default), switch shoulder (6), orbit camera (7), and orbit camera zoom in and out (no key by default). No

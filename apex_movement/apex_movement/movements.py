@@ -24,7 +24,7 @@ UI_SHARED = (
     "control_window_config", "control_window_transaction_close", "panel_persistence",
     "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_options_tabs", "panel_pages",
     "panel_preferences", "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_theme_choice",
-    "panel_toggle", "panel_view", "panel_widgets", "panel_size_choice", "panel_window_size",
+    "panel_toggle", "panel_view", "panel_widgets", "panel_size_choice", "panel_window_size", "panel_scroll", "panel_dynamic",
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.

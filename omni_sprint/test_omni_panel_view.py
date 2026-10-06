@@ -59,10 +59,15 @@ panel_assets.texture = lambda _world: None
 panel_fonts.build = lambda _root: {"title": object(), "body": object()}
 
 model, root, widgets, form = build()
-CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot")
-check("six pages, opened on OMNI SPRINT, under the mod's name",
-      len(widgets["pages"].children) == len(model.pages) == 6 and widgets["focus"] is widgets["nav:omni_sprint"]
+CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera")
+check("seven pages, opened on OMNI SPRINT, under the mod's name",
+      len(widgets["pages"].children) == len(model.pages) == 7 and widgets["focus"] is widgets["nav:omni_sprint"]
       and theme.BRAND == "OMNI SPRINT")
+check("the DYNAMIC CAMERA page has its three cards, FIELD OF VIEW, FRAMING and MOTION, with their settings",
+      all(f"heading:dynamic:{key}" in widgets for key in ("fov", "framing", "motion"))
+      and all(f"row:{key}" in widgets for key in ("speed_fov", "speed_fov_gain", "speed_fov_seconds", "action_framing",
+                                                    "action_framing_strength", "camera_motion",
+                                                    "camera_motion_strength")))
 check("EN and FR sit in the header, with no gear nor Options page",
       "EN" in widgets and "FR" in widgets and "options" not in widgets and "language:EN" not in widgets)
 check("the page's rows are the camera settings, the FOV row registered to be greyed",

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.6 - 2026-10-06
+
+- New DYNAMIC CAMERA page: the camera follows the action. Three effects, each with its own switch, on by default:
+  - Field of view: the view widens while sprinting or sliding, following your speed. Gain and transition time are adjustable.
+  - Framing: the camera moves back while running or in the air, closer when crouched, and back with your speed while driving. Strength from 25 to 200%.
+  - Motion: the camera follows your changes of speed softly, and drifts a little when you stand still. Strength from 25 to 200%.
+- With Vehicle Driving, the view you chose there stays the same, and the driving framing adds to it.
+- The menu now reopens where you left it: same page and same place in the page, even after restarting the game.
+
 ## 1.1.5 - 2026-10-06
 
 - New WINDOW button at the top of the menu, beside THEME: three sizes, LARGE (default), FULL SCREEN and NORMAL (the previous size). More room, same text size. Each mod keeps its own.

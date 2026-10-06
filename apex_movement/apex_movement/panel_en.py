@@ -17,6 +17,13 @@ TEXT = {
     "aiming": "AIMING", "aiming_page": "Third-person aiming and zoom.",
     "orbit_camera": "ORBIT CAMERA", "orbit_camera_page": "Circles the character at the distance you choose.",
     "loot": "LOOT", "loot_page": "Pick up loot from farther away.",
+    # The DYNAMIC CAMERA page, its three cards the same in the three camera mods (Kevin, 2026-10-06).
+    "dynamic_camera": "DYNAMIC CAMERA", "dynamic_camera_tab_desc": "Field of view, framing and motion.",
+    "dynamic_camera_page": "The camera follows the action: speed, jumps, crouching and driving.",
+    "dynamic_fov": "FIELD OF VIEW", "dynamic_fov_desc": "Wider while sprinting or sliding.",
+    "dynamic_framing": "FRAMING",
+    "dynamic_framing_desc": "Back when running, jumping or driving fast, closer when crouched.",
+    "dynamic_motion": "MOTION", "dynamic_motion_desc": "Soft inertia, and a faint drift when standing still.",
     "third_person_needed": "Turn on third person in the CAMERA tab.",
     "change_key": "CHANGE", "press_key": "PRESS A KEY", "no_key": "NONE",
     "commands": "COMMANDS", "keyboard": "KEYBOARD / MOUSE", "controller": "CONTROLLER",

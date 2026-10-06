@@ -97,6 +97,10 @@ names = ["focus", "pages", "notice", "close", "theme", "window_size", "EN", "FR"
 names += [f"nav:{key}" for key in panel_camera_pages.PAGES] + [f"{key}:settings" for key in panel_camera_pages.PAGES]
 names += [f"{part}:{name}" for name in ("loot_reach", "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "orbit", "third_person_ads", "orbit_distance")
           for part in ("row", "description")]
+# The DYNAMIC CAMERA page's sliders, greyed under their switch (Kevin, 2026-10-06).
+DYNAMIC_SLIDERS = {"speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
+                   "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
+names += [f"{part}:{name}" for name in DYNAMIC_SLIDERS for part in ("row", "description")]
 names += [f"setting:{key}" for key in model.options]
 for action, device in camera_control_config.SLOTS:
     names += [f"command:{action}:{device}", f"clear:{action}:{device}", f"value:{action}:{device}"]
@@ -128,6 +132,13 @@ for third_person, orbit, live in ((True, True, True), (False, True, True), (True
     check(f"the Orbit distance is {'live' if live else 'greyed'} with third person {third_person}, orbit {orbit}",
           distance.enabled is live)
 form.shown.update(third_person=True, orbit=settings.orbit.value)
+for slider, switch in DYNAMIC_SLIDERS.items():
+    form.shown[switch] = False
+    form.refresh_dependency(widgets)
+    off = widgets[f"setting:{slider}"].enabled is False and widgets[f"row:{slider}"].opacity < 1
+    form.shown[switch] = True
+    form.refresh_dependency(widgets)
+    check(f"{slider} is greyed while {switch} is off", off and widgets[f"setting:{slider}"].enabled is True)
 form.refresh_dependency(widgets)
 widgets["setting:third_person"].checked = True
 form.poll()

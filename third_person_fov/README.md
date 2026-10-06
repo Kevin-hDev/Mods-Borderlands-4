@@ -1,6 +1,6 @@
 # Third Person & FOV
 
-Version **1.1.5**.
+Version **1.1.6**.
 
 An over-the-shoulder camera and a wider field of view for Borderlands 4, without the movement changes from Apex
 Movement or Omni Sprint.
@@ -20,6 +20,9 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
   FOV.
 - **Extended loot reach**, on by default: pick up loot and open containers from farther away, from 1× to 3×, 2× by
   default. Vendors, characters and vehicles keep the game's own reach.
+- **Dynamic camera**, on by default: the view widens while sprinting or sliding, the camera moves back while
+  running, in the air or driving fast and closer when crouched, and it follows your changes of speed softly. Each
+  effect has its own switch and strength. With Vehicle Driving, its chosen view stays and the driving framing adds to it.
 
 Its settings window, in English and French, has a **Camera** page and a **Commands** page. The Commands page sets
 every camera key, for keyboard and mouse and for controller, with PlayStation or Xbox icons: third person (P by

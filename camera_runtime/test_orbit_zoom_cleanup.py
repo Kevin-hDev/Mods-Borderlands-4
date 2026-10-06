@@ -52,7 +52,7 @@ class CleanupTests(unittest.TestCase):
         controller.stop(stale=True)
 
         self.assertFalse(controller.cleanup_pending)
-        self.assertIsNone(controller.zoom.last_offset)
+        self.assertIsNone(controller.offset.written)
 
 
 if __name__ == "__main__":

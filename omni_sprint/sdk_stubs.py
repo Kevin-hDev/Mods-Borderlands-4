@@ -170,6 +170,12 @@ def install() -> dict:
 
     hooks_module = types.ModuleType("unrealsdk.hooks")
     hooks_module.Type = types.SimpleNamespace(POST="POST", PRE="PRE")
+    # The camera runtime's own clock at the wheel (vehicle_framing.py) installs its hook through these.
+    installed = state.setdefault("hooks", {})
+    hooks_module.add_hook = lambda path, kind, identifier, callback: installed.__setitem__(
+        (path, kind, identifier), callback)
+    hooks_module.has_hook = lambda path, kind, identifier: (path, kind, identifier) in installed
+    hooks_module.remove_hook = lambda path, kind, identifier: installed.pop((path, kind, identifier))
 
     unrealsdk_module = types.ModuleType("unrealsdk")
     unrealsdk_module.logging = logging_module

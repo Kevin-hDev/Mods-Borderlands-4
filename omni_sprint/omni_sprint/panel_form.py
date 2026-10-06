@@ -12,7 +12,9 @@ from .panel_form_lifecycle import Lifecycle
 
 # A setting that changes nothing while its switch is off; the walk key's rows are Apex Movement's.
 DEPENDS_ON = {"fov": "custom_fov", "loot_reach": "extended_loot", "shoulder_left": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth",
-              "orbit": None, "third_person_ads": "third_person", "orbit_distance": "orbit"}
+              "orbit": None, "third_person_ads": "third_person", "orbit_distance": "orbit",
+              "speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
+              "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
 
 
 class PanelForm(Lifecycle):

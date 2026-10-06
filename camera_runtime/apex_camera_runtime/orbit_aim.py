@@ -53,7 +53,7 @@ class OrbitAim:
         if (controller.ads is None or self.busy or not self.eligible(controller, actor)
                 or not controller.ads.wanted):
             return
-        controller.zoom.release()
+        controller.offset.release()
         self.phase = 'enter'  # Hooks must see the temporary destination before the call.
         try:
             # A normal mode blend outlasts the weapon zoom and misses the natural HUD update.

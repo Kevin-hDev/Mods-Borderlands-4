@@ -97,7 +97,7 @@ class NativeClimb:
                 return True
             if controller.framing is not None:
                 controller.framing.stop()
-            controller.zoom.release()
+            controller.offset.release()
             foot_preemption.cancel(controller.foot_mode, controller, "climb", True)
             aiming.prepare_vehicle(controller, "ThirdPerson", controller._desired_mode,
                                    CAMERA_TRANSITION, CAMERA_BLEND, CAMERA_TELEPORT)

@@ -23,7 +23,7 @@ def stop(controller: Any, mode: str, transition: str, blend: float, teleport: bo
         controller.cleanup_retry.schedule_wait(controller, moment, stale)
         return
     try:
-        controller.zoom.stop(stale=stale)
+        controller.offset.stop(stale=stale)
     except Exception as error:
         errors.append(error)
     if controller._hooks_installed:

@@ -11,6 +11,7 @@ from .constants import CAMERA_TRANSITION as TRANSITION
 from .controller_actions import ControllerActions
 from .foot_mode import ORBIT_MODE, THIRD_PERSON_MODE, FootModeState
 from .lifetime import CameraLifetime
+from .camera_offset import CameraOffset
 from .orbit_zoom import OrbitZoom
 from .orbit_aim import OrbitAim
 from .orbit_feedback import note_refusal
@@ -48,6 +49,7 @@ class ThirdPersonController(ControllerActions):
         self._aim_returning = False
         self._suspensions: set[str] = set()
         self.transition_name = TRANSITION
+        self.offset = CameraOffset(self)
         self.zoom = OrbitZoom(self)
         self.ads = ads
         self.framing = framing
@@ -60,7 +62,7 @@ class ThirdPersonController(ControllerActions):
     @property
     def cleanup_pending(self) -> bool:
         return (self._bridge_started or self._hooks_installed or self._mode_pushes > 0
-                or self.foot_mode.rollback_failed or self.zoom.pending
+                or self.foot_mode.rollback_failed or self.offset.pending
                 or (self.ads is not None and self.ads.pending)
                 or (self.anchor is not None and self.anchor.pending))
 

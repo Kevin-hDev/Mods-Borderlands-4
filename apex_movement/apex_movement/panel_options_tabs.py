@@ -6,7 +6,7 @@ open, the camera tab otherwise, and the menu reopens on the tab it was closed on
 2026-10-06).
 """
 
-from . import panel_buttons as b, panel_i18n as i18n
+from . import panel_buttons as b, panel_dynamic, panel_i18n as i18n
 from .panel_options import NAMES, SENTENCES, TABS
 
 
@@ -66,3 +66,6 @@ def refresh(form, widgets, language):
     if form.model.camera_options:
         widgets["heading:camera"].SetText(i18n.text("camera", language))
         widgets["group:camera"].SetText(i18n.text("camera_desc", language))
+        widgets[f"heading:{panel_dynamic.PAGE}"].SetText(i18n.text(panel_dynamic.PAGE, language))
+        widgets[f"group:{panel_dynamic.PAGE}"].SetText(i18n.text(f"{panel_dynamic.PAGE}_page", language))
+        panel_dynamic.refresh(widgets, language)

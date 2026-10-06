@@ -30,3 +30,18 @@ def notice(controller):
         # A loading boundary cannot confirm a restored view.
         pass
     return "cleanup_pending"
+
+
+def for_owner(runtime, owner):
+    """The elected owner's aiming notice for its settings window; None for any other mod or when aiming is off."""
+    active = runtime.arbiter.active()
+    if active is None or active.owner != owner:
+        return None
+    ads = getattr(runtime.third_person, "ads", None)
+    if ads is not None and ads.pending:
+        return "cleanup_pending"
+    camera_enabled = (active.settings.third_person_enabled()
+                      or getattr(active.settings, 'orbit_enabled', lambda: False)())
+    if not camera_enabled or not active.settings.third_person_ads():
+        return None
+    return notice(runtime.third_person)

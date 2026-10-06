@@ -25,10 +25,13 @@ def check(label, condition):
 
 model = Model(mod)
 check("SDK entry opens the custom window", getattr(mod, panel_open.MARKER, False))
-check("only camera settings, over four pages (Kevin, 2026-10-06), and five separate command pairs are exposed",
-      model.pages == ("camera", "aiming", "orbit_camera", "loot", "commands") and model.page == "camera"
+check("only camera settings, over five pages (Kevin, 2026-10-06), and five separate command pairs are exposed",
+      model.pages == ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "commands")
+      and model.page == "camera"
       and list(model.options) == ["third_person", "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "fov", "third_person_ads", "orbit",
-                                  "orbit_distance", "extended_loot", "loot_reach"]
+                                  "orbit_distance", "extended_loot", "loot_reach", "speed_fov", "speed_fov_gain",
+                                  "speed_fov_seconds", "action_framing", "action_framing_strength", "camera_motion",
+                                  "camera_motion_strength"]
       and set(model.camera_options) == set(model.options)
       and len(model.command_options) == 10)
 check("preferences belong to the mod's existing save file",

@@ -39,6 +39,7 @@ def apply(form, widgets):
         notice = "camera_outdated" if camera.framing_status() == "camera_outdated" else "camera_elsewhere"
         widgets[f"group:{key}"].SetText(i18n.text(notice, language) if elsewhere
                                         else pages.description(form, group, key, language))
+        pages.refresh(widgets, key, language)
     if "heading:command_external" in widgets:
         widgets["heading:command_external"].SetText(i18n.text("commands", language))
         widgets["group:command_external"].SetText(i18n.text("camera_elsewhere", language))

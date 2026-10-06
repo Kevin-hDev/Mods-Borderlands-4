@@ -21,6 +21,18 @@ ORBIT_DISTANCE = {"display_name": "Distance", "description": "Camera distance, a
 # Apex Movement and Omni Sprint only: Third Person & FOV always applies its FOV.
 CUSTOM_FOV = {"display_name": "Custom FOV", "description": "Use the FOV below instead of the game's."}
 FOV ={"display_name": "FOV", "description": "Field of view, up to 150."}
+SPEED_FOV = {"display_name": "Speed FOV", "description": "Widen the view while sprinting."}
+SPEED_FOV_GAIN = {"display_name": "Speed FOV gain", "description": "Field of view added while sprinting."}
+SPEED_FOV_SECONDS = {"display_name": "Speed FOV transition", "description": "Seconds to widen and to come back."}
+ACTION_FRAMING = {"display_name": "Action framing",
+                  "description": "Moves the camera back while running, in the air or driving fast, and closer when "
+                                 "crouched."}
+ACTION_FRAMING_STRENGTH = {"display_name": "Action framing strength",
+                           "description": "100% is the default; lower is softer, higher stronger."}
+CAMERA_MOTION = {"display_name": "Camera motion",
+                 "description": "The camera follows your changes of speed softly, and drifts a little when you stand still."}
+CAMERA_MOTION_STRENGTH = {"display_name": "Camera motion strength",
+                          "description": "100% is the default; lower is softer, higher stronger."}
 
 ADS_NOTICES = {
     "unsupported": "Shoulder aiming is unavailable on this version. Keep first-person aiming until the mod is updated.",

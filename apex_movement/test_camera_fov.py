@@ -20,7 +20,7 @@ camera_settings.custom_fov.value = True
 camera_settings.fov.value = 140
 camera.on_frame(1_000_000_000)
 ok = player.BaseFOV == 140.0
-ok = ok and camera_settings.saved_fov_pair() == (90.0, 140.0) and state["settings_saves"] == 1
+ok = ok and camera_settings.saved_fov_pair() == (90.0, 147.0) and state["settings_saves"] == 1
 camera.stop()
 ok = ok and player.BaseFOV == 90.0
 camera.start()

@@ -7,9 +7,10 @@ import panel_fixture as f
 from third_person_fov import panel_preferences as prefs, settings
 from apex_camera_runtime import shared, constants
 
-CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot")
+CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera")
 root, widgets, form = f.build()
-assert len(widgets["pages"].children) == 5, "four camera pages then COMMANDS (Kevin, 2026-10-06)"
+assert len(widgets["pages"].children) == 6, "five camera pages then COMMANDS (Kevin, 2026-10-06)"
+assert all(f"heading:dynamic:{key}" in widgets for key in ("fov", "framing", "motion"))
 assert widgets["focus"] is widgets["nav:camera"]
 assert "EN" in widgets and "FR" in widgets and "options" not in widgets
 assert all(f"row:{key}" in widgets for key in ("third_person", "shoulder_left", "orbit", "orbit_distance", "fov",

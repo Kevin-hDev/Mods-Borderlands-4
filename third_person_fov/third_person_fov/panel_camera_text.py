@@ -44,7 +44,15 @@ EN = {'camera_refused': 'The camera could not confirm this change. It was not sa
  'orbit_camera_page': 'Circles the character at the distance you choose.',
  'loot': 'LOOT',
  'loot_page': 'Pick up loot from farther away.',
- 'third_person_needed': 'Turn on third person in the CAMERA tab.'}
+ 'third_person_needed': 'Turn on third person in the CAMERA tab.',
+ 'dynamic_camera': 'DYNAMIC CAMERA',
+ 'dynamic_camera_page': 'The camera follows the action: speed, jumps, crouching and driving.',
+ 'dynamic_fov': 'FIELD OF VIEW',
+ 'dynamic_fov_desc': 'Wider while sprinting or sliding.',
+ 'dynamic_framing': 'FRAMING',
+ 'dynamic_framing_desc': 'Back when running, jumping or driving fast, closer when crouched.',
+ 'dynamic_motion': 'MOTION',
+ 'dynamic_motion_desc': 'Soft inertia, and a faint drift when standing still.'}
 FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a pas été enregistré.',
  'camera_timeout': 'La caméra n’a pas répondu. Les réglages précédents ont été rétablis. Réessaie '
                    'dans un moment.',
@@ -89,6 +97,14 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
  'loot': 'LOOT',
  'loot_page': 'Ramasse le loot de plus loin.',
  'third_person_needed': "Active la troisième personne dans l'onglet CAMÉRA.",
+ 'dynamic_camera': 'CAMÉRA DYNAMIQUE',
+ 'dynamic_camera_page': "La caméra suit l'action : vitesse, sauts, accroupi et conduite.",
+ 'dynamic_fov': 'CHAMP DE VISION',
+ 'dynamic_fov_desc': 'Plus large en sprint et en glissade.',
+ 'dynamic_framing': 'CADRAGE',
+ 'dynamic_framing_desc': 'Recule en courant, en sautant ou en roulant vite, se rapproche accroupi.',
+ 'dynamic_motion': 'MOUVEMENTS',
+ 'dynamic_motion_desc': "Une légère inertie, et un faible flottement à l'arrêt.",
  'aim_third': 'Troisième personne',
  'aim_first': 'Première personne',
  'ads_unsupported': "Visée à l'épaule indisponible avec cette version. Garde la visée première "
@@ -120,4 +136,17 @@ FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrièr
  'fov': ('FOV', "Champ de vision, jusqu'à 150."),
  'extended_loot': ('Portée du loot augmentée',
                    'Ramasse le loot et ouvre les coffres de plus loin.'),
- 'loot_reach': ('Portée du loot', '1 : portée du jeu ; 2 : deux fois plus loin.')}
+ 'loot_reach': ('Portée du loot', '1 : portée du jeu ; 2 : deux fois plus loin.'),
+ 'speed_fov': ('FOV en vitesse', 'Élargit la vue quand tu sprintes.'),
+ 'speed_fov_gain': ('Élargissement', 'Champ de vision ajouté en sprint.'),
+ 'speed_fov_seconds': ('Transition', "Secondes pour s'élargir et pour revenir."),
+ 'action_framing': ("Cadrage selon l'action",
+                    "Recule la caméra en courant, en l'air ou en roulant vite, et la rapproche "
+                    'accroupi.'),
+ 'action_framing_strength': ('Force du cadrage',
+                             '100 % par défaut ; plus bas, plus doux ; plus haut, plus fort.'),
+ 'camera_motion': ('Mouvements de caméra',
+                   'La caméra suit en douceur tes changements de vitesse, et bouge un peu à '
+                   "l'arrêt."),
+ 'camera_motion_strength': ('Force des mouvements',
+                            '100 % par défaut ; plus bas, plus doux ; plus haut, plus fort.')}

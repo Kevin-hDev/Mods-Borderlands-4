@@ -72,6 +72,8 @@ def _window(root, world, model, widgets, template):
         switcher.AddChild(commands.page(switcher, model, widgets, template, o.commands_frame(widgets, template)))
     if "language" in model.pages:
         switcher.AddChild(o.language_page(switcher, widgets, template))
+    if "dynamic_camera" in model.pages:
+        switcher.AddChild(o.dynamic_page(switcher, model, widgets, template))
     switcher.AddChild(o.options_page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))

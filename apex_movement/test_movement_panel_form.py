@@ -49,6 +49,10 @@ names = ["focus", "pages", "notice", "close", "theme", "window_size", "options",
 names += [f"nav:{page}" for page in model.pages]
 names += [f"setting:{key}" for key in model.options]
 names += [f"{part}:{key}" for key in ('shoulder_smooth', 'orbit_smooth', 'shoulder_seconds') for part in ('row', 'description')]
+# The DYNAMIC CAMERA tab's sliders, greyed under their switch (Kevin, 2026-10-06).
+DYNAMIC_SLIDERS = {"speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
+                   "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
+names += [f"{part}:{key}" for key in DYNAMIC_SLIDERS for part in ('row', 'description')]
 for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out"):
     names += [f"heading:command_{action}", f"group:command_{action}"]
     for device in ("keyboard", "controller"):
@@ -88,6 +92,13 @@ assert all(widgets[f"setting:{name}"].enabled is True and widgets[f"row:{name}"]
            for name in ("shoulder_left", "orbit"))
 widgets["setting:third_person"].checked = True
 assert not form.poll() and "third_person" not in form.pending and widgets["setting:orbit"].enabled is True
+for slider, switch in DYNAMIC_SLIDERS.items():
+    assert widgets[f"setting:{slider}"].enabled is True and widgets[f"row:{slider}"].opacity == 1.0
+    widgets[f"setting:{switch}"].checked = True
+    assert not form.poll() and form.pending[switch] is False
+    assert widgets[f"setting:{slider}"].enabled is False and widgets[f"row:{slider}"].opacity < 1
+    widgets[f"setting:{switch}"].checked = True
+    assert not form.poll() and switch not in form.pending and widgets[f"setting:{slider}"].enabled is True
 
 widgets["options"].checked = True
 assert not form.poll() and widgets["pages"].active == len(model.pages)

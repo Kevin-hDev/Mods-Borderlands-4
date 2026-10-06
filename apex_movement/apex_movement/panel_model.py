@@ -25,11 +25,12 @@ class Model(Restore):
             # Camera belongs to the full pack; separate movement files must remain independent.
             from . import camera_settings
             from .camera_control_actions import Actions
-            self.camera_options = {option.identifier: option for option in camera_settings.VISIBLE}
+            self.camera_options = {option.identifier: option
+                                   for option in (*camera_settings.VISIBLE, *camera_settings.DYNAMIC)}
             self.command_options = {option.identifier: option for option in camera_settings.commands.options}
             self.command_actions = Actions(camera_settings.commands, mod)
             # The Options tabs past the camera's (panel_options.TABS), pages without a sidebar button.
-            self.pages += ("commands", "language")
+            self.pages += ("commands", "language", "dynamic_camera")
         self.options = {**movement, **self.camera_options}
         self._undo, self._command_undo = (), {}
         self._command_plan = None

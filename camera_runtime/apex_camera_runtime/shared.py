@@ -55,6 +55,8 @@ def shared(weak_ref: Callable | None = None, address_of: Callable | None = None)
     from .loot_runtime import LootRuntime
     from .loot_unit import create_unit
     state.runtime.loot = LootRuntime(create_unit)
+    from .vehicle_framing import VehicleFraming, game_modules
+    state.runtime.vehicle = VehicleFraming(game_modules)
     from . import ads_category, ads_paths_reader, generated_ads
     state.ads_category_reader = ads_category.category
     state.ads_object_address = ads_category.address

@@ -9,7 +9,7 @@ sys.path.insert(0, str(HERE))
 
 from apex_camera_runtime.arbitration import Arbiter, Client  # noqa: E402
 from apex_camera_runtime.constants import PROTOCOL  # noqa: E402
-from apex_camera_runtime.fov import FovEngine  # noqa: E402
+from apex_camera_runtime.fov import FovEngine, single  # noqa: E402
 from apex_camera_runtime.runtime import CameraRuntime  # noqa: E402
 from apex_camera_runtime.shared import reset_for_tests, shared  # noqa: E402
 
@@ -218,6 +218,87 @@ except RuntimeError:
     pass
 check("unregister removes the client even when third-person cleanup reports an error",
       failing_runtime.arbiter.active() is None and failing_runtime._active_client is None)
+
+class Counted(Settings):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.remembered = 0
+
+    def remember_fov_pair(self, native, applied):
+        super().remember_fov_pair(native, applied)
+        self.remembered += 1
+
+
+gain_engine = FovEngine(weakref.ref, lambda item: item.address)
+game_view = Counted(False, 110.0)
+runner = Player(8, 110.0)
+gain_engine.apply("apex_movement", runner, game_view, 5.0, 10.0)
+check("without a custom FOV, the speed gain rides on the game's own value",
+      runner.BaseFOV == 115.0 and game_view.saved == (110.0, 120.0) and game_view.remembered == 1)
+for gain in (7.3, 9.9, 10.0):
+    gain_engine.apply("apex_movement", runner, game_view, gain, 10.0)
+check("each frame's gain is written as the game reads it back, without saving the file again",
+      runner.BaseFOV == 120.0 and game_view.remembered == 1 and len(game_view.notes) == 1)
+gain_engine.apply("apex_movement", runner, game_view, 0.0, 10.0)
+check("at rest the game gets its own value back", runner.BaseFOV == 110.0 and gain_engine._owner_ref is None)
+kept = Player(9, single(116.5))
+gain_engine.apply("apex_movement", kept, game_view, 0.0, 10.0)
+check("a mid-sprint value the game kept after a reload is given back", kept.BaseFOV == 110.0)
+menu = Player(10, 95.0)
+gain_engine.apply("apex_movement", menu, game_view, 0.0, 10.0)
+check("a value the game's menu can give is never touched", menu.BaseFOV == 95.0)
+
+custom = Counted(True, 119.0, (110.0, 119.0))
+kevin = Player(11, 119.0)
+gain_engine.apply("third_person_fov", kevin, custom, 10.0, 10.0)
+check("a custom FOV gets the gain on top, its saved top raised once",
+      kevin.BaseFOV == 129.0 and custom.saved == (110.0, 129.0) and custom.remembered == 1
+      and custom.notes == ["FOV restore value recovered: 110"])
+gain_engine.apply("third_person_fov", kevin, custom, 0.0, 10.0)
+check("at rest a custom FOV stays the player's", kevin.BaseFOV == 119.0 and custom.remembered == 1)
+gain_engine.stop()
+reloaded_kevin = Player(12, 125.0)
+gain_engine.apply("third_person_fov", reloaded_kevin, custom, 0.0, 10.0)
+check("a gained custom value kept by the game still recovers the game's own",
+      reloaded_kevin.BaseFOV == 119.0 and gain_engine._native == 110.0)
+reloaded_kevin.BaseFOV = 90.0
+gain_engine.apply("third_person_fov", reloaded_kevin, custom, 0.0, 10.0)
+check("a menu change while owned becomes the game's value",
+      reloaded_kevin.BaseFOV == 119.0 and custom.saved == (90.0, 129.0) and gain_engine._native == 90.0)
+custom.wanted = 150.0
+gain_engine.apply("third_person_fov", reloaded_kevin, custom, 30.0, 30.0)
+check("the gain never takes the view past 170", reloaded_kevin.BaseFOV == 170.0 and custom.saved == (90.0, 170.0))
+custom.wanted = 120.0
+gain_engine.apply("third_person_fov", reloaded_kevin, custom, 0.0, 30.0)
+check("a new custom FOV is logged once, not per frame", custom.notes[-1] == "FOV set to 120")
+gain_engine.stop()
+check("stopping gives the game's value back", reloaded_kevin.BaseFOV == 90.0)
+
+frame_settings = Counted(False, 110.0)
+frame_settings.speed_fov = lambda: (True, 10.0, 0.4)
+movement = type("Movement", (), {"bIsSprinting": True, "MovementMode": "MOVE_Walking",
+                                 "IsPerformingControlledMove": lambda self: False,
+                                 "Velocity": type("Velocity", (), {"X": 828.0, "Y": 0.0, "Z": 0.0})()})()
+zoom = type("Zoom", (), {"bWantsToZoom": False, "State": "NotZoomed"})()
+character = type("Character", (), {"CharacterMovement": movement, "ZoomState": zoom})()
+sprinter = type("Pc", (), {"OakCharacter": character, "Player": Player(13, 110.0)})()
+frame_runtime = CameraRuntime(FovEngine(weakref.ref, lambda item: item.address))
+frame_runtime.register("apex_movement", 200, frame_settings, PROTOCOL)
+seen = []
+for frame in range(1, 91):
+    frame_runtime.tick(sprinter, 5_000_000_000 + frame * 16_666_667)
+    seen.append(sprinter.Player.BaseFOV)
+check("the runtime writes the gain every frame, not twice a second",
+      seen[0] == 110.0 and 110.0 < seen[5] < seen[10] < seen[20] < 120.0 and seen[-1] == 120.0
+      and len(set(seen[:30])) == 30)
+movement.bIsSprinting = False
+movement.Velocity.X = 540.0
+for frame in range(91, 211):
+    frame_runtime.tick(sprinter, 5_000_000_000 + frame * 16_666_667)
+check("walking again brings the game's value back", sprinter.Player.BaseFOV == 110.0
+      and "speed FOV widening: sprint at 828" in frame_settings.notes
+      and "speed FOV back: ground at 540" in frame_settings.notes)
+frame_runtime.stop()
 
 first_runtime = shared(weakref.ref, lambda item: item.address)
 second_runtime = shared(weakref.ref, lambda item: item.address)

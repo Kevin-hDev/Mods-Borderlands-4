@@ -21,7 +21,8 @@ def refresh(form, widgets):
         if framing is not None and framing.pending:
             framing.reset(widgets)
             discarded = True
-    for name, visible in (("camera:settings", not elsewhere), ("commands:settings", not elsewhere),
+    for name, visible in (("camera:settings", not elsewhere), ("dynamic_camera:settings", not elsewhere),
+                          ("commands:settings", not elsewhere),
                           ("commands:external", elsewhere)):
         if name in widgets:
             widgets[name].SetVisibility(w.enum("ESlateVisibility", "Visible" if visible else "Collapsed"))

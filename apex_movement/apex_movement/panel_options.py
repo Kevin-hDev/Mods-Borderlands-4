@@ -1,19 +1,22 @@
-"""The gear page from mockup V2, in three tabs since 2026-10-06: camera, commands and the menu language.
+"""The gear page from mockup V2, in tabs since 2026-10-06: camera, dynamic camera, commands and the menu language.
 
 Kevin found the single page too long (docs/mokup/menu_mods/decisions.md, sketch A of options_onglets): each tab is a
 page of the window's switcher with the same head, the tilted OPTIONS title and the three tab buttons, then its own
 sentence. "options" stays the camera tab's page key, the one a saved page already names.
 """
 
-from . import panel_buttons as b, panel_pages as p, panel_shortcut as sc
+from . import panel_buttons as b, panel_dynamic, panel_pages as p, panel_shortcut as sc
 from . import panel_text as tx, panel_theme as t, panel_widgets as w
 
 # The page each tab shows, in the order of its buttons. Without the camera, Apex Movement's separate files keep one
 # page, the language under the OPTIONS title, and no tab.
-TABS = ("options", "commands", "language")
+# The dynamic camera is a camera setting, so its tab follows the camera's (Kevin, 2026-10-06: a fourth button in
+# OPTIONS rather than a sidebar page, the sidebar being full).
+TABS = ("options", "dynamic_camera", "commands", "language")
 # Each tab's button and the sentence under the title.
-NAMES = {"options": "camera", "commands": "commands", "language": "languages"}
-SENTENCES = {"options": "camera_tab_desc", "commands": "commands_tab_desc", "language": "options_desc_menu"}
+NAMES = {"options": "camera", "dynamic_camera": "dynamic_camera", "commands": "commands", "language": "languages"}
+SENTENCES = {"options": "camera_tab_desc", "dynamic_camera": "dynamic_camera_tab_desc",
+             "commands": "commands_tab_desc", "language": "options_desc_menu"}
 
 
 def _language_card(body, widgets, template):
@@ -71,9 +74,21 @@ def options_page(owner, model, widgets, template):
     controls = w.new("VerticalBox", rows)
     widgets["camera:settings"] = controls
     w.column(rows, controls)
-    sc.rows(controls, model.camera_options.values(), widgets, template)
+    dynamic = {name for _key, names in panel_dynamic.SECTIONS for name in names}
+    sc.rows(controls, [option for key, option in model.camera_options.items() if key not in dynamic], widgets, template)
     from . import panel_framing
     panel_framing.build(controls, widgets, template)
+    return page
+
+
+def dynamic_page(owner, model, widgets, template):
+    """The DYNAMIC CAMERA tab: one card, hidden with the camera's while another camera mod is in charge."""
+    page, body = tab_page(owner, widgets, template, panel_dynamic.PAGE)
+    rows = p.card(body, widgets, panel_dynamic.PAGE)
+    controls = w.new("VerticalBox", rows)
+    widgets[f"{panel_dynamic.PAGE}:settings"] = controls
+    w.column(rows, controls)
+    panel_dynamic.build(controls, model.camera_options.values(), widgets, template)
     return page
 
 

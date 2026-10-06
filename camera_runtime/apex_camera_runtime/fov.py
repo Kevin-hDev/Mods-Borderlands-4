@@ -1,29 +1,35 @@
-"""Own BaseFOV and restore only a value this runtime still owns."""
+"""Own BaseFOV and restore only a value this runtime still owns.
 
+The speed gain (speed_fov.py) rides on the player's FOV and is written every frame while it moves. The saved pair
+only changes with the player's FOV or the gain's setting, never with a frame's gain, so sprinting writes no file.
+"""
+
+import struct
 from math import isfinite
 from typing import Any, Callable
 
-from .constants import FOV_MAX, FOV_MIN, GAME_MENU_MAX_FOV
+from .constants import FOV_CEILING, FOV_MAX, FOV_MIN, GAME_MENU_MAX_FOV
+
+
+def single(value: float) -> float:
+    """BaseFOV is a 32-bit float: a written value is compared with what the game reads back."""
+    return struct.unpack("f", struct.pack("f", value))[0]
 
 
 class FovEngine:
     def __init__(self, weak_ref: Callable, address_of: Callable) -> None:
         self._weak_ref = weak_ref
         self._address_of = address_of
+        self._clear()
+
+    def _clear(self) -> None:
         self._owner_name: str | None = None
         self._owner_ref: Any = None
         self._owner_id = 0
         self._native: float | None = None
         self._written: float | None = None
+        self._base: float | None = None
         self._settings: Any = None
-
-    def _clear(self) -> None:
-        self._owner_name = None
-        self._owner_ref = None
-        self._owner_id = 0
-        self._native = None
-        self._written = None
-        self._settings = None
 
     def _release(self) -> None:
         if self._owner_ref is None:
@@ -45,20 +51,28 @@ class FovEngine:
         return min(FOV_MAX, max(FOV_MIN, value)) if isfinite(value) else 110.0
 
     @staticmethod
-    def _restore_saved(player: Any, settings: Any) -> None:
-        native, applied = settings.saved_fov_pair()
-        if (native is None or applied is None or applied <= GAME_MENU_MAX_FOV
-                or native == applied or float(player.BaseFOV) != applied):
+    def _recovered(current: float, settings: Any) -> float | None:
+        """The game's value saved before a write that the game kept: the menu never goes above its maximum, so a
+        value between it and the saved top is ours."""
+        native, top = settings.saved_fov_pair()
+        if native is None or top is None or native > GAME_MENU_MAX_FOV or not GAME_MENU_MAX_FOV < current <= top:
+            return None
+        return native
+
+    def _restore_saved(self, player: Any, settings: Any) -> None:
+        native = self._recovered(float(player.BaseFOV), settings)
+        if native is None:
             return
         player.BaseFOV = native
         if float(player.BaseFOV) != native:
             raise ValueError("saved FOV restoration failed")
         settings.note(f"FOV given back to the game's {native:g} after reload")
 
-    def apply(self, owner: str, player: Any, settings: Any) -> None:
+    def apply(self, owner: str, player: Any, settings: Any, gain: float = 0.0, ceiling: float = 0.0) -> None:
         if self._owner_name is not None and self._owner_name != owner:
             self._release()
-        if not settings.fov_enabled():
+        custom = settings.fov_enabled()
+        if not custom and gain <= 0:
             self._release()
             if player is not None:
                 self._restore_saved(player, settings)
@@ -70,40 +84,38 @@ class FovEngine:
         if self._owner_ref is not None and (self._owner_id != player_id or self._owner_ref() is None):
             self._release()
         current = float(player.BaseFOV)
-        wanted = self._wanted(settings)
-        saved_native, saved_applied = settings.saved_fov_pair()
-        if current == wanted:
-            if (self._owner_ref is None and saved_applied == wanted and wanted > GAME_MENU_MAX_FOV
-                    and saved_native != wanted):
-                self._claim(owner, player, settings, saved_native, wanted)
-                settings.note(f"FOV restore value recovered: {saved_native:g}")
-            return
-        same_value = self._owner_ref is not None and current == self._written
-        if same_value:
-            native = self._native
-        elif (saved_applied is not None and saved_applied > GAME_MENU_MAX_FOV
-              and current == saved_applied and saved_native is not None):
-            native = saved_native
-        else:
-            native = current
+        owned = self._owner_ref is not None and current == self._written
+        recovered = None if owned else self._recovered(current, settings)
+        native = self._native if owned else current if recovered is None else recovered
         if native is None:
             raise ValueError("native FOV missing")
-        message = (f"FOV set to {wanted:g}" if same_value else
-                   f"FOV set to {wanted:g}, game's {native:g}" if self._owner_ref is None else
-                   f"FOV found at the game's {native:g}, set to {wanted:g} again")
-        settings.remember_fov_pair(native, wanted)
-        self._claim(owner, player, settings, native, wanted)
-        player.BaseFOV = wanted
-        if float(player.BaseFOV) != wanted:
-            raise ValueError("FOV assignment failed")
-        settings.note(message)
+        base = self._wanted(settings) if custom else native
+        wanted = single(min(FOV_CEILING, base + gain))
+        if not owned and recovered is None and current == wanted:
+            # Already the value wanted: nothing to own until a write is needed.
+            return
+        top = min(FOV_CEILING, base + max(gain, ceiling))
+        if settings.saved_fov_pair() != (native, top):
+            settings.remember_fov_pair(native, top)
+        if not owned:
+            message = (f"FOV restore value recovered: {native:g}" if recovered is not None else
+                       f"FOV set to {wanted:g}, game's {native:g}" if self._owner_ref is None else
+                       f"FOV found at the game's {native:g}, set to {wanted:g} again")
+            self._claim(owner, player, settings, native)
+            settings.note(message)
+        elif base != self._base:
+            settings.note(f"FOV set to {base:g}")
+        self._written, self._base = wanted, base
+        if current != wanted:
+            player.BaseFOV = wanted
+            if float(player.BaseFOV) != wanted:
+                raise ValueError("FOV assignment failed")
 
-    def _claim(self, owner: str, player: Any, settings: Any, native: float, written: float) -> None:
+    def _claim(self, owner: str, player: Any, settings: Any, native: float) -> None:
         self._owner_name = owner
         self._owner_ref = self._weak_ref(player)
         self._owner_id = int(self._address_of(player))
         self._native = native
-        self._written = written
         self._settings = settings
 
     def stop(self) -> None:

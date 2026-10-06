@@ -6,6 +6,7 @@ from .arbitration import Arbiter, Client
 from .constants import PROTOCOL
 from .ads_coordination import transfer_pending
 from .orbit_entry import OrbitEntry
+from .speed_fov import SpeedFov, step as speed_step
 
 CHECK_NS = 500_000_000
 
@@ -16,28 +17,21 @@ class CameraRuntime:
         self.fov = fov_engine
         self.third_person = third_person
         self.loot = None
+        # The framing at the wheel (vehicle_framing.py), made by shared.py as the loot unit.
+        self.vehicle = None
         self._active_client: Client | None = None
         self._next_fov_ns = 0
         self._setup_owner: str | None = None
         self._setup_failed = False
         self.orbit_entry = OrbitEntry()
+        self.speed_fov = SpeedFov()
 
     def register(self, owner: str, priority: int, settings: Any, protocol: int = PROTOCOL) -> None:
         self.arbiter.register(Client(owner, priority, settings), protocol)
 
     def ads_status(self, owner: str) -> str | None:
-        from .ads_status import notice
-        active = self.arbiter.active()
-        if active is None or active.owner != owner:
-            return None
-        ads = getattr(self.third_person, "ads", None)
-        if ads is not None and ads.pending:
-            return "cleanup_pending"
-        camera_enabled = (active.settings.third_person_enabled()
-                          or getattr(active.settings, 'orbit_enabled', lambda: False)())
-        if not camera_enabled or not active.settings.third_person_ads():
-            return None
-        return notice(self.third_person)
+        from .ads_status import for_owner
+        return for_owner(self, owner)
 
     def unregister(self, owner: str) -> None:
         active = self.arbiter.active()
@@ -194,35 +188,37 @@ class CameraRuntime:
         if self.loot is not None:
             self.loot.sync(client.owner, context, client.settings, now_ns)
         self.orbit_entry.sync(self, client, context, now_ns)
+        if self.vehicle is not None:
+            self.vehicle.sync(client.settings)
         player = context
         if hasattr(context, "Player"):
             player = context.Player if getattr(context, "OakCharacter", None) is not None else None
         if player is None:
             # Gameplay departure is a boundary, not a periodic refresh: one callback must release the owned FOV.
             self._next_fov_ns = 0
-        if now_ns >= self._next_fov_ns:
+        # The speed gain moves every frame; without it, ownership is checked twice a second.
+        gain = speed_step(self.speed_fov, client.settings, context if player is not None else None, now_ns)
+        if now_ns >= self._next_fov_ns or self.speed_fov.moved:
             self._next_fov_ns = now_ns + CHECK_NS
-            self.fov.apply(client.owner, player, client.settings)
+            self.fov.apply(client.owner, player, client.settings, gain, self.speed_fov.ceiling)
 
     def _stop_active(self) -> None:
         self.orbit_entry.retirement.retire(self.third_person)
         self.orbit_entry.reset()
         errors = []
-        if self.loot is not None:
-            try:
-                self.loot.stop()
-            except Exception as error:
-                errors.append(error)
-        try:
-            self.fov.stop()
-        except Exception as error:
-            errors.append(error)
+        for unit in (self.loot, self.fov, self.vehicle):
+            if unit is not None:
+                try:
+                    unit.stop()
+                except Exception as error:
+                    errors.append(error)
         if self.third_person is not None:
             try:
                 self.third_person.stop()
             except Exception as error:
                 errors.append(error)
         self._active_client, self._next_fov_ns = None, 0
+        self.speed_fov.reset()
         if errors:
             raise RuntimeError("camera cleanup incomplete") from errors[0]
 

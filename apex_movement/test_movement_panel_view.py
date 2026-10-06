@@ -85,7 +85,7 @@ assert root.kind == "UserWidget"
 # The window sits on a clear layer over the whole screen (panel_modal, 2026-10-06).
 assert (root.WidgetTree.RootWidget.kind == "CanvasPanel"
         and [child.kind for child in root.WidgetTree.RootWidget.children] == ["BackgroundBlur", "ScaleBox"])
-assert len(model.pages) == 12 and model.pages[-2:] == ("commands", "language")
+assert len(model.pages) == 13 and model.pages[-3:] == ("commands", "language", "dynamic_camera")
 assert len(widgets["pages"].children) == len(model.pages) + 1
 assert model.page == "options" and widgets["focus"] is widgets["options"]
 assert "EN" not in widgets and "FR" not in widgets
@@ -238,8 +238,9 @@ visit(root.WidgetTree.RootWidget)
 assert all(id(widget) in attached for widget in widgets.values())
 assert sum(node.kind == "ScrollBox" for node in Widget.created) == len(model.pages) + 2
 assert all(f"setting:{key}" in widgets for key in model.options)
-# Three fixed framing cards add 69 entries, the header's size button 5; no dynamically growing registry.
-assert len(widgets) < 720, "the fixed widget registry must stay bounded"
+# Three fixed framing cards add 69 entries, the header's size button 5, the DYNAMIC CAMERA tab (its head, its card,
+# seven rows and a fourth tab button on every head) about 80; no dynamically growing registry.
+assert len(widgets) < 820, "the fixed widget registry must stay bounded"
 
 # Each theme changes colours only, read when the window is drawn: no colour of another theme stays (2026-10-06).
 veils = {tuple(theme.HOVER_OVERLAY), tuple(theme.PRESS_OVERLAY)}

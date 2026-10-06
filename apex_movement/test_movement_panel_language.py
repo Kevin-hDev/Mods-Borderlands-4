@@ -10,9 +10,9 @@ movement_ui_fixture.install()
 
 from apex_movement import camera_settings, menu, panel_i18n, panel_theme
 
-# Two Options tabs close the list: their pages have no sidebar button (2026-10-06).
-assert len(panel_theme.PAGES) == 12 and panel_theme.PAGES[-2:] == ("commands", "language")
-for group, page in zip(menu.MENU, panel_theme.PAGES[:-2]):
+# Three Options tabs close the list: their pages have no sidebar button (2026-10-06).
+assert len(panel_theme.PAGES) == 13 and panel_theme.PAGES[-3:] == ("commands", "language", "dynamic_camera")
+for group, page in zip(menu.MENU, panel_theme.PAGES[:-3]):
     assert panel_i18n.text(page, "FR")
     assert panel_i18n.group_text(group, page, "FR")
     for option in group.children:
@@ -25,11 +25,13 @@ for key in ("options", "options_desc_menu", "camera_tab_desc", "commands_tab_des
             "camera", "camera_desc", "language", "menu_language",
             "change_key", "press_key", "no_key", "right", "left", "commands", "keyboard", "controller",
             "command_third_person", "command_third_person_desc", "command_shoulder", "command_shoulder_desc",
-            "command_orbit", "command_orbit_desc", "command_tools", "command_tools_desc", "commands_reset"):
+            "command_orbit", "command_orbit_desc", "command_tools", "command_tools_desc", "commands_reset",
+            "dynamic_camera", "dynamic_camera_tab_desc", "dynamic_camera_page", "dynamic_fov", "dynamic_fov_desc",
+            "dynamic_framing", "dynamic_framing_desc", "dynamic_motion", "dynamic_motion_desc"):
     assert panel_i18n.text(key, "FR") and panel_i18n.text(key, "EN")
 # Camera settings keep their own translations; shortcuts are described on the Commands page.
 for option in (camera_settings.third_person, camera_settings.shoulder_left,
-               camera_settings.orbit, camera_settings.custom_fov, camera_settings.fov):
+               camera_settings.orbit, camera_settings.custom_fov, camera_settings.fov, *camera_settings.DYNAMIC):
     title, description = panel_i18n.option_text(option, "FR")
     assert title and description and title != option.identifier
 result.success()

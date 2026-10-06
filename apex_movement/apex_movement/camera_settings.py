@@ -9,6 +9,8 @@ try:
     from .apex_camera_runtime.ads_options import AdsOptions
     from .apex_camera_runtime.framing_options import FramingOptions
     from .apex_camera_runtime.loot_options import LootOptions
+    from .apex_camera_runtime.speed_fov_options import SpeedFovOptions
+    from .apex_camera_runtime.dynamic_options import DynamicOptions
     from .apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
     from .apex_camera_runtime.camera_option import BaseViewOption, CameraBoolOption
     from .apex_camera_runtime.camera_commands import CameraCommands
@@ -21,6 +23,8 @@ except ModuleNotFoundError as error:
     from apex_camera_runtime.ads_options import AdsOptions
     from apex_camera_runtime.framing_options import FramingOptions
     from apex_camera_runtime.loot_options import LootOptions
+    from apex_camera_runtime.speed_fov_options import SpeedFovOptions
+    from apex_camera_runtime.dynamic_options import DynamicOptions
     from apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
     from apex_camera_runtime.camera_option import BaseViewOption, CameraBoolOption
     from apex_camera_runtime.camera_commands import CameraCommands
@@ -29,6 +33,8 @@ except ModuleNotFoundError as error:
     from apex_camera_runtime import option_texts
 
 loot = LootOptions()
+speed_fov = SpeedFovOptions()
+dynamic = DynamicOptions()
 loot_distance = loot.distance
 zoom = OrbitZoomOptions()
 ads = AdsOptions()
@@ -111,9 +117,11 @@ native_fov = SliderOption("native_fov", 0, 0, 180, step=1, is_integer=False, is_
 applied_fov = SliderOption("applied_fov", 0, 0, 180, step=1, is_integer=False, is_hidden=True)
 # The custom panel exposes only player choices; recovery values stay private.
 VISIBLE = (third_person, third_person_ads, shoulder_left, *shoulder_transition.options, orbit, custom_fov, fov, *loot.options)
+# The DYNAMIC CAMERA tab's settings, apart from the CAMERA tab's.
+DYNAMIC = (*speed_fov.options, *dynamic.options)
 ALL = [third_person, third_person_ads, third_person_key, third_person_controller,
        shoulder_left, *shoulder_transition.options, shoulder_key, shoulder_controller,
-       orbit, orbit_key, orbit_controller, *commands.options[6:], custom_fov, fov, *loot.options, native_fov, applied_fov,
+       orbit, orbit_key, orbit_controller, *commands.options[6:], custom_fov, fov, *loot.options, *speed_fov.options, *dynamic.options, native_fov, applied_fov,
            zoom.option, *framing.options]
 
 

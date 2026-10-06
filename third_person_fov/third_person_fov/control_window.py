@@ -59,6 +59,11 @@ class Session:
         self.claimed = False
         # What a theme change needs to draw the window again (control_window_redraw).
         self.viewport, self.return_to_menu = lambda: None, False
+        # The settings windows reopen scrolled where they were left; the key-only window has no pages.
+        self.scroll = None
+        if hasattr(form, "model"):
+            from .panel_scroll import Memory  # with the menu's modules, which load after this one
+            self.scroll = Memory(form.model)
 
     def same_context(self, pc):
         character = self.character()
@@ -70,6 +75,10 @@ class Session:
         if defer(self, reason):
             return
         self.closed = True
+        if self.scroll is not None:
+            # Once: close runs again while the cleanup completes.
+            self.scroll, scroll = None, self.scroll
+            scroll.remember(self.form.resolve())
         if self.cleanup is None:
             self.cleanup = Cleanup(self, reason)
         elif _active is not self:
@@ -113,6 +122,8 @@ class Session:
                 return
             self.focus()
             note("console_handoff_dispatched=true")
+        if self.scroll is not None:
+            self.scroll.restore(self.form.resolve())
         if self.form.poll():
             self.close("button")
             return

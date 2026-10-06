@@ -7,6 +7,8 @@ GAME_MENU_MAX_FOV = 110.0
 FOV_MIN = 70.0
 FOV_MAX = 150.0
 FOV_DEFAULT = 110.0
+# The speed gain may go past the slider's 150, never near 180, where a view angle stops making sense.
+FOV_CEILING = 170.0
 THIRD_PERSON_RIGHT = 48.4
 THIRD_PERSON_UP = 5.0
 CAMERA_TRANSITION = "Default"

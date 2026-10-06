@@ -1,6 +1,6 @@
 # Omni Sprint
 
-Version **1.0.10**.
+Version **1.0.11**.
 
 Sprint in every direction in Borderlands 4: sideways, diagonally and backwards, while the camera stays free. Omni
 Sprint keeps the game's sprint speed, supplies a backward running animation in third person, and offers an optional
@@ -31,6 +31,9 @@ stops. Omni Sprint opens that limit to 180 degrees, so the sprint starts and hol
   icons. No controller button is set by default.
 - **Extended loot reach**, on by default: pick up loot and open containers from farther away, from 1× to 3×, 2× by
   default. Vendors, characters and vehicles keep the game's own reach.
+- **Dynamic camera**, on by default: the view widens while sprinting or sliding, the camera moves back while
+  running, in the air or driving fast and closer when crouched, and it follows your changes of speed softly. Each
+  effect has its own switch and strength. With Vehicle Driving, its chosen view stays and the driving framing adds to it.
 - Switched off in the mod menu, the game's 60 degree limit is back at once.
 
 The mod turns itself on the first time the game launches with it installed.

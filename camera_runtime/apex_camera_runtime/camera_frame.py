@@ -27,7 +27,7 @@ def sync(controller, pc, actor, manager, settings, now_ns):
         if climbing:
             if controller.framing is not None:
                 controller.framing.stop()
-            controller.zoom.release()
+            controller.offset.release()
             return
     except Exception:
         controller.stop(now_ns=now_ns)
@@ -41,7 +41,7 @@ def sync(controller, pc, actor, manager, settings, now_ns):
         controller.framing.sync(controller, pc, actor, manager, settings)
     if controller._bridge_started and not controller.cleanup_retry.pending:
         try:
-            controller.zoom.sync(settings)
+            controller.offset.sync(settings)
         except Exception:
             controller.stop(now_ns=now_ns)
             raise
