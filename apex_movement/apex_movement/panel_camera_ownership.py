@@ -22,6 +22,7 @@ def refresh(form, widgets):
             framing.reset(widgets)
             discarded = True
     for name, visible in (("camera:settings", not elsewhere), ("dynamic_camera:settings", not elsewhere),
+                          ("shoulder:settings", not elsewhere),
                           ("commands:settings", not elsewhere),
                           ("commands:external", elsewhere)):
         if name in widgets:

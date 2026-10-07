@@ -1,4 +1,5 @@
-"""Checks five camera actions and ten assignments as one grouped authority."""
+"""Checks six camera actions and twelve assignments as one grouped authority; Free Look's keys are read each frame,
+its binds call nothing."""
 
 import pathlib
 import sys
@@ -42,6 +43,10 @@ sys.modules["mods_base"] = mods_base
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from apex_camera_runtime.camera_commands import CameraCommands  # noqa: E402
+from apex_camera_runtime.keyboard_layout import (RIGHT_OF_TAB, TOP_ROW_EIGHT, TOP_ROW_SEVEN, TOP_ROW_SIX,  # noqa: E402
+                                                 key_at)
+FREE_LOOK, SIX, SEVEN = key_at(RIGHT_OF_TAB, "Q"), key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
+EIGHT = key_at(TOP_ROW_EIGHT, "Eight")
 
 
 calls = []
@@ -57,12 +62,15 @@ commands = CameraCommands(
     orbit=callback("orbit"),
     zoom_in=callback("zoom_in"),
     zoom_out=callback("zoom_out"),
+    camera_distance=callback("camera_distance"),
 )
 identifiers = (
     "third_person_key", "third_person_controller",
     "shoulder_key", "shoulder_controller",
     "orbit_key", "orbit_controller",
     "zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller",
+    "free_look_key", "free_look_controller",
+    "camera_distance_key", "camera_distance_controller",
 )
 assert tuple(option.identifier for option in commands.options) == identifiers
 assert tuple(bind.identifier for bind in commands.binds) == identifiers
@@ -83,24 +91,31 @@ assert commands.slots() == (
     ("zoom_in", "controller", "zoom_in_controller"),
     ("zoom_out", "keyboard", "zoom_out_key"),
     ("zoom_out", "controller", "zoom_out_controller"),
+    ("free_look", "keyboard", "free_look_key"),
+    ("free_look", "controller", "free_look_controller"),
+    ("camera_distance", "keyboard", "camera_distance_key"),
+    ("camera_distance", "controller", "camera_distance_controller"),
 )
 assert commands.identifier("shoulder", "controller") == "shoulder_controller"
 assert commands.defaults() == {
     "third_person_key": "P", "third_person_controller": None,
-    "shoulder_key": "Six", "shoulder_controller": None,
-    "orbit_key": "Seven", "orbit_controller": None,
+    "shoulder_key": SIX, "shoulder_controller": None,
+    "orbit_key": SEVEN, "orbit_controller": None,
     "zoom_in_key": None, "zoom_in_controller": None,
     "zoom_out_key": None, "zoom_out_controller": None,
+    "free_look_key": FREE_LOOK, "free_look_controller": "Gamepad_LeftThumbstick",
+    "camera_distance_key": EIGHT, "camera_distance_controller": None,
 }
 assert all(bind.is_hidden is True and bind.event_filter == "IE_Pressed" for bind in commands.binds)
 assert all(option.is_hidden is False for option in commands.options)
-assert tuple(bind.key for bind in commands.binds) == ("P", None, "Six", None, "Seven", None,
-                                                    None, None, None, None)
+assert tuple(bind.key for bind in commands.binds) == ("P", None, SIX, None, SEVEN, None,
+                                                    None, None, None, None, FREE_LOOK, "Gamepad_LeftThumbstick",
+                                                    EIGHT, None)
 
 for bind in commands.binds:
     bind.callback()
 assert calls == ["third_person", "third_person", "shoulder", "shoulder", "orbit", "orbit",
-                 "zoom_in", "zoom_in", "zoom_out", "zoom_out"]
+                 "zoom_in", "zoom_in", "zoom_out", "zoom_out", "camera_distance", "camera_distance"]
 
 assert commands.validate({"shoulder_key": "ThumbMouseButton"}) == {
     "shoulder_key": "ThumbMouseButton"
@@ -111,7 +126,7 @@ assert commands.validate({"shoulder_controller": "Gamepad_FaceButton_Left"}) == 
 assert commands.validate({"orbit_controller": None}) == {"orbit_controller": None}
 
 for changes in (
-    {"orbit_key": "Six"},
+    {"orbit_key": SIX},
     {"zoom_in_key": "P"},
     {"zoom_in_controller": "Gamepad_FaceButton_Left",
      "zoom_out_controller": "Gamepad_FaceButton_Left"},
@@ -134,8 +149,8 @@ old_orbit = commands.option("orbit_key").value
 commands.option("orbit_key").value = "P"
 assert commands.option("orbit_key").value == old_orbit
 
-commands.apply({"third_person_key": "Six", "shoulder_key": "P"})
-assert commands.option("third_person_key").value == "Six"
+commands.apply({"third_person_key": "Nine", "shoulder_key": "P"})
+assert commands.option("third_person_key").value == "Nine"
 assert commands.option("shoulder_key").value == "P"
 commands.apply({"shoulder_controller": None})
 assert commands.option("shoulder_controller").value is None
@@ -143,10 +158,31 @@ assert commands.option("shoulder_controller").value is None
 commands.option("orbit_controller").value = "malformed"
 assert commands.option("orbit_controller").value is None
 commands.align()
-assert tuple(bind.key for bind in commands.binds) == ("Six", None, "P", None, "Seven", None,
-                                                    None, None, None, None)
+assert tuple(bind.key for bind in commands.binds) == ("Nine", None, "P", None, SEVEN, None,
+                                                    None, None, None, None, FREE_LOOK, "Gamepad_LeftThumbstick",
+                                                    EIGHT, None)
 commands.apply({"zoom_in_key": "MouseScrollUp", "zoom_out_key": "MouseScrollDown"})
 assert commands.option("zoom_in_key")._bind.key == "MouseScrollUp"
 commands.apply(commands.defaults())
 assert commands.option("zoom_in_key")._bind.key is None
+
+# A "Six" or "Seven" saved before the keyboard-named defaults becomes the key's name where it cannot be typed
+# (Kevin's Omni Sprint, AZERTY, 2026-10-07), and stays as it is on QWERTY.
+from apex_camera_runtime import camera_commands  # noqa: E402
+saved = dict(camera_commands.UNREACHABLE)
+camera_commands.UNREACHABLE.clear()
+camera_commands.UNREACHABLE.update({"Six": "Hyphen", "Seven": "E_AccentGrave"})
+commands.applying = True
+commands.option("shoulder_key").value = "Six"
+commands.option("orbit_key").value = "Seven"
+commands.applying = False
+commands.align()
+assert commands.option("shoulder_key").value == "Hyphen" and commands.option("orbit_key").value == "E_AccentGrave"
+assert commands.option("shoulder_key")._bind.key == "Hyphen"
+assert camera_commands.normalize_camera_key("Nine") == "Nine"
+camera_commands.UNREACHABLE.clear()
+commands.option("shoulder_key").value = "Six"
+assert commands.option("shoulder_key").value == "Six", "QWERTY keeps its Six"
+camera_commands.UNREACHABLE.update(saved)
+assert camera_commands.UNREACHABLE == {old: new for old, new in (("Six", SIX), ("Seven", SEVEN)) if new != old}
 print("RESULTAT: OK | camera commands validate, group, align and keep callbacks")

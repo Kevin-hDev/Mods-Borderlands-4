@@ -2,6 +2,7 @@
 #include "interaction_bridge.h"
 #include "camera_memory.h"
 #include "interaction_alignment.h"
+#include "camera_builds.h"
 #include <atomic>
 #include <cmath>
 #include <cstring>
@@ -84,22 +85,22 @@ int start_locked(const apex_interaction::Config& config) {
     auto* provider = reinterpret_cast<void*>(config.controller + apex_interaction::provider_offset);
     if (!apex_camera::memory_access(provider, sizeof(void*))) return 2;
     const uintptr_t module = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+    view_stats = apex_interaction::validate_camera(config, module);
+    if (!view_stats) return 7;
     auto** table = *static_cast<void***>(provider);
-    if (reinterpret_cast<uintptr_t>(table) != module + apex_interaction::table_rva
+    if (reinterpret_cast<uintptr_t>(table) != module + camera_builds::rva(apex_interaction::table_rva)
         || !apex_camera::memory_access(table, (apex_interaction::provider_slot + 1) * sizeof(void*))) return 3;
-    auto* expected = reinterpret_cast<void*>(module + apex_interaction::provider_rva);
+    auto* expected = reinterpret_cast<void*>(module + camera_builds::rva(apex_interaction::provider_rva));
     void** slot = table + apex_interaction::provider_slot;
     if (*slot != expected || !apex_camera::executable_in_main_module(expected)) return 4;
     // Match both the producer and its call into the pawn before observing this build.
     constexpr unsigned char head[] = {0x41, 0x56, 0x56, 0x57, 0x55, 0x53, 0x48, 0x83, 0xEC, 0x20};
     constexpr unsigned char call[] = {0xFF, 0x90, 0x88, 0x05, 0x00, 0x00};
-    auto* call_site = reinterpret_cast<void*>(module + 0x1E49D3);
+    auto* call_site = reinterpret_cast<void*>(module + camera_builds::rva(apex_interaction::call_rva));
     if (!apex_camera::memory_access(expected, sizeof(head))
         || !apex_camera::memory_access(call_site, sizeof(call))
         || std::memcmp(expected, head, sizeof(head))
         || std::memcmp(call_site, call, sizeof(call))) return 5;
-    view_stats = apex_interaction::validate_camera(config, module);
-    if (!view_stats) return 7;
     HMODULE pinned{};
     if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
                            reinterpret_cast<LPCWSTR>(&dispatch), &pinned)) return 6;

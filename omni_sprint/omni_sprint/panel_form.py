@@ -3,7 +3,7 @@
 
 import time
 
-from . import panel_ownership
+from . import panel_camera_tabs as tabs, panel_ownership
 
 from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
 from . import panel_theme_choice
@@ -11,7 +11,7 @@ from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
 
 # A setting that changes nothing while its switch is off; the walk key's rows are Apex Movement's.
-DEPENDS_ON = {"fov": "custom_fov", "loot_reach": "extended_loot", "shoulder_left": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth",
+DEPENDS_ON = {"fov": "custom_fov", "loot_reach": "extended_loot", "shoulder_left": "third_person", "shoulder_auto": "third_person", "shoulder_auto_swap": "shoulder_auto", "shoulder_auto_return": "shoulder_auto", "camera_distance_close": "third_person", "camera_distance_far": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth",
               "orbit": None, "third_person_ads": "third_person", "orbit_distance": "orbit",
               "speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
               "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
@@ -190,6 +190,8 @@ class PanelForm(Lifecycle):
                 else:
                     self.report(widgets, "failed")
                 return False
+        if tabs.poll(self, widgets):
+            return False
         for index, key in enumerate(self.model.pages):
             if self.take(widgets[f"nav:{key}"]):
                 if self.flush(widgets) and self.model.change_page(key):

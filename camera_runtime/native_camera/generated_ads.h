@@ -3,10 +3,10 @@
 #include <cstdint>
 
 namespace apex_ads {
-inline constexpr uint64_t PROTOCOL = 6ULL;
+inline constexpr uint64_t PROTOCOL = 7ULL;
 inline constexpr uint64_t ADS_ABI = 2ULL;
-inline constexpr uint64_t VIEW_ABI = 8ULL;
-inline constexpr uint64_t INTERACTION_ABI = 2ULL;
+inline constexpr uint64_t VIEW_ABI = 9ULL;
+inline constexpr uint64_t INTERACTION_ABI = 3ULL;
 inline constexpr uint64_t CATEGORY_PISTOL = 1ULL;
 inline constexpr uint64_t CATEGORY_SMG = 2ULL;
 inline constexpr uint64_t CATEGORY_SHOTGUN = 3ULL;

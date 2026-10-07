@@ -24,7 +24,8 @@ class Mod:
 
 
 commands = CameraCommands(third_person=lambda: None, shoulder=lambda: None, orbit=lambda: None,
-                          zoom_in=lambda: None, zoom_out=lambda: None)
+                          zoom_in=lambda: None, zoom_out=lambda: None,
+                              camera_distance=lambda: None)
 mod = Mod()
 actions = Actions(commands, mod)
 

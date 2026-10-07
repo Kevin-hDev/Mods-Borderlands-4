@@ -1,5 +1,6 @@
 #include "interaction_alignment.h"
 #include "camera_memory.h"
+#include "camera_builds.h"
 #include <cmath>
 #include <cstring>
 
@@ -53,10 +54,6 @@ int read_camera(const Config& config, ViewStats getter, CameraView& view) {
 
 ViewStats validate_camera(const Config& config, uintptr_t module) {
     if (!config.pawn || !config.manager || !config.camera_module) return nullptr;
-    auto* address = reinterpret_cast<void*>(module + 0x48814D9);
-    constexpr unsigned char cache_read[] = {0x48, 0x81, 0xC7, 0x10, 0x19, 0x00, 0x00};
-    if (!apex_camera::memory_access(address, sizeof(cache_read))
-        || std::memcmp(address, cache_read, sizeof(cache_read))) return nullptr;
     // Resolve an existing native export; no Python callback is installed in the game thread.
     const auto symbol = GetProcAddress(reinterpret_cast<HMODULE>(config.camera_module), "view_stats");
     if (!symbol) return nullptr;
@@ -64,6 +61,17 @@ ViewStats validate_camera(const Config& config, uintptr_t module) {
     if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
                            reinterpret_cast<LPCWSTR>(symbol), &pinned)
         || reinterpret_cast<uintptr_t>(pinned) != config.camera_module) return nullptr;
+    const auto profile_symbol = GetProcAddress(pinned, "view_game_build");
+    if (!profile_symbol) return nullptr;
+    using BuildGetter = unsigned (*)();
+    BuildGetter build{};
+    static_assert(sizeof(build) == sizeof(profile_symbol));
+    std::memcpy(&build, &profile_symbol, sizeof(build));
+    if (!camera_builds::publish(build())) return nullptr;
+    auto* address = reinterpret_cast<void*>(module + camera_builds::rva(cache_read_rva));
+    constexpr unsigned char cache_read[] = {0x48, 0x81, 0xC7, 0x10, 0x19, 0x00, 0x00};
+    if (!apex_camera::memory_access(address, sizeof(cache_read))
+        || std::memcmp(address, cache_read, sizeof(cache_read))) return nullptr;
     ViewStats getter{};
     static_assert(sizeof(getter) == sizeof(symbol));
     std::memcpy(&getter, &symbol, sizeof(getter));

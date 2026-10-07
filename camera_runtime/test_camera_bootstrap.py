@@ -30,6 +30,8 @@ class Function:
 
 
 library = types.SimpleNamespace(view_start=Function(), view_stop=Function(),
+                                ads_verify_files=Function(), view_game_build=Function(1),
+                                view_update_rva=Function(0x3CD4832),
                                 view_set_collision=Function(),
                                 view_set_suspended=Function(), view_set_right=Function(True),
                                 view_stats=Function())
@@ -43,8 +45,10 @@ class BootstrapTests(unittest.TestCase):
         self.runtime, self.messages = Runtime(), []
 
     def attach(self, alignment):
-        return attach(self.runtime, library, alignment, Hooks(), sdk,
-                      lambda item: lambda: item, kismet, self.messages.append)
+        controller = attach(self.runtime, library, alignment, Hooks(), sdk,
+                            lambda item: lambda: item, kismet, self.messages.append)
+        controller.readiness.__self__.future.result(timeout=2)
+        return controller
 
     def assert_camera_works(self, controller):
         manager = Manager()
@@ -116,6 +120,7 @@ class BootstrapTests(unittest.TestCase):
                 patch.object(bootstrap, 'load_packaged_library', return_value=library), \
                 patch.object(bootstrap, 'load_interaction_library', side_effect=OSError('missing')) as load:
             controller = bootstrap.ensure(self.runtime)
+            controller.readiness.__self__.future.result(timeout=2)
             self.assertTrue(any('interaction alignment load failed: OSError' in message
                                 for message in self.messages))
             self.assert_camera_works(controller)

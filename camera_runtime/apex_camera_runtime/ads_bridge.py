@@ -7,7 +7,7 @@ from .generated_ads import AdsContext, AdsStats, ObjectId
 
 
 class AdsBridge:
-    def __init__(self, library, log=lambda _message: None):
+    def __init__(self, library, log=lambda _message: None, preflight=None):
         self.library = library
         self._log, self.reason = log, None
         self._prepared = None
@@ -22,7 +22,7 @@ class AdsBridge:
         ):
             function = getattr(library, name)
             function.argtypes, function.restype = arguments, ctypes.c_int
-        self._preflight = Preflight(library.ads_verify_files, log)
+        self._preflight = preflight if preflight is not None else Preflight(library.ads_verify_files, log)
 
     def start_preflight(self):
         self._preflight.start()

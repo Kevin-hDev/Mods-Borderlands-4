@@ -30,7 +30,7 @@ class Model(Restore):
             self.command_options = {option.identifier: option for option in camera_settings.commands.options}
             self.command_actions = Actions(camera_settings.commands, mod)
             # The Options tabs past the camera's (panel_options.TABS), pages without a sidebar button.
-            self.pages += ("commands", "language", "dynamic_camera")
+            self.pages += ("commands", "language", "dynamic_camera", "shoulder")
         self.options = {**movement, **self.camera_options}
         self._undo, self._command_undo = (), {}
         self._command_plan = None

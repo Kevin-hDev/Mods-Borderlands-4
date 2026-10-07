@@ -6,6 +6,7 @@ from typing import Any, Callable
 from .collision import CollisionResolver
 from .climb_anchor import ClimbAnchorSession
 from .ads_bridge import AdsBridge
+from .build_preflight import BuildPreflight
 from .ads_context import ContextReader
 from .ads_session import AdsSession
 from .camera_bridge import CameraBridge
@@ -31,10 +32,12 @@ def attach(runtime: Any, library: Any, interaction_library: Any, hooks: Any, sdk
         interaction = None
         log(f"interaction alignment setup failed: {type(error).__name__}")
     collision = CollisionResolver(kismet, sdk, weak_ref, log)
+    preflight = BuildPreflight(library, log)
+    preflight.start()
     bridge = CameraBridge(Bridge(library), interaction, log, collision=collision)
     framing = None
     try:
-        native_ads = AdsBridge(library, log)
+        native_ads = AdsBridge(library, log, preflight=preflight)
         ads = AdsSession(native_ads, ContextReader(weak_ref, native_ads.identify, sdk.find_all), log)
         native_ads.start_preflight()
     except Exception:
@@ -52,7 +55,8 @@ def attach(runtime: Any, library: Any, interaction_library: Any, hooks: Any, sdk
         anchor = None
         log(f'native climb animated anchor unavailable: {type(error).__name__}')
     controller = ThirdPersonController(
-        hooks, bridge, IDENTIFIER, weak_ref=weak_ref, log=log, ads=ads, framing=framing, anchor=anchor)
+        hooks, bridge, IDENTIFIER, weak_ref=weak_ref, log=log, ads=ads, framing=framing,
+        anchor=anchor, readiness=preflight.ready)
     runtime.set_third_person(controller)
     return controller
 

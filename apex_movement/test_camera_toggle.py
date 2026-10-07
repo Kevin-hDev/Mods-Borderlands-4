@@ -14,6 +14,8 @@ state["settings_exists"] = True
 
 import apex_movement  # noqa: E402
 from apex_movement import camera, camera_settings  # noqa: E402
+from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, TOP_ROW_SIX, key_at  # noqa: E402
+SIX, SEVEN = key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
 
 
 class Runtime:
@@ -68,8 +70,8 @@ runtime = Runtime()
 camera.shared = lambda: runtime
 
 ok = camera_settings.third_person_key.default_value == "P"
-ok = ok and camera_settings.shoulder_key.default_value == "Six"
-ok = ok and camera_settings.orbit_key.default_value == "Seven"
+ok = ok and camera_settings.shoulder_key.default_value == SIX
+ok = ok and camera_settings.orbit_key.default_value == SEVEN
 ok = ok and camera_settings.shoulder_left.value is False and camera_settings.orbit.value is False
 ok = ok and all(bind in apex_movement.mod.kwargs["keybinds"] for bind in
                 (camera_settings.third_person_bind, camera_settings.shoulder_bind,
@@ -79,8 +81,8 @@ ok = ok and camera_settings.third_person_bind.is_hidden is True and camera_setti
 apex_movement.mod.enable()
 ok = ok and "P" in state["keybinds"]
 state["keybinds"]["P"]()
-state["keybinds"]["Six"]()
-state["keybinds"]["Seven"]()
+state["keybinds"][SIX]()
+state["keybinds"][SEVEN]()
 ok = ok and runtime.toggles == [("third_person", "apex_movement"),
                                 ("shoulder", "apex_movement"),
                                 ("orbit", "apex_movement")]

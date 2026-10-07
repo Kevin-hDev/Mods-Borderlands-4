@@ -2,6 +2,7 @@
 #include "ads_compat.h"
 #include "ads_memory.h"
 #include "camera_memory.h"
+#include "camera_builds.h"
 
 namespace {
 SRWLOCK guard = SRWLOCK_INIT;
@@ -41,18 +42,19 @@ int start_locked(uintptr_t manager) {
     const int verified = apex_ads::verify_module_files_error();
     if (verified) return verified;
     const auto game = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-    if (!apex_ads::signature_matches(game + climb_anchor::eye_update_rva, climb_anchor::eye_prefix)
-        || !apex_ads::signature_matches(game + climb_anchor::socket_update_rva, climb_anchor::socket_prefix)) return 22;
+    if (!camera_builds::rva(climb_anchor::eye_update_rva)
+        || !apex_ads::signature_matches(game + camera_builds::rva(climb_anchor::eye_update_rva), climb_anchor::eye_prefix)
+        || !apex_ads::signature_matches(game + camera_builds::rva(climb_anchor::socket_update_rva), climb_anchor::socket_prefix)) return 22;
     climb_anchor::Session candidate{};
     if (!climb_anchor::capture(manager, candidate)) return 2;
-    auto** target = reinterpret_cast<void**>(game + climb_anchor::eye_slot_rva);
-    auto* expected = reinterpret_cast<void*>(game + climb_anchor::eye_update_rva);
+    auto** target = reinterpret_cast<void**>(game + camera_builds::rva(climb_anchor::eye_slot_rva));
+    auto* expected = reinterpret_cast<void*>(game + camera_builds::rva(climb_anchor::eye_update_rva));
     if (!apex_camera::memory_access(target, sizeof(void*)) || *target != expected) return 3;
     HMODULE pinned{};
     if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
                            reinterpret_cast<LPCWSTR>(&dispatch), &pinned)) return 4;
     original = reinterpret_cast<climb_anchor::Update>(expected);
-    socket_update = reinterpret_cast<climb_anchor::Update>(game + climb_anchor::socket_update_rva);
+    socket_update = reinterpret_cast<climb_anchor::Update>(game + camera_builds::rva(climb_anchor::socket_update_rva));
     session = candidate; slot = target;
     if (apex_camera::replace_slot(slot, expected, reinterpret_cast<void*>(&dispatch))) return 5;
     statistics = {}; statistics.installed = 1; statistics.active = 1;

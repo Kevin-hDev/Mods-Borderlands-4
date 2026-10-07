@@ -27,6 +27,7 @@ template<int Value> int distinct_method() { return Value; }
 }
 
 int main(int argc, char**) {
+    assert(camera_builds::publish(1));
     using namespace apex_ads;
     signature_match = argc == 1;
     alignas(8) std::array<unsigned char, MANAGER_INPUTS_OFFSET + 8> manager{};

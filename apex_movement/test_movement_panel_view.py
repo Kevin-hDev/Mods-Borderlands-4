@@ -85,7 +85,7 @@ assert root.kind == "UserWidget"
 # The window sits on a clear layer over the whole screen (panel_modal, 2026-10-06).
 assert (root.WidgetTree.RootWidget.kind == "CanvasPanel"
         and [child.kind for child in root.WidgetTree.RootWidget.children] == ["BackgroundBlur", "ScaleBox"])
-assert len(model.pages) == 13 and model.pages[-3:] == ("commands", "language", "dynamic_camera")
+assert len(model.pages) == 14 and model.pages[-4:] == ("commands", "language", "dynamic_camera", "shoulder")
 assert len(widgets["pages"].children) == len(model.pages) + 1
 assert model.page == "options" and widgets["focus"] is widgets["options"]
 assert "EN" not in widgets and "FR" not in widgets
@@ -239,8 +239,24 @@ assert all(id(widget) in attached for widget in widgets.values())
 assert sum(node.kind == "ScrollBox" for node in Widget.created) == len(model.pages) + 2
 assert all(f"setting:{key}" in widgets for key in model.options)
 # Three fixed framing cards add 69 entries, the header's size button 5, the DYNAMIC CAMERA tab (its head, its card,
-# seven rows and a fourth tab button on every head) about 80; no dynamically growing registry.
-assert len(widgets) < 820, "the fixed widget registry must stay bounded"
+# seven rows and a fourth tab button on every head) about 80, the FREE LOOK command card 17, the automatic shoulder's
+# three rows 42, the SHOULDER VIEW tab (its head, its card and a fifth tab button on every head) 55 (922 in all on
+# 2026-10-07); no dynamically growing registry.
+assert len(widgets) < 960, "the fixed widget registry must stay bounded"
+# Free Look's settings sit on the CAMERA tab; COMMANDS only holds keys (Kevin, 2026-10-07).
+free_look = [widgets[f"setting:{key}"] for key in ("free_look_keyboard_hold", "free_look_controller_hold",
+                                                   "free_look_hold_time")]
+assert all(widget in walk(widgets["camera:settings"]) for widget in free_look)
+assert not any(widget in walk(widgets["commands:settings"]) for widget in free_look)
+# The shoulder's settings sit on their own SHOULDER VIEW tab, the smooth camera transitions stay on CAMERA VIEW
+# (Kevin, 2026-10-07).
+shoulder = [widgets[f"setting:{key}"] for key in ("shoulder_left", "shoulder_auto", "shoulder_auto_swap",
+                                                  "shoulder_auto_return", "shoulder_smooth")]
+assert all(widget in walk(widgets["shoulder:settings"]) for widget in shoulder)
+assert not any(widget in walk(widgets["camera:settings"]) for widget in shoulder)
+assert all(widgets[f"setting:{key}"] in walk(widgets["camera:settings"])
+           for key in ("third_person", "orbit_smooth", "shoulder_seconds"))
+assert all(f"tab:{page}:shoulder" in widgets for page in ("options", "shoulder", "dynamic_camera", "commands"))
 
 # Each theme changes colours only, read when the window is drawn: no colour of another theme stays (2026-10-06).
 veils = {tuple(theme.HOVER_OVERLAY), tuple(theme.PRESS_OVERLAY)}

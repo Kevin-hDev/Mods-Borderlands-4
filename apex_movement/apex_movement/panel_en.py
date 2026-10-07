@@ -12,8 +12,12 @@ TEXT = {
     "camera_tab_desc": "View, aiming, orbit camera and loot.",
     "commands_tab_desc": "Camera keys, on keyboard and controller.",
     "camera": "CAMERA", "camera_desc": "View, field of view and loot.",
+    # The camera tab's two halves (Kevin, 2026-10-07).
+    "camera_view": "CAMERA VIEW", "shoulder_view": "SHOULDER VIEW", "shoulder": "SHOULDER VIEW",
+    "shoulder_tab_desc": "Camera shoulder and automatic switch.",
+    "shoulder_desc": "Pick the shoulder, and let the camera switch shoulders in front of a wall.",
     # Omni Sprint and Third Person & FOV spread the camera settings over four pages (Kevin, 2026-10-06).
-    "camera_page": "View on foot, shoulder and field of view.",
+    "camera_page": "View on foot, field of view and Free Look.",
     "aiming": "AIMING", "aiming_page": "Third-person aiming and zoom.",
     "orbit_camera": "ORBIT CAMERA", "orbit_camera_page": "Circles the character at the distance you choose.",
     "loot": "LOOT", "loot_page": "Pick up loot from farther away.",
@@ -32,6 +36,8 @@ TEXT = {
     "command_orbit": "ORBIT CAMERA", "command_orbit_desc": "Turn the Orbit Camera on or off.",
     "command_zoom_in": "ORBIT CAMERA ZOOM IN", "command_zoom_in_desc": "One step per press, in the Orbit Camera.",
     "command_zoom_out": "ORBIT CAMERA ZOOM OUT", "command_zoom_out_desc": "One step per press, in the Orbit Camera.",
+    "command_free_look": "FREE LOOK", "command_free_look_desc": "Hold to turn the camera while you keep your direction.",
+    "command_camera_distance": "CAMERA DISTANCE", "command_camera_distance_desc": "Close, normal or far, in third person.",
     "command_tools": "COMMAND OPTIONS", "command_tools_desc": "Controller icons and camera command defaults.",
     "commands_reset": "DEFAULT KEYS", "controller_icons": "CONTROLLER ICONS",
     "camera_draft_discarded": "Camera mod changed: unsaved camera settings were discarded.",

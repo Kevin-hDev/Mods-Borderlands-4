@@ -221,4 +221,7 @@ def install() -> dict:
 
 
 def patch_memory(memory_module: Any, fake: FakeMemory) -> None:
-    memory_module.read, memory_module.write = fake.read, fake.write
+    # The float calls live in the shared helper and reach the Windows calls through it.
+    from apex_camera_runtime import process_memory
+    for module in (memory_module, process_memory):
+        module.read, module.write = fake.read, fake.write

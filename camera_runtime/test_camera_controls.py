@@ -57,6 +57,9 @@ class Third:
         settings.toggles += 1
         return True
 
+    def undo_auto_shoulder(self, _settings):
+        return False
+
     def set_shoulder(self, settings, left):
         self.shoulder_values.append(left)
         settings.left = left

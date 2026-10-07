@@ -14,6 +14,8 @@ sdk_stubs.install()
 
 import unrealsdk  # noqa: E402
 from apex_camera_runtime import constants, shared as runtime  # noqa: E402
+from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, TOP_ROW_SIX, key_at  # noqa: E402
+SIX, SEVEN = key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
 
 from omni_sprint import panel_assets, panel_fonts, panel_form, panel_model, panel_preferences  # noqa: E402
 from omni_sprint import panel_theme as theme, panel_view  # noqa: E402
@@ -60,8 +62,8 @@ panel_fonts.build = lambda _root: {"title": object(), "body": object()}
 
 model, root, widgets, form = build()
 CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera")
-check("seven pages, opened on OMNI SPRINT, under the mod's name",
-      len(widgets["pages"].children) == len(model.pages) == 7 and widgets["focus"] is widgets["nav:omni_sprint"]
+check("eight pages, SHOULDER VIEW last, opened on OMNI SPRINT, under the mod's name",
+      len(widgets["pages"].children) == len(model.pages) == 8 and model.pages[-1] == "shoulder" and widgets["focus"] is widgets["nav:omni_sprint"]
       and theme.BRAND == "OMNI SPRINT")
 check("the DYNAMIC CAMERA page has its three cards, FIELD OF VIEW, FRAMING and MOTION, with their settings",
       all(f"heading:dynamic:{key}" in widgets for key in ("fov", "framing", "motion"))
@@ -93,7 +95,7 @@ duplicate = widgets["command:orbit:keyboard"]
 duplicate.SelectedKey = SimpleNamespace(Key=SimpleNamespace(KeyName="P"))
 form.poll()
 check("the real Omni form keeps the key after a refused duplicate",
-      model.command_options["orbit_key"].value == "Seven")
+      model.command_options["orbit_key"].value == SEVEN)
 check("the real Omni form classifies a refused duplicate",
       form.command_form.notice == "refused")
 check("the real Omni form explains a refused duplicate",
@@ -102,7 +104,7 @@ check("the real Omni form explains a refused duplicate",
 check("the sprint's page holds its switch, and each card says what its page sets",
       "row:omni_sprint" in widgets and widgets["label:omni_sprint"].calls["SetText"] == ("SPRINT IN ALL DIRECTIONS",)
       and widgets["group:omni_sprint"].calls["SetText"] == ("The game's sprint, in every direction.",)
-      and widgets["group:camera"].calls["SetText"] == ("View on foot, shoulder and field of view.",))
+      and widgets["group:camera"].calls["SetText"] == ("View on foot, field of view and Free Look.",))
 
 
 def page_of(widget):
@@ -110,8 +112,11 @@ def page_of(widget):
                 if any(node is widget for node in walk(page)))
 
 
-placement = {"camera": ("setting:third_person", "setting:shoulder_left", "setting:custom_fov", "setting:fov",
+placement = {"camera": ("setting:third_person", "setting:custom_fov", "setting:fov", "setting:orbit_smooth",
+                        "setting:shoulder_seconds", "setting:free_look_hold_time",
                         "heading:framing:horizontal", "heading:framing:height"),
+             "shoulder": ("setting:shoulder_left", "setting:shoulder_auto", "setting:shoulder_auto_swap",
+                          "setting:shoulder_auto_return", "setting:shoulder_smooth"),
              "aiming": ("setting:third_person_ads", "heading:framing:zoom"),
              "orbit_camera": ("setting:orbit", "setting:orbit_distance"),
              "loot": ("setting:extended_loot", "setting:loot_reach")}

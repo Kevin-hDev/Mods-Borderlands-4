@@ -14,14 +14,18 @@ state["settings_exists"] = True
 
 import omni_sprint  # noqa: E402
 from omni_sprint import camera, settings  # noqa: E402
+from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, TOP_ROW_SIX, key_at  # noqa: E402
+SIX, SEVEN = key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
 
 ids = ("third_person_key", "third_person_controller", "shoulder_key", "shoulder_controller",
        "orbit_key", "orbit_controller")
 ids += ("zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller")
+ids += ("free_look_key", "free_look_controller")
+ids += ("camera_distance_key", "camera_distance_controller")
 assert tuple(option.identifier for option in settings.commands.options) == ids
 assert tuple(omni_sprint.mod.kwargs["keybinds"]) == settings.commands.binds
-assert settings.commands.defaults()["shoulder_key"] == "Six"
-assert settings.commands.defaults()["orbit_key"] == "Seven"
+assert settings.commands.defaults()["shoulder_key"] == SIX
+assert settings.commands.defaults()["orbit_key"] == SEVEN
 
 settings.commands.apply({"shoulder_key": "F6"})
 settings.commands.align()
@@ -42,8 +46,8 @@ camera.toggle_shoulder = lambda: calls.append("shoulder")
 camera.toggle_orbit = lambda: calls.append("orbit")
 camera.adjust_orbit_zoom = lambda direction: calls.append(direction)
 omni_sprint.mod.enable()
-for key in ("P", "Gamepad_FaceButton_Top", "Six", "Gamepad_FaceButton_Left",
-            "Seven", "Gamepad_FaceButton_Right"):
+for key in ("P", "Gamepad_FaceButton_Top", SIX, "Gamepad_FaceButton_Left",
+            SEVEN, "Gamepad_FaceButton_Right"):
     state["keybinds"][key]()
 assert calls == ["third_person", "third_person", "shoulder", "shoulder", "orbit", "orbit"]
 for key in ("MouseScrollUp", "MouseScrollDown", "Gamepad_LeftShoulder", "Gamepad_RightShoulder"):
@@ -53,4 +57,4 @@ saved = tuple(option.value for option in settings.commands.options)
 omni_sprint.mod.disable()
 assert tuple(option.value for option in settings.commands.options) == saved
 assert not state["keybinds"]
-print("RESULTAT: OK | Omni Sprint owns five actions and ten persistent assignments")
+print("RESULTAT: OK | Omni Sprint owns six actions and twelve persistent assignments")

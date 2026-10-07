@@ -1,6 +1,8 @@
 param([switch]$TestsOnly)
 $ErrorActionPreference = 'Stop'
 $sourceRoot = $PSScriptRoot
+$contract = Get-Content -Raw -LiteralPath (Join-Path $sourceRoot 'ads_contract.json') | ConvertFrom-Json
+$libraryStem = "apex_camera_interaction_v$($contract.constants.INTERACTION_ABI)"
 $buildRoot = Join-Path $env:TEMP 'apex_camera_interaction_build'
 New-Item -ItemType Directory -Force -Path $buildRoot | Out-Null
 $vcvars = 'C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat'
@@ -23,13 +25,13 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Native interaction test failed' }
     }
     if ($TestsOnly) { return }
-    & cl.exe @common '/LD' @sources '/Fe:apex_camera_interaction_v2.dll'
+    & cl.exe @common '/LD' @sources "/Fe:$libraryStem.dll"
     if ($LASTEXITCODE -ne 0) { throw 'Native library build failed' }
     $assets = Join-Path (Split-Path $sourceRoot) 'apex_camera_runtime\assets'
-    $target = Join-Path $assets 'apex_camera_interaction_v2.dll'
-    Copy-Item -LiteralPath (Join-Path $buildRoot 'apex_camera_interaction_v2.dll') -Destination $target -Force
+    $target = Join-Path $assets "$libraryStem.dll"
+    Copy-Item -LiteralPath (Join-Path $buildRoot "$libraryStem.dll") -Destination $target -Force
     $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $target).Hash.ToLowerInvariant()
-    Set-Content -LiteralPath (Join-Path $assets 'apex_camera_interaction_v2.sha256') -Value $hash -Encoding ascii -NoNewline
+    Set-Content -LiteralPath (Join-Path $assets "$libraryStem.sha256") -Value $hash -Encoding ascii -NoNewline
     Write-Output "RESULTAT: OK - native interaction built: $hash"
 } finally {
     Pop-Location

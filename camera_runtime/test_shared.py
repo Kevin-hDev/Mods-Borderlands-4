@@ -80,15 +80,27 @@ else:
     refused = False
 check("v5 cannot share the per-frame collision callback", refused)
 sys.modules.pop("_apex_camera_runtime_v5", None)
+old = types.ModuleType("_apex_camera_runtime_v6")
+old.protocol, old.runtime = 6, object()
+sys.modules["_apex_camera_runtime_v6"] = old
+try:
+    shared_module.shared(lambda item: item, lambda item: 1)
+except RuntimeError:
+    refused = True
+else:
+    refused = False
+check("v6 cannot share the build-qualified native libraries", refused)
+sys.modules.pop("_apex_camera_runtime_v6", None)
 runtime = shared_module.shared(lambda item: item, lambda item: 1)
-state = sys.modules.get("_apex_camera_runtime_v6")
+state = sys.modules.get("_apex_camera_runtime_v7")
 check("all names reserve the same zoom-capable runtime",
-      shared_module.PROTOCOL == 6 and state is not None
+      shared_module.PROTOCOL == 7 and state is not None
       and sys.modules.get("_apex_camera_runtime_v1") is state
       and sys.modules.get("_apex_camera_runtime_v2") is state
       and sys.modules.get("_apex_camera_runtime_v3") is state
       and sys.modules.get("_apex_camera_runtime_v4") is state
-      and sys.modules.get("_apex_camera_runtime_v5") is state and state.runtime is runtime)
+      and sys.modules.get("_apex_camera_runtime_v5") is state
+      and sys.modules.get("_apex_camera_runtime_v6") is state and state.runtime is runtime)
 from apex_camera_runtime import ads_category, ads_paths_reader, generated_ads
 check("probes consume the elected package's canonical ADS readers",
       state is not None and getattr(state, "ads_category_reader", None) is ads_category.category
@@ -99,7 +111,7 @@ check("probes consume the elected package's canonical ADS readers",
 check("old clients reject the reserved state without starting a second camera",
       getattr(sys.modules["_apex_camera_runtime_v1"], "protocol", None) != 1
       and all(getattr(sys.modules[f"_apex_camera_runtime_v{version}"], "protocol", None) != version
-              for version in (2, 3, 4, 5)))
+              for version in (2, 3, 4, 5, 6)))
 shared_module.reset_for_tests()
 check("cleanup removes both shared names",
       all(name not in sys.modules for name in shared_module.ALL_STATES))

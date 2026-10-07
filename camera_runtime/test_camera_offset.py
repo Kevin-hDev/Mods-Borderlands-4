@@ -66,6 +66,15 @@ class OffsetTests(unittest.TestCase):
         self.hook()(object(), None, None, None)
         self.assertIsNone(self.controller.offset.written)
 
+    def test_a_new_animation_on_the_same_hunter_is_followed(self):
+        # Hunter Change's looks give the hunter a new animation (verified in game, 2026-10-07).
+        self.animation = object()
+        self.frames(30)
+        self.assertIsNone(self.controller.offset.written)
+        self.controller.offset.sync(self.settings)
+        self.frames(90)
+        self.assertLess(self.offset.X, -55.0)
+
     def test_orbit_distance_comes_first_and_writes_x_only(self):
         self.frames(30)
         self.controller.zoom.wanted_x = lambda: 25.0

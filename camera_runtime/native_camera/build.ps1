@@ -23,6 +23,12 @@ $sources = @((Join-Path $sourceRoot 'view_target_math.cpp'),
              (Join-Path $sourceRoot 'view_target_bridge.cpp'))
 Push-Location $buildRoot
 try {
+    & cl.exe @common (Join-Path $sourceRoot 'test_camera_builds.cpp') '/Fe:camera_builds_test.exe'
+    if ($LASTEXITCODE -ne 0) { throw 'Camera build profile test build failed' }
+    & .\camera_builds_test.exe
+    if ($LASTEXITCODE -ne 0) { throw 'Steam camera profile test failed' }
+    & .\camera_builds_test.exe epic
+    if ($LASTEXITCODE -ne 0) { throw 'Epic camera profile test failed' }
     & cl.exe @common (Join-Path $sourceRoot 'test_offset_blend.cpp') '/Fe:offset_blend_test.exe'
     if ($LASTEXITCODE -ne 0) { throw 'Camera offset transition test build failed' }
     & .\offset_blend_test.exe

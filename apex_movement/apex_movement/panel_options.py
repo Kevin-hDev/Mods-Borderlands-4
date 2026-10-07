@@ -12,10 +12,13 @@ from . import panel_text as tx, panel_theme as t, panel_widgets as w
 # page, the language under the OPTIONS title, and no tab.
 # The dynamic camera is a camera setting, so its tab follows the camera's (Kevin, 2026-10-06: a fourth button in
 # OPTIONS rather than a sidebar page, the sidebar being full).
-TABS = ("options", "dynamic_camera", "commands", "language")
+# The camera tab splits in two, CAMERA VIEW and SHOULDER VIEW, on the same row (Kevin, 2026-10-07: the tab grew too
+# long; sketch A, two tabs rather than a second row of buttons). "options" stays the CAMERA VIEW tab's page key.
+TABS = ("options", "shoulder", "dynamic_camera", "commands", "language")
 # Each tab's button and the sentence under the title.
-NAMES = {"options": "camera", "dynamic_camera": "dynamic_camera", "commands": "commands", "language": "languages"}
-SENTENCES = {"options": "camera_tab_desc", "dynamic_camera": "dynamic_camera_tab_desc",
+NAMES = {"options": "camera_view", "shoulder": "shoulder_view", "dynamic_camera": "dynamic_camera",
+         "commands": "commands", "language": "languages"}
+SENTENCES = {"options": "camera_tab_desc", "shoulder": "shoulder_tab_desc", "dynamic_camera": "dynamic_camera_tab_desc",
              "commands": "commands_tab_desc", "language": "options_desc_menu"}
 
 
@@ -74,10 +77,24 @@ def options_page(owner, model, widgets, template):
     controls = w.new("VerticalBox", rows)
     widgets["camera:settings"] = controls
     w.column(rows, controls)
-    dynamic = {name for _key, names in panel_dynamic.SECTIONS for name in names}
-    sc.rows(controls, [option for key, option in model.camera_options.items() if key not in dynamic], widgets, template)
+    from .camera_settings import SHOULDER_PAGE
+    elsewhere = {name for _key, names in panel_dynamic.SECTIONS for name in names} | set(SHOULDER_PAGE)
+    sc.rows(controls, [option for key, option in model.camera_options.items() if key not in elsewhere], widgets,
+            template)
     from . import panel_framing
     panel_framing.build(controls, widgets, template)
+    return page
+
+
+def shoulder_page(owner, model, widgets, template):
+    """The SHOULDER VIEW tab: one card, hidden with the camera's while another camera mod is in charge."""
+    from .camera_settings import SHOULDER_PAGE
+    page, body = tab_page(owner, widgets, template, "shoulder")
+    rows = p.card(body, widgets, "shoulder")
+    controls = w.new("VerticalBox", rows)
+    widgets["shoulder:settings"] = controls
+    w.column(rows, controls)
+    sc.rows(controls, [model.camera_options[key] for key in SHOULDER_PAGE], widgets, template)
     return page
 
 

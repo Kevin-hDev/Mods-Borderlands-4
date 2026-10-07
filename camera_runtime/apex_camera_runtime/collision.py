@@ -12,6 +12,7 @@ from .collision_sweep import SphereSweep
 from .collision_visibility import Visibility
 from .generated_ads import CollisionQuery, MIN_POINTER
 from .lifetime import CameraLifetime
+from .shoulder_clearance import ShoulderClearance
 from .constants import THIRD_PERSON_MODE
 
 Callback = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.POINTER(CollisionQuery), ctypes.POINTER(ctypes.c_double))
@@ -22,6 +23,7 @@ class CollisionResolver:
         self.sweep = SphereSweep(kismet, sdk)
         self.visibility = Visibility(kismet, sdk)
         self.path = CollisionPath()
+        self.clearance = ShoulderClearance()
         self.lifetime = CameraLifetime(weak_ref)
         self.callback = None
         self.thread = None
@@ -76,6 +78,7 @@ class CollisionResolver:
         self.reference_clear = False
         self.margin_blocked = False
         self.path.reset()
+        self.clearance.clear()
 
     def _mode_allowed(self, manager, actor):
         # Check the elected owner's permission before ThirdPerson too: ADS may
@@ -140,6 +143,8 @@ class CollisionResolver:
                 else:
                     target = self.visibility.target(actor)
                     position = self._position(actor, anchor, desired, distance, target, query.delta)
+                self.clearance.record(self.sweep, actor, manager, anchor, desired, distance, self.margin_blocked,
+                                      position)
             self._owned(query)
             if not self._mode_allowed(manager, actor):
                 self.invalidate()

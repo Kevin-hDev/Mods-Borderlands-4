@@ -32,6 +32,9 @@ class ControllerActions:
             self.stop()
             raise
 
+    def undo_auto_shoulder(self, settings: Any) -> bool:
+        return self.shoulder.player_switch(self, settings)
+
     def toggle_shoulder(self, settings: Any) -> bool:
         try:
             left = settings.shoulder_left()

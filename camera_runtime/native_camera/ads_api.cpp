@@ -1,4 +1,5 @@
 #include "ads_api.h"
+#include "camera_builds.h"
 #include "ads_compat.h"
 #include "ads_detours.h"
 #include "ads_identity.h"
@@ -57,7 +58,7 @@ int initialize() {
     if (!object_table) return static_cast<int>(ERROR_OBJECT_TABLE);
     const auto game = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
     if (!third_name(name)
-            || !state.configure(object_table, name, reinterpret_cast<ZoomScale>(game + ZOOM_SCALE_RVA))) {
+            || !state.configure(object_table, name, reinterpret_cast<ZoomScale>(game + camera_builds::rva(ZOOM_SCALE_RVA)))) {
         return static_cast<int>(ERROR_UNSUPPORTED);
     }
     owning_thread = GetCurrentThreadId();

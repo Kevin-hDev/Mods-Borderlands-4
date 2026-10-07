@@ -3,6 +3,7 @@
 #include "framing_code.h"
 #include "ads_memory.h"
 #include "ads_compat.h"
+#include "camera_builds.h"
 #include "view_performance.h"
 
 namespace {
@@ -29,7 +30,7 @@ void* find(void* actor, void* type) {
 void* cast(void* object, void* type) {
     apex_performance::Measurement timing(apex_performance::Stage::progress_cast, true);
     const uintptr_t module = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-    auto method = reinterpret_cast<Cast>(module + ZOOM_CAST_RVA);
+    auto method = reinterpret_cast<Cast>(module + camera_builds::rva(ZOOM_CAST_RVA));
     void* value = method(object, type);
     // Exactly the three getters used by the game's qualified progress reader.
     return value && value != object && virtual_at(value, 0x10) && virtual_at(value, 0x18)
@@ -38,7 +39,7 @@ void* cast(void* object, void* type) {
 float progress(void* value) {
     apex_performance::Measurement timing(apex_performance::Stage::progress_call, true);
     const auto module = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-    return reinterpret_cast<Progress>(module + ZOOM_PROGRESS_RVA)(value);
+    return reinterpret_cast<Progress>(module + camera_builds::rva(ZOOM_PROGRESS_RVA))(value);
 }
 bool read(void* manager, void* actor, float& output) {
     apex_performance::Measurement timing(apex_performance::Stage::progress, true);
@@ -47,20 +48,21 @@ bool read(void* manager, void* actor, float& output) {
         apex_performance::Measurement signatures(apex_performance::Stage::progress_signatures, true);
         // As with ADS preparation, qualify fixed game code once per library lifetime.
         // A mismatch is terminal; live object identities and vtables are never cached here.
+        if (!camera_builds::rva(ZOOM_PROGRESS_RVA)) return false;
         static const bool compatible = module
-            && signature_matches(module + ZOOM_PROGRESS_RVA, ZOOM_PROGRESS_PREFIX)
-            && signature_matches(module + ZOOM_CAST_RVA, ZOOM_CAST_PREFIX);
+            && signature_matches(module + camera_builds::rva(ZOOM_PROGRESS_RVA), ZOOM_PROGRESS_PREFIX)
+            && signature_matches(module + camera_builds::rva(ZOOM_CAST_RVA), ZOOM_CAST_PREFIX);
         if (!compatible) return false;
     }
     void* inputs = pointer_at(reinterpret_cast<uintptr_t>(manager), MANAGER_INPUTS_OFFSET);
     void* target = pointer_at(reinterpret_cast<uintptr_t>(inputs), ZOOM_TARGET_OFFSET);
-    void* type = pointer_at(module, ZOOM_TYPE_RVA);
+    void* type = pointer_at(module, camera_builds::rva(ZOOM_TYPE_RVA));
     if (!apex_camera::memory_access(type, OBJECT_OUTER_OFFSET + 8)) return false;
     float current{};
     if (!read_progress(target, actor, type, find, cast, progress, current)
         || pointer_at(reinterpret_cast<uintptr_t>(manager), MANAGER_INPUTS_OFFSET) != inputs
         || pointer_at(reinterpret_cast<uintptr_t>(inputs), ZOOM_TARGET_OFFSET) != target
-        || pointer_at(module, ZOOM_TYPE_RVA) != type) return false;
+        || pointer_at(module, camera_builds::rva(ZOOM_TYPE_RVA)) != type) return false;
     output = current;
     return true;
 }

@@ -66,6 +66,8 @@ def refresh(form, widgets, language):
     if form.model.camera_options:
         widgets["heading:camera"].SetText(i18n.text("camera", language))
         widgets["group:camera"].SetText(i18n.text("camera_desc", language))
+        widgets["heading:shoulder"].SetText(i18n.text("shoulder_view", language))
+        widgets["group:shoulder"].SetText(i18n.text("shoulder_desc", language))
         widgets[f"heading:{panel_dynamic.PAGE}"].SetText(i18n.text(panel_dynamic.PAGE, language))
         widgets[f"group:{panel_dynamic.PAGE}"].SetText(i18n.text(f"{panel_dynamic.PAGE}_page", language))
         panel_dynamic.refresh(widgets, language)

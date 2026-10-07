@@ -1,5 +1,6 @@
 #include "anchor_contract.h"
 #include "ads_compat.h"
+#include "camera_builds.h"
 #include <cstdio>
 #include <cstring>
 
@@ -38,6 +39,7 @@ bool apply_socket(Update, void*, void*, float, uint64_t) { return false; }
 }
 
 int main() {
+    check(camera_builds::publish(1), "Steam fixture profile selected");
     check(anchor_start(0) == 2 && captured,
           "owned ADS HUD detours do not reject an intact anchor trial");
     captured = false; file_error = 21;

@@ -24,9 +24,11 @@ class ThirdPersonController(ControllerActions):
     def __init__(self, hooks: Any, bridge: Any, identifier: str,
                  weak_ref: Callable | None = None, log: Callable | None = None,
                  clock: Callable[[], int] | None = None, ads: Any = None,
-                 framing: Any = None, anchor: Any = None) -> None:
+                 framing: Any = None, anchor: Any = None,
+                 readiness: Callable[[], bool] | None = None) -> None:
         self.hooks = hooks
         self.bridge = bridge
+        self.readiness = readiness or (lambda: True)
         self.identifier = identifier
         self.weak_ref = weak_ref or (lambda item: lambda: item)
         self.log = log or (lambda _message: None)
@@ -89,6 +91,8 @@ class ThirdPersonController(ControllerActions):
             foot_preemption.end(self.foot_mode, "vehicle")
 
     def _start(self, pc: Any, settings: Any, now_ns: int) -> None:
+        if not self.readiness():
+            return
         actor = getattr(pc, "OakCharacter", None)
         manager = getattr(pc, "PlayerCameraManager", None)
         if actor is None or manager is None:

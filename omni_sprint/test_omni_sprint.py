@@ -25,6 +25,10 @@ from omni_sprint import animation, camera, definition, frame, memory  # noqa: E4
 
 mod = state["mods"][0]
 from omni_sprint import panel_preferences, settings  # noqa: E402
+from apex_camera_runtime.keyboard_layout import (RIGHT_OF_TAB, TOP_ROW_EIGHT, TOP_ROW_SEVEN, TOP_ROW_SIX,  # noqa: E402
+                                                 key_at)
+FREE_LOOK, SIX, SEVEN = key_at(RIGHT_OF_TAB, "Q"), key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
+EIGHT = key_at(TOP_ROW_EIGHT, "Eight")
 check("one mod, named Omni Sprint, with the camera settings and its window's language and page, both hidden",
       len(state["mods"]) == 1 and mod.kwargs["name"] == "Omni Sprint"
       and mod.kwargs["options"] == [*settings.OPTIONS, *panel_preferences.ALL]
@@ -36,8 +40,9 @@ check("a fresh install switches it on and says its version",
 check("its one hook is the clock, under the mod's own identifier: Apex Movement and Vehicle Driving use theirs on the "
       "same function, and two identifiers never replace each other",
       mod.kwargs["hooks"] == [frame.tick] and frame.tick.identifier == "omni_sprint:frame" and frame.tick.enabled)
-check("P, Six and Seven expose the three default camera actions",
-      set(state["keybinds"]) == {"P", "Six", "Seven"})
+check("P, Six, Seven, Eight, the key right of Tab and L3 are the default camera keys (the last two for Free Look, "
+      "read each frame)",
+      set(state["keybinds"]) == {"P", SIX, SEVEN, EIGHT, FREE_LOOK, "Gamepad_LeftThumbstick"})
 source = pathlib.Path(omni_sprint.__file__).parent
 text = "\n".join(path.read_text(encoding="utf-8") for path in sorted(source.glob("*.py")))
 check("nothing Apex Movement or Vehicle Driving writes is named: sprint request, slide, speeds, vehicle",

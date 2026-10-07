@@ -30,6 +30,10 @@ EN = {'camera_refused': 'The camera could not confirm this change. It was not sa
  'command_zoom_in_desc': 'One step per press, in the Orbit Camera.',
  'command_zoom_out': 'ORBIT CAMERA ZOOM OUT',
  'command_zoom_out_desc': 'One step per press, in the Orbit Camera.',
+ 'command_free_look': 'FREE LOOK',
+ 'command_free_look_desc': 'Hold to turn the camera while you keep your direction.',
+ 'command_camera_distance': 'CAMERA DISTANCE',
+ 'command_camera_distance_desc': 'Close, normal or far, in third person.',
  'camera_draft_discarded': 'Camera mod changed: unsaved camera settings were discarded.',
  'camera_outdated': 'Camera mods of different versions are loaded. Update Apex Movement, Omni '
                     'Sprint and Third Person & FOV, then restart the game.',
@@ -37,7 +41,7 @@ EN = {'camera_refused': 'The camera could not confirm this change. It was not sa
  'framing_saved_unavailable': 'Saved. Framing preview is unavailable here.',
  'framing_saved_partial': 'Saved. Part of the framing preview is unavailable here; check the '
                           'camera rows.',
- 'camera_page': 'View on foot, shoulder and field of view.',
+ 'camera_page': 'View on foot, field of view and Free Look.',
  'aiming': 'AIMING',
  'aiming_page': 'Third-person aiming and zoom.',
  'orbit_camera': 'ORBIT CAMERA',
@@ -52,7 +56,11 @@ EN = {'camera_refused': 'The camera could not confirm this change. It was not sa
  'dynamic_framing': 'FRAMING',
  'dynamic_framing_desc': 'Back when running, jumping or driving fast, closer when crouched.',
  'dynamic_motion': 'MOTION',
- 'dynamic_motion_desc': 'Soft inertia, and a faint drift when standing still.'}
+ 'dynamic_motion_desc': 'Soft inertia, and a faint drift when standing still.',
+ 'camera_view': 'CAMERA VIEW',
+ 'shoulder_view': 'SHOULDER VIEW',
+ 'shoulder': 'SHOULDER VIEW',
+ 'shoulder_desc': 'Pick the shoulder, and let the camera switch shoulders in front of a wall.'}
 FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a pas été enregistré.',
  'camera_timeout': 'La caméra n’a pas répondu. Les réglages précédents ont été rétablis. Réessaie '
                    'dans un moment.',
@@ -81,6 +89,10 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
  'command_zoom_in_desc': 'Un cran par appui, en caméra orbitale.',
  'command_zoom_out': 'ÉLOIGNER LA CAMÉRA',
  'command_zoom_out_desc': 'Un cran par appui, en caméra orbitale.',
+ 'command_free_look': 'VUE LIBRE',
+ 'command_free_look_desc': 'Maintiens pour tourner la caméra en gardant ta direction.',
+ 'command_camera_distance': 'DISTANCE DE LA CAMÉRA',
+ 'command_camera_distance_desc': 'Proche, normale ou loin, à la troisième personne.',
  'camera_draft_discarded': 'Mod caméra changé : les réglages caméra non enregistrés ont été '
                            'annulés.',
  'camera_outdated': 'Des mods de caméra de versions différentes sont chargés. Mets à jour Apex '
@@ -89,7 +101,7 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
  'framing_saved_unavailable': 'Enregistré. Aperçu du cadrage indisponible ici.',
  'framing_saved_partial': 'Enregistré. Aperçu du cadrage partiel ici ; consulte les lignes de la '
                           'caméra.',
- 'camera_page': 'Vue à pied, épaule et champ de vision.',
+ 'camera_page': 'Vue à pied, champ de vision et vue libre.',
  'aiming': 'VISÉE',
  'aiming_page': 'Visée en troisième personne et zoom.',
  'orbit_camera': 'CAMÉRA ORBITALE',
@@ -105,6 +117,10 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
  'dynamic_framing_desc': 'Recule en courant, en sautant ou en roulant vite, se rapproche accroupi.',
  'dynamic_motion': 'MOUVEMENTS',
  'dynamic_motion_desc': "Une légère inertie, et un faible flottement à l'arrêt.",
+ 'camera_view': 'VUE CAMÉRA',
+ 'shoulder_view': 'VUE ÉPAULES',
+ 'shoulder': 'VUE ÉPAULES',
+ 'shoulder_desc': "Choisis l'épaule, et laisse la caméra changer d'épaule devant un mur.",
  'aim_third': 'Troisième personne',
  'aim_first': 'Première personne',
  'ads_unsupported': "Visée à l'épaule indisponible avec cette version. Garde la visée première "
@@ -123,7 +139,21 @@ FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrièr
  'third_person_ads': ('Visée',
                       'Les fusils de précision et les armes lourdes gardent la visée en première '
                       'personne.'),
- 'shoulder_left': ('Épaule', 'Place la caméra à gauche ou à droite du personnage.'),
+ 'shoulder_left': ("Changement d'épaule", 'Place la caméra à gauche ou à droite du personnage.'),
+ 'shoulder_auto': ("Changement d'épaule automatique",
+                   "La caméra passe sur l'autre épaule quand un mur bouche la vue, puis revient."),
+ 'shoulder_auto_swap': ('Épaule automatique : délai de bascule',
+                        'Temps pendant lequel un mur bouche la vue avant que la caméra change '
+                        "d'épaule, en secondes."),
+ 'shoulder_auto_return': ('Épaule automatique : délai de retour',
+                          'Temps de vue dégagée avant que la caméra revienne sur ton épaule, en '
+                          'secondes.'),
+ 'camera_distance_close': ('Distance de la caméra : proche',
+                           'Distance derrière toi en position proche, en mètres. La normale est à '
+                           '2,56.'),
+ 'camera_distance_far': ('Distance de la caméra : loin',
+                         'Distance derrière toi en position loin, en mètres. La normale est à '
+                         '2,56.'),
  'shoulder_smooth': ("Changement d'épaule fluide",
                      'Déplace progressivement la caméra entre les deux épaules.'),
  'orbit_smooth': ('Transitions caméra fluides',
@@ -149,4 +179,12 @@ FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrièr
                    'La caméra suit en douceur tes changements de vitesse, et bouge un peu à '
                    "l'arrêt."),
  'camera_motion_strength': ('Force des mouvements',
-                            '100 % par défaut ; plus bas, plus doux ; plus haut, plus fort.')}
+                            '100 % par défaut ; plus bas, plus doux ; plus haut, plus fort.'),
+ 'free_look_keyboard_hold': ('Vue libre : maintenir au clavier',
+                             'OUI : la vue libre dure tant que la touche est tenue. NON : un appui '
+                             "l'allume, un autre l'éteint."),
+ 'free_look_controller_hold': ('Vue libre : maintenir à la manette',
+                               'OUI : la vue libre dure tant que le bouton est tenu. NON : un '
+                               "appui l'allume, un autre l'éteint."),
+ 'free_look_hold_time': ('Vue libre : durée du maintien',
+                         'Temps à tenir avant que la vue libre démarre, en secondes.')}

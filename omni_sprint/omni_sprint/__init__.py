@@ -10,7 +10,7 @@ from .settings_persistence import AtomicMod
 
 from . import animation, camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.11"
+__version__ = "1.0.15"
 __author__ = "kevin-hDev"
 
 

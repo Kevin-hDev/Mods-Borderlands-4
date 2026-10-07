@@ -41,6 +41,7 @@ def sync(controller, pc, actor, manager, settings, now_ns):
         controller.framing.sync(controller, pc, actor, manager, settings)
     if controller._bridge_started and not controller.cleanup_retry.pending:
         try:
+            controller.shoulder.follow(controller, settings, now_ns)
             controller.offset.sync(settings)
         except Exception:
             controller.stop(now_ns=now_ns)

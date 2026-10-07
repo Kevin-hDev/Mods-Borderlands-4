@@ -3,7 +3,7 @@
 
 from . import panel_buttons as b, panel_fonts as fonts, panel_header as h
 from . import panel_modal as modal, panel_window_size as size
-from . import panel_camera_pages as pages, panel_pages as p
+from . import panel_camera_pages as pages, panel_camera_tabs as tabs, panel_pages as p
 from . import panel_text as tx, panel_theme as t, panel_widgets as w, report
 
 
@@ -22,6 +22,8 @@ def _sidebar(owner, widgets, template):
     for page in t.PAGES:
         button = b.button(nav, widgets, f"nav:{page}", "nav", template, "nav_off")
         w.column(nav, button, padding=w.pad(0, 0, t.SPACE_2))
+        if tabs.hidden(page):
+            button.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
     w.column(column, scroll, fill=True)
     widgets["meta"] = tx.text(column, "", "meta", wrap=True)
     w.column(column, widgets["meta"], padding=w.pad(t.SPACE_5, t.SPACE_4 + t.SPACE_2, t.SPACE_3))
@@ -60,12 +62,15 @@ def _window(root, world, model, widgets, template):
     switcher = w.new("WidgetSwitcher", middle)
     widgets["pages"] = switcher
     for group, key in zip(model.groups, model.pages):
-        page, body = p.scrolling_body(switcher, template)
+        page, body = (tabs.frame(switcher, widgets, template, key) if key == tabs.CAMERA
+                      else p.scrolling_body(switcher, template))
         pages.build(p.card(body, widgets, key), key, group, widgets, template)
         switcher.AddChild(page)
     if "commands" in model.pages:
         from . import panel_camera_commands as commands
         switcher.AddChild(commands.page(switcher, model, widgets, template))
+    if tabs.SHOULDER in model.pages:
+        switcher.AddChild(tabs.shoulder_page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))
     w.column(stack, _footer(stack, widgets, template))

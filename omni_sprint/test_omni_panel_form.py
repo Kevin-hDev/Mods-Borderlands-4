@@ -95,7 +95,11 @@ names = ["focus", "pages", "notice", "close", "theme", "window_size", "EN", "FR"
          "nav:commands", "row:fov", "description:fov", "icons:PS5", "icons:XSX",
          "commands:settings", "commands:external"]
 names += [f"nav:{key}" for key in panel_camera_pages.PAGES] + [f"{key}:settings" for key in panel_camera_pages.PAGES]
-names += [f"{part}:{name}" for name in ("loot_reach", "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "orbit", "third_person_ads", "orbit_distance")
+# CAMERA VIEW and SHOULDER VIEW, the CAMERA page's two halves, and their buttons (Kevin, 2026-10-07).
+names += ["nav:shoulder", "shoulder:settings", "heading:shoulder", "group:shoulder"]
+names += [f"tab:{page}:{tab}{part}" for page in ("camera", "shoulder") for tab in ("camera", "shoulder")
+          for part in ("", "_label")]
+names += [f"{part}:{name}" for name in ("loot_reach", "camera_distance_close", "camera_distance_far", "shoulder_left", "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "orbit", "third_person_ads", "orbit_distance")
           for part in ("row", "description")]
 # The DYNAMIC CAMERA page's sliders, greyed under their switch (Kevin, 2026-10-06).
 DYNAMIC_SLIDERS = {"speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",

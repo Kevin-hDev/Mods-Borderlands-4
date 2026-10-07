@@ -73,6 +73,8 @@ def load_packaged_library(folder: pathlib.Path, get_data: Callable | None = None
 class Bridge:
     def __init__(self, library: Any) -> None:
         self.library = library
+        library.view_update_rva.argtypes = []
+        library.view_update_rva.restype = ctypes.c_uint64
         library.view_start.argtypes = [ctypes.c_void_p, ctypes.POINTER(Config)]
         library.view_start.restype = ctypes.c_int
         library.view_stop.argtypes, library.view_stop.restype = [], ctypes.c_int
@@ -100,6 +102,10 @@ class Bridge:
             return False
         if address <= 0:
             return False
+        target = self.library.view_update_rva()
+        if type(target) is not int or not 0 < target < (1 << 32):
+            raise RuntimeError("Native camera build unavailable")
+        config.expected_rva = target
         status = self.library.view_start(address, ctypes.byref(config))
         if status:
             raise RuntimeError(f"native camera start refused ({status})")

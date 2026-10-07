@@ -34,9 +34,13 @@ class Settings:
     third_person_ads = staticmethod(camera_settings.ads.enabled)
     orbit_distance = staticmethod(camera_settings.zoom.distance)
     set_orbit_distance = staticmethod(camera_settings.zoom.save)
+    camera_distance = staticmethod(camera_settings.distance.index)
+    camera_distances = staticmethod(camera_settings.distance.distances)
+    set_camera_distance = staticmethod(camera_settings.distance.save)
     loot_distance = staticmethod(camera_settings.loot_distance)
     speed_fov = staticmethod(camera_settings.speed_fov.values)
     dynamic_camera = staticmethod(camera_settings.dynamic.values)
+    free_look = staticmethod(camera_settings.free_look.values)
     fov_enabled = staticmethod(camera_settings.custom_fov_enabled)
     fov_value = staticmethod(camera_settings.fov_value)
     saved_fov_pair = staticmethod(camera_settings.saved_fov_pair)
@@ -45,6 +49,7 @@ class Settings:
     set_third_person = staticmethod(camera_settings.set_third_person)
     shoulder_left = staticmethod(camera_settings.shoulder_left_enabled)
     shoulder_transition = staticmethod(camera_settings.shoulder_transition.seconds)
+    shoulder_auto = staticmethod(camera_settings.shoulder_transition.automatic.values)
     orbit_transition = staticmethod(camera_settings.shoulder_transition.orbit_seconds)
     set_shoulder_left = staticmethod(camera_settings.set_shoulder_left)
     orbit_enabled = staticmethod(camera_settings.orbit_enabled)
@@ -122,6 +127,12 @@ def ready() -> bool:
 
 def adjust_orbit_zoom(direction: int) -> bool:
     return bool(_registered and _runtime.adjust_orbit_zoom(OWNER, direction))
+
+
+def cycle_camera_distance() -> bool:
+    # The shared runtime may come from an older mod's copy, made before the camera distance key (2026-10-07).
+    cycle = getattr(_runtime, "cycle_camera_distance", None) if _registered else None
+    return bool(callable(cycle) and cycle(OWNER))
 
 
 def aim_status() -> tuple[str, str] | None:

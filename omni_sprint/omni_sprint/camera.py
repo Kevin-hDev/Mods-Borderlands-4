@@ -31,14 +31,19 @@ _refusal = None
 
 class Settings:
     shoulder_transition = staticmethod(settings.shoulder_transition.seconds)
+    shoulder_auto = staticmethod(settings.shoulder_transition.automatic.values)
     orbit_transition = staticmethod(settings.shoulder_transition.orbit_seconds)
     framing_values = staticmethod(settings.framing.snapshot)
     third_person_ads = staticmethod(settings.ads.enabled)
     orbit_distance = staticmethod(settings.zoom.distance)
     set_orbit_distance = staticmethod(settings.zoom.save)
+    camera_distance = staticmethod(settings.distance.index)
+    camera_distances = staticmethod(settings.distance.distances)
+    set_camera_distance = staticmethod(settings.distance.save)
     loot_distance = staticmethod(settings.loot_distance)
     speed_fov = staticmethod(settings.speed_fov.values)
     dynamic_camera = staticmethod(settings.dynamic.values)
+    free_look = staticmethod(settings.free_look.values)
     @staticmethod
     def fov_enabled() -> bool:
         return settings.custom_fov_enabled()
@@ -155,6 +160,12 @@ def ready() -> bool:
 
 def adjust_orbit_zoom(direction: int) -> bool:
     return bool(_registered and _runtime.adjust_orbit_zoom(OWNER, direction))
+
+
+def cycle_camera_distance() -> bool:
+    # The shared runtime may come from an older mod's copy, made before the camera distance key (2026-10-07).
+    cycle = getattr(_runtime, "cycle_camera_distance", None) if _registered else None
+    return bool(callable(cycle) and cycle(OWNER))
 
 
 def elected_elsewhere() -> bool:

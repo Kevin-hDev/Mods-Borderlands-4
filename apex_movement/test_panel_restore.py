@@ -67,7 +67,8 @@ class Tests(unittest.TestCase):
         option = NS(identifier="dash", value=True, default_value=False,
                     confirm_write=lambda **_: confirmed[0])
         commands = CameraCommands(third_person=lambda: None, shoulder=lambda: None,
-                                  orbit=lambda: None, zoom_in=lambda: None, zoom_out=lambda: None)
+                                  orbit=lambda: None, zoom_in=lambda: None, zoom_out=lambda: None,
+                              camera_distance=lambda: None)
         previous_key = commands.option("orbit_key").value
         model = object.__new__(Model)
         def fail_save():

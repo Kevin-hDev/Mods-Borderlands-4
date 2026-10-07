@@ -1,7 +1,7 @@
 """The one writer of the camera manager's CameraLocationOffset on foot (dynamic camera plan, 2026-10-06).
 
 It sums what is asked of the offset each frame: in Orbit, the zoom's distance (orbit_zoom.py, which no longer writes
-itself); in ThirdPerson, the framing by action and the camera motion (dynamic_camera.py). Two writers on one field
+itself); in ThirdPerson, the framing by action, the camera motion and the chosen camera distance (dynamic_camera.py). Two writers on one field
 would end up contradicting each other. The game puts the offset back to zero each frame and checks walls after it
 (verified in game, 2026-09-26, releves/third_person_fov/2026-09-26-zoom-orbit): once nothing is asked, nothing stays.
 It writes at the hunter's animation update, as the Orbit zoom did: the offset read there was zero at every frame of
@@ -11,6 +11,7 @@ the framing trial, so the write comes before the camera is placed. Interruptions
 import math
 from typing import Any
 
+from .camera_distance import DISTANCES, offset as distance_offset
 from .constants import ORBIT_MODE, THIRD_PERSON_MODE
 from .dynamic_camera import DynamicCamera
 from .orbit_zoom_values import FRAME, OFFSET_TOLERANCE
@@ -44,17 +45,22 @@ class CameraOffset:
 
     def sync(self, settings: Any) -> None:
         self.settings = settings
-        if self.installed or not self.ready():
-            return
-        if not (callable(getattr(settings, "orbit_distance", None))
-                or callable(getattr(settings, "dynamic_camera", None))):
+        if not self.ready() or not any(callable(getattr(settings, name, None))
+                                       for name in ("orbit_distance", "dynamic_camera", "camera_distance")):
             return
         actor, _manager = self.controller._lifetime.owned()
         animation = actor.Mesh.GetAnimInstance() if actor is not None else None
         if animation is None:
             return
+        address = self.controller._lifetime.address(animation)
+        if self.installed:
+            # The same hunter can get a new animation: Hunter Change's looks give one (verified in game, 2026-10-07,
+            # releves/2026-10-07-distance/sdk-essai-2-curseurs.log). Kept on the old one, the offset never wrote again.
+            if address != self.animation_id:
+                self.animation_ref, self.animation_id = self.controller.weak_ref(animation), address
+            return
         self.animation_ref = self.controller.weak_ref(animation)
-        self.animation_id = self.controller._lifetime.address(animation)
+        self.animation_id = address
         self.installed = True
         self.controller.hooks.add_hook(FRAME, self.controller.hooks.Type.POST, self.identifier, self.on_frame)
 
@@ -93,15 +99,21 @@ class CameraOffset:
     def _dynamic(self, now_ns: int) -> tuple | None:
         owner = self.controller
         read_values = getattr(self.settings, "dynamic_camera", None)
+        # Mods older than the camera distance key (2026-10-07) have no distance to read: the game's own.
+        read_distance = getattr(self.settings, "camera_distance", None)
+        read_lengths = getattr(self.settings, "camera_distances", None)
         actor, manager = owner._lifetime.owned()
-        if (not callable(read_values) or actor is None or owner._in_vehicle
+        if (not (callable(read_values) or callable(read_distance)) or actor is None or owner._in_vehicle
                 or owner._desired_mode == ORBIT_MODE
                 or str(manager.GetActorCameraMode(actor)) != THIRD_PERSON_MODE):
             self.dynamic.reset()
             return None
         rotation = manager.GetCameraRotation()
         pc = owner._lifetime.pc_ref() if owner._lifetime.pc_ref else None
-        return self.dynamic.step(read_values(), read(pc), float(rotation.Pitch), float(rotation.Yaw), now_ns)
+        values = read_values() if callable(read_values) else (0.0, 0.0)
+        lengths = read_lengths() if callable(read_lengths) else DISTANCES
+        distance = distance_offset(read_distance(), lengths) if callable(read_distance) else 0.0
+        return self.dynamic.step(values, read(pc), float(rotation.Pitch), float(rotation.Yaw), now_ns, distance)
 
     def on_frame(self, obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
         if (self.faulted or not self.installed or not self.animation_id

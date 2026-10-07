@@ -1,6 +1,8 @@
 # Apex Movement
 
-Version **1.2.4**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.8**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+
+Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. The custom climbing body animation is also not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
 Apex Legends style movement for Borderlands 4. Every move has its own settings in the mod menu, and its own switch,
 except the movement speeds, which are adjusted without one.
@@ -45,18 +47,28 @@ The full pack also carries an optional camera, on the Options page:
   Crouch and switch shoulders while aiming. Sniper rifles remain in first person; heavy and unsupported
   weapons use the native view. When downed, and when a ground slam lands, the view stays in third person.
 - **Shoulder**: the camera sits over the right shoulder by default, or the left one.
+- **Automatic shoulder switch**: when a wall blocks the view ahead, the camera moves to the other shoulder, then
+  comes back once the view is clear. On by default, never while aiming; its switch and both delays sit next to the
+  shoulder, on the SHOULDER VIEW tab.
 - **Orbit camera**: the camera turns freely around the character. The shoulder and the orbit camera only work in
   third person, and are greyed while it is off.
+- **Camera distance**: in third person, the 8 key moves the camera from close to normal to far, with a glide;
+  aiming keeps the usual aiming distance. Normal is the game's camera; close (1.80 m) and far (3.60 m) are set
+  to the centimetre on the CAMERA VIEW tab.
 - **Custom FOV**: a field of view from 70 to 150, off by default. Switched off, the game's own FOV is used.
 - **Extended loot reach**: pick up loot and open containers from farther away, from 1× to 3×, 2× by default. Vendors,
   characters and vehicles keep the game's own reach.
 - **Dynamic camera**, on by default: the view widens while sprinting or sliding, the camera moves back while
   running, in the air or driving fast and closer when crouched, and it follows your changes of speed softly. Each
   effect has its own switch and strength. With Vehicle Driving, its chosen view stays and the driving framing adds to it.
+- **Free Look**: hold the key right of Tab (A on AZERTY, Q on QWERTY) or L3 to turn the camera while the character
+  or the vehicle keeps going. On foot you keep your speed, left or right turns the run, and letting go stops you
+  unless you hold a movement key; first person switches to third person while held. A vehicle keeps its speed and
+  goes straight until you brake. Aiming ends it. Hold or press-to-toggle and the hold time (0.20 s) are set on the CAMERA VIEW tab.
 
 The **Commands** page sets each camera key twice, once for keyboard and mouse and once for controller: third person
-(P by default), switch shoulder (6), orbit camera (7), and orbit camera zoom in and out (no key by default). No
-controller button is set by default. The page shows PlayStation or Xbox icons, and DEFAULT KEYS puts the camera keys
+(P by default), switch shoulder (6), orbit camera (7), orbit camera zoom in and out (no key by default), Free
+Look (the key right of Tab, L3) and camera distance (8). Free Look is the only camera action with a controller button by default. The page shows PlayStation or Xbox icons, and DEFAULT KEYS puts the camera keys
 back. The left mouse button is refused: it fires and clicks through menus.
 
 The camera is the shared [camera runtime](../camera_runtime/), which Omni Sprint and Third Person & FOV carry too.

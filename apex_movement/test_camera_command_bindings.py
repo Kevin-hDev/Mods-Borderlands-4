@@ -14,14 +14,18 @@ state["settings_exists"] = True
 
 import apex_movement  # noqa: E402
 from apex_movement import camera, camera_settings  # noqa: E402
+from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, TOP_ROW_SIX, key_at  # noqa: E402
+SIX, SEVEN = key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
 
 ids = ("third_person_key", "third_person_controller", "shoulder_key", "shoulder_controller",
        "orbit_key", "orbit_controller")
 ids += ("zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller")
+ids += ("free_look_key", "free_look_controller")
+ids += ("camera_distance_key", "camera_distance_controller")
 assert tuple(option.identifier for option in camera_settings.commands.options) == ids
 assert tuple(apex_movement.camera_keybinds) == camera_settings.commands.binds
-assert camera_settings.commands.defaults()["shoulder_key"] == "Six"
-assert camera_settings.commands.defaults()["orbit_key"] == "Seven"
+assert camera_settings.commands.defaults()["shoulder_key"] == SIX
+assert camera_settings.commands.defaults()["orbit_key"] == SEVEN
 
 camera_settings.commands.apply({"orbit_key": "F7"})
 camera_settings.commands.align()
@@ -42,8 +46,8 @@ camera.toggle_shoulder = lambda: calls.append("shoulder")
 camera.toggle_orbit = lambda: calls.append("orbit")
 camera.adjust_orbit_zoom = lambda direction: calls.append(direction)
 apex_movement.mod.enable()
-for key in ("P", "Gamepad_FaceButton_Top", "Six", "Gamepad_FaceButton_Left",
-            "Seven", "Gamepad_FaceButton_Right"):
+for key in ("P", "Gamepad_FaceButton_Top", SIX, "Gamepad_FaceButton_Left",
+            SEVEN, "Gamepad_FaceButton_Right"):
     state["keybinds"][key]()
 assert calls == ["third_person", "third_person", "shoulder", "shoulder", "orbit", "orbit"]
 for key in ("MouseScrollUp", "MouseScrollDown", "Gamepad_LeftShoulder", "Gamepad_RightShoulder"):
@@ -53,4 +57,4 @@ saved = tuple(option.value for option in camera_settings.commands.options)
 apex_movement.mod.disable()
 assert tuple(option.value for option in camera_settings.commands.options) == saved
 assert not any(key.startswith("Gamepad_") for key in state["keybinds"])
-print("RESULTAT: OK | Apex Movement owns five actions and ten persistent assignments")
+print("RESULTAT: OK | Apex Movement owns six actions and twelve persistent assignments")

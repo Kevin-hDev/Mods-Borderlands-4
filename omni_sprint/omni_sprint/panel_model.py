@@ -27,7 +27,7 @@ class Model(Restore):
         self.command_options = {option.identifier: option for option in settings.commands.options}
         from .camera_control_actions import Actions
         self.command_actions = Actions(settings.commands, mod)
-        self.pages += ("commands",)
+        self.pages += ("commands", "shoulder")
         self._undo, self._command_undo = (), {}
         self._command_plan = None
         self.transaction = Transaction(mod, report.error_once)

@@ -11,7 +11,7 @@ from .panel_form_lifecycle import Lifecycle
 # the walk key, loot reach under its switch and the shoulder outside third person. Orbit and the common camera
 # animation remain available in first person; Orbit returns to its entry view (Kevin, 2026-10-06).
 DEPENDS_ON = {"fov": "custom_fov", "walk_toggle": "walk", "walk_key_speed": "walk", "loot_reach": "extended_loot",
-              "shoulder_left": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth", "orbit": None, "third_person_ads": "third_person",
+              "shoulder_left": "third_person", "shoulder_auto": "third_person", "shoulder_auto_swap": "shoulder_auto", "shoulder_auto_return": "shoulder_auto", "camera_distance_close": "third_person", "camera_distance_far": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth", "orbit": None, "third_person_ads": "third_person",
               "speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
               "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
 

@@ -13,6 +13,8 @@ state = sdk_stubs.install()
 
 import omni_sprint  # noqa: E402
 from omni_sprint import camera, settings  # noqa: E402
+from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, TOP_ROW_SIX, key_at  # noqa: E402
+SIX, SEVEN = key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
 
 
 class Runtime:
@@ -67,7 +69,7 @@ runtime = Runtime()
 camera.shared = lambda: runtime
 
 ok = settings.third_person_key.default_value == "P"
-ok = ok and settings.shoulder_key.default_value == "Six" and settings.orbit_key.default_value == "Seven"
+ok = ok and settings.shoulder_key.default_value == SIX and settings.orbit_key.default_value == SEVEN
 ok = ok and settings.shoulder_left.value is False and settings.orbit.value is False
 ok = ok and all(bind in omni_sprint.mod.kwargs["keybinds"] for bind in
                 (settings.third_person_bind, settings.shoulder_bind, settings.orbit_bind))
@@ -75,8 +77,8 @@ ok = ok and all(bind in omni_sprint.mod.kwargs["keybinds"] for bind in
 ok = ok and settings.third_person_bind.is_hidden is True and settings.third_person_key.is_hidden is False
 omni_sprint.mod.enable()
 state["keybinds"]["P"]()
-state["keybinds"]["Six"]()
-state["keybinds"]["Seven"]()
+state["keybinds"][SIX]()
+state["keybinds"][SEVEN]()
 ok = ok and runtime.toggles == [("third_person", "omni_sprint"),
                                 ("shoulder", "omni_sprint"),
                                 ("orbit", "omni_sprint")]

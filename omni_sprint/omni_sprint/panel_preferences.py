@@ -9,7 +9,7 @@ from .panel_theme import SIZES, THEMES
 
 LANGUAGES = ("EN", "FR")
 _COMMANDS = ("commands",)
-PAGE_KEYS = (*tuple(group.identifier.removesuffix("_menu") for group in menu.ALL), *_COMMANDS)
+PAGE_KEYS = (*tuple(group.identifier.removesuffix("_menu") for group in menu.ALL), *_COMMANDS, "shoulder")
 french = BoolOption("menu_french", False, is_hidden=True)
 CONTROLLER_ICONS = ("PS5", "XSX")
 controller_icons = SpinnerOption("controller_icons", "PS5", list(CONTROLLER_ICONS), is_hidden=True)

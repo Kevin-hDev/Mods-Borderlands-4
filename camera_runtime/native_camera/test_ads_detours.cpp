@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include "ads_test_assert.h"
+#include "camera_builds.h"
 
 using namespace apex_ads;
 namespace {
@@ -20,6 +21,7 @@ bool install(uintptr_t, void*, void** original, const char*, size_t) {
 }
 }
 int main() {
+    assert(camera_builds::publish(1));
     NativeFixture fixture;
     for (int failure : {1, 2, 0}) {
         State state;

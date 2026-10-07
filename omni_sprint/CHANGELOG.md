@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.0.15 - 2026-10-07
+
+- Fixed third-person camera activation on the Epic Games version of Borderlands 4. Third-person view and aiming were tested on both Epic Games and Steam.
+- Camera compatibility is now checked against the installed game build before activation. Existing settings are preserved.
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+- Known Epic Games limitation: extended loot reach is not supported yet.
+
+## 1.0.14 - 2026-10-07
+
+- Camera distance in one key: in third person, the 8 key moves the camera from close to normal to far, with a glide. While aiming, the camera keeps its usual aiming distance. Your choice is saved.
+  - The close (1.80 m by default) and far (3.60 m) distances can be set to the centimetre in the CAMERA page, CAMERA VIEW. Normal is the game's distance.
+  - The key can be changed or removed in COMMANDS.
+- Fix: after changing the hunter's look with Hunter Change, the camera no longer moved back while sprinting and its motion stopped. It now follows the new look.
+
+## 1.0.13 - 2026-10-07
+
+- Automatic shoulder switch: when a wall blocks the view ahead, the camera moves to your other shoulder, then comes back once the view is clear. On by default, never while aiming.
+  - The delay before switching (0.15 s by default) and before coming back (0.30 s) can be set.
+  - During an automatic switch, your shoulder key brings the camera back to your shoulder.
+- The CAMERA page is split in two, with two buttons at the top: CAMERA VIEW and SHOULDER VIEW. The field of view now comes right after third person.
+- The "Shoulder" setting is now called "Shoulder switch".
+- Fix: on AZERTY keyboards, the default keys for switching shoulders and the orbit camera (6 and 7) did nothing. They now work on any keyboard, also for players who kept them since installing. A key you picked yourself does not change.
+
+## 1.0.12 - 2026-10-07
+
+- New Free Look: hold the key right of Tab (A on AZERTY, Q on QWERTY) or L3 to turn the camera while your character keeps going the same way.
+  - On foot: you keep your speed without holding a movement key, and left or right turns your run. Standing still, you stay in place. Let go and you stop, unless you hold a movement key.
+  - In first person, the view switches to third person while you hold it.
+  - In a vehicle: it keeps its speed and goes straight until you brake. Let go and the camera comes back behind it.
+  - Aiming ends Free Look.
+- Change the key in COMMANDS. The CAMERA page sets: hold or press once (keyboard and controller) and the hold time, 0.20 s by default.
+
 ## 1.0.11 - 2026-10-06
 
 - New DYNAMIC CAMERA page: the camera follows the action. Three effects, each with its own switch, on by default:

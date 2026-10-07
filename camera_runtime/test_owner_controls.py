@@ -50,6 +50,9 @@ class Third:
     def shoulder_available(self):
         return True
 
+    def undo_auto_shoulder(self, _settings):
+        return False
+
     def set_shoulder(self, settings, left):
         settings.set_shoulder_left(left)
         return True

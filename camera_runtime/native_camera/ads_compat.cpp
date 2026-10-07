@@ -2,6 +2,7 @@
 #include "generated_ads.h"
 #include "ads_sdk_exports.h"
 #include "camera_memory.h"
+#include "camera_builds.h"
 #include <array>
 #include <bcrypt.h>
 #include <cstring>
@@ -43,9 +44,8 @@ bool module_matches(HMODULE module, const char* expected) {
 }
 
 namespace apex_ads {
-bool file_matches(const wchar_t* path, const char* expected) {
-    unsigned char wanted[32]{}, digest[32]{};
-    if (!path || !decode(expected, wanted, sizeof(wanted))) return false;
+bool file_digest(const wchar_t* path, unsigned char (&digest)[32]) {
+    if (!path) return false;
     HashResources resources;
     resources.file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
                                  FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
@@ -69,13 +69,19 @@ bool file_matches(const wchar_t* path, const char* expected) {
                 || BCryptHashData(resources.hash, buffer.data(), count, 0) < 0) return false;
         total += count;
     }
-    if (BCryptFinishHash(resources.hash, digest, sizeof(digest), 0) < 0) return false;
+    return BCryptFinishHash(resources.hash, digest, sizeof(digest), 0) >= 0;
+}
+
+bool file_matches(const wchar_t* path, const char* expected) {
+    unsigned char wanted[32]{}, digest[32]{};
+    if (!decode(expected, wanted, sizeof(wanted)) || !file_digest(path, digest)) return false;
     unsigned char difference{};
     for (size_t i = 0; i < sizeof(digest); ++i) difference |= digest[i] ^ wanted[i];
     return difference == 0;
 }
 
 bool signature_matches(uintptr_t address, const char* expected) {
+    expected = camera_builds::prefix(expected);
     unsigned char bytes[MAX_SIGNATURE_BYTES]{};
     const size_t characters = expected ? strnlen_s(expected, MAX_SIGNATURE_BYTES * 2 + 1) : 0;
     const size_t length = characters / 2;
@@ -100,19 +106,28 @@ int verify_module_files_error() {
     // File I/O only: no game objects, names, hooks or SDK calls from the worker.
     std::call_once(file_check, [] {
         const auto sdk = GetModuleHandleW(sdk_exports::module);
-        file_error.store(module_files_error(sdk, SDK_SHA256, GAME_SHA256), std::memory_order_release);
+        int error = static_cast<int>(ERROR_SDK_COMPATIBILITY);
+        if (sdk && module_matches(sdk, SDK_SHA256)) {
+            wchar_t path[32768]{};
+            unsigned char digest[32]{};
+            const auto length = GetModuleFileNameW(nullptr, path, static_cast<DWORD>(std::size(path)));
+            const auto profile = length && length < std::size(path) && file_digest(path, digest)
+                ? camera_builds::profile_for_digest(digest, sizeof(digest)) : 0;
+            error = camera_builds::publish(profile) ? 0 : static_cast<int>(ERROR_GAME_COMPATIBILITY);
+        }
+        file_error.store(error, std::memory_order_release);
     });
     return file_error.load(std::memory_order_acquire);
 }
 
 int module_signatures_error(uintptr_t game) {
     const bool matched = game
-        && signature_matches(game + ZOOM_SCALE_RVA, ZOOM_SCALE_PREFIX)
-        && signature_matches(game + HUD_PRODUCER_RVA, HUD_PRODUCER_PREFIX)
-        && signature_matches(game + HUD_GETTER_RVA, HUD_GETTER_PREFIX)
-        && signature_matches(game + MODE_GETTER_RVA, MODE_GETTER_PREFIX)
-        && signature_matches(game + MODE_FINISH_RVA, MODE_FINISH_PREFIX)
-        && signature_matches(game + VIEW_UPDATE_RVA, VIEW_UPDATE_PREFIX);
+        && signature_matches(game + camera_builds::rva(ZOOM_SCALE_RVA), ZOOM_SCALE_PREFIX)
+        && signature_matches(game + camera_builds::rva(HUD_PRODUCER_RVA), HUD_PRODUCER_PREFIX)
+        && signature_matches(game + camera_builds::rva(HUD_GETTER_RVA), HUD_GETTER_PREFIX)
+        && signature_matches(game + camera_builds::rva(MODE_GETTER_RVA), MODE_GETTER_PREFIX)
+        && signature_matches(game + camera_builds::rva(MODE_FINISH_RVA), MODE_FINISH_PREFIX)
+        && signature_matches(game + camera_builds::rva(VIEW_UPDATE_RVA), VIEW_UPDATE_PREFIX);
     return matched ? 0 : static_cast<int>(ERROR_SIGNATURE);
 }
 

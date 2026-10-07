@@ -34,17 +34,23 @@ model = Model(mod)
 check("the camera declaration contains no command row",
       not ({option.identifier for group in menu.CAMERA for option in group.children}
            & {option.identifier for option in settings.commands.options}))
-PAGES = ("omni_sprint", "camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "commands")
+PAGES = ("omni_sprint", "camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "commands", "shoulder")
 check("the sprint's page then the five camera pages (Kevin, 2026-10-06), the recovery values left out",
       model.pages == PAGES and model.page == "omni_sprint" and not model.camera_elsewhere
-      and list(model.options) == ["omni_sprint", "third_person", "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "custom_fov", "fov",
+      and list(model.options) == ["omni_sprint", "third_person", "custom_fov", "fov", "camera_distance_close",
+                                  "camera_distance_far", "orbit_smooth", "shoulder_seconds",
+                                  "free_look_keyboard_hold", "free_look_controller_hold", "free_look_hold_time",
+                                  "shoulder_left", "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return",
+                                  "shoulder_smooth",
                                   "third_person_ads", "orbit", "orbit_distance", "extended_loot", "loot_reach",
                                   "speed_fov", "speed_fov_gain", "speed_fov_seconds", "action_framing",
                                   "action_framing_strength", "camera_motion", "camera_motion_strength"]
       and set(model.camera_options) == set(model.options) - {"omni_sprint"}
       and list(model.command_options) == ["third_person_key", "third_person_controller", "shoulder_key",
                                           "shoulder_controller", "orbit_key", "orbit_controller",
-                                          "zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller"])
+                                          "zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller",
+                                          "free_look_key", "free_look_controller", "camera_distance_key",
+                                          "camera_distance_controller"])
 check("choosing the mod in the SDK's menu opens the window", getattr(mod, panel_open.MARKER, False) is True)
 # mods_base refuses a slider whose step is wider than its range (options.py, SliderOption.__post_init__).
 check("the saved page is a slider the SDK accepts",
@@ -61,11 +67,11 @@ check("each camera page has its name and its one-line description in both langua
       == [("CAMERA", "CAMÉRA"), ("AIMING", "VISÉE"), ("ORBIT CAMERA", "CAMÉRA ORBITALE"), ("LOOT", "LOOT"),
           ("DYNAMIC CAMERA", "CAMÉRA DYNAMIQUE")]
       and [panel_i18n.group_text(group, key, "FR") for key, group in camera_pages.items()]
-      == ["Vue à pied, épaule et champ de vision.", "Visée en troisième personne et zoom.",
+      == ["Vue à pied, champ de vision et vue libre.", "Visée en troisième personne et zoom.",
           "Tourne autour du personnage, à la distance de ton choix.", "Ramasse le loot de plus loin.",
           "La caméra suit l'action : vitesse, sauts, accroupi et conduite."]
       and [panel_i18n.group_text(group, key, "EN") for key, group in camera_pages.items()]
-      == ["View on foot, shoulder and field of view.", "Third-person aiming and zoom.",
+      == ["View on foot, field of view and Free Look.", "Third-person aiming and zoom.",
           "Circles the character at the distance you choose.", "Pick up loot from farther away.",
           "The camera follows the action: speed, jumps, crouching and driving."])
 check("one name for the orbit camera: its page is named as its command (review, 2026-09-26)",
@@ -142,11 +148,11 @@ check("asking which mod drives the camera never creates the runtime",
 shared = runtime.shared(weak_ref=weakref.ref, address_of=id)
 shared.register("omni_sprint", 100, object(), constants.PROTOCOL)
 check("while Omni Sprint drives the camera, its pages show all their settings",
-      not Model(mod).camera_elsewhere and len(Model(mod).options) == 20 and len(Model(mod).command_options) == 10)
+      not Model(mod).camera_elsewhere and len(Model(mod).options) == 28 and len(Model(mod).command_options) == 14)
 shared.register("apex_movement", 200, object(), constants.PROTOCOL)
 elsewhere = Model(mod)
 check("while Apex Movement is on, stable camera controls refuse writes but the sprint remains writable",
-      elsewhere.camera_elsewhere and len(elsewhere.options) == 20 and len(elsewhere.command_options) == 10
+      elsewhere.camera_elsewhere and len(elsewhere.options) == 28 and len(elsewhere.command_options) == 14
       and not elsewhere.write({"orbit_distance": 400})
       and not elsewhere.write({"fov": 130}) and elsewhere.write({"omni_sprint": False})
       and elsewhere.command_actions is not None and elsewhere.restore() and settings.omni_sprint.value is True

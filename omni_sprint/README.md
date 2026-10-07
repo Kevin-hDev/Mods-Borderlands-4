@@ -1,6 +1,8 @@
 # Omni Sprint
 
-Version **1.0.11**.
+Version **1.0.15**.
+
+Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
 Sprint in every direction in Borderlands 4: sideways, diagonally and backwards, while the camera stays free. Omni
 Sprint keeps the game's sprint speed, supplies a backward running animation in third person, and offers an optional
@@ -27,8 +29,18 @@ stops. Omni Sprint opens that limit to 180 degrees, so the sprint starts and hol
 - In third person, key 6 switches shoulders and key 7 switches to the orbit camera, which turns freely around the
   character; two more keys, none set by default, move it closer or farther away. Both switches are greyed while
   third person is off.
+- **Camera distance**: in third person, the 8 key moves the camera from close to normal to far, with a glide;
+  aiming keeps the usual aiming distance. Normal is the game's camera; close (1.80 m) and far (3.60 m) are set
+  to the centimetre on the CAMERA VIEW part of the Camera page.
+- **Automatic shoulder switch**: when a wall blocks the view ahead, the camera moves to the other shoulder, then
+  comes back once the view is clear. On by default, never while aiming; its switch and both delays sit next to the
+  shoulder, in the Camera page's SHOULDER VIEW.
+- **Free Look**: hold the key right of Tab (A on AZERTY, Q on QWERTY) or L3 to turn the camera while the character
+  or the vehicle keeps going. On foot you keep your speed, left or right turns the run, and letting go stops you
+  unless you hold a movement key; first person switches to third person while held. A vehicle keeps its speed and
+  goes straight until you brake. Aiming ends it. Hold or press-to-toggle and the hold time (0.20 s) are set on the Camera page.
 - The **Commands** page sets every camera key, for keyboard and mouse and for controller, with PlayStation or Xbox
-  icons. No controller button is set by default.
+  icons. Free Look is the only camera action with a controller button by default (L3).
 - **Extended loot reach**, on by default: pick up loot and open containers from farther away, from 1× to 3×, 2× by
   default. Vendors, characters and vehicles keep the game's own reach.
 - **Dynamic camera**, on by default: the view widens while sprinting or sliding, the camera moves back while

@@ -4,6 +4,7 @@ from typing import Any, Callable, NamedTuple
 
 from mods_base import EInputEvent, keybind
 
+from .keyboard_layout import RIGHT_OF_TAB, TOP_ROW_EIGHT, TOP_ROW_SEVEN, TOP_ROW_SIX, key_at
 from .key_option import (ControllerKeybindOption, KeyboardKeybindOption,
                          normalize_controller_key, normalize_keyboard_key)
 
@@ -20,20 +21,46 @@ class Action(NamedTuple):
     keyboard_default: str | None
     display_name: str
     description: str
+    controller_default: str | None = None
+    # Read each frame on the game's key states rather than called at a press: it needs the release too.
+    polled: bool = False
 
 
 ACTIONS = (
     Action("third_person", "third_person_key", "third_person_controller", "P",
            "Toggle Third Person", "Turn the third-person camera on or off."),
-    Action("shoulder", "shoulder_key", "shoulder_controller", "Six",
+    # The 6 and 7 keys of the top row, named as the game names them on this keyboard (keyboard_layout.py).
+    Action("shoulder", "shoulder_key", "shoulder_controller", key_at(TOP_ROW_SIX, "Six"),
            "Switch Camera Shoulder", "Move the third-person camera to the other shoulder."),
-    Action("orbit", "orbit_key", "orbit_controller", "Seven",
+    Action("orbit", "orbit_key", "orbit_controller", key_at(TOP_ROW_SEVEN, "Seven"),
            "Toggle Orbit Camera", "Switch between shoulder and Orbit Camera views."),
     Action("zoom_in", "zoom_in_key", "zoom_in_controller", None,
            "Orbit Camera Zoom In", "Move the Orbit Camera closer, one step per press."),
     Action("zoom_out", "zoom_out_key", "zoom_out_controller", None,
            "Orbit Camera Zoom Out", "Move the Orbit Camera farther away, one step per press."),
+    # The key right of Tab (A on Kevin's AZERTY, Q on QWERTY: keyboard_layout.py) and L3 by default (Kevin,
+    # 2026-10-06), the only camera action with a controller button by default: he asked for it with the action.
+    # Read by free_look.py.
+    Action("free_look", "free_look_key", "free_look_controller", key_at(RIGHT_OF_TAB, "Q"),
+           "Free Look", "Hold to turn the camera while the character or the vehicle keeps going.",
+           controller_default="Gamepad_LeftThumbstick", polled=True),
+    # The 8 key of the top row, beside the shoulder's and the Orbit Camera's (Kevin, 2026-10-07). Last, so the
+    # mods' settings that unpack the first six options by position keep theirs.
+    Action("camera_distance", "camera_distance_key", "camera_distance_controller", key_at(TOP_ROW_EIGHT, "Eight"),
+           "Camera Distance", "Switch the third-person camera between close, normal and far."),
 )
+
+
+# A "Six" or "Seven" saved before the keyboard-named defaults (2026-10-07). On a keyboard whose 6 and 7 keys type
+# something else (Hyphen and E_AccentGrave on AZERTY), no key press gives that name: it can only be the old default,
+# which never fired there (Kevin, 2026-10-07: his Omni Sprint still had Six and Seven saved). It becomes the key's name.
+UNREACHABLE = {old: new for old, new in (("Six", key_at(TOP_ROW_SIX, "Six")), ("Seven", key_at(TOP_ROW_SEVEN, "Seven")))
+               if new != old}
+
+
+def normalize_camera_key(value: Any) -> str | None:
+    value = normalize_keyboard_key(value)
+    return UNREACHABLE.get(value, value)
 
 
 class _CameraOption:
@@ -58,7 +85,7 @@ class _CameraOption:
 
 
 class CameraKeyboardOption(_CameraOption, KeyboardKeybindOption):
-    normalizer = staticmethod(normalize_keyboard_key)
+    normalizer = staticmethod(normalize_camera_key)
 
 
 class CameraControllerOption(_CameraOption, ControllerKeybindOption):
@@ -69,7 +96,7 @@ class CameraCommands:
     """One owner-specific set built from the shared, immutable camera command table."""
 
     def __init__(self, **callbacks: Callable[[], None]) -> None:
-        if set(callbacks) != {action.name for action in ACTIONS}:
+        if set(callbacks) != {action.name for action in ACTIONS if not action.polled}:
             raise ValueError("invalid camera callbacks")
         self.applying = True
         self.binds, self.options = self._build(callbacks)
@@ -85,10 +112,11 @@ class CameraCommands:
         for action in ACTIONS:
             for device, identifier, default, option_type in (
                     (KEYBOARD, action.keyboard_id, action.keyboard_default, CameraKeyboardOption),
-                    (CONTROLLER, action.controller_id, None, CameraControllerOption)):
+                    (CONTROLLER, action.controller_id, action.controller_default, CameraControllerOption)):
+                callback = (lambda: None) if action.polled else callbacks[action.name]
                 # A toggle changes once per physical press; repeats and releases would immediately undo it.
                 bind = keybind(identifier, default,
-                               lambda callback=callbacks[action.name]: callback(),
+                               lambda callback=callback: callback(),
                                display_name=f"{DEVICE_NAMES[device]}: {action.display_name}",
                                description=action.description,
                                is_hidden=True, event_filter=EInputEvent.IE_Pressed)
@@ -115,12 +143,12 @@ class CameraCommands:
 
     def defaults(self) -> dict[str, str | None]:
         return {action.keyboard_id: action.keyboard_default for action in ACTIONS} | {
-            action.controller_id: None for action in ACTIONS
+            action.controller_id: action.controller_default for action in ACTIONS
         }
 
     @staticmethod
     def _normalizer(identifier: str) -> Callable[[Any], str | None]:
-        return normalize_controller_key if identifier.endswith("_controller") else normalize_keyboard_key
+        return normalize_controller_key if identifier.endswith("_controller") else normalize_camera_key
 
     def validate(self, changes: Any) -> dict[str, str | None]:
         if type(changes) is not dict or not 0 < len(changes) <= len(self.options):

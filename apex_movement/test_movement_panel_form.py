@@ -48,12 +48,12 @@ names = ["focus", "pages", "notice", "close", "theme", "window_size", "options",
          "row:orbit", "description:orbit", "row:third_person_ads", "description:third_person_ads"]
 names += [f"nav:{page}" for page in model.pages]
 names += [f"setting:{key}" for key in model.options]
-names += [f"{part}:{key}" for key in ('shoulder_smooth', 'orbit_smooth', 'shoulder_seconds') for part in ('row', 'description')]
+names += [f"{part}:{key}" for key in ('camera_distance_close', 'camera_distance_far', 'shoulder_auto', 'shoulder_auto_swap', 'shoulder_auto_return', 'shoulder_smooth', 'orbit_smooth', 'shoulder_seconds') for part in ('row', 'description')]
 # The DYNAMIC CAMERA tab's sliders, greyed under their switch (Kevin, 2026-10-06).
 DYNAMIC_SLIDERS = {"speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
                    "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
 names += [f"{part}:{key}" for key in DYNAMIC_SLIDERS for part in ('row', 'description')]
-for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out"):
+for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free_look", "camera_distance"):
     names += [f"heading:command_{action}", f"group:command_{action}"]
     for device in ("keyboard", "controller"):
         base = f"{action}:{device}"

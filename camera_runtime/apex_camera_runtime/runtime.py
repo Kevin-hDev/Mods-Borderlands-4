@@ -6,6 +6,7 @@ from .arbitration import Arbiter, Client
 from .constants import PROTOCOL
 from .ads_coordination import transfer_pending
 from .orbit_entry import OrbitEntry
+from . import camera_distance_route, shoulder_route
 from .speed_fov import SpeedFov, step as speed_step
 
 CHECK_NS = 500_000_000
@@ -19,6 +20,9 @@ class CameraRuntime:
         self.loot = None
         # The framing at the wheel (vehicle_framing.py), made by shared.py as the loot unit.
         self.vehicle = None
+        # Free Look (free_look.py), made by shared.py too. Mixed versions need no new protocol: a runtime from an older
+        # copy never reads the newer mods' Free Look settings, and an older mod's settings have none to read.
+        self.free_look = None
         self._active_client: Client | None = None
         self._next_fov_ns = 0
         self._setup_owner: str | None = None
@@ -101,28 +105,13 @@ class CameraRuntime:
                     or self.orbit_entry.ready(self, client))
 
     def toggle_shoulder(self, owner: str) -> bool:
-        client = self.arbiter.active()
-        if client is None or client.owner != owner:
-            return False
-        try:
-            left = client.settings.shoulder_left()
-        except Exception:
-            return False
-        return self.set_shoulder(owner, not left)
+        return shoulder_route.toggle(self, owner)
 
     def set_shoulder(self, owner: str, left: bool) -> bool:
-        client = self.arbiter.active()
-        if (type(left) is not bool or client is None or client.owner != owner
-                or self.third_person is None):
-            return False
-        try:
-            if (not client.settings.third_person_enabled()
-                    or not self.third_person.shoulder_available()):
-                return False
-            return bool(self.third_person.set_shoulder(client.settings, left))
-        except Exception:
-            client.settings.note("shoulder shortcut: setting could not be saved")
-            return False
+        return shoulder_route.choose(self, owner, left)
+
+    def cycle_camera_distance(self, owner: str) -> bool:
+        return camera_distance_route.cycle(self, owner)
 
     def toggle_orbit(self, owner: str) -> bool:
         client = self.arbiter.active()
@@ -190,6 +179,8 @@ class CameraRuntime:
         self.orbit_entry.sync(self, client, context, now_ns)
         if self.vehicle is not None:
             self.vehicle.sync(client.settings)
+        if self.free_look is not None:
+            self.free_look.sync(client.settings)
         player = context
         if hasattr(context, "Player"):
             player = context.Player if getattr(context, "OakCharacter", None) is not None else None
@@ -206,7 +197,7 @@ class CameraRuntime:
         self.orbit_entry.retirement.retire(self.third_person)
         self.orbit_entry.reset()
         errors = []
-        for unit in (self.loot, self.fov, self.vehicle):
+        for unit in (self.loot, self.fov, self.vehicle, self.free_look):
             if unit is not None:
                 try:
                     unit.stop()
