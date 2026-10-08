@@ -33,7 +33,7 @@ def apply(form, widgets):
         title, description = i18n.option_text(option, language)
         widgets[f"label:{key}"].SetText(title.upper())
         widgets[f"description:{key}"].SetText(description)
-    hunter_page.paint(widgets, form.hunter_state, language)
+    hunter_page.paint(widgets, form.hunter_state, language, form.model.mod.is_enabled)
     panel_switch.paint(widgets, form.switch_page.view, language)
     widgets["notice"].SetText(i18n.text(form.notice, language))
 

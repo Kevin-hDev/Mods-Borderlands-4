@@ -1,7 +1,8 @@
 """The lifecycle: nothing without a character; a new character dressed for its game once, later frames leaving it
-alone; a game not ready yet tried again after a pause, then dressed; the wait given up after its bound, said once; a
-failed look tried again after a pause, given up after its bound, said once; a new character dressed again; a reset
-dressing the character again; an error inside never leaving the frame hook."""
+alone but for the size of the look worn, kept at each frame; a game not ready yet tried again after a pause, then
+dressed; the wait given up after its bound, said once; a failed look tried again after a pause, given up after its
+bound, said once; a new character dressed again; a reset dressing the character again; an error inside never leaving
+the frame hook."""
 
 import sys
 
@@ -44,6 +45,10 @@ lifecycle.on_frame(1.1)
 lifecycle.on_frame(50.0)
 check("a new character dressed for its game once, later frames leaving it alone", calls == ["settle"]
       and fake_game.body_drawn(character) == "Cosmetics_Paladin_Body00_Default")
+fake_game.stand_up(character)
+lifecycle.on_frame(51.0)
+check("the size of the look worn kept at each frame, after the character is dressed",
+      fake_game.size(character) == fake_game.own_size("Paladin") and calls == ["settle"])
 
 character = fake_game.load(state, "Gravitar", "0" * 32)
 calls.clear()

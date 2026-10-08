@@ -11,14 +11,15 @@ Open the console with `~`, type `mods`, and choose **Hunter Change**: its settin
 two pages.
 
 - **APPEARANCE.** Wear another hunter's look in the game you play. It applies at once and comes back each time you load
-  that game. Your hunter, skills, level and gear stay yours, and your save is not changed: the choice is kept in the
-  mod's own file.
+  that game. Choose their body and head among the skins you own: BASE, PRISON or PREMIUM. You also take their height:
+  your view and crosshair stand at their shoulder, as in their own game. Your hunter, skills, level and gear stay yours,
+  and your save is not changed: the choice is kept in the mod's own file.
 - **HUNTER.** Become another hunter in this game: same level, same backpack, same story. Each hunter keeps their own
   skill tree in each game. The first time you become a hunter in a game, their skill tree starts over with all your
   points to spend. The next times, the points you spent are still there.
 
 The **ENABLED** button, at the bottom left of the window, turns the chosen look on or off: off, your hunter gets their
-own look back. The HUNTER page works either way.
+own look back and the APPEARANCE page is greyed out. The HUNTER page works either way.
 
 ## Changing hunter
 

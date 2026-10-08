@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.5 - 2026-10-08
+
+- APPEARANCE page: you now also take the worn hunter's height. Your view and crosshair stand at their shoulder, as in
+  their own game, standing, crouched or after a slide.
+- With the mod turned off, the APPEARANCE page is greyed out and no longer changes your look.
+
+## 1.0.4 - 2026-10-08
+
+- APPEARANCE page: choose the body and the head of the look you wear, among the skins you own: BASE, PRISON or
+  PREMIUM. Body and head mix freely.
+- The hunters' names on the cards stay readable in every window theme.
+- The menu now reopens where you left it: same page and same place in the page, even after restarting the game.
+
 ## 1.0.3 - 2026-10-06
 
 - New WINDOW button at the top of the menu, beside THEME: three sizes, LARGE (default), FULL SCREEN and NORMAL (the previous size). More room, same text size. Each mod keeps its own.

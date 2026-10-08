@@ -97,17 +97,8 @@ class PanelForm(Lifecycle):
             self.notice = self.failure_notice() if outcome == "failed" else outcome
             self.sync(widgets)
         self.read_changes(widgets, now)
-        worn = hunter_page.taken(self.take, widgets)
-        if worn is not None:
-            self.notice = "saved" if wardrobe.wear(worn) else "failed"
-            self.hunter_state = wardrobe.status()
-            self.refresh_labels(widgets)
+        if hunter_page.poll(self, widgets):
             return False
-        # The page follows the game while it is open: a game loaded or left, the mod turned on or off.
-        state = wardrobe.status()
-        if state != self.hunter_state:
-            self.hunter_state = state
-            self.refresh_labels(widgets)
         switched = panel_switch.poll(self, widgets)
         if switched:
             return switched if switched == panel_switch.LEAVE else False

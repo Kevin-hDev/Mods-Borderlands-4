@@ -335,7 +335,7 @@ check("every text in both languages with the same blanks, each sentence filled w
 check("no French sentence puts de before a hunter's name, as de Amon would read",
       not any(re.search(r"\bde [AEIOU]", panel_fr.TEXT[key].format(**dict.fromkeys(blanks(panel_fr.TEXT[key]),
                                                                                    hunter.name)))
-              for key in ADDED for hunter in hunters.HUNTERS))
+              for key in panel_fr.TEXT for hunter in hunters.HUNTERS))
 check("no long dash in the French texts",
       not any("\u2014" in value for value in (*panel_fr.TEXT.values(), *panel_fr.GROUPS.values())))
 

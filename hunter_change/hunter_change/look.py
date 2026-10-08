@@ -6,8 +6,9 @@ is written as a reference made by name and typed as the picker's own default: th
 (a typed reference given to an untyped GbxDefPtr parameter crashes the game, 2026-09-28). The game builds again when
 handed a text that changes the selections: first one of the body picker's own parts, then the outfit worn, whose text
 is the save's own (essai 30). To show another hunter, the outfit goes back without its body and head, which the game
-then keeps Default, and saves so (essai 31); the rest of the outfit, colours included, stays. The outfit is the game's
-business: the mod never keeps nor restores one (Kevin, 2026-09-28), it hands back what is worn.
+then keeps Default, and saves so (essai 31); the rest of the outfit, colours included, stays. Any of the three skins'
+body and head can be written so (a player's report, Nexus, 2026-10-07), if the player owns it (skins.py). The outfit
+is the game's business: the mod never keeps nor restores one (Kevin, 2026-09-28), it hands back what is worn.
 
 The pickers live the whole game session and are shared by every game of a hunter (essai 23): the ones dressed are
 listed, so that turning the mod off gives every one its own default back.
@@ -19,7 +20,7 @@ from typing import Any
 from unrealsdk.unreal import FGbxDefPtr
 
 from . import hunters, report
-from .hunters import BODY, HEAD, Hunter
+from .hunters import BODY, DEFAULT, HEAD, Hunter
 
 ACTOR_TYPE = "character"
 CHOSEN = "def"
@@ -53,9 +54,15 @@ def pickers(character: Any) -> dict[str, Any] | None:
 
 
 def wearing(found: dict[str, Any]) -> Hunter | None:
-    """The hunter whose default body the body picker holds."""
-    body = name_of(found[BODY].DefaultPart)
-    return next((hunter for hunter in hunters.HUNTERS if hunters.parts(hunter)[BODY] == body), None)
+    """The hunter whose body, of any skin, the body picker holds as its default."""
+    worn = hunters.part_of(name_of(found[BODY].DefaultPart))
+    return worn[0] if worn is not None else None
+
+
+def skins_worn(found: dict[str, Any]) -> tuple[str | None, str | None]:
+    """The skins of the body and head the pickers hold as their defaults; None for a part of none of the skins."""
+    worn = [hunters.part_of(name_of(found[ending].DefaultPart)) for ending in (BODY, HEAD)]
+    return tuple(part[1] if part is not None else None for part in worn)
 
 
 def kind_of(choice: Any) -> str:
@@ -78,8 +85,8 @@ def outfit_text(entries: list[tuple[str, str]]) -> str:
     return "gap," + ",".join(f"{picker}[{part}]" for picker, part in entries)
 
 
-def _write(found: dict[str, Any], hunter: Hunter) -> bool:
-    for ending, name in hunters.parts(hunter).items():
+def _write(found: dict[str, Any], hunter: Hunter, body: str = DEFAULT, head: str = DEFAULT) -> bool:
+    for ending, name in hunters.parts(hunter, body, head).items():
         picker = found[ending]
         try:
             picker.DefaultPart = FGbxDefPtr(name, picker.DefaultPart._type)
@@ -113,13 +120,18 @@ def _rebuild(player_state: Any, body_picker: Any, text: str) -> bool:
     return True
 
 
-def dress(character: Any, player_state: Any, played: Hunter, worn: Hunter) -> bool:
-    """The character built as `worn`, its own look when `worn` is `played`, keeping the rest of the outfit worn."""
+def dress(character: Any, player_state: Any, played: Hunter, worn: Hunter, body: str = DEFAULT,
+          head: str = DEFAULT) -> bool:
+    """The character built as `worn` with the body and head of the skins named, its own look when `worn` is
+    `played`, keeping the rest of the outfit worn. The own look always takes the game's own parts: the player's own
+    skins are chosen in the outfit, which is handed back whole."""
     found = pickers(character)
     if found is None or not found[BODY].PickableParts:
         report.error_once("pickers", "the character's body and head pickers were not found, look unchanged")
         return False
-    if not _write(found, worn):
+    if worn == played:
+        body = head = DEFAULT
+    if not _write(found, worn, body, head):
         _write(found, played)
         _track(found, played, played)
         return False
@@ -133,7 +145,7 @@ def dress(character: Any, player_state: Any, played: Hunter, worn: Hunter) -> bo
         _write(found, played)
         _track(found, played, played)
         return False
-    report.note(f"{played.name} wears {worn.name}'s look")
+    report.note(f"{played.name} wears {worn.name}'s look, body {body}, head {head}")
     return True
 
 

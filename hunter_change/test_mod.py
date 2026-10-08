@@ -27,7 +27,7 @@ def check(label: str, condition: bool) -> None:
 
 mod = hunter_change.mod
 check("built under its public name with its version and the frame hook",
-      mod.kwargs["name"] == "Hunter Change" and hunter_change.__version__ == "1.0.3"
+      mod.kwargs["name"] == "Hunter Change" and hunter_change.__version__ == "1.0.5"
       and mod.kwargs["hooks"] == [lifecycle.tick])
 check("on at its first launch", mod.is_enabled and lifecycle.tick.enabled)
 check("its window opened from the SDK's mod menu, its preferences kept with the mod",
@@ -40,7 +40,7 @@ wardrobe.wear("CorpoHacker")
 mod.disable()
 check("turned off, the hook stopped and the own look given back, the choice kept", not lifecycle.tick.enabled
       and fake_game.body_drawn(character) == "Cosmetics_Gravitar_Body00_Default"
-      and choices.chosen(HARLOWE_GAME) == "CorpoHacker")
+      and choices.chosen(HARLOWE_GAME) == choices.Choice("CorpoHacker"))
 mod.enable()
 lifecycle.on_frame(2.0)
 check("turned on, the character in play handled again",

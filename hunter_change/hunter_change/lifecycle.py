@@ -1,4 +1,5 @@
-"""Each new character of the player dressed for its game, once, from the frame hook our other mods already use.
+"""Each new character of the player dressed for its game, once, from the frame hook our other mods already use; the
+size of the look worn kept on it at each frame (stature.keep).
 
 A game being loaded may have its character before its id or its pickers (wardrobe.WAIT): the character is tried again
 after a pause, for a bounded time. A look refused is tried again a few times, then left until the next character; the
@@ -14,7 +15,7 @@ from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 from unrealsdk.unreal import WeakPointer
 
-from . import report, wardrobe
+from . import report, stature, wardrobe
 
 HOOK_PATH = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 WAIT_S = 0.5
@@ -42,6 +43,7 @@ def on_frame(now: float) -> None:
     if _current() != character:
         STATE.current, STATE.done, STATE.tries, STATE.next_try, STATE.first_wait = (
             WeakPointer(character), False, 0, 0.0, None)
+    stature.keep(character, now)
     if STATE.done or now < STATE.next_try:
         return
     result = wardrobe.settle(character, pc.PlayerState)

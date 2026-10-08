@@ -1,25 +1,34 @@
-"""Which hunter each saved game wears: the one reader and writer of the choices file.
+"""Which hunter each saved game wears, with which body and head: the one reader and writer of the choices file.
 
 The mods' own settings hold one value for every game, while a look is chosen per game (Claude's choice, noted in
 docs/reverse-and-change-hunters/plan-du-mod.md), keyed by the game's id (game_id.py). The file keeps the hunter's code
-and nothing of the outfit: the outfit worn stays the game's business (Kevin, 2026-09-28). A game chosen again moves to
-the end, so the one chosen longest ago goes first when the file is full.
+and the skins of its body and head (sketch C1, Kevin, 2026-10-07), nothing of the outfit: the outfit worn stays the
+game's business (Kevin, 2026-09-28). A game chosen again moves to the end, so the one chosen longest ago goes first
+when the file is full. Version 1 kept the hunter only: its games read with the game's own skins.
 """
 
 import json
 from pathlib import Path
+from typing import NamedTuple
 
 from mods_base import SETTINGS_DIR
 
 from . import file_replace, game_id, hunters, report
 
-VERSION = 1
+VERSION = 2
 FILE_NAME = "hunter_change_choices.json"
 MAX_GAMES = 200
-# 200 games take about 16 kB: anything much larger is not ours and is not read.
+# 200 games take about 25 kB: anything much larger is not ours and is not read.
 MAX_BYTES = 64_000
 
-_games: dict[str, str] | None = None
+
+class Choice(NamedTuple):
+    hunter: str
+    body: str = hunters.DEFAULT
+    head: str = hunters.DEFAULT
+
+
+_games: dict[str, Choice] | None = None
 
 
 def path() -> Path:
@@ -37,7 +46,12 @@ def _known(game: object, hunter: object) -> bool:
             and isinstance(hunter, str) and hunters.by_code(hunter) is not None)
 
 
-def _read() -> dict[str, str]:
+def _skin(value: object) -> str:
+    """A skin as the file holds it; one the mod does not know, or none, read as the game's own."""
+    return value if isinstance(value, str) and value in hunters.SKINS else hunters.DEFAULT
+
+
+def _read() -> dict[str, Choice]:
     """The file's games, oldest first; entries the mod does not know skipped, an unreadable file taken as empty."""
     try:
         with open(path(), "rb") as source:
@@ -53,22 +67,22 @@ def _read() -> dict[str, str]:
     except (OSError, ValueError, KeyError, TypeError, RecursionError) as error:
         report.error_once("choices:read", f"choices file unreadable ({type(error).__name__}), no look chosen")
         return {}
-    games: dict[str, str] = {}
+    games: dict[str, Choice] = {}
     for entry in entries:
         if isinstance(entry, dict) and _known(entry.get("game"), entry.get("hunter")):
             games.pop(entry["game"], None)
-            games[entry["game"]] = entry["hunter"]
+            games[entry["game"]] = Choice(entry["hunter"], _skin(entry.get("body")), _skin(entry.get("head")))
     return _bounded(games)
 
 
-def _bounded(games: dict[str, str]) -> dict[str, str]:
+def _bounded(games: dict[str, Choice]) -> dict[str, Choice]:
     while len(games) > MAX_GAMES:
         del games[next(iter(games))]
     return games
 
 
-def _write(games: dict[str, str]) -> bool:
-    content = {"version": VERSION, "games": [{"game": game, "hunter": hunter} for game, hunter in games.items()]}
+def _write(games: dict[str, Choice]) -> bool:
+    content = {"version": VERSION, "games": [{"game": game, **choice._asdict()} for game, choice in games.items()]}
     target = path()
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -81,25 +95,26 @@ def _write(games: dict[str, str]) -> bool:
     return True
 
 
-def _memory() -> dict[str, str]:
+def _memory() -> dict[str, Choice]:
     global _games
     if _games is None:
         _games = _read()
     return _games
 
 
-def chosen(game: str) -> str | None:
+def chosen(game: str) -> Choice | None:
     return _memory().get(game)
 
 
-def choose(game: str, hunter: str | None) -> bool:
-    """Remembers the hunter worn in a game, None for its own; whether the file took it. The session keeps it anyway."""
+def choose(game: str, hunter: str | None, body: str = hunters.DEFAULT, head: str = hunters.DEFAULT) -> bool:
+    """Remembers the hunter worn in a game with its body and head, None for its own; whether the file took it. The
+    session keeps it anyway."""
     if not isinstance(game, str) or game_id.PATTERN.fullmatch(game) is None or (
-            hunter is not None and not _known(game, hunter)):
-        raise ValueError("unknown game id or hunter")
+            hunter is not None and not _known(game, hunter)) or body not in hunters.SKINS or head not in hunters.SKINS:
+        raise ValueError("unknown game id, hunter or skin")
     games = _memory()
     games.pop(game, None)
     if hunter is not None:
-        games[game] = hunter
+        games[game] = Choice(hunter, body, head)
         _bounded(games)
     return _write(games)

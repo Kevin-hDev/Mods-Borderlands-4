@@ -2,8 +2,10 @@
 at once, in the heirloom's orange frame (panel_notice.py); one card per hunter in three columns, each with Kevin's
 picture of the hunter, its name and its class in the class's colour; in the card's top right corner, YOUR HUNTER on the
 hunter played and CHOSEN on the look worn when it is another hunter's, the worn card framed in gold; under them, a
-sentence naming both. Outside a game there is no card and no frame, only a sentence asking to load one: a card that
-could change nothing would read as broken.
+sentence naming both, and on another hunter's look the rows of its body and head skins (panel_skins.py, sketch C1).
+Outside a game there is no card and no frame, only a sentence asking to load one: a card that could change nothing
+would read as broken. With the mod off, the cards and skins stay in view but greyed and still, the orange frame saying
+to turn it on (Kevin's choice A, 2026-10-08): a click had dressed the character with the mod off.
 
 A card is clicked like the window's buttons: a latched CheckBox, read once per poll (panel_buttons.py). A picture that
 does not load leaves the card without it, never an empty frame (panel_picture.py of the heirloom does the same).
@@ -16,10 +18,10 @@ page is never read by the other.
 from typing import Any
 
 from . import hunters, menu, panel_assets as assets, panel_buttons as b, panel_hunters_theme as ht
-from . import panel_i18n as i18n, panel_notice, panel_pages as p, panel_text as tx, panel_theme as t
-from . import panel_widgets as w
+from . import panel_i18n as i18n, panel_notice, panel_pages as p, panel_skins, panel_text as tx, panel_theme as t
+from . import panel_widgets as w, wardrobe
 
-APPLIES = "applies"
+APPLIES, OFF = "applies", "look_off"
 # The two tags of sketch B2: (part, fill, outline, letters), as theme colour names read when the card is drawn.
 TAGS = (("own", "COLOR_INK", "COLOR_SPARK", "COLOR_SPARK"), ("chosen", "COLOR_GOLD", "COLOR_GOLD", "COLOR_INK"))
 
@@ -119,6 +121,7 @@ def page(owner: Any, key: str, widgets: dict, template: Any, world: Any) -> Any:
     widgets["hunter_applies"] = notice_block(rows, widgets, APPLIES)
     widgets["hunter_grid"] = grid(rows, widgets, template, world, "hunter")
     sentence(rows, widgets, "hunter_state")
+    panel_skins.rows(rows, widgets, template)
     return scroll
 
 
@@ -134,9 +137,15 @@ def show(widget: Any, shown: bool) -> None:
     widget.SetVisibility(w.enum("ESlateVisibility", "Visible" if shown else "Collapsed"))
 
 
-def paint_notice(widgets: dict, key: str, language: str) -> None:
-    """The text `key` in the orange frame, in capitals as sketch B2 wrote it."""
-    widgets[f"notice:{key}"].SetText(i18n.text(key, language).upper())
+def paint_notice(widgets: dict, key: str, language: str, text: str | None = None) -> None:
+    """The text `text`, or else `key`'s, in the frame made for `key`, in capitals as sketch B2 wrote it."""
+    widgets[f"notice:{key}"].SetText(i18n.text(text or key, language).upper())
+
+
+def still(widget: Any, enabled: bool) -> None:
+    """A widget greyed and deaf to clicks while the mod is off."""
+    widget.SetIsEnabled(enabled)
+    widget.SetRenderOpacity(1.0 if enabled else t.OPACITY_DISABLED)
 
 
 def paint_card(widgets: dict, prefix: str, hunter: hunters.Hunter, language: str, own: bool, chosen: bool,
@@ -145,8 +154,9 @@ def paint_card(widgets: dict, prefix: str, hunter: hunters.Hunter, language: str
     and the gold frame and shadow when `framed`."""
     name = f"{prefix}:{hunter.code}"
     widgets[f"{name}_name"].SetText(hunter.name.upper())
+    widgets[f"{name}_name"].SetColorAndOpacity(w.slate(ht.CARD_TEXT))
     widgets[f"{name}_class"].SetText(i18n.text(f"class:{hunter.code}", language))
-    widgets[f"{name}_class"].SetColorAndOpacity(w.slate(t.on_card(ht.CLASS_COLOURS[hunter.code])))
+    widgets[f"{name}_class"].SetColorAndOpacity(w.slate(ht.CLASS_COLOURS[hunter.code]))
     widgets[f"{name}_own"].SetText(i18n.text("your_hunter", language))
     show(widgets[f"{name}_own_tag"], own)
     widgets[f"{name}_chosen"].SetText(i18n.text("chosen", language))
@@ -155,16 +165,20 @@ def paint_card(widgets: dict, prefix: str, hunter: hunters.Hunter, language: str
     widgets[f"{name}_shadow"].SetBrushColor(w.linear(t.COLOR_GOLD_SHADE if framed else t.COLOR_INK))
 
 
-def paint(widgets: dict, state: tuple[hunters.Hunter, hunters.Hunter] | None, language: str) -> None:
-    """The cards and the sentence for `state`, the hunter played and the look worn, or None outside a game."""
+def paint(widgets: dict, state: wardrobe.Status | None, language: str, enabled: bool = True) -> None:
+    """The cards, the sentence and the skin rows for `state`, or None outside a game; greyed and still with the mod
+    off."""
     shown = state is not None
     show(widgets["hunter_grid"], shown)
     show(widgets["hunter_applies"], shown)
-    paint_notice(widgets, APPLIES, language)
+    paint_notice(widgets, APPLIES, language, APPLIES if enabled else OFF)
+    still(widgets["hunter_grid"], enabled)
+    still(widgets["skins"], enabled)
+    panel_skins.paint(widgets, state, language)
     if not shown:
         widgets["hunter_state"].SetText(i18n.text("no_game", language))
         return
-    played, worn = state
+    played, worn = state.played, state.worn.hunter
     for hunter in hunters.HUNTERS:
         worn_here = hunter == worn
         paint_card(widgets, "hunter", hunter, language, own=hunter == played, chosen=worn_here and worn != played,
@@ -172,3 +186,22 @@ def paint(widgets: dict, state: tuple[hunters.Hunter, hunters.Hunter] | None, la
     key = "own_look" if worn == played else "worn_look"
     widgets["hunter_state"].SetText(i18n.text(key, language).format(
         played=played.name, worn=worn.name, own=played.name.upper()))
+
+
+def poll(form: Any, widgets: dict) -> bool:
+    """A card or a skin clicked, worn at once while the mod is on: True, the poll stops there. Otherwise the page
+    follows the game while the window is open (a game loaded or left, the mod turned on or off): False."""
+    code = taken(form.take, widgets)
+    # Both read, so that a skin clicked with a card is dropped, not worn at the next poll; with the mod off, both are.
+    skin = panel_skins.taken(form.take, widgets)
+    if form.model.mod.is_enabled and (code is not None or skin is not None):
+        done = wardrobe.wear(code) if code is not None else wardrobe.wear_skin(*skin)
+        form.notice = "saved" if done else "failed"
+        form.hunter_state = wardrobe.status()
+        form.refresh_labels(widgets)
+        return True
+    state = wardrobe.status()
+    if state != form.hunter_state:
+        form.hunter_state = state
+        form.refresh_labels(widgets)
+    return False

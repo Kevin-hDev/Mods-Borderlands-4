@@ -1,6 +1,9 @@
 """The Hunter Change window at work: opened in a game, the APPEARANCE page shows the hunter played in its own look and
 the HUNTER page its cards; a card of APPEARANCE clicked dresses the character at once, remembers the choice for the game
-and says it saved; a look the game refuses says it failed; on the HUNTER page, a card clicked shows the message and its
+and says it saved; a look the game refuses says it failed; on another hunter's look the BODY and HEAD rows show a
+button for each skin owned only, the one worn in gold, and a click wears it at once and remembers it, a skin clicked
+with a card dropped; the rows hidden on
+the own look and with one skin owned; on the HUNTER page, a card clicked shows the message and its
 two buttons without dressing anyone, CANCEL brings the cards back, RETURN TO MAIN MENU refused keeps the window and says
 why on the cards, accepted closes the window for the return; a language change paints the HUNTER page again; the page
 follows the game while open, a game left showing no card; ENABLED turns the mod off and the page shows the own look
@@ -19,7 +22,8 @@ import fake_game  # noqa: E402
 import panel_fixture  # noqa: E402
 import save_fixture as fx  # noqa: E402
 import hunter_change  # noqa: E402
-from hunter_change import choices, hunters, leave, panel_assets, panel_fonts, panel_form, panel_model  # noqa: E402
+from hunter_change import choices, hunters, leave, panel_assets, panel_buttons, panel_fonts, panel_form  # noqa: E402
+from hunter_change import panel_model, skins  # noqa: E402
 from hunter_change import panel_switch, panel_view, save_places  # noqa: E402
 from hunter_change.switch_page import BUSY, CARDS, CONFIRM  # noqa: E402
 
@@ -46,6 +50,8 @@ def find_noted(*args, **kwargs):
 
 
 save_places.documents_candidates, save_places.find = documents_asked, find_noted
+owned = [("default", "prison", "premium")]
+skins.owned = lambda: owned[0]
 asks: list[tuple] = []
 accepts = [True]
 
@@ -88,6 +94,11 @@ def shown(name: str) -> bool:
     return widgets[name].calls.get("SetVisibility", (None,))[0] == "ESlateVisibility.Visible"
 
 
+def gold(name: str) -> bool:
+    """The button filled as the one chosen, in the switch style "on"."""
+    return widgets[f"{name}_fill"].calls["SetBrushColor"] == (panel_buttons.w.linear(panel_buttons.colours("on")[0]),)
+
+
 def click(name: str) -> object:
     widgets[name].checked = True
     return form.poll()
@@ -103,7 +114,8 @@ check("opened in a game, the HUNTER page shows its cards", form.switch_page.view
 click("hunter:CorpoHacker")
 check("a card clicked dresses the character at once",
       fake_game.body_drawn(character) == "Cosmetics_CorpoHacker_Body00_Default")
-check("remembers the choice for the game and says it saved", choices.chosen(HARLOWE_GAME) == "CorpoHacker"
+check("remembers the choice for the game and says it saved",
+      choices.chosen(HARLOWE_GAME) == choices.Choice("CorpoHacker")
       and text("notice") == "Saved." and shown("hunter:CorpoHacker_chosen_tag")
       and not widgets["hunter:CorpoHacker"].checked)
 
@@ -111,8 +123,39 @@ fake_game.rule["setter_refused"] = True
 click("hunter:Paladin")
 check("a look the game refuses says it failed", text("notice") != "Saved."
       and fake_game.body_drawn(character) == "Cosmetics_CorpoHacker_Body00_Default"
-      and choices.chosen(HARLOWE_GAME) == "CorpoHacker")
+      and choices.chosen(HARLOWE_GAME) == choices.Choice("CorpoHacker"))
 fake_game.rule["setter_refused"] = False
+
+# A refused rebuild leaves the pickers on the own look (look.dress): the card is clicked again.
+click("hunter:CorpoHacker")
+check("on another hunter's look, the BODY and HEAD rows with a button per skin owned, the game's own in gold",
+      shown("skins") and all(shown(f"skin:{part}:{skin}_box") for part in ("body", "head")
+                             for skin in ("default", "prison", "premium"))
+      and text("label:skin_body") == "Body"
+      and text("description:skin_head") == "Loveless's head, to mix with any body."
+      and text("skin:body:premium_label") == "PREMIUM" and gold("skin:body:default") and not gold("skin:body:premium"))
+click("skin:body:premium")
+check("a skin clicked worn at once, remembered and said saved, in gold",
+      fake_game.body_drawn(character) == "Cosmetics_CorpoHacker_Body02_Premium"
+      and choices.chosen(HARLOWE_GAME) == choices.Choice("CorpoHacker", "premium") and text("notice") == "Saved."
+      and gold("skin:body:premium") and not gold("skin:body:default") and gold("skin:head:default")
+      and not widgets["skin:body:premium"].checked)
+owned[0] = ("default", "premium")
+form.poll()
+check("a skin not owned has no button", shown("skin:head:premium_box") and not shown("skin:head:prison_box"))
+owned[0] = ("default",)
+form.poll()
+check("the rows hidden with the game's own skin alone", not shown("skins"))
+owned[0] = ("default", "prison", "premium")
+click("hunter:Gravitar")
+check("the rows hidden on the own look", not shown("skins") and choices.chosen(HARLOWE_GAME) is None
+      and fake_game.body_drawn(character) == "Cosmetics_Gravitar_Body00_Default")
+widgets["skin:body:prison"].checked = True
+click("hunter:CorpoHacker")
+form.poll()
+check("a skin clicked with a card dropped: the card worn, the skin neither worn then nor at the next poll",
+      fake_game.body_drawn(character) == "Cosmetics_CorpoHacker_Body00_Default"
+      and choices.chosen(HARLOWE_GAME) == choices.Choice("CorpoHacker") and not widgets["skin:body:prison"].checked)
 
 # The HUNTER page, in the same window.
 click("nav:hunter")
@@ -167,6 +210,13 @@ form.poll()
 check("ENABLED turns the mod off and the page shows the own look again", not hunter_change.mod.is_enabled
       and fake_game.body_drawn(character) == "Cosmetics_Gravitar_Body00_Default"
       and text("hunter_state").startswith("You play Harlowe."))
+chosen_before = choices.chosen(HARLOWE_GAME)
+click("hunter:Paladin")
+check("with the mod off, a card clicked changes nothing, the cards greyed and the frame saying to turn it on",
+      fake_game.body_drawn(character) == "Cosmetics_Gravitar_Body00_Default"
+      and choices.chosen(HARLOWE_GAME) == chosen_before and not widgets["hunter:Paladin"].checked
+      and widgets["hunter_grid"].calls["SetIsEnabled"] == (False,)
+      and text("notice:applies").startswith("HUNTER CHANGE IS OFF"))
 
 check("CLOSE closes", click("close") is True)
 check("the saves read are the fixture's only, from its Documents folder",

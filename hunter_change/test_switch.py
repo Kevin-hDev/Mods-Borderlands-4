@@ -208,7 +208,7 @@ if backups.folder().is_dir():
 backups.folder().parent.mkdir(parents=True, exist_ok=True)
 backups.folder().write_bytes(b"")
 check("no backup: nothing changed, the look kept", run("Gravitar", "Paladin").reason == "backup_failed"
-      and text() == HARLOWE_TEXT and trees.kept(G, "Gravitar") is None and choices.chosen(G) == LOOK)
+      and text() == HARLOWE_TEXT and trees.kept(G, "Gravitar") is None and choices.chosen(G) == choices.Choice(LOOK))
 backups.folder().unlink()
 
 fresh(look=True)
@@ -216,7 +216,7 @@ real_keep = trees.keep
 trees.keep = lambda *_args: False
 check("the tree not kept: the save unchanged, a spare backup, the look kept",
       run("Gravitar", "Paladin").reason == "trees_failed" and text() == HARLOWE_TEXT and backed_up() == [original]
-      and choices.chosen(G) == LOOK)
+      and choices.chosen(G) == choices.Choice(LOOK))
 trees.keep = real_keep
 
 fresh(look=True)
@@ -225,7 +225,7 @@ real_drop = trees.drop
 trees.drop = lambda *_args: False
 check("no tree left and none dropped: the save unchanged, a spare backup, the look kept",
       run("Gravitar", "Paladin").reason == "trees_failed" and (client / "4.sav").read_bytes() == treeless
-      and backed_up() == [treeless] and choices.chosen(G) == LOOK)
+      and backed_up() == [treeless] and choices.chosen(G) == choices.Choice(LOOK))
 trees.drop = real_drop
 
 
@@ -243,7 +243,7 @@ number = re.search(r"switch (\w+):", state["logs"][since]).group(1)
 check("a save held three times: not written and said with the change's number, the tries 0.1 then 0.2 s apart, "
       "the look kept", outcome.reason == "write_failed" and text() == HARLOWE_TEXT and pauses == [0.1, 0.2]
       and any(f"switch {number}: a save could not be written" in error for error in state["errors"])
-      and choices.chosen(G) == LOOK)
+      and choices.chosen(G) == choices.Choice(LOOK))
 check("no temporary file left after a failed write", names() == ["1.sav", "4.sav"])
 
 fresh()
@@ -278,7 +278,7 @@ os.replace = garble_once
 outcome = run("Gravitar", "Paladin")
 os.replace = real_replace
 check("read back different: the save restored as it was, the look kept", outcome.reason == "restored"
-      and (client / "4.sav").read_bytes() == original and choices.chosen(G) == LOOK)
+      and (client / "4.sav").read_bytes() == original and choices.chosen(G) == choices.Choice(LOOK))
 
 
 def garble_always(source, target):
@@ -293,7 +293,7 @@ outcome = run("Gravitar", "Paladin")
 os.replace = real_replace
 check("not restored: said, and the backup holds the save, the look kept", outcome.reason == "restore_failed"
       and backed_up() == [original] and any("did not read back" in error for error in state["errors"])
-      and choices.chosen(G) == LOOK)
+      and choices.chosen(G) == choices.Choice(LOOK))
 
 
 def garble_then_hold(source, target):
@@ -322,7 +322,8 @@ pathlib.Path.read_bytes = lambda path: ((_ for _ in ()).throw(PermissionError("h
 outcome = run("Gravitar", "Paladin")
 pathlib.Path.read_bytes = real_read
 check("not readable back: left as written, nothing put back over it, the look kept", outcome.reason == "unverified"
-      and pauses == [0.1, 0.2] and save_text.header(text())["hunter"] == "Char_Paladin" and choices.chosen(G) == LOOK)
+      and pauses == [0.1, 0.2] and save_text.header(text())["hunter"] == "Char_Paladin"
+      and choices.chosen(G) == choices.Choice(LOOK))
 
 fresh(look=True)
 garbled = [1]
@@ -345,7 +346,7 @@ finally:
     os.replace, pathlib.Path.read_bytes = real_replace, real_read
 check("the save put back held at its read back: not taken for restored, said, the look kept",
       outcome.reason == "restore_failed" and (client / "4.sav").read_bytes() == original
-      and any("did not read back" in error for error in state["errors"]) and choices.chosen(G) == LOOK)
+      and any("did not read back" in error for error in state["errors"]) and choices.chosen(G) == choices.Choice(LOOK))
 
 fresh()
 real_read = save_places._read

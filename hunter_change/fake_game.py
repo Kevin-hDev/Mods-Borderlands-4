@@ -2,17 +2,19 @@
 31): each hunter's body and head pickers live the whole session and are shared by every game of that hunter; a
 character holds one choice per selection, a chosen part (kind def) or Default, which names the picker's current
 default; the part setter takes a text, chooses what it names and leaves every other selection Default, then builds the
-body from the chosen body part or else the body picker's default; the first-person legs hang from the body mesh."""
+body from the chosen body part or else the body picker's default; a character has its hunter's own size, which the
+game puts back when it stands up (stand_up)."""
 
 import enum
 import types
 from typing import Any
 
+from hunter_change import hunters
 from sdk_stubs import FakeDefPtr
 
 GESTALT = types.SimpleNamespace(_path_name=lambda: "/Script/GbxGame.GbxActorPartDef_Gestalt")
 COLOUR = "Cosmetics_Colorization_Primary"
-rule = {"refuse": None, "ignore": None, "setter_refused": False, "scale_refused": False}
+rule = {"refuse": None, "ignore": None, "setter_refused": False, "size_refused": False}
 
 
 class EGbxActorPartChoiceType(enum.IntEnum):
@@ -51,25 +53,40 @@ class Choice:
         return self.picker.DefaultPart if self.part is None else FakeDefPtr(self.part)
 
 
-class Legs:
-    Name = "FirstPersonLegs"
+class Capsule:
+    def __init__(self, half: float) -> None:
+        self.CapsuleRadius, self.CapsuleHalfHeight = 40.0, half
 
-    def __init__(self) -> None:
-        self.RelativeScale3D = types.SimpleNamespace(X=1.0, Y=1.0, Z=1.0)
-
-    def SetRelativeScale3D(self, vector: Any) -> None:
-        if rule["scale_refused"]:
+    def SetCapsuleSize(self, radius: float, half: float, _update: bool) -> None:
+        if rule["size_refused"]:
             raise RuntimeError("no")
-        self.RelativeScale3D = vector
+        self.CapsuleRadius, self.CapsuleHalfHeight = radius, half
 
 
 class Character:
-    """A class instance, as the game's are, so that WeakPointer can follow it."""
+    """A class instance, as the game's are, so that WeakPointer can follow it; standing at height 1000."""
 
-    def __init__(self, selections: list, legs: Legs) -> None:
+    def __init__(self, selections: list, own: Any) -> None:
+        self.own, self.bIsCrouched = own, False
         self.GbxActorPartOwnerState = types.SimpleNamespace(ReplicatedSelections=selections)
-        self.Mesh = types.SimpleNamespace(AttachChildren=[types.SimpleNamespace(Name="FirstPersonArms"), legs],
-                                          GestaltMeshParts=[])
+        self.Mesh = types.SimpleNamespace(GestaltMeshParts=[], RelativeLocation=vec(0.0, 0.0, own.mesh_z))
+        self.Mesh.K2_SetRelativeLocation = lambda at, _s, _h, _t: setattr(self.Mesh, "RelativeLocation", at)
+        self.CapsuleComponent = Capsule(own.half)
+        self.CharacterMovement = types.SimpleNamespace(CrouchedHalfHeight=60.5)
+        self.CharacterMovement.SetCrouchedHalfHeight = lambda half: setattr(self.CharacterMovement,
+                                                                            "CrouchedHalfHeight", half)
+        self.BaseEyeHeight, self.CrouchedEyeHeight = own.eye, own.crouched_eye
+        self.location = vec(0.0, 0.0, 1000.0)
+
+    def K2_GetActorLocation(self) -> Any:
+        return self.location
+
+    def K2_SetActorLocation(self, at: Any, _sweep: bool, _hit: Any, _teleport: bool) -> None:
+        self.location = at
+
+
+def vec(x: float, y: float, z: float) -> types.SimpleNamespace:
+    return types.SimpleNamespace(X=x, Y=y, Z=z)
 
 
 _pickers: dict[str, tuple[Picker, Picker, Picker]] = {}
@@ -98,7 +115,7 @@ def load(state: dict, code: str, game: str, outfit: str = "gap,") -> Character:
     """A game of `code` loaded with the outfit its save holds: a new character, the session's pickers."""
     selections = [types.SimpleNamespace(SelectorDef=picker, choices=[Choice(picker)])
                   for picker in (*pickers_of(code), colour_picker)]
-    character = Character(selections, Legs())
+    character = Character(selections, hunters.by_code(code).stature)
     player_state = types.SimpleNamespace(ReplicatedCharacterDef=f"Char_{code}", ActiveCharGuid=id_words(game))
 
     def setter(_actor_type: str, text: str) -> None:
@@ -122,8 +139,21 @@ def body_drawn(character: Character) -> str:
     return character.Mesh.GestaltMeshParts[0].Name
 
 
-def legs_scale(character: Character) -> float:
-    return character.Mesh.AttachChildren[1].RelativeScale3D.Z
+def size(character: Character) -> tuple[float, float, float, float]:
+    """Half height, eye height, crouched eye height and body height, as the character holds them now."""
+    return (character.CapsuleComponent.CapsuleHalfHeight, character.BaseEyeHeight, character.CrouchedEyeHeight,
+            character.Mesh.RelativeLocation.Z)
+
+
+def own_size(code: str) -> tuple[float, float, float, float]:
+    stature = hunters.by_code(code).stature
+    return stature.half, stature.eye, stature.crouched_eye, stature.mesh_z
+
+
+def stand_up(character: Character) -> None:
+    """What the game does when the character stands up from a crouch or a slide (2026-10-08): its own capsule half
+    height and eye height back, the body left where it was."""
+    character.CapsuleComponent.CapsuleHalfHeight, character.BaseEyeHeight = character.own.half, character.own.eye
 
 
 def outfit_worn(character: Character) -> str:

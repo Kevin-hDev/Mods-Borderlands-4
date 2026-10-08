@@ -10,7 +10,7 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 | [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, third-person aiming, FOV and loot reach | 1.0.15 |
 | [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, selectable third-person or first-person aiming, adjustable FOV and loot reach | 1.1.6 |
 | [Apex Heirloom](apex_heirloom/) | An Apex Legends style heirloom: the Jakobs knife or the axe in your hand when your weapon is put away, and a key to put it away | 1.0.6 |
-| [Hunter Change](hunter_change/) | Become another Vault Hunter in your game, keeping its level, backpack and story, each hunter with their own skill tree; or only wear another hunter's look | 1.0.3 |
+| [Hunter Change](hunter_change/) | Become another Vault Hunter in your game, keeping its level, backpack and story, each hunter with their own skill tree; or only wear another hunter's look | 1.0.5 |
 | [Benefix Ohm Attack](benefix_ohm_attack/) | Fire an attack beam from your hand that locks onto enemies, with six elements to choose from, its own energy bar and damage that scales with your level | 1.0.4 |
 
 [camera_runtime](camera_runtime/) is not a mod of its own: it is the camera, field of view and loot reach that Apex

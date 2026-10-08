@@ -1,9 +1,10 @@
 """The look: the body and head pickers found among the selections, within their bound; the hunter worn told by the body
 picker's default; the outfit worn read as its chosen parts in order; another hunter dressed with its defaults written
 typed and read back, the rest of the outfit handed back after one own body part, whatever the body and head chosen;
-the own look given back with the outfit worn as it is; a default refused or not taken puts the own ones back and
-hands nothing; a refused rebuild said and the own defaults put back; a character without the two pickers refused; the
-other hunters' pickers dressed this session undressed all at once, without a rebuild."""
+the own look given back with the outfit worn as it is; another hunter dressed with the body and head of any skins and
+told back from them, the own look always with the game's own parts; a default refused or not taken puts the own ones
+back and hands nothing; a refused rebuild said and the own defaults put back; a character without the two pickers
+refused; the other hunters' pickers dressed this session undressed all at once, without a rebuild."""
 
 import sys
 import types
@@ -91,8 +92,29 @@ check("a refused rebuild said, the own defaults put back to match the character 
       and look.wearing(look.pickers(character)) == rafa)
 rule["setter_refused"] = False
 look.dress(character, player_state(), rafa, rafa)
-bare = fake_game.Character([types.SimpleNamespace(SelectorDef=fake_game.colour_picker)], fake_game.Legs())
+bare = fake_game.Character([types.SimpleNamespace(SelectorDef=fake_game.colour_picker)],
+                           hunters.by_code("Gravitar").stature)
 check("a character without the two pickers refused", not look.dress(bare, player_state(), rafa, amon))
+
+character = fake_game.load(state, "Gravitar", HARLOWE_GAME, "gap,Cosmetics_Colorization_Primary[Colour9]")
+check("the skins of the game's own parts told", look.skins_worn(look.pickers(character)) == ("default", "default"))
+handed.clear()
+check("another hunter dressed with the body and head of the skins named, the other hunter's body drawn",
+      look.dress(character, player_state(), harlowe, loveless, hunters.PREMIUM, hunters.PRISON)
+      and body.DefaultPart._name == "Cosmetics_CorpoHacker_Body02_Premium"
+      and head.DefaultPart._name == "Cosmetics_CorpoHacker_Head01_Prison"
+      and fake_game.body_drawn(character) == "Cosmetics_CorpoHacker_Body02_Premium"
+      and handed[-1] == "gap,Cosmetics_Colorization_Primary[Colour9]")
+check("the hunter and skins worn told from them", look.wearing(look.pickers(character)) == loveless
+      and look.skins_worn(look.pickers(character)) == ("premium", "prison"))
+check("said in the game's log", state["logs"][-1].endswith("Harlowe wears Loveless's look, body premium, head prison"))
+check("the own look always with the game's own parts, whatever the skins asked",
+      look.dress(character, player_state(), harlowe, harlowe, hunters.PREMIUM, hunters.PREMIUM)
+      and body.DefaultPart._name == "Cosmetics_Gravitar_Body00_Default"
+      and head.DefaultPart._name == "Cosmetics_Gravitar_Head00_Default")
+head.DefaultPart = fake_game.FakeDefPtr("Cosmetics_Gravitar_Head00_Default_Alt", fake_game.GESTALT)
+check("a part of none of the skins told as none", look.skins_worn(look.pickers(character)) == ("default", None))
+head.DefaultPart = fake_game.FakeDefPtr("Cosmetics_Gravitar_Head00_Default", fake_game.GESTALT)
 
 character = fake_game.load(state, "Gravitar", HARLOWE_GAME)
 look.dress(character, player_state(), harlowe, amon)

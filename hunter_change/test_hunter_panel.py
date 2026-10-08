@@ -3,8 +3,9 @@ each with its picture, name and class; no UNDO nor RESTORE in the footer; the se
 orange frame, in capitals; the look worn framed in gold and tagged CHOSEN, the hunter played tagged YOUR HUNTER, the
 tags in the card's top right corner as sketch B2 drew them, CHOSEN in gold and YOUR HUNTER outlined in orange; the
 class in its colour, the sentence naming both; the own look shown without CHOSEN; outside a game no card, no frame and
-a sentence asking for one; the texts in French; a card without its picture keeps its name; a card clicked read
-once."""
+a sentence asking for one; with the mod off, cards and skins greyed and still, the frame saying to turn it on; the
+texts in French, the skin rows' too; no skin shown in gold when the one worn is not owned or unknown; a card without
+its picture keeps its name; a card clicked read once."""
 
 import sys
 from types import SimpleNamespace
@@ -15,7 +16,8 @@ state = sdk_stubs.install()
 
 import panel_fixture  # noqa: E402
 from hunter_change import hunters, panel_assets, panel_fonts, panel_hunters, panel_hunters_theme as ht  # noqa: E402
-from hunter_change import panel_model, panel_preferences, panel_theme as theme, panel_view  # noqa: E402
+from hunter_change import panel_model, panel_preferences, panel_theme as theme, panel_view, wardrobe  # noqa: E402
+from hunter_change import panel_widgets as w  # noqa: E402
 
 fails: list[str] = []
 
@@ -89,11 +91,16 @@ def shown(name):
     return widgets[name].calls["SetVisibility"][0] == "ESlateVisibility.Visible"
 
 
+def status(worn, *owned, body="default", head="default"):
+    """What the wardrobe gives the window: Harlowe played, `worn`'s look, the skins owned."""
+    return wardrobe.Status(harlowe, wardrobe.Look(worn, body, head), ("default", *owned))
+
+
 def slot_of(widget):
     return widget.owner.slots[widget.owner.children.index(widget)]
 
 
-panel_hunters.paint(widgets, (harlowe, loveless), "EN")
+panel_hunters.paint(widgets, status(loveless), "EN")
 check("the sentence above the cards in the heirloom's orange frame, in capitals",
       text("notice:applies") == "APPLIES AT ONCE, FOR THIS GAME." and shown("hunter_applies")
       and colour(widgets["notice:applies"].owner.owner.calls["SetBrushColor"][0]) == "spark")
@@ -121,7 +128,7 @@ check("the sentence naming both", text("hunter_state") == "You play Harlowe with
                                                          "Choose HARLOWE to get yours back."
       and widgets["hunter_grid"].calls["SetVisibility"][0] == "ESlateVisibility.Visible")
 
-panel_hunters.paint(widgets, (harlowe, harlowe), "EN")
+panel_hunters.paint(widgets, status(harlowe), "EN")
 check("the own look shown without CHOSEN", not shown("hunter:Gravitar_chosen_tag") and shown("hunter:Gravitar_own_tag")
       and brush("hunter:Gravitar_frame").R == theme.rgba(theme.COLOR_GOLD)[0]
       and text("hunter_state").startswith("You play Harlowe."))
@@ -131,14 +138,36 @@ check("outside a game no card, no frame and a sentence asking for one",
       not shown("hunter_grid") and not shown("hunter_applies")
       and text("hunter_state") == "Load a game to choose a look.")
 
-panel_hunters.paint(widgets, (harlowe, loveless), "FR")
+panel_hunters.paint(widgets, status(loveless, "prison", "premium", body="premium"), "FR")
 check("the texts in French", text("hunter:Gravitar_own") == "TON CHASSEUR"
       and text("notice:applies") == "S'APPLIQUE TOUT DE SUITE, POUR CETTE PARTIE."
       and text("hunter:Paladin_class") == "CHEVALIER-\nFORGERON"
       and text("hunter_state") == "Tu joues Harlowe. Apparence portée : Loveless. "
                                   "Choisis HARLOWE pour retrouver la tienne.")
+check("the skin rows in French", text("label:skin_body") == "Corps" and text("label:skin_head") == "Tête"
+      and text("description:skin_body") == "Le corps porté. Seuls les skins que tu possèdes sont proposés."
+      and text("skin:head:default_label") == "BASE")
+panel_hunters.paint(widgets, status(loveless, "prison", body="premium", head=None), "FR")
+check("a skin worn but no longer owned, or a head of no skin: no button shown in gold, none for the skin not owned",
+      not shown("skin:body:premium_box") and shown("skin:body:prison_box")
+      and not any(colour(brush(f"skin:{part}:{skin}_fill")) == "gold" for part in ("body", "head")
+                  for skin in ("default", "prison", "premium") if shown(f"skin:{part}:{skin}_box")))
+panel_hunters.paint(widgets, status(loveless, "prison"), "EN", enabled=False)
+check("with the mod off, the cards and skins greyed and still, the orange frame saying to turn it on",
+      text("notice:applies") == "HUNTER CHANGE IS OFF: TURN IT ON AT THE BOTTOM LEFT TO CHANGE YOUR LOOK."
+      and all(widgets[name].calls["SetIsEnabled"] == (False,)
+              and widgets[name].calls["SetRenderOpacity"] == (theme.OPACITY_DISABLED,)
+              for name in ("hunter_grid", "skins"))
+      and shown("hunter_grid") and shown("skins"))
+panel_hunters.paint(widgets, status(loveless, "prison"), "FR", enabled=False)
+check("and in French", text("notice:applies") == "HUNTER CHANGE EST ÉTEINT : ALLUME-LE EN BAS À GAUCHE POUR CHANGER "
+                                                  "D'APPARENCE.")
+panel_hunters.paint(widgets, status(loveless, "prison"), "EN")
+check("with the mod on again, lively and clickable", text("notice:applies") == "APPLIES AT ONCE, FOR THIS GAME."
+      and all(widgets[name].calls["SetIsEnabled"] == (True,) and widgets[name].calls["SetRenderOpacity"] == (1.0,)
+              for name in ("hunter_grid", "skins")))
 amon = hunters.by_code("Paladin")
-panel_hunters.paint(widgets, (harlowe, amon), "FR")
+panel_hunters.paint(widgets, status(amon), "FR")
 check("the French look sentence never puts de before a hunter's name, as de Amon would read",
       " de A" not in text("hunter_state") and "Amon" in text("hunter_state"))
 
@@ -168,9 +197,14 @@ for theme_name in theme.THEMES:
         panel_view.build_view(SimpleNamespace(), model)
     finally:
         theme.rgba = original_rgba
-    allowed = {*{**theme._EMBER, **theme.PALETTES[theme_name]}.values(), *map(theme.on_card, ht.CLASS_COLOURS.values())}
+    allowed = {*{**theme._EMBER, **theme.PALETTES[theme_name]}.values(), ht.CARD_TEXT, *ht.CLASS_COLOURS.values()}
     stray = {(colour, alpha) for colour, alpha in used if colour not in allowed and (colour, alpha) not in veils}
     check(f"{theme_name}: no colour kept from another theme, hunter tags included {sorted(stray)}", not stray)
+    panel_hunters.paint(widgets, status(loveless), "EN")
+    check(f"{theme_name}: the cards' names light and classes in their own colours, on the ink card",
+          widgets["hunter:Paladin_name"].calls["SetColorAndOpacity"][0] == w.slate(ht.CARD_TEXT)
+          and widgets["hunter:Paladin_class"].calls["SetColorAndOpacity"][0] == w.slate(ht.CLASS_COLOURS["Paladin"])
+          and theme.luminance(theme.COLOR_INK) < 0.5 < theme.luminance(ht.CARD_TEXT))
 panel_preferences.theme.value = "EMBER"
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
