@@ -1,0 +1,123 @@
+"""The OMNI DIRECTION page (Kevin, 2026-10-09; docs/mokup/menu_mods/decisions.md, sketches in omni_direction/): an
+Options tab in Apex Movement, a sidebar page in Omni Sprint and Third Person & FOV.
+
+Four rows, each with its sentence under it: the body's switch, the angle (360 or 180), the third-person sprint's
+switch (not in Omni Sprint, whose OMNI SPRINT page holds its own), and dash or slide on the sides and backward. The two
+choices are the optics row's boxes (panel_optics.py), each held by a collapsed slider the form reads and saves as any
+number; a click on a box only moves that slider. A « ? » opens a help pop-up for the body, the angle and the crouch.
+
+Greyed rows: everything outside third person, the angle and the sprint while the body is off, the crouch while the
+sprint is off; in Omni Sprint, the crouch follows its OMNI SPRINT switch, which opens the sprint in every view. A help
+stays clickable on a greyed row: it says what the row does.
+"""
+
+from . import panel_buttons as b, panel_i18n as i18n, panel_pages as p, panel_popup, panel_text as tx
+from . import panel_theme as t, panel_widgets as w
+
+PAGE = "omni_direction"
+BODY, ANGLE, SPRINT, CROUCH = "omni_body", "omni_angle", "omni_direction_sprint", "omni_crouch"
+# Omni Sprint's own switch, on its OMNI SPRINT page.
+OMNI_SPRINT = "omni_sprint"
+# Each box's text key, in the order of the saved values (omni_direction_options: 0 is 360 and dash).
+CHOICES = {ANGLE: ("omni_full_turn", "omni_half_turn"), CROUCH: ("omni_dash", "omni_slide")}
+# The rows with a « ? », and their pop-up's key.
+HELPS = {BODY: "omni_body", ANGLE: "omni_angle", CROUCH: "omni_crouch"}
+
+
+def box(name, index):
+    return f"omni:{name}:{index}"
+
+
+def help_button(name):
+    return f"omni:{name}:help"
+
+
+def build(rows, options, widgets, template):
+    for option in options:
+        name = option.identifier
+        widgets[f"label:{name}"] = tx.text(rows, "", "label", wrap=True)
+        control = w.new("HorizontalBox", rows)
+        if name in CHOICES:
+            for index in range(len(CHOICES[name])):
+                w.row(control, b.button(control, widgets, box(name, index), "lang", template, "off"),
+                      padding=w.pad(0, 0, 0, t.SPACE_2 if index else 0), valign="Center")
+            value = w.new("Slider", control)
+            value.SetMinValue(float(option.min_value))
+            value.SetMaxValue(float(option.max_value))
+            value.SetStepSize(float(option.step))
+            value.SetValue(float(option.value))
+            value.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
+            w.row(control, value)
+            widgets[f"setting:{name}"] = value
+        else:
+            w.row(control, b.button(control, widgets, f"setting:{name}", "switch", template, "off"), valign="Center")
+        if name in HELPS:
+            w.row(control, b.button(control, widgets, help_button(name), "lang", template, "secondary"),
+                  padding=w.pad(0, 0, 0, t.SPACE_4), valign="Center")
+        widgets[f"row:{name}"] = p._row(rows, widgets[f"label:{name}"], control)
+        widgets[f"description:{name}"] = tx.text(rows, "", "hint", wrap=True)
+        w.column(rows, widgets[f"description:{name}"], padding=w.pad(t.SPACE_2, 0, t.SPACE_3))
+        if name in HELPS:
+            content = panel_popup.build(widgets, HELPS[name], template)
+            widgets[f"omni_help:{name}"] = tx.text(content, "", "desc", wrap=True)
+            w.column(content, widgets[f"omni_help:{name}"], padding=w.pad(t.SPACE_2, 0, t.SPACE_4))
+
+
+def active(form):
+    """Which rows change something now, by option."""
+    shown = form.shown
+    third = shown.get("third_person") is True
+    body = third and shown.get(BODY) is True
+    sprint = (body and shown.get(SPRINT) is True) if SPRINT in shown else shown.get(OMNI_SPRINT) is True
+    return {BODY: third, ANGLE: body, SPRINT: body, CROUCH: sprint}
+
+
+def refresh(form, widgets):
+    """Each frame, before the form reads its settings: a « ? » opens its help, and a click on a box moves its value;
+    a click on a greyed box is dropped."""
+    language = form.model.language
+    for name, key in HELPS.items():
+        if name in form.model.options and form.take(widgets[help_button(name)]):
+            widgets[f"heading:popup_{key}"].SetText(i18n.text(f"popup_{key}", language))
+            widgets[f"group:popup_{key}"].SetText(i18n.text(f"popup_{key}_desc", language))
+            widgets[f"omni_help:{name}"].SetText(i18n.text(f"{key}_help_text", language))
+            panel_popup.show(form, widgets, key)
+    rows = active(form)
+    for name, choices in CHOICES.items():
+        if name not in form.model.options:
+            continue
+        for index in range(len(choices)):
+            choice = widgets[box(name, index)]
+            if choice.IsChecked():
+                choice.SetIsChecked(False)
+                if rows[name]:
+                    widgets[f"setting:{name}"].SetValue(float(index))
+
+
+def grey(form, widgets):
+    """With the window's other dependent rows (panel_form.refresh_dependency): the rows that change nothing now."""
+    for name, on in active(form).items():
+        if name not in form.model.options:
+            continue
+        if name in CHOICES:
+            for index in range(len(CHOICES[name])):
+                widgets[box(name, index)].SetIsEnabled(on)
+        else:
+            widgets[f"setting:{name}"].SetIsEnabled(on)
+        for part in ("row", "description"):
+            widgets[f"{part}:{name}"].SetRenderOpacity(1.0 if on else t.OPACITY_DISABLED)
+
+
+def paint(widgets, option, current, language):
+    """A box row's boxes, the lit one chosen; a switch row is painted as any other switch."""
+    name = option.identifier
+    if name in HELPS:
+        widgets[f"{help_button(name)}_label"].SetText("?")
+    if name not in CHOICES:
+        widgets[f"setting:{name}_label"].SetText(i18n.text("on" if current else "off", language))
+        b.paint(widgets, f"setting:{name}", "on" if current else "off")
+        return
+    chosen = int(current) if current in (0, 1, 0.0, 1.0) else int(option.default_value)
+    for index, key in enumerate(CHOICES[name]):
+        widgets[f"{box(name, index)}_label"].SetText(i18n.text(key, language))
+        b.paint(widgets, box(name, index), "on" if index == chosen else "off")

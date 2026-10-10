@@ -32,7 +32,7 @@ class Actions:
     def defaults(self): return True
 
 
-names = [f"{kind}:{action}:{device}" for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free_look", "camera_distance")
+names = [f"{kind}:{action}:{device}" for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free_look", "camera_distance", "sniper_zoom")
          for device in ("keyboard", "controller") for kind in ("command", "clear")]
 names += ["commands_reset", "commands_status"]
 widgets = {name: Widget() for name in names}

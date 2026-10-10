@@ -34,7 +34,7 @@ class Actions:
 
 
 names = []
-for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free_look", "camera_distance"):
+for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free_look", "camera_distance", "sniper_zoom"):
     for device in ("keyboard", "controller"):
         names += [f"command:{action}:{device}", f"clear:{action}:{device}", f"value:{action}:{device}"]
 names += ["commands_reset", "commands_status"]

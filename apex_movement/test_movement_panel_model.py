@@ -37,24 +37,39 @@ mod = Mod()
 model = panel_model.Model(mod)
 assert not ({option.identifier for option in camera_settings.VISIBLE}
             & {option.identifier for option in camera_settings.commands.options})
-assert len(model.groups) == 10 and len(model.pages) == 14
+assert len(model.groups) == 10 and len(model.pages) == 17
 assert model.pages == panel_theme.PAGES
-assert model.pages[-4:] == ("commands", "language", "dynamic_camera", "shoulder")  # the Options tabs past the camera's
-assert tuple(model.camera_options) == ("third_person", "third_person_ads", "custom_fov", "fov",
+# The Options tabs past the camera's.
+assert model.pages[-7:] == ("commands", "language", "dynamic_camera", "shoulder", "aiming", "sensitivity",
+                           "omni_direction")
+assert tuple(model.camera_options) == ("third_person", "third_person_ads", "pistol_optics", "smg_optics",
+                                       "shotgun_optics", "assault_optics", "sniper_optics", "heavy_optics",
+                                       "custom_fov", "fov",
                                        "camera_distance_close", "camera_distance_far", "shoulder_left",
                                        "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return", "shoulder_smooth",
                                        "orbit_smooth", "shoulder_seconds",
-                                       "free_look_keyboard_hold", "free_look_controller_hold", "free_look_hold_time",
-                                       "orbit", "extended_loot", "loot_reach",
-                                       "speed_fov", "speed_fov_gain", "speed_fov_seconds", "action_framing",
+                                       "free_look", "free_look_keyboard_hold", "free_look_controller_hold", "free_look_hold_time",
+                                       "orbit", "extended_loot", "loot_reach", "sensitivity_look", "sensitivity_aim",
+                                       "sensitivity_weapons", "sensitivity_weapon_pistol", "sensitivity_weapon_smg",
+                                       "sensitivity_weapon_shotgun", "sensitivity_weapon_assault",
+                                       "sensitivity_weapon_sniper", "sensitivity_weapon_heavy",
+                                       "sensitivity_weapon_sniper_optics",
+                                       "sensitivity_weapon_sniper_x2", "sensitivity_weapon_sniper_x3",
+                                       "sensitivity_weapon_sniper_x4", "sensitivity_weapon_sniper_x6",
+                                       "sensitivity_weapon_sniper_x8", "omni_body", "omni_angle",
+                                       "omni_direction_sprint", "omni_crouch", "speed_fov", "speed_fov_gain", "speed_fov_seconds", "action_framing",
                                        "action_framing_strength", "camera_motion", "camera_motion_strength")
 assert tuple(model.command_options) == (
     "third_person_key", "third_person_controller", "shoulder_key", "shoulder_controller",
     "orbit_key", "orbit_controller", "zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller",
-    "free_look_key", "free_look_controller", "camera_distance_key", "camera_distance_controller")
-# Movement, walk, ten camera/loot choices, the two camera distances, the seven of the DYNAMIC CAMERA tab and Free Look's three hold settings,
-# shown under its keys on the COMMANDS tab; the keys themselves have their own page.
-assert len(model.options) == 60
+    "free_look_key", "free_look_controller", "camera_distance_key", "camera_distance_controller",
+    "sniper_zoom_key", "sniper_zoom_controller")
+# Movement, walk, ten camera/loot choices, the two camera distances, the eight sensitivity settings, the seven of the DYNAMIC CAMERA tab and Free Look's three hold settings,
+# shown under its keys on the COMMANDS tab; the keys themselves have their own page. The sniper optic row and its five
+# sensitivity bars came on 2026-10-09 (idea n° 6), then the sniper rifle's own bar and the switch folding the five,
+# then the OMNI DIRECTION tab's four; the other weapon types' five optic rows and the heavy weapons' bar the same
+# evening.
+assert len(model.options) == 87
 assert ([key for key in model.options if key.startswith("walk")]
         == ["walk_speed", "walk", "walk_key", "walk_toggle", "walk_key_speed"])
 assert "native_fov" not in model.options and "applied_fov" not in model.options
@@ -64,7 +79,8 @@ assert model.change_controller_icons("XSX") and model.controller_icons == "XSX"
 assert not model.change_controller_icons("other")
 assert panel_preferences.french.default_value is False
 # A page index saved before the language tab still names the same page.
-assert panel_preferences.PAGE_KEYS[-4:] == ("options", "language", "dynamic_camera", "shoulder")
+assert panel_preferences.PAGE_KEYS[-7:] == ("options", "language", "dynamic_camera", "shoulder", "aiming",
+                                            "sensitivity", "omni_direction")
 assert model.change_language("FR") and model.language == "FR"
 assert not model.change_language("other")
 assert model.change_page("dash") and model.page == "dash"

@@ -74,7 +74,7 @@ class FakeMod:
         self._settings_directory = tempfile.TemporaryDirectory()
         self.settings_file = Path(self._settings_directory.name) / "settings.json"
         if state["settings_exists"]:
-            self.settings_file.write_text("{}")
+            self.settings_file.write_text(state.get("settings_text", "{}"))
         # What the settings file holds for "enabled" after the mod's last save; None while it never saved.
         self.saved_enabled: bool | None = None
         self.state = state

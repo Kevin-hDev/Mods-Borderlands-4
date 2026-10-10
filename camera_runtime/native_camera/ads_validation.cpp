@@ -55,9 +55,11 @@ uint32_t context_error(uintptr_t table, const AdsContext& context) {
             || !read_memory(pointers[7], INPUTS_CONTROLLER_OFFSET, value) || value != pointers[0])
         return static_cast<uint32_t>(ERROR_CONTEXT);
     uint8_t category{};
+    // The weapons this view can present; ads_policy.py alone decides which of them the player gets at the shoulder.
+    // Heavy weapons since every weapon type has its optic row (2026-10-10): trial 1 found them refused here.
     const bool supported = read_memory(pointers[4], ANIMATION_CATEGORY_OFFSET, category)
-        && (category == CATEGORY_PISTOL || category == CATEGORY_SMG
-            || category == CATEGORY_SHOTGUN || category == CATEGORY_ASSAULT);
+        && (category == CATEGORY_PISTOL || category == CATEGORY_SMG || category == CATEGORY_SHOTGUN
+            || category == CATEGORY_ASSAULT || category == CATEGORY_SNIPER || category == CATEGORY_HEAVY);
     return supported ? 0U : static_cast<uint32_t>(ERROR_CONTEXT);
 }
 }

@@ -1,16 +1,12 @@
 """Analytic half-planes and vertical cylinders at the SDK physics boundary."""
-import ctypes
 import math
 from types import SimpleNamespace as NS
-
-from apex_camera_runtime.collision import CollisionResolver
-from apex_camera_runtime.generated_ads import CollisionQuery
 
 
 class Geometry:
     def __init__(self, planes=(), pillars=(), walls=()):
         self.planes, self.pillars, self.walls = planes, pillars, walls
-        self.spheres = self.lines = 0
+        self.spheres = 0
         self.detailed_only = False
 
     @staticmethod
@@ -81,34 +77,3 @@ class Geometry:
     def SphereTraceSingle(self, actor, first, last, radius, channel, detailed, *args):
         self.spheres += 1
         return self.trace(first, last, radius, detailed)
-
-    def LineTraceSingle(self, actor, first, last, channel, detailed, *args):
-        self.lines += 1
-        return self.trace(first, last, 0, detailed)
-
-
-class Scene:
-    def __init__(self, geometry):
-        self.geometry = geometry
-        self.manager = NS(_get_address=lambda: 0x30000, GetActorCameraMode=lambda _: 'ThirdPerson')
-        self.actor = NS(_get_address=lambda: 0x20000, K2_GetActorLocation=lambda: NS(X=0, Y=0, Z=0),
-                        CapsuleComponent=NS(GetScaledCapsuleHalfHeight=lambda: 80))
-        self.pc = NS(_get_address=lambda: 0x10000, OakCharacter=self.actor,
-                     PlayerCameraManager=self.manager)
-        sdk = NS(make_struct=lambda name, **values: NS(**values))
-        self.resolver = CollisionResolver(geometry, sdk, lambda x: lambda: x, lambda _: None)
-        class Register:
-            def __call__(self, callback):
-                self.callback = callback
-                return 0
-        self.register = Register()
-        self.resolver.start(NS(view_set_collision=self.register), self.pc, self.manager)
-        self.query = CollisionQuery(manager=0x30000, before=(-250, 0, 80),
-                                    desired=(-250, 53.2, 80), delta=1 / 60)
-
-    def frame(self):
-        output = (ctypes.c_double * 3)(-1, -1, -1)
-        status = self.register.callback(ctypes.pointer(self.query), output)
-        if status:
-            raise AssertionError(f'Collision callback refused: {status}')
-        return tuple(output)

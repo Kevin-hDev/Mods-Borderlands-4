@@ -48,10 +48,12 @@ class Tests(unittest.TestCase):
     def test_publish_once_live_value_and_serial_changes_republish(self):
         self.sync(); self.sync()
         self.assertEqual(len(self.writes), 1)
-        self.assertEqual(tuple(self.writes[-1].values), (15, 10, 0))
+        # The native framing gets the aim zoom only: the game places the spacing and height with the shoulder.
+        self.assertEqual(tuple(self.writes[-1].values), (15, 0, 0))
         self.values = ((25, False), (20, False), (-10, False))
         self.sync()
-        self.assertEqual(tuple(self.writes[-1].values), (25, 20, -10))
+        self.assertEqual(len(self.writes), 2)
+        self.assertEqual(tuple(self.writes[-1].values), (25, 0, 0))
         self.serial = 2
         self.sync()
         self.assertEqual(len(self.writes), 3)
@@ -72,7 +74,7 @@ class Tests(unittest.TestCase):
         self.controller._desired_mode = 'Orbit'
         self.controller.presentation_mode = lambda: 'ThirdPerson'
         self.sync()
-        self.assertEqual(tuple(self.writes[-1].values), (15, 10, 0))
+        self.assertEqual(tuple(self.writes[-1].values), (15, 0, 0))
         self.assertEqual(self.controller._desired_mode, 'Orbit')
         self.manager.GetActorCameraMode = lambda _: 'Orbit'
         self.sync()
@@ -144,7 +146,7 @@ class Tests(unittest.TestCase):
         self.assertIsNone(self.session.confirm(self.values))
         self.bridge.status = lambda: 0
         self.sync()
-        self.assertEqual(tuple(self.writes[-1].values), (0, 10, 0))
+        self.assertEqual(tuple(self.writes[-1].values), (0, 0, 0))
         self.assertIsNone(self.session.confirm(self.values))
         self.bridge.status = lambda: 1
         self.sync()

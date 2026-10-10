@@ -6,17 +6,26 @@ import weakref
 import panel_fixture as f
 from third_person_fov import panel_preferences as prefs, settings
 from apex_camera_runtime import shared, constants
+from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, key_at
 
-CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera")
+CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity", "omni_direction")
 root, widgets, form = f.build()
-assert len(widgets["pages"].children) == 6, "five camera pages then COMMANDS (Kevin, 2026-10-06)"
+assert len(widgets["pages"].children) == 9, "seven camera pages, COMMANDS, then SHOULDER VIEW (Kevin, 2026-10-09)"
+assert all(f"setting:{key}" in widgets for key in ("omni_body", "omni_angle", "omni_direction_sprint", "omni_crouch"))
+
+from third_person_fov import panel_camera_tabs  # noqa: E402
+assert panel_camera_tabs.hidden("shoulder") and not panel_camera_tabs.hidden("camera"),     "SHOULDER VIEW is reached from CAMERA's head, not the sidebar"
 assert all(f"heading:dynamic:{key}" in widgets for key in ("fov", "framing", "motion"))
 assert widgets["focus"] is widgets["nav:camera"]
 assert "EN" in widgets and "FR" in widgets and "options" not in widgets
 assert all(f"row:{key}" in widgets for key in ("third_person", "shoulder_left", "orbit", "orbit_distance", "fov",
                                                 "extended_loot", "loot_reach"))
-placement = {"camera": ("setting:third_person", "setting:shoulder_left", "setting:shoulder_smooth", "setting:orbit_smooth", "setting:shoulder_seconds", "setting:fov", "heading:framing:horizontal",
-                        "heading:framing:height"),
+placement = {"camera": ("setting:third_person", "setting:orbit_smooth", "setting:shoulder_seconds", "setting:fov",
+                        "setting:free_look_hold_time", "heading:framing:horizontal", "heading:framing:height",
+                        "tab:camera:camera", "tab:camera:shoulder"),
+             "shoulder": ("setting:shoulder_left", "setting:shoulder_auto", "setting:shoulder_auto_swap",
+                          "setting:shoulder_auto_return", "setting:shoulder_smooth", "tab:shoulder:camera",
+                          "tab:shoulder:shoulder"),
              "aiming": ("setting:third_person_ads", "heading:framing:zoom"),
              "orbit_camera": ("setting:orbit", "setting:orbit_distance"),
              "loot": ("setting:extended_loot", "setting:loot_reach")}
@@ -24,6 +33,15 @@ for key, names in placement.items():
     page = widgets["pages"].children[form.model.pages.index(key)]
     inside = {id(node) for node in f.walk(page)}
     assert all(id(widgets[name]) in inside for name in names), key
+# CAMERA's two buttons open its two halves; CAMERA's sidebar button stays lit on either (Kevin, 2026-10-07).
+f.click(form, widgets, "tab:camera:shoulder")
+shoulder_index = form.model.pages.index("shoulder")
+assert form.page == shoulder_index and widgets["pages"].calls["SetActiveWidgetIndex"] == (shoulder_index,)
+assert widgets["tab:camera:shoulder_label"].calls["SetText"] == ("SHOULDER VIEW",)
+assert widgets["heading:shoulder"].calls["SetText"] == ("SHOULDER VIEW",)
+assert panel_camera_tabs.lit(form, "camera", form.model.pages.index("camera"))
+f.click(form, widgets, "tab:shoulder:camera")
+assert form.model.pages[form.page] == "camera" and widgets["pages"].calls["SetActiveWidgetIndex"] == (0,)
 assert widgets["setting:orbit_distance"].calls["SetIsEnabled"] == (False,), "the distance waits for the orbit camera"
 assert widgets["value:orbit_distance"].calls["SetText"] == ("3 m",)
 assert "row:custom_fov" not in widgets and "SetIsEnabled" not in widgets["setting:fov"].calls, "the FOV has no switch"
@@ -53,7 +71,7 @@ f.click(form, widgets, "icons:XSX")
 duplicate = widgets["command:orbit:keyboard"]
 duplicate.SelectedKey = NS(Key=NS(KeyName="P"))
 form.poll()
-assert settings.commands.option("orbit_key").value == "Seven"
+assert settings.commands.option("orbit_key").value == key_at(TOP_ROW_SEVEN, "Seven")
 assert form.command_form.notice == "refused"
 assert (widgets["commands_status"].calls["SetText"] ==
         ("Attribution refusée. Cette touche est réservée ou déjà utilisée.",))

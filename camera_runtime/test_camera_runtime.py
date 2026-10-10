@@ -303,7 +303,38 @@ frame_runtime.stop()
 first_runtime = shared(weakref.ref, lambda item: item.address)
 second_runtime = shared(weakref.ref, lambda item: item.address)
 check("both packaged mods receive the same process-wide runtime", first_runtime is second_runtime)
+check("the shared runtime carries the third-person sensitivity", first_runtime.sensitivity is not None)
+check("and the sniper zoom key", first_runtime.sniper_zoom is not None)
 reset_for_tests()
+
+
+class Unit:
+    def __init__(self):
+        self.calls = []
+
+    def sync(self, settings, context, now_ns, zoom=None):
+        self.calls.append(("sync", settings, context, zoom))
+
+    def stop(self):
+        self.calls.append(("stop",))
+
+
+class ZoomUnit(Unit):
+    def sync(self, settings, context, controller):
+        self.calls.append(("sync", settings, context, controller))
+
+
+unit, zoom_unit = Unit(), ZoomUnit()
+sensitive = CameraRuntime(FovEngine(weakref.ref, lambda item: item.address))
+sensitive.sensitivity, sensitive.sniper_zoom = unit, zoom_unit
+sensitive.register("apex_movement", 200, apex_settings, PROTOCOL)
+frame_player = Player(6, 95.0)
+sensitive.tick(frame_player, 1_000_000_000)
+sensitive.unregister("apex_movement")
+check("the sensitivity follows the elected client's settings each frame, and stops when it leaves",
+      ("sync", apex_settings, frame_player, None) in unit.calls and unit.calls[-1] == ("stop",))
+check("so does the sniper zoom key, with the camera controller",
+      ("sync", apex_settings, frame_player, None) in zoom_unit.calls and zoom_unit.calls[-1] == ("stop",))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

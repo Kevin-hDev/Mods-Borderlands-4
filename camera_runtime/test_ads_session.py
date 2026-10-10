@@ -192,6 +192,98 @@ class SessionTests(unittest.TestCase):
         self.assertFalse(self.session.wanted)
         self.assertEqual(len(self.native.contexts), 1)
 
+    def sniper(self, ticked=(3, 6)):
+        self.animation.WeaponType = Kind.Sniper
+        self.settings.sniper_optics = lambda: ticked
+
+    def test_a_sniper_rifle_set_to_bdl4_keeps_the_game_scope(self):
+        self.sniper(())
+        self.assertFalse(self.prepare())
+        self.assertFalse(self.session.confirm("ThirdPerson"))
+        self.assertEqual((self.native.contexts, self.native.optic_calls), ([], []))
+
+    def test_an_older_mod_or_dll_without_optics_keeps_the_game_scope(self):
+        self.animation.WeaponType = Kind.Sniper
+        self.assertFalse(self.prepare())
+        self.sniper()
+        self.native.optics = False
+        self.assertFalse(self.prepare())
+        self.settings.sniper_optics = lambda: (6, 3)
+        self.native.optics = True
+        self.assertFalse(self.prepare())
+
+    def test_a_ticked_optic_takes_the_sniper_rifle_to_the_shoulder_at_once(self):
+        self.sniper()
+        self.assertTrue(self.prepare())
+        self.assertTrue(self.session.confirm("ThirdPerson"))
+        self.assertEqual(len(self.native.contexts), 1)
+        self.assertEqual(self.native.optic_calls, [(1, 1 / 3)])
+
+    def test_the_zoom_key_cycles_while_aiming_and_the_view_comes_back_at_once(self):
+        self.sniper()
+        self.prepare(); self.session.confirm("ThirdPerson")
+        self.assertEqual(self.session.optic.next(self.native), 6)
+        self.assertEqual(self.session.optic.next(self.native), 3)
+        self.assertEqual(self.native.optic_calls, [(1, 1 / 3), (1, 1 / 6), (1, 1 / 3)])
+        self.session.optic.next(self.native)
+        self.native.status.fov_writes = 1
+        self.actor.ZoomState.bWantsToZoom = False
+        self.assertTrue(self.prepare())
+        self.assertEqual(self.native.optic_calls[-1], (1, 1.0))
+        self.assertEqual(self.native.releases, [1])
+        self.assertIsNone(self.session.optic.next(self.native))
+        self.native.status.fov_writes += 1
+        self.native.status.zoom_scale = 1.0
+        self.assertFalse(self.prepare())
+        self.assertEqual(self.native.clears, [1])
+
+    def test_the_next_aim_starts_on_the_last_zoom_used(self):
+        self.sniper()
+        self.prepare(); self.session.confirm("ThirdPerson")
+        self.session.optic.next(self.native)
+        self.session.stop()
+        self.prepare(); self.session.confirm("ThirdPerson")
+        self.assertEqual(self.native.optic_calls[-1], (2, 1 / 6))
+
+    def test_a_mod_from_before_the_rows_aims_at_the_shoulder_in_x1(self):
+        self.settings.sniper_optics = lambda: (3, 6)
+        self.prepare(); self.session.confirm("ThirdPerson")
+        self.assertEqual(len(self.native.contexts), 1)
+        self.assertEqual(self.native.optic_calls, [(1, 0.75)])
+        self.assertIsNone(self.session.optic.next(self.native))
+
+    def rows(self, kind, ticked):
+        self.animation.WeaponType = kind
+        self.settings.weapon_optics = lambda category: ticked if category == int(kind) else ()
+
+    def test_an_assault_rifle_on_bdl4_keeps_the_game_aim(self):
+        self.rows(Kind.Assault, ())
+        self.assertFalse(self.prepare())
+        self.assertEqual((self.native.contexts, self.native.optic_calls), ([], []))
+
+    def test_a_pistol_zooms_with_its_ticked_optic(self):
+        self.rows(Kind.Pistol, (2, 3))
+        self.assertTrue(self.prepare())
+        self.assertTrue(self.session.confirm("ThirdPerson"))
+        self.assertEqual(self.native.optic_calls, [(1, 1 / 2)])
+        self.assertEqual(self.session.optic.next(self.native), 3)
+
+    def test_a_heavy_weapon_with_a_ticked_zoom_aims_at_the_shoulder(self):
+        self.rows(Kind.Heavy, (1, 2))
+        self.assertTrue(self.prepare())
+        self.assertTrue(self.session.confirm("ThirdPerson"))
+        self.assertEqual(self.native.optic_calls, [(1, 0.75)])
+        self.assertEqual(self.session.optic.next(self.native), 2)
+        self.assertEqual(self.native.optic_calls, [(1, 0.75), (1, 1 / 2)])
+
+    def test_a_refused_optic_clears_its_publication(self):
+        self.sniper()
+        self.native.optic_error = RuntimeError("Aiming optic unavailable")
+        self.prepare()
+        self.assertFalse(self.session.confirm("ThirdPerson"))
+        self.assertEqual(self.native.clears, [1])
+        self.assertFalse(self.session.optic.active)
+
     def test_publication_refusal_does_not_retry_every_frame_or_change_weapon(self):
         failures = []
         def refuse(context):

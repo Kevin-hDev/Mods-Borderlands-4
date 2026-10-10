@@ -11,7 +11,7 @@ import movement_ui_fixture
 movement_ui_fixture.install()
 
 from apex_movement import camera, camera_settings, panel_camera_commands, panel_form, panel_labels, panel_model
-from apex_movement import panel_theme, settings
+from apex_movement import panel_theme, panel_widgets, settings
 
 
 from movement_ui_fixture import Widget
@@ -37,6 +37,7 @@ class Mod:
 
 panel_labels.apply = lambda *_: None
 panel_camera_commands.refresh = lambda *_: None
+panel_widgets.enum = lambda name, member: f"{name}.{member}"
 shown = {}  # What the labels would show beside each setting: for the shortcut, the key in its key field.
 panel_labels.value = lambda _widgets, option, current, _language: shown.__setitem__(option.identifier, current)
 mod = Mod()
@@ -45,15 +46,19 @@ names = ["focus", "pages", "notice", "close", "theme", "window_size", "options",
          "restore", "undo", "enabled", "row:fov", "description:fov",
          "row:walk_toggle", "description:walk_toggle", "row:walk_key_speed", "description:walk_key_speed",
          "row:loot_reach", "description:loot_reach", "row:shoulder_left", "description:shoulder_left",
-         "row:orbit", "description:orbit", "row:third_person_ads", "description:third_person_ads"]
+         "row:orbit", "description:orbit", "row:third_person_ads", "description:third_person_ads",
+         "row:auto_sprint_third_person", "description:auto_sprint_third_person"]
 names += [f"nav:{page}" for page in model.pages]
 names += [f"setting:{key}" for key in model.options]
-names += [f"{part}:{key}" for key in ('camera_distance_close', 'camera_distance_far', 'shoulder_auto', 'shoulder_auto_swap', 'shoulder_auto_return', 'shoulder_smooth', 'orbit_smooth', 'shoulder_seconds') for part in ('row', 'description')]
+names += [f"{part}:{key}" for key in ('camera_distance_close', 'camera_distance_far', 'sensitivity_look', 'sensitivity_aim', 'sensitivity_weapons', 'sensitivity_weapon_sniper_optics', 'shoulder_auto', 'shoulder_auto_swap', 'shoulder_auto_return', 'shoulder_smooth', 'orbit_smooth', 'shoulder_seconds') for part in ('row', 'description')]
 # The DYNAMIC CAMERA tab's sliders, greyed under their switch (Kevin, 2026-10-06).
 DYNAMIC_SLIDERS = {"speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
                    "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
-names += [f"{part}:{key}" for key in DYNAMIC_SLIDERS for part in ('row', 'description')]
-for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free_look", "camera_distance"):
+# Free Look's settings, greyed while it is switched off (Kevin, 2026-10-08).
+FREE_LOOK_ROWS = {"free_look_keyboard_hold": "free_look", "free_look_controller_hold": "free_look",
+                  "free_look_hold_time": "free_look"}
+names += [f"{part}:{key}" for key in {**DYNAMIC_SLIDERS, **FREE_LOOK_ROWS} for part in ('row', 'description')]
+for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free_look", "camera_distance", "sniper_zoom"):
     names += [f"heading:command_{action}", f"group:command_{action}"]
     for device in ("keyboard", "controller"):
         base = f"{action}:{device}"
@@ -61,10 +66,33 @@ for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free
                   f"value:{base}", f"value:{base}:icon"]
 names += ["heading:command_tools", "group:command_tools", "commands_reset", "commands_reset_label",
           "commands_status", "icons_label", "icons:PS5", "icons:PS5_label", "icons:XSX", "icons:XSX_label"]
+# The weapon-type rows' fold (panel_weapon_sensitivity.py).
+names += ["weapons:rows", "weapons:optics"]
+# The optic rows' boxes, one row per weapon type (panel_optics.py).
+OPTIC_ROWS = {"pistol_optics": (1, 2, 3), "smg_optics": (1, 2, 3, 4), "shotgun_optics": (1, 2),
+              "assault_optics": (1, 2, 3, 4), "sniper_optics": (2, 3, 4, 6, 8), "heavy_optics": (1, 2)}
+names += ["optic:help"] + [f"optic:{row}:{box}" for row, zooms in OPTIC_ROWS.items() for box in ("bdl4", *zooms)]
+names += [f"{part}:{row}" for row in OPTIC_ROWS for part in ("row", "description")]
+# The OMNI DIRECTION tab's rows, boxes, « ? » and pop-ups (panel_omni_direction.py, Kevin 2026-10-09).
+OMNI_ROWS = ("omni_body", "omni_angle", "omni_direction_sprint", "omni_crouch")
+names += [f"{part}:{key}" for key in OMNI_ROWS for part in ("row", "description")]
+names += [f"omni:{key}:{index}" for key in ("omni_angle", "omni_crouch") for index in (0, 1)]
+for key in ("omni_body", "omni_angle", "omni_crouch"):
+    names += [f"omni:{key}:help", f"omni_help:{key}", f"heading:popup_{key}", f"group:popup_{key}",
+              f"popup:{key}", f"popup:{key}:beside", f"popup:{key}:close", f"popup:{key}:close_label"]
 widgets = {name: Widget() for name in names}
 form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
 assert widgets["setting:fov"].enabled is False
 assert widgets["row:fov"].opacity < 1 and widgets["description:fov"].opacity < 1
+# Auto sprint in third person waits on auto sprint itself (Kevin, 2026-10-09).
+assert widgets["setting:auto_sprint_third_person"].enabled is True
+widgets["setting:auto_sprint"].checked = True
+assert not form.poll() and form.pending["auto_sprint"] is False
+assert widgets["setting:auto_sprint_third_person"].enabled is False
+assert widgets["row:auto_sprint_third_person"].opacity < 1
+widgets["setting:auto_sprint"].checked = True
+assert not form.poll() and "auto_sprint" not in form.pending
+assert widgets["row:auto_sprint_third_person"].opacity == 1.0
 # The walk key is on by default: its toggle and its speed are live.
 assert widgets["setting:walk_key_speed"].enabled is True and widgets["row:walk_key_speed"].opacity == 1.0
 assert widgets["setting:walk_toggle"].enabled is True and widgets["row:walk_toggle"].opacity == 1.0
@@ -92,13 +120,46 @@ assert all(widgets[f"setting:{name}"].enabled is True and widgets[f"row:{name}"]
            for name in ("shoulder_left", "orbit"))
 widgets["setting:third_person"].checked = True
 assert not form.poll() and "third_person" not in form.pending and widgets["setting:orbit"].enabled is True
-for slider, switch in DYNAMIC_SLIDERS.items():
+for slider, switch in {**DYNAMIC_SLIDERS, **FREE_LOOK_ROWS}.items():
     assert widgets[f"setting:{slider}"].enabled is True and widgets[f"row:{slider}"].opacity == 1.0
     widgets[f"setting:{switch}"].checked = True
     assert not form.poll() and form.pending[switch] is False
     assert widgets[f"setting:{slider}"].enabled is False and widgets[f"row:{slider}"].opacity < 1
     widgets[f"setting:{switch}"].checked = True
     assert not form.poll() and switch not in form.pending and widgets[f"setting:{slider}"].enabled is True
+
+# OMNI DIRECTION: the whole page waits on third person, the angle and the sprint on the body, the crouch on the sprint.
+assert not form.poll()
+assert widgets["setting:omni_body"].enabled is False and widgets["row:omni_body"].opacity < 1
+assert widgets["omni:omni_angle:0"].enabled is False and widgets["row:omni_crouch"].opacity < 1
+widgets["omni:omni_angle:1"].checked = True
+assert not form.poll() and widgets["setting:omni_angle"].value == 0 and "omni_angle" not in form.pending
+widgets["setting:third_person"].checked = True
+assert not form.poll() and form.pending["third_person"] is True
+assert all(widgets[f"row:{key}"].opacity == 1.0 for key in OMNI_ROWS)
+assert widgets["setting:omni_body"].enabled is True and widgets["omni:omni_crouch:1"].enabled is True
+widgets["omni:omni_angle:1"].checked = True
+assert not form.poll() and widgets["setting:omni_angle"].value == 1.0
+assert not form.poll() and form.pending["omni_angle"] == 1
+widgets["setting:omni_direction_sprint"].checked = True
+assert not form.poll() and form.pending["omni_direction_sprint"] is False
+assert widgets["row:omni_crouch"].opacity < 1 and widgets["omni:omni_crouch:0"].enabled is False
+assert widgets["row:omni_angle"].opacity == 1.0
+widgets["setting:omni_body"].checked = True
+assert not form.poll() and form.pending["omni_body"] is False
+assert widgets["row:omni_angle"].opacity < 1 and widgets["setting:omni_direction_sprint"].enabled is False
+widgets["omni:omni_crouch:help"].checked = True
+assert not form.poll() and form.popup == "omni_crouch"
+widgets["popup:omni_crouch:close"].checked = True
+assert not form.poll() and form.popup is None
+for key in ("omni_body", "omni_direction_sprint"):
+    widgets[f"setting:{key}"].checked = True
+    form.poll()
+widgets["omni:omni_angle:0"].checked = True
+form.poll()
+widgets["setting:third_person"].checked = True
+form.poll()
+assert not form.poll() and not {"omni_body", "omni_direction_sprint", "third_person", "omni_angle"} & set(form.pending)
 
 widgets["options"].checked = True
 assert not form.poll() and widgets["pages"].active == len(model.pages)

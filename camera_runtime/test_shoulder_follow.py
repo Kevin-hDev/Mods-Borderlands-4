@@ -8,6 +8,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from apex_camera_runtime.shoulder import ShoulderState  # noqa: E402
+from apex_camera_runtime.constants import THIRD_PERSON_RIGHT as RIGHT  # noqa: E402
 from apex_camera_runtime.shoulder_auto import RETURN_S, SWAP_S, Values  # noqa: E402
 from apex_camera_runtime.shoulder_clearance import Reading  # noqa: E402
 
@@ -27,10 +28,10 @@ SHOWN, OTHER = (0.0, 50.0, 0.0), (0.0, -50.0, 0.0)
 class Clearance:
     def __init__(self):
         self.reading = None
-        self.wanted = False
+        self.wanted = self.active = False
 
-    def set(self, room, other_room):
-        self.reading = Reading(room, other_room, SHOWN, None if other_room is None else OTHER)
+    def set(self, room, other_room, seen="", other_seen=""):
+        self.reading = Reading(room, other_room, SHOWN, None if other_room is None else OTHER, seen, other_seen)
 
     def take(self):
         return self.reading
@@ -38,16 +39,26 @@ class Clearance:
 
 class Sight:
     """Free view ahead by camera; a wall in front of the shown camera is a low share there."""
-    def __init__(self, shown=1.0, other=1.0, fail=False):
+    def __init__(self, shown=1.0, other=1.0, fail=False, beyond=1.0):
         self.views = {SHOWN: shown, OTHER: other}
         self.fail = fail
         self.calls = 0
+        self.seen = "clear"
+        # The view past the other camera: low beside a door or a window.
+        self.beyond = beyond
+        self.openings = []
 
     def share(self, _actor, start, yaw):
         self.calls += 1
         if self.fail:
             raise ValueError("invalid sight result")
+        self.seen = f"{'shown' if start == SHOWN else 'other'} line"
         return self.views[start]
+
+    def opening(self, _actor, camera, other, yaw):
+        self.openings.append((camera, other))
+        self.seen = "beyond line"
+        return self.beyond
 
 
 class Bridge:
@@ -116,42 +127,46 @@ def start(sight=None):
 
 owner, settings, state, clearance = start()
 check("the saved side is shown first", state.shown_left is False)
-clearance.set(0.1, 1.0)
+clearance.set(0.1, 1.0, "40 cm on Wall/SM_Wall up 0.00", "clear")
 now = frames(state, owner, settings, SWAP_S + 0.05, 0)
-check("a wall at the right camera shows the left shoulder", owner.bridge.rights[-1] == -48.4
+check("a wall at the right camera shows the left shoulder", owner.bridge.rights[-1] == -RIGHT
       and state.shown_left is True)
 check("the swap uses the shoulder transition", owner.bridge.durations[-1] == 0.2)
 check("the saved shoulder is not changed by a swap", settings.left is False and settings.saves == 0)
-check("the swap is written once", owner.bridge.rights.count(-48.4) == 1)
-check("the swap is logged with its reading", owner.lines[-1] == "automatic shoulder: left shown (free 0.10, other 1.00)")
+check("the swap is written once", owner.bridge.rights.count(-RIGHT) == 1)
+check("the swap is logged with its reading", owner.lines[-1] == "automatic shoulder: left shown (free 0.10, other 1.00)"
+      "; shown room 0.10 (40 cm on Wall/SM_Wall up 0.00) view 1.00 shown line"
+      "; other room 1.00 (clear) view 1.00 other line")
 check("during a swap the chosen side is measured", clearance.wanted)
 
 owner._aiming = True
 clearance.set(1.0, 1.0)
 sight_calls = state.sight.calls
 now = frames(state, owner, settings, RETURN_S + 0.5, now)
-check("aiming never brings the shoulder back", state.shown_left is True and owner.bridge.rights[-1] == -48.4)
+check("aiming never brings the shoulder back", state.shown_left is True and owner.bridge.rights[-1] == -RIGHT)
 check("aiming stops the second sweep and the view checks", not clearance.wanted and state.sight.calls == sight_calls)
+check("aiming stops the extra sweeps against poles", not clearance.active)
 owner._aiming = False
 now = frames(state, owner, settings, RETURN_S + 0.05, now)
 check("once clear for the return delay the chosen right shoulder is back",
-      owner.bridge.rights[-1] == 48.4 and state.shown_left is False)
+      owner.bridge.rights[-1] == RIGHT and state.shown_left is False)
 check("the return is logged", owner.lines[-1].startswith("automatic shoulder: right shown"))
 check("a clear shoulder asks for no second sweep", not clearance.wanted)
+check("on foot with the switch on, a cramped side is swept again against poles", clearance.active)
 
 clearance.set(0.1, 1.0)
 now = frames(state, owner, settings, SWAP_S + 0.05, now)
 check("the shoulder key during a swap is taken", state.player_switch(owner, settings))
 check("the key shows the chosen shoulder, the saved one unchanged",
-      owner.bridge.rights[-1] == 48.4 and state.shown_left is False and settings.saves == 0)
+      owner.bridge.rights[-1] == RIGHT and state.shown_left is False and settings.saves == 0)
 now = frames(state, owner, settings, 1.0, now)
-check("after the key the wall does not swap again", owner.bridge.rights[-1] == 48.4)
+check("after the key the wall does not swap again", owner.bridge.rights[-1] == RIGHT)
 check("the key with no swap is left to the normal shoulder change", not state.player_switch(owner, settings))
 
 clearance.reading = None
 before = list(owner.bridge.rights)
 frames(state, owner, settings, 1.0, now)
-check("no reading changes nothing", owner.bridge.rights == before and not clearance.wanted)
+check("no reading changes nothing", owner.bridge.rights == before and not clearance.wanted and not clearance.active)
 
 owner, settings, state, clearance = start(Sight(shown=0.3))
 clearance.set(1.0, None)
@@ -160,12 +175,55 @@ check("a wall ahead of a roomy camera asks for the other side", clearance.wanted
 clearance.set(1.0, 1.0)
 frames(state, owner, settings, SWAP_S + 0.05, now)
 check("a wall ahead of the right camera shows the left shoulder", state.shown_left is True
-      and owner.lines[-1] == "automatic shoulder: left shown (free 0.30, other 1.00)")
+      and owner.lines[-1] == "automatic shoulder: left shown (free 0.30, other 1.00)"
+      "; shown room 1.00 view 0.30 shown line; other room 1.00 view 1.00 other line; beyond 1.00 beyond line")
+check("a swap the view alone asks for looks past the other camera first", state.sight.openings[0] == (SHOWN, OTHER))
+
+# Walking straight to a door: the wall beside it blocks the right camera's view, the left one sees through the door,
+# and past the left camera the same wall stands again (Kevin, 2026-10-08).
+owner, settings, state, clearance = start(Sight(shown=0.43, beyond=0.4))
+clearance.set(1.0, 1.0)
+now = frames(state, owner, settings, 1.0, 0)
+check("a door's edge keeps the chosen shoulder", state.shown_left is False and owner.bridge.rights == [RIGHT])
+check("the kept shoulder is logged once, with what the line past the other camera met", owner.lines == [
+    "automatic shoulder: right kept, the other side only sees through an opening; shown room 1.00 view 0.43 shown line"
+    "; other room 1.00 view 1.00 other line; beyond 0.40 beyond line"])
+check("the other side stays measured while the door is ahead", clearance.wanted)
+state.sight.views[SHOWN] = 1.0
+now = frames(state, owner, settings, 0.1, now)
+state.sight.views[SHOWN] = 0.43
+frames(state, owner, settings, 0.1, now)
+check("the next door is logged again", len(owner.lines) == 2 and owner.lines[-1].startswith("automatic shoulder: right kept"))
+
+owner, settings, state, clearance = start(Sight(beyond=0.0))
+clearance.set(0.1, 1.0)
+frames(state, owner, settings, SWAP_S + 0.05, 0)
+check("a camera squeezed by a wall swaps on its room alone", state.shown_left is True and state.sight.openings == [])
+
+owner, settings, state, clearance = start(Sight(shown=0.3))
+clearance.set(1.0, 1.0)
+now = frames(state, owner, settings, SWAP_S + 0.05, 0)
+looked = len(state.sight.openings)
+state.sight.beyond = 0.0
+now = frames(state, owner, settings, RETURN_S - 0.1, now)
+check("the way back to the chosen shoulder never looks past an opening",
+      state.shown_left is True and len(state.sight.openings) == looked)
+now = frames(state, owner, settings, 0.15, now)
+check("the chosen shoulder comes back as before", state.shown_left is False)
+
+owner, settings, state, clearance = start(Sight(shown=0.3))
+clearance.set(1.0, 1.0)
+now = frames(state, owner, settings, SWAP_S + 0.05, 0)
+state.player_switch(owner, settings)
+looked = len(state.sight.openings)
+frames(state, owner, settings, 0.5, now)
+check("after the shoulder key, nothing looks past an opening until the side clears",
+      state.shown_left is False and len(state.sight.openings) == looked)
 
 owner, settings, state, clearance = start(Sight(shown=0.3, other=0.4))
 clearance.set(1.0, 1.0)
 frames(state, owner, settings, 1.0, 0)
-check("a wall ahead of both cameras swaps nothing", state.shown_left is False and owner.bridge.rights == [48.4])
+check("a wall ahead of both cameras swaps nothing", state.shown_left is False and owner.bridge.rights == [RIGHT])
 
 owner, settings, state, clearance = start(Sight(fail=True))
 clearance.set(0.1, 1.0)
@@ -195,8 +253,8 @@ owner, settings, state, clearance = start()
 settings.automatic = False
 clearance.set(0.1, 1.0)
 frames(state, owner, settings, 1.0, 0)
-check("switched off, a wall swaps nothing", state.shown_left is False and owner.bridge.rights == [48.4])
-check("switched off, nothing is measured", not clearance.wanted and state.sight.calls == 0)
+check("switched off, a wall swaps nothing", state.shown_left is False and owner.bridge.rights == [RIGHT])
+check("switched off, nothing is measured", not clearance.wanted and not clearance.active and state.sight.calls == 0)
 
 owner, settings, state, clearance = start()
 clearance.set(0.1, 1.0)
@@ -204,7 +262,7 @@ now = frames(state, owner, settings, SWAP_S + 0.05, 0)
 settings.automatic = False
 frames(state, owner, settings, 0.05, now)
 check("switching off during a swap shows the chosen shoulder at once",
-      state.shown_left is False and owner.bridge.rights[-1] == 48.4 and state.auto.override is None)
+      state.shown_left is False and owner.bridge.rights[-1] == RIGHT and state.auto.override is None)
 check("switching off is logged", owner.lines[-1] == "automatic shoulder: switched off, right shown")
 
 owner, settings, state, clearance = start()
@@ -219,7 +277,7 @@ owner._aiming = True
 settings.left = True
 clearance.set(1.0, None)
 frames(state, owner, settings, 0.5, 0)
-check("a side saved elsewhere is never written while the shoulder is unavailable", owner.bridge.rights == [48.4])
+check("a side saved elsewhere is never written while the shoulder is unavailable", owner.bridge.rights == [RIGHT])
 
 owner, settings, state, clearance = start()
 clearance.set(0.1, 1.0)

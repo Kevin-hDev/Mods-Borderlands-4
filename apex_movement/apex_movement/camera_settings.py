@@ -11,9 +11,12 @@ try:
     from .apex_camera_runtime.loot_options import LootOptions
     from .apex_camera_runtime.speed_fov_options import SpeedFovOptions
     from .apex_camera_runtime.dynamic_options import DynamicOptions
+    from .apex_camera_runtime.omni_direction_options import SLIDE, OmniDirectionOptions
     from .apex_camera_runtime.free_look_options import FreeLookOptions
     from .apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
     from .apex_camera_runtime.camera_distance_options import CameraDistanceOptions
+    from .apex_camera_runtime.look_sensitivity_options import LookSensitivityOptions
+    from .apex_camera_runtime.weapon_optic_options import WeaponOpticOptions
     from .apex_camera_runtime.camera_option import BaseViewOption, CameraBoolOption
     from .apex_camera_runtime.camera_commands import CameraCommands
     from .apex_camera_runtime.shoulder_transition_options import ShoulderTransitionOptions
@@ -28,9 +31,12 @@ except ModuleNotFoundError as error:
     from apex_camera_runtime.loot_options import LootOptions
     from apex_camera_runtime.speed_fov_options import SpeedFovOptions
     from apex_camera_runtime.dynamic_options import DynamicOptions
+    from apex_camera_runtime.omni_direction_options import SLIDE, OmniDirectionOptions
     from apex_camera_runtime.free_look_options import FreeLookOptions
     from apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
     from apex_camera_runtime.camera_distance_options import CameraDistanceOptions
+    from apex_camera_runtime.look_sensitivity_options import LookSensitivityOptions
+    from apex_camera_runtime.weapon_optic_options import WeaponOpticOptions
     from apex_camera_runtime.camera_option import BaseViewOption, CameraBoolOption
     from apex_camera_runtime.camera_commands import CameraCommands
     from apex_camera_runtime.shoulder_transition_options import ShoulderTransitionOptions
@@ -41,9 +47,12 @@ except ModuleNotFoundError as error:
 loot = LootOptions()
 speed_fov = SpeedFovOptions()
 dynamic = DynamicOptions()
+# Apex Movement keeps the slide on the sides and backward: a move of its own (Kevin, 2026-10-09).
+omni = OmniDirectionOptions(SLIDE)
 loot_distance = loot.distance
 zoom = OrbitZoomOptions()
 distance = CameraDistanceOptions()
+sensitivity = LookSensitivityOptions()
 ads = AdsOptions()
 framing = FramingOptions(note=report.note)
 shoulder_transition = ShoulderTransitionOptions()
@@ -118,6 +127,7 @@ def _cycle_distance() -> None:
 commands = CameraCommands(third_person=_toggle_third_person, shoulder=_toggle_shoulder, orbit=_toggle_orbit,
                           zoom_in=lambda: _zoom(-1), zoom_out=lambda: _zoom(1), camera_distance=_cycle_distance)
 free_look = FreeLookOptions(commands)
+optics = WeaponOpticOptions(commands)
 (third_person_bind, third_person_controller_bind, shoulder_bind, shoulder_controller_bind,
  orbit_bind, orbit_controller_bind) = commands.binds[:6]
 (third_person_key, third_person_controller, shoulder_key, shoulder_controller,
@@ -131,13 +141,18 @@ applied_fov = SliderOption("applied_fov", 0, 0, 180, step=1, is_integer=False, i
 # The custom panel exposes only player choices; recovery values stay private.
 # The field of view right after the view, as on the other camera mods' CAMERA VIEW page (Kevin, 2026-10-07); the
 # shoulder's settings show on their own SHOULDER VIEW tab (SHOULDER_PAGE).
-VISIBLE = (third_person, third_person_ads, custom_fov, fov, *distance.options, shoulder_left, *shoulder_transition.options,
-           *free_look.options, orbit, *loot.options)
+VISIBLE = (third_person, third_person_ads, *optics.options, custom_fov, fov, *distance.options, shoulder_left, *shoulder_transition.options,
+           *free_look.options, orbit, *loot.options, *sensitivity.options, *omni.options)
+# The settings each one-card tab shows (panel_options.CARD_PAGES), kept off the CAMERA VIEW tab.
+CARD_SETTINGS = {"shoulder": SHOULDER_PAGE, "aiming": (third_person_ads.identifier,
+                                                       *(option.identifier for option in optics.options)),
+                 "sensitivity": tuple(option.identifier for option in sensitivity.options),
+                 "omni_direction": tuple(option.identifier for option in omni.options)}
 # The DYNAMIC CAMERA tab's settings, apart from the CAMERA tab's.
 DYNAMIC = (*speed_fov.options, *dynamic.options)
 ALL = [third_person, third_person_ads, third_person_key, third_person_controller,
        shoulder_left, *shoulder_transition.options, shoulder_key, shoulder_controller,
-       orbit, orbit_key, orbit_controller, *commands.options[6:], *distance.options, *free_look.options, custom_fov, fov, *loot.options, *speed_fov.options, *dynamic.options, native_fov, applied_fov,
+       orbit, orbit_key, orbit_controller, *commands.options[6:], *distance.options, *free_look.options, custom_fov, fov, *loot.options, *speed_fov.options, *dynamic.options, *omni.options, *sensitivity.options, *optics.options, native_fov, applied_fov,
            zoom.option, distance.option, *framing.options]
 
 

@@ -8,6 +8,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from apex_camera_runtime.foot_mode import ORBIT_MODE  # noqa: E402
+from apex_camera_runtime.constants import THIRD_PERSON_RIGHT as RIGHT  # noqa: E402
 from apex_camera_runtime.third_person import ThirdPersonController  # noqa: E402
 from camera_test_fixtures import Bound, Bridge, Hooks, Manager, Settings, args  # noqa: E402
 
@@ -52,13 +53,13 @@ check("leaving Orbit succeeds", controller.toggle_orbit(settings, 1))
 check("the shoulder bridge stays suspended until the Orbit exit is confirmed",
       bridge.suspended == [True])
 check("the shoulder stays unchanged until the Orbit exit is confirmed",
-      not controller.set_shoulder(settings, True) and not settings.left and bridge.rights == [48.4])
+      not controller.set_shoulder(settings, True) and not settings.left and bridge.rights == [RIGHT])
 controller.sync("apex", pc, settings, 2)
 check("leaving Orbit restores one ThirdPerson layer and shoulder",
       manager.pushes == 1 and controller._mode_pushes == 1 and not settings.orbit
       and bridge.suspended[-1] is False and not settings.left)
 check("the shoulder becomes available after the Orbit exit is confirmed",
-      controller.set_shoulder(settings, True) and settings.left and bridge.rights[-1] == -48.4)
+      controller.set_shoulder(settings, True) and settings.left and bridge.rights[-1] == -RIGHT)
 check("entering Orbit succeeds", controller.toggle_orbit(settings, 3))
 controller.sync("apex", pc, settings, 4)
 check("entering Orbit removes every layer before the direct request",

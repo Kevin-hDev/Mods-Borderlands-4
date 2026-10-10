@@ -94,6 +94,17 @@ int main() {
     factor = .5f;
     state.clear(generation);
     assert(state.publish(fixture.context(++generation)) == 0);
+    assert(state.set_optic(generation, 0.125f) == 0);
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+    assert(std::abs(read_fov(view) - zoom_fov(110.0f, 0.125f)) < 0.001f && state.statistics().zoom_scale == 0.125f);
+    assert(state.set_optic(generation, 1.0f) == 0); // Let go: the view without zoom at once.
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+    assert(std::abs(read_fov(view) - 110.0f) < 0.001f && state.statistics().zoom_scale == 1.0f);
+    assert(state.set_optic(generation, 0.0f) == 0);
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+    assert(std::abs(read_fov(view) - 71.05929f) < 0.001f && state.statistics().zoom_scale == 0.5f);
+    state.clear(generation);
+    assert(state.publish(fixture.context(++generation)) == 0);
     const auto writes = state.statistics().fov_writes;
     const int fault_calls = zoom_calls;
     fault = ZoomFault::access_violation;

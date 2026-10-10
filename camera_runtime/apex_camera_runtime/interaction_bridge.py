@@ -1,4 +1,5 @@
-"""Validated native boundary for the rendered-camera interaction ray."""
+"""Validated native boundary for the hunter's eyes on the crosshair's line in third person: the game aims throws
+and pickups from them (docs/third_person_fov/camera/2026-10-08-plan-yeux-sur-la-camera.md)."""
 import ctypes
 
 from .native_bridge import load_packaged_library
@@ -15,12 +16,15 @@ class Config(ctypes.Structure):
     _fields_ += [(name, ctypes.c_uint64) for name in ('controller', 'pawn', 'manager', 'camera_module')]
 
 
+class View(ctypes.Structure):
+    _fields_ = [(name, ctypes.c_double * 3) for name in ('origin', 'rotation')]
+
+
 class Stats(ctypes.Structure):
-    _fields_ = [(name, ctypes.c_uint64) for name in ('calls', 'matches', 'valid', 'invalid', 'tick_ms')]
-    _fields_ += [(name, ctypes.c_double * 3) for name in ('origin', 'rotation', 'anchor')]
-    _fields_ += [(name, ctypes.c_uint32) for name in ('active', 'installed', 'last_success', 'reserved')]
+    _fields_ = [(name, ctypes.c_uint64) for name in ('calls', 'valid', 'invalid', 'tick_ms')]
+    _fields_ += [(name, ctypes.c_uint32) for name in ('active', 'installed')]
     _fields_ += [(name, ctypes.c_uint64) for name in ('writes', 'bypassed', 'rejected_view')]
-    _fields_ += [(name, ctypes.c_double * 3) for name in ('output_origin', 'output_rotation')]
+    _fields_ += [(name, View) for name in ('eyes', 'output')]
 
 
 def make_config(pc, manager, camera_library):
@@ -49,7 +53,7 @@ class InteractionBridge:
     @staticmethod
     def _check(status):
         if status:
-            raise RuntimeError('Native interaction operation refused')
+            raise RuntimeError(f'native interaction operation refused ({status})')
 
     def start(self, config):
         self._check(self.library.interaction_start(ctypes.byref(config)))

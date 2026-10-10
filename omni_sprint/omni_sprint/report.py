@@ -5,7 +5,7 @@ from unrealsdk import logging
 PREFIX = "[Omni Sprint]"
 # Bounded: a key per failure kind or per character's movement component; past this, new keys are dropped.
 MAX_REPORTED = 200
-# A line per definition opened or found back, bounded per switch-on: a long session must not fill the log, which the
+# A line per change, bounded per switch-on: a long session must not fill the log, which the
 # game only rewrites at its next launch.
 MAX_NOTES = 2000
 

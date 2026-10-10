@@ -24,6 +24,8 @@ public:
     int publish_pointer(const AdsContext* input);
     int clear(uint64_t generation);
     int release(uint64_t generation);
+    int set_optic(uint64_t generation, float scale);
+    float optic(const Ticket& ticket);
     bool ticket(void* manager, Ticket& output);
     bool ticket(Ticket& output);
     bool current(const Ticket& ticket);
@@ -43,6 +45,9 @@ private:
     AdsStats stats_{};
     uintptr_t table_{};
     uint64_t third_name_{}, last_generation_{};
+    // Bound to one published aim: the next publication or a cleanup leaves it behind on its own.
+    uint64_t optic_generation_{};
+    float optic_{};
     DWORD thread_{};
     ZoomScale zoom_{};
     bool touched_{};

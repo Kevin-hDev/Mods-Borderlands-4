@@ -37,6 +37,9 @@ class Arbiter:
     def unregister(self, owner: str) -> None:
         self._clients.pop(owner, None)
 
+    def clients(self) -> tuple[Client, ...]:
+        return tuple(self._clients.values())
+
     def active(self) -> Client | None:
         if not self._clients:
             return None

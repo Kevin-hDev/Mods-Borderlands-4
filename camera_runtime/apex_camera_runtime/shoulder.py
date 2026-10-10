@@ -3,7 +3,7 @@
 from typing import Any
 
 from .constants import THIRD_PERSON_MODE, THIRD_PERSON_RIGHT
-from .shoulder_auto import CLEAR, AutoShoulder
+from .shoulder_auto import CLEAR, AutoShoulder, swap_due
 from .shoulder_sight import ShoulderSight
 
 # A long frame counts as this much, so a hitch never completes a swap's delay on its own.
@@ -27,6 +27,11 @@ def _share(value: float | None) -> str:
     return "unread" if value is None else f"{value:.2f}"
 
 
+def _met(seen: str) -> str:
+    """What cut a side's room, in brackets; nothing when it was not swept again (shoulder_clearance.py)."""
+    return f" ({seen})" if seen else ""
+
+
 class ShoulderState:
     def __init__(self) -> None:
         self.auto = AutoShoulder()
@@ -35,6 +40,10 @@ class ShoulderState:
         self.last_ns: int | None = None
         self.sight: ShoulderSight | None = None
         self.sight_failed = False
+        # Each side's room and view ahead behind the last shares, written with a swap.
+        self.measured = ""
+        # An opening kept the shown side last frame: the log names the first frame of each such stretch only.
+        self.kept = False
 
     @staticmethod
     def configure(bridge, settings):
@@ -81,19 +90,20 @@ class ShoulderState:
             return
         reading = clearance.take()
         if reading is None:
-            # The wall check is not running (aiming, vehicle, Orbit...): hold the side shown.
-            clearance.wanted = False
+            # The camera guard is not measuring (aiming, vehicle, Orbit...): hold the side shown.
+            clearance.wanted = clearance.active = False
             self.auto.step(settings.shoulder_left(), None, None, False, seconds)
             return
         allowed = self.available(controller)
         values = _values(settings)
         if values is None or not values.enabled:
-            clearance.wanted = False
+            clearance.wanted = clearance.active = False
             self._show_chosen(controller, settings, allowed)
             return
         shown, other = self._shares(controller, collision, reading) if allowed else (reading.room, None)
         side = self.auto.step(settings.shoulder_left(), shown, other, allowed, seconds, values.swap_s, values.return_s)
         clearance.wanted = allowed and (self.auto.override is not None or shown < CLEAR)
+        clearance.active = allowed
         if side is self.shown_left or not allowed:
             return
         self.configure(controller.bridge, settings)
@@ -101,7 +111,7 @@ class ShoulderState:
             raise RuntimeError("automatic shoulder refused")
         self.shown_left = side
         controller.log(f"automatic shoulder: {'left' if side else 'right'} shown "
-                       f"(free {_share(shown)}, other {_share(other)})")
+                       f"(free {_share(shown)}, other {_share(other)}){self.measured}")
 
     def _show_chosen(self, controller: Any, settings: Any, allowed: bool) -> None:
         """Switched off in the menu: a swap under way ends at once."""
@@ -116,8 +126,10 @@ class ShoulderState:
         controller.log(f"automatic shoulder: switched off, {'left' if left else 'right'} shown")
 
     def _shares(self, controller: Any, collision: Any, reading: Any) -> tuple:
-        """Each side's free share: the smaller of its room and its view ahead."""
+        """Each side's free share: the smaller of its room and its view ahead, and of the view past an opening when only
+        the view would swap."""
         shown, other = reading.room, reading.other_room
+        self.measured = ""
         if self.sight_failed:
             return shown, other
         try:
@@ -125,12 +137,30 @@ class ShoulderState:
                 self.sight = ShoulderSight(collision.sweep.kismet, collision.sweep.sdk)
             actor, manager = controller._lifetime.owned()
             yaw = float(manager.GetCameraRotation().Yaw)
-            shown = min(shown, self.sight.share(actor, reading.camera, yaw))
+            view = self.sight.share(actor, reading.camera, yaw)
+            self.measured = f"; shown room {_share(shown)}{_met(reading.seen)} view {_share(view)} {self.sight.seen}"
+            shown = min(shown, view)
+            kept = False
             if other is not None and reading.other_camera is not None:
-                other = min(other, self.sight.share(actor, reading.other_camera, yaw))
+                view = self.sight.share(actor, reading.other_camera, yaw)
+                self.measured += (f"; other room {_share(other)}{_met(reading.other_seen)} view {_share(view)} "
+                                  f"{self.sight.seen}")
+                other = min(other, view)
+                if (self.auto.override is None and not self.auto.waiting and swap_due(shown, other)
+                        and not swap_due(reading.room, other)):
+                    # Only the view ahead asks for this swap: the other side must see on past the door or window it
+                    # looks through (shoulder_sight.py). A camera squeezed by a wall still swaps on its room alone.
+                    beyond = self.sight.opening(actor, reading.camera, reading.other_camera, yaw)
+                    self.measured += f"; beyond {_share(beyond)} {self.sight.seen}"
+                    other = min(other, beyond)
+                    kept = other < CLEAR
+            if kept and not self.kept:
+                controller.log(f"automatic shoulder: {'left' if self.shown_left else 'right'} kept, the other side "
+                               f"only sees through an opening{self.measured}")
+            self.kept = kept
         except Exception as error:
             # The view ahead is comfort: without it, the swap still answers a wall at the camera.
-            self.sight_failed = True
+            self.sight_failed, self.measured = True, ""
             controller.log(f"automatic shoulder: view ahead unavailable ({type(error).__name__}), room only")
             return reading.room, reading.other_room
         return shown, other

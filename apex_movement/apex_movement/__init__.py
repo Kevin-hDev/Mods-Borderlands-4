@@ -13,8 +13,8 @@ from mods_base import build_mod
 from . import pack
 from . import (
     air_crouch, air_strafe, dash, family, frame, glide, ground_speed, heavier_fall, jump_report, menu, move_watch,
-    ownership, panel_open, panel_preferences, report, settings, slide, slide_direction, slide_physics,
-    slide_steering, sprint, walk_key, wall_climb,
+    ownership, panel_open, panel_preferences, report, settings, settings_upgrade, slide, slide_direction,
+    slide_physics, slide_steering, sprint, walk_key, wall_climb,
 )
 
 camera_adapter = None
@@ -26,13 +26,14 @@ if pack.is_full():
     camera_options = camera_settings.ALL
     camera_keybinds = list(camera_settings.commands.binds)
     frame.set_camera(camera_adapter)
+    sprint.set_view(camera_adapter.in_third_person)
 # The slow walk ships in the full pack only (Kevin, 2026-09-26): a separate file holds no key for it.
 walk_keybinds = []
 if pack.is_full():
     from . import slow_walk
     walk_keybinds = [walk_key.bind]
 
-__version__ = "1.2.8"
+__version__ = "1.2.16"
 __author__ = "kevin-hDev"
 
 
@@ -115,6 +116,8 @@ mod = build_mod(
     on_disable=_on_disable,
 )
 panel_open.install(mod)
+if pack.is_full():
+    settings_upgrade.apply(mod.settings_file, settings.auto_sprint_third_person)
 
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
 if mod.settings_file is not None and not mod.settings_file.exists():

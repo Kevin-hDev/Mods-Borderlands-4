@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.2.8**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.16**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. The custom climbing body animation is also not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -44,8 +44,16 @@ The full pack also carries an optional camera, on the Options page:
 
 - **Third person**: an over-the-shoulder camera on foot, off by default. Aim View defaults to third person,
   with native weapon zoom and a visible reticle; choose first person in Camera settings if preferred.
-  Crouch and switch shoulders while aiming. Sniper rifles remain in first person; heavy and unsupported
-  weapons use the native view. When downed, and when a ground slam lands, the view stays in third person.
+  Crouch and switch shoulders while aiming. When downed, and when a ground slam lands, the view stays in third
+  person.
+- **Optics**: Every weapon type has its optic on the AIMING page: BDL4 keeps the game's first-person aim, the zooms
+  you tick aim over the shoulder (pistols x1 to x3, SMGs and assault rifles x1 to x4, shotguns and heavy
+  weapons x1 and x2, sniper rifles x2 to x8). With several zooms ticked, a key switches from one to the next.
+  Unsupported weapons keep the native view.
+- **Omni direction**: in third person, the character turns toward where it runs, all the way round (360°) or up
+  to the sides (180°), sprints in every direction and stays turned when it stops.
+- **Sensitivity**: the camera's speed in third person, without aiming and while aiming, with mouse and
+  controller. Optional aim speeds per weapon type and per optic zoom, each with its own switch.
 - **Shoulder**: the camera sits over the right shoulder by default, or the left one.
 - **Automatic shoulder switch**: when a wall blocks the view ahead, the camera moves to the other shoulder, then
   comes back once the view is clear. On by default, never while aiming; its switch and both delays sit next to the

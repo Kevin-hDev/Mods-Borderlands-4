@@ -12,8 +12,7 @@ def _sidebar(owner, widgets, template):
     panel = w.border(owner, t.COLOR_SIDEBAR, w.pad(t.SPACE_5, 0))
     column = w.new("VerticalBox", panel)
     panel.SetContent(column)
-    widgets["settings_caption"] = tx.text(column, "", "caption")
-    w.column(column, widgets["settings_caption"], padding=w.pad(0, t.SPACE_4 + t.SPACE_2, t.SPACE_3))
+    # No SETTINGS caption over the pages (Kevin, 2026-10-10): it took room for nothing, beside the OPTIONS page.
     scroll = w.new("ScrollBox", column)
     w.cosmetic("nav_scrollbar", lambda: p._scrollbar(scroll, template))
     nav = w.new("VerticalBox", scroll)
@@ -50,8 +49,14 @@ def _window(root, world, model, widgets, template):
     frame.SetCursor(w.enum("EMouseCursor", "Default"))
     layers, _ = w.shadowed(root, frame, size.SHADOW)
     root.SetContent(w.sized(root, layers, size.WIDTH + size.SHADOW, size.HEIGHT + size.SHADOW))
-    stack = w.new("VerticalBox", body)
-    body.SetContent(stack)
+    # Pop-ups (panel_popup.py) lie in a layer over the whole window: a page or its scrolling never cuts one.
+    over = w.new("Overlay", body)
+    body.SetContent(over)
+    stack = w.new("VerticalBox", over)
+    w.layer(over, stack)
+    widgets["popups"] = w.new("Overlay", over)
+    widgets["popups"].SetVisibility(w.enum("ESlateVisibility", "SelfHitTestInvisible"))
+    w.layer(over, widgets["popups"])
     w.column(stack, h.hazard(stack))
     head, avatar = h.header(stack, world, widgets, template)
     w.column(stack, head)
@@ -74,8 +79,9 @@ def _window(root, world, model, widgets, template):
         switcher.AddChild(o.language_page(switcher, widgets, template))
     if "dynamic_camera" in model.pages:
         switcher.AddChild(o.dynamic_page(switcher, model, widgets, template))
-    if "shoulder" in model.pages:
-        switcher.AddChild(o.shoulder_page(switcher, model, widgets, template))
+    for key in o.CARD_PAGES:
+        if key in model.pages:
+            switcher.AddChild(o.card_page(switcher, model, widgets, template, key))
     switcher.AddChild(o.options_page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))

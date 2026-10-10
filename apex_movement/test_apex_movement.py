@@ -27,6 +27,8 @@ def check(label: str, condition: bool) -> None:
 
 mod = state["mods"][0]
 check("the mod is named Apex Movement", mod.kwargs["name"] == "Apex Movement")
+check("a new install: auto sprint off in third person (Kevin, 2026-10-09)",
+      settings.auto_sprint_third_person.value is False)
 check("the menu, camera settings and hidden preferences are registered",
       mod.kwargs["options"] == [*menu.MENU, *camera_settings.ALL, *apex_movement.panel_preferences.ALL])
 check("camera features are off by default",

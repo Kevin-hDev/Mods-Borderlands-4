@@ -59,6 +59,12 @@ def shared(weak_ref: Callable | None = None, address_of: Callable | None = None)
     state.runtime.vehicle = VehicleFraming(game_modules)
     from . import free_look
     state.runtime.free_look = free_look.FreeLook(free_look.game_modules)
+    from .look_sensitivity import LookSensitivity
+    state.runtime.sensitivity = LookSensitivity(weak_ref, address_of)
+    from . import sniper_zoom
+    state.runtime.sniper_zoom = sniper_zoom.SniperZoom(sniper_zoom.game_modules)
+    from . import omni_direction
+    state.runtime.omni = omni_direction.OmniDirection(omni_direction.game_modules)
     from . import ads_category, ads_paths_reader, generated_ads
     state.ads_category_reader = ads_category.category
     state.ads_object_address = ads_category.address

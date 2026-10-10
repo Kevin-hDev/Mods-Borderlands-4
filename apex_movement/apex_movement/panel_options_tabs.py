@@ -68,6 +68,13 @@ def refresh(form, widgets, language):
         widgets["group:camera"].SetText(i18n.text("camera_desc", language))
         widgets["heading:shoulder"].SetText(i18n.text("shoulder_view", language))
         widgets["group:shoulder"].SetText(i18n.text("shoulder_desc", language))
+        for page in ("aiming", "sensitivity", "omni_direction"):
+            widgets[f"heading:{page}"].SetText(i18n.text(page, language))
+            text = i18n.text(f"{page}_page", language)
+            # As the other camera mods' pages do (panel_camera_pages.NEEDS_THIRD_PERSON): these tabs need it.
+            if form.shown.get("third_person") is not True:
+                text += "\n" + i18n.text("third_person_needed", language)
+            widgets[f"group:{page}"].SetText(text)
         widgets[f"heading:{panel_dynamic.PAGE}"].SetText(i18n.text(panel_dynamic.PAGE, language))
         widgets[f"group:{panel_dynamic.PAGE}"].SetText(i18n.text(f"{panel_dynamic.PAGE}_page", language))
         panel_dynamic.refresh(widgets, language)

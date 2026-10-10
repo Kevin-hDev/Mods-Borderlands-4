@@ -1,15 +1,12 @@
-"""Fake SDK modules and a fake game memory, so Omni Sprint's logic can be tested outside the game.
+"""Fake SDK modules, so Omni Sprint's logic can be tested outside the game.
 
-Installed into sys.modules before importing omni_sprint. The memory holds a movement component pointing to its
-definition, laid out as the SDK's type says, with the game files' values (2026-09-19, verified in game): tests read and
-write it through omni_sprint.memory once patch_memory() has swapped the Windows calls for this one.
+Installed into sys.modules before importing omni_sprint. The fake game memory, which holds the movement definition the
+shared runtime opens since 2026-10-09, is the shared runtime's own (sprint_memory_fixtures.py).
 """
 
-import struct
 import sys
 import types
 import tempfile
-from pathlib import Path
 import weakref
 from pathlib import Path
 from typing import Any
@@ -25,60 +22,7 @@ RUNTIME_SOURCE = next((path for path in (_HERE.parent.parent / "camera_runtime" 
 if str(RUNTIME_SOURCE) not in sys.path:
     sys.path.insert(0, str(RUNTIME_SOURCE))
 
-LIMIT_OFFSET = 580
-# Case as the SDK gives the names; the mod lowers them. The limit sits at 580 as in the 2026-06-26 build.
-FIELD_NAMES = (
-    "MaxSprintAngle", "SprintAnalogInputThreshold", "MaxSpeedCooldownMaxSpeed", "MaxLadderSlideDownSpeed",
-    "FallDelayGravityScale", "MaxLadderDescendSpeed", "LadderSlideAcceleration", "PushAwayFromPlayersRadiusThreshold",
-    "DoubleJumpInputDelay", "LadderBrakingDeceleration", "LadderFriction", "LadderSlideBrakingDeceleration",
-    "FallDelayTime", "DashInputDelay", "MaxLadderForwardSpeed", "MaxLadderReverseSpeed", "MaxLadderAscendSpeed",
-    "JumpQueueTime", "SprintingJumpMaxSpeedPct", "LadderJumpVelocity", "LadderInterpSpeed",
-)
-OFFSETS = {name: (LIMIT_OFFSET if index == 0 else 16 + index * 8) for index, name in enumerate(FIELD_NAMES)}
-BASE = 0x2000_0000
-SIZE = 0x40000
-
-
-class FakeMemory:
-    """A block of the game's memory: reads and writes outside it fail, like the Windows calls on a bad address."""
-
-    def __init__(self) -> None:
-        self.data = bytearray(SIZE)
-        self.refuse_writes = False
-        self.writes = 0
-
-    def _inside(self, address: int, size: int) -> bool:
-        return BASE <= address and address + size <= BASE + SIZE
-
-    def read(self, address: int, size: int) -> bytes | None:
-        return bytes(self.data[address - BASE : address - BASE + size]) if self._inside(address, size) else None
-
-    def write(self, address: int, data: bytes) -> bool:
-        if self.refuse_writes or not self._inside(address, len(data)):
-            return False
-        self.writes += 1
-        self.data[address - BASE : address - BASE + len(data)] = data
-        return True
-
-    def put_float(self, address: int, value: float) -> None:
-        struct.pack_into("<f", self.data, address - BASE, value)
-
-    def get_float(self, address: int) -> float:
-        return struct.unpack_from("<f", self.data, address - BASE)[0]
-
-    def put_pointer(self, address: int, value: int) -> None:
-        struct.pack_into("<Q", self.data, address - BASE, value)
-
-    def put_definition(self, address: int, known: dict[str, float]) -> None:
-        for name, offset in OFFSETS.items():
-            self.put_float(address + offset, known[name.lower()])
-
-
-def movement_type() -> Any:
-    """OakCharacterMovementDef as the SDK lists it, with one field the mod does not know."""
-    fields = [types.SimpleNamespace(Name=name, Offset_Internal=offset) for name, offset in OFFSETS.items()]
-    fields.append(types.SimpleNamespace(Name="bCanClimbLadders", Offset_Internal=900))
-    return types.SimpleNamespace(Name="OakCharacterMovementDef", _properties=lambda: iter(fields))
+from sprint_memory_fixtures import BASE, OFFSETS, FakeMemory, movement_type, patch  # noqa: E402,F401
 
 
 class FakePlayer:
@@ -91,10 +35,17 @@ class FakePlayer:
 
 def player(component: int, fov: float = 90.0) -> Any:
     """A player controller whose character's movement component sits at this address, the menu's FOV in
-    Player.BaseFOV."""
-    movement = types.SimpleNamespace(_get_address=lambda: component)
-    return types.SimpleNamespace(OakCharacter=types.SimpleNamespace(CharacterMovement=movement),
-                                 Player=FakePlayer(fov))
+    Player.BaseFOV, and its body's animation in OakCharacter.Mesh (the clock counts that body's updates only)."""
+    movement = types.SimpleNamespace(_get_address=lambda: component, bIsSprinting=False, MovementMode=1)
+    body = types.SimpleNamespace(_get_address=lambda: component + 0x800)
+    mesh = types.SimpleNamespace(GetAnimInstance=lambda: body)
+    character = types.SimpleNamespace(CharacterMovement=movement, Mesh=mesh)
+    return types.SimpleNamespace(OakCharacter=character, Player=FakePlayer(fov))
+
+
+def body(pc: Any) -> Any:
+    """The played body's animation, whose updates tick the clock."""
+    return pc.OakCharacter.Mesh.GetAnimInstance()
 
 
 class FakeHook:
@@ -162,6 +113,9 @@ def install() -> dict:
         state["type_finds"] += 1
         return iter([types.SimpleNamespace(Name="Vector", _properties=lambda: iter([])), *state["types"]])
 
+    def unknown_object(*args: Any, **kwargs: Any) -> Any:
+        return None
+
     logging_module = types.ModuleType("unrealsdk.logging")
     logging_module.misc = lambda text: state["misc"].append(text)
     logging_module.info = lambda text: state["misc"].append(text)
@@ -182,6 +136,8 @@ def install() -> dict:
     unrealsdk_module.hooks = hooks_module
     unrealsdk_module.find_all = find_all
     unrealsdk_module.make_struct = lambda name, **fields: types.SimpleNamespace(**fields)
+    unrealsdk_module.find_object = unknown_object
+    unrealsdk_module.construct_object = unknown_object
     unreal_module = types.ModuleType("unrealsdk.unreal")
     unreal_module.WeakPointer = weakref.ref
     unrealsdk_module.unreal = unreal_module
@@ -218,10 +174,3 @@ def install() -> dict:
     }.items():
         sys.modules[name] = module
     return state
-
-
-def patch_memory(memory_module: Any, fake: FakeMemory) -> None:
-    # The float calls live in the shared helper and reach the Windows calls through it.
-    from apex_camera_runtime import process_memory
-    for module in (memory_module, process_memory):
-        module.read, module.write = fake.read, fake.write

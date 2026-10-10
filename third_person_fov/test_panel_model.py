@@ -25,15 +25,30 @@ def check(label, condition):
 
 model = Model(mod)
 check("SDK entry opens the custom window", getattr(mod, panel_open.MARKER, False))
-check("only camera settings, over five pages (Kevin, 2026-10-06), and five separate command pairs are exposed",
-      model.pages == ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "commands")
+# OMNI DIRECTION right after CAMERA, the mod's main page (Kevin, 2026-10-09).
+check("only camera settings, over the camera pages (Kevin, 2026-10-06), and eight separate command pairs are exposed",
+      model.pages == ("camera", "omni_direction", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity",
+                      "commands", "shoulder")
       and model.page == "camera"
-      and list(model.options) == ["third_person", "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "fov", "third_person_ads", "orbit",
+      and list(model.options) == ["third_person", "fov", "camera_distance_close", "camera_distance_far",
+                                  "orbit_smooth", "shoulder_seconds",
+                                  "free_look", "free_look_keyboard_hold", "free_look_controller_hold", "free_look_hold_time",
+                                  "shoulder_left", "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return",
+                                  "shoulder_smooth", "omni_body", "omni_angle", "omni_direction_sprint",
+                                  "omni_crouch", "third_person_ads", "pistol_optics", "smg_optics",
+                                  "shotgun_optics", "assault_optics", "sniper_optics", "heavy_optics", "orbit",
                                   "orbit_distance", "extended_loot", "loot_reach", "speed_fov", "speed_fov_gain",
                                   "speed_fov_seconds", "action_framing", "action_framing_strength", "camera_motion",
-                                  "camera_motion_strength"]
+                                  "camera_motion_strength", "sensitivity_look", "sensitivity_aim",
+                                  "sensitivity_weapons", "sensitivity_weapon_pistol", "sensitivity_weapon_smg",
+                                  "sensitivity_weapon_shotgun", "sensitivity_weapon_assault",
+                                  "sensitivity_weapon_sniper", "sensitivity_weapon_heavy",
+                                  "sensitivity_weapon_sniper_optics",
+                                  "sensitivity_weapon_sniper_x2", "sensitivity_weapon_sniper_x3",
+                                  "sensitivity_weapon_sniper_x4", "sensitivity_weapon_sniper_x6",
+                                  "sensitivity_weapon_sniper_x8"]
       and set(model.camera_options) == set(model.options)
-      and len(model.command_options) == 10)
+      and len(model.command_options) == 16)
 check("preferences belong to the mod's existing save file",
       all(option in mod.kwargs["options"] and option.mod is mod for option in prefs.ALL))
 check("reopening restores the selected page, language and icon family",

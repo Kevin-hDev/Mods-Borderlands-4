@@ -11,9 +11,11 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 state["settings_exists"] = True
+# A player's file from before the third-person auto sprint switch, auto sprint on (settings_upgrade.py).
+state["settings_text"] = '{"enabled": true, "options": {"auto_sprint_menu": {"auto_sprint": true}}}'
 
 import apex_movement  # noqa: E402
-from apex_movement import camera, camera_settings  # noqa: E402
+from apex_movement import camera, camera_settings, settings  # noqa: E402
 from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, TOP_ROW_SIX, key_at  # noqa: E402
 SIX, SEVEN = key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
 
@@ -132,6 +134,8 @@ for option in (camera_settings.shoulder_key, camera_settings.orbit_key):
         ok = ok and option.value is None and raw not in state["keybinds"]
 apex_movement.mod.disable()
 ok = ok and "K" not in state["keybinds"]
+# A player's file from before keeps auto sprint in third person (Kevin, 2026-10-09).
+ok = ok and settings.auto_sprint_third_person.value is True
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if ok else "1 ECHEC(S)")
 sys.exit(0 if ok else 1)

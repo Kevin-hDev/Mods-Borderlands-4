@@ -11,7 +11,7 @@ from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
 
 # A setting that changes nothing while its switch is off; the walk key's rows are Apex Movement's.
-DEPENDS_ON = {"fov": "custom_fov", "loot_reach": "extended_loot", "shoulder_left": "third_person", "shoulder_auto": "third_person", "shoulder_auto_swap": "shoulder_auto", "shoulder_auto_return": "shoulder_auto", "camera_distance_close": "third_person", "camera_distance_far": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth",
+DEPENDS_ON = {"fov": "custom_fov", "loot_reach": "extended_loot", "shoulder_left": "third_person", "sensitivity_look": "third_person", "sensitivity_aim": "third_person", "sensitivity_weapons": "third_person", "sensitivity_weapon_sniper_optics": "third_person", "shoulder_auto": "third_person", "shoulder_auto_swap": "shoulder_auto", "shoulder_auto_return": "shoulder_auto", "free_look_keyboard_hold": "free_look", "free_look_controller_hold": "free_look", "free_look_hold_time": "free_look", "camera_distance_close": "third_person", "camera_distance_far": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth",
               "orbit": None, "third_person_ads": "third_person", "orbit_distance": "orbit",
               "speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
               "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
@@ -71,6 +71,9 @@ class PanelForm(Lifecycle):
             # The whole row fades, label and value included, as the mockup's .row.muted does.
             for part in ("row", "description"):
                 widgets[f"{part}:{name}"].SetRenderOpacity(1.0 if active else t.OPACITY_DISABLED)
+        if "omni_body" in self.model.options:
+            from . import panel_omni_direction
+            panel_omni_direction.grey(self, widgets)
 
     def refresh_labels(self, widgets):
         labels.apply(self, widgets)
@@ -163,10 +166,18 @@ class PanelForm(Lifecycle):
         widgets, now = self.resolve(), time.perf_counter_ns()
         panel_ownership.update(self, widgets)
         self.refresh_aim(widgets)
+        if "sensitivity_weapons" in self.model.options:
+            from . import panel_weapon_sensitivity
+            panel_weapon_sensitivity.poll(self, widgets, now)
+        if "omni_body" in self.model.options:
+            from . import panel_omni_direction
+            panel_omni_direction.refresh(self, widgets)
         outcome = self.model.advance()
         if outcome is not None:
             self.notice = self.failure_notice() if outcome == "failed" else outcome
             self.sync(widgets)
+        if self.poll_popup(widgets):
+            return False
         self.read_changes(widgets, now)
         if self.take(widgets["close"]):
             return self.flush(widgets)

@@ -1,5 +1,6 @@
 #include "ads_state.h"
 #include "ads_memory.h"
+#include <cmath>
 
 namespace apex_ads {
 bool State::configure(uintptr_t table, uint64_t third_name, ZoomScale zoom) {
@@ -60,6 +61,28 @@ int State::publish_pointer(const AdsContext* input) {
         return 1;
     }
     return publish(candidate);
+}
+
+int State::set_optic(uint64_t generation, float scale) {
+    AcquireSRWLockExclusive(&guard_);
+    const bool thread = thread_ && thread_ == GetCurrentThreadId();
+    // 0 gives the weapon's own zoom back, 1 no zoom; an optic never widens the view.
+    const bool valid = std::isfinite(scale) && scale >= 0.0f && scale <= 1.0f;
+    const bool accepted = thread && valid && generation && context_.enabled && generation == context_.generation;
+    if (accepted) {
+        optic_generation_ = generation;
+        optic_ = scale;
+    }
+    ReleaseSRWLockExclusive(&guard_);
+    if (!thread) note_error(static_cast<uint32_t>(ERROR_WRONG_THREAD));
+    return accepted ? 0 : 1;
+}
+
+float State::optic(const Ticket& ticket) {
+    AcquireSRWLockShared(&guard_);
+    const float value = optic_generation_ == ticket.context.generation ? optic_ : 0.0f;
+    ReleaseSRWLockShared(&guard_);
+    return value;
 }
 
 int State::clear(uint64_t generation) {

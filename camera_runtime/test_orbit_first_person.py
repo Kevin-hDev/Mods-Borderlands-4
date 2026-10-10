@@ -57,9 +57,10 @@ class Tests(OrbitFirstPersonFixture, unittest.TestCase):
         self.assertFalse(self.settings.orbit)
         self.assertEqual(self.manager.mode, 'Default')
 
-    def test_cold_first_person_loads_only_on_request_and_never_pushes_third_person(self):
+    def test_cold_first_person_builds_the_unit_at_once_and_never_pushes_third_person(self):
         self.prepare()
-        self.assertEqual(self.setups, 0)
+        self.assertEqual(self.setups, 1)
+        self.assertEqual((self.requests, self.manager.pushes), ([], 0))
         self.assertTrue(self.runtime.camera_ready('camera'))
         self.enter_orbit()
         self.assertEqual(self.setups, 1)
@@ -90,12 +91,12 @@ class Tests(OrbitFirstPersonFixture, unittest.TestCase):
         self.enter_orbit()
         self.assertTrue(self.controller.zoom.available())
 
-    def test_cancel_cold_request_does_not_load_or_save_camera(self):
+    def test_cancel_cold_request_does_not_move_or_save_camera(self):
         self.prepare()
         self.assertTrue(self.runtime.set_orbit('camera', True))
         self.assertTrue(self.runtime.cancel_orbit('camera'))
         self.tick()
-        self.assertEqual(self.setups, 0)
+        self.assertEqual(self.setups, 1)
         self.assertFalse(self.settings.orbit)
         self.assertEqual(self.requests, [])
 
@@ -114,7 +115,7 @@ class Tests(OrbitFirstPersonFixture, unittest.TestCase):
         self.tick()
         self.assertFalse(self.runtime.camera_ready('camera'))
         self.assertFalse(self.runtime.toggle_orbit('camera'))
-        self.assertEqual(self.setups, 0)
+        self.assertEqual((self.requests, self.manager.pushes), ([], 0))
 
     def test_refused_orbit_rolls_back_to_first_person_without_a_layer(self):
         self.prepare()
@@ -148,7 +149,8 @@ class Tests(OrbitFirstPersonFixture, unittest.TestCase):
         self.prepare()
         self.assertFalse(self.runtime.set_orbit('other', True))
         self.assertFalse(self.runtime.camera_ready('other'))
-        self.assertEqual(self.setups, 0)
+        self.assertFalse(self.runtime.orbit_entry.pending)
+        self.assertEqual((self.requests, self.manager.pushes), ([], 0))
 
     def test_vehicle_preempts_unconfirmed_entry_without_default_camera_write(self):
         self.prepare()

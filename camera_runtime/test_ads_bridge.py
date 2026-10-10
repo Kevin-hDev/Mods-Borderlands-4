@@ -81,6 +81,30 @@ class BridgeTests(unittest.TestCase):
         self.code = 1
         with self.assertRaises(RuntimeError): self.bridge.release(7)
 
+    def test_a_library_without_optics_keeps_them_unavailable(self):
+        self.bridge.prepare()
+        self.assertFalse(self.bridge.optics)
+        with self.assertRaises(RuntimeError): self.bridge.set_optic(7, 0.25)
+
+    def test_the_optic_reaches_native_code_with_its_generation(self):
+        self.library.ads_set_optic = Function(
+            lambda generation, scale: self.calls.append(("optic", generation, scale)) or self.code)
+        bridge = AdsBridge(self.library)
+        self.assertTrue(bridge.optics)
+        self.assertEqual(self.library.ads_set_optic.argtypes, [ctypes.c_uint64, ctypes.c_float])
+        with self.assertRaises(RuntimeError): bridge.set_optic(7, 0.25)  # Not prepared yet.
+        bridge.start_preflight()
+        bridge._preflight.future.result(timeout=2)
+        bridge.prepare()
+        bridge.set_optic(7, 0.25)
+        self.assertEqual(self.calls[-1], ("optic", 7, 0.25))
+        for generation, scale in ((0, 0.5), (True, 0.5), (7, 1.5), (7, -0.1), (7, 1), (7, float("nan"))):
+            with self.subTest(generation=generation, scale=scale), self.assertRaises(ValueError):
+                bridge.set_optic(generation, scale)
+        self.assertEqual(self.calls[-1], ("optic", 7, 0.25))
+        self.code = 1
+        with self.assertRaises(RuntimeError): bridge.set_optic(7, 1.0)
+
 
 if __name__ == "__main__":
     result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(BridgeTests))

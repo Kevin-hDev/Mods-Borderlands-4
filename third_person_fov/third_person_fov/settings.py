@@ -11,10 +11,16 @@ try:
     from .apex_camera_runtime.loot_options import LootOptions
     from .apex_camera_runtime.speed_fov_options import SpeedFovOptions
     from .apex_camera_runtime.dynamic_options import DynamicOptions
+    from .apex_camera_runtime.omni_direction_options import DASH, SLIDE, OmniDirectionOptions
+    from .apex_camera_runtime.free_look_options import FreeLookOptions
     from .apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
+    from .apex_camera_runtime.camera_distance_options import CameraDistanceOptions
+    from .apex_camera_runtime.look_sensitivity_options import LookSensitivityOptions
+    from .apex_camera_runtime.weapon_optic_options import WeaponOpticOptions
     from .apex_camera_runtime.camera_option import BaseViewOption, CameraBoolOption
     from .apex_camera_runtime.camera_commands import CameraCommands
     from .apex_camera_runtime.shoulder_transition_options import ShoulderTransitionOptions
+    from .apex_camera_runtime.shoulder_page import SHOULDER_PAGE
     from .apex_camera_runtime.constants import FOV_DEFAULT, FOV_MAX, FOV_MIN
     from .apex_camera_runtime import option_texts
 except ModuleNotFoundError as error:
@@ -25,10 +31,16 @@ except ModuleNotFoundError as error:
     from apex_camera_runtime.loot_options import LootOptions
     from apex_camera_runtime.speed_fov_options import SpeedFovOptions
     from apex_camera_runtime.dynamic_options import DynamicOptions
+    from apex_camera_runtime.omni_direction_options import DASH, SLIDE, OmniDirectionOptions
+    from apex_camera_runtime.free_look_options import FreeLookOptions
     from apex_camera_runtime.orbit_zoom_options import OrbitZoomOptions
+    from apex_camera_runtime.camera_distance_options import CameraDistanceOptions
+    from apex_camera_runtime.look_sensitivity_options import LookSensitivityOptions
+    from apex_camera_runtime.weapon_optic_options import WeaponOpticOptions
     from apex_camera_runtime.camera_option import BaseViewOption, CameraBoolOption
     from apex_camera_runtime.camera_commands import CameraCommands
     from apex_camera_runtime.shoulder_transition_options import ShoulderTransitionOptions
+    from apex_camera_runtime.shoulder_page import SHOULDER_PAGE
     from apex_camera_runtime.constants import FOV_DEFAULT, FOV_MAX, FOV_MIN
     from apex_camera_runtime import option_texts
 
@@ -36,8 +48,12 @@ except ModuleNotFoundError as error:
 loot = LootOptions()
 speed_fov = SpeedFovOptions()
 dynamic = DynamicOptions()
+# Dash on the sides and backward, as the game does without the open sprint (Kevin, 2026-10-09).
+omni = OmniDirectionOptions(DASH)
 loot_distance = loot.distance
 zoom = OrbitZoomOptions()
+distance = CameraDistanceOptions()
+sensitivity = LookSensitivityOptions()
 ads = AdsOptions()
 framing = FramingOptions(note=report.note)
 shoulder_transition = ShoulderTransitionOptions()
@@ -103,8 +119,15 @@ def _zoom(direction: int) -> None:
     camera.adjust_orbit_zoom(direction)
 
 
+def _cycle_distance() -> None:
+    from . import camera
+    camera.cycle_camera_distance()
+
+
 commands = CameraCommands(third_person=_toggle_third_person, shoulder=_toggle_shoulder, orbit=_toggle_orbit,
-                          zoom_in=lambda: _zoom(-1), zoom_out=lambda: _zoom(1))
+                          zoom_in=lambda: _zoom(-1), zoom_out=lambda: _zoom(1), camera_distance=_cycle_distance)
+free_look = FreeLookOptions(commands)
+optics = WeaponOpticOptions(commands)
 (third_person_bind, third_person_controller_bind, shoulder_bind, shoulder_controller_bind,
  orbit_bind, orbit_controller_bind) = commands.binds[:6]
 (third_person_key, third_person_controller, shoulder_key, shoulder_controller,
@@ -115,8 +138,8 @@ native_fov = SliderOption("native_fov", 0, 0, 180, step=1, is_integer=False, is_
 applied_fov = SliderOption("applied_fov", 0, 0, 180, step=1, is_integer=False, is_hidden=True)
 OPTIONS = [third_person, third_person_ads, third_person_key, third_person_controller,
            shoulder_left, *shoulder_transition.options, shoulder_key, shoulder_controller,
-           orbit, orbit_key, orbit_controller, *commands.options[6:], fov, *loot.options, *speed_fov.options, *dynamic.options, native_fov, applied_fov,
-           zoom.option, *framing.options]
+           orbit, orbit_key, orbit_controller, *commands.options[6:], *distance.options, *free_look.options, fov, *loot.options, *speed_fov.options, *dynamic.options, *omni.options, *sensitivity.options, *optics.options, native_fov, applied_fov,
+           zoom.option, distance.option, *framing.options]
 
 
 def third_person_enabled() -> bool:

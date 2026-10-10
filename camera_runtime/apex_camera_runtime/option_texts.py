@@ -4,9 +4,21 @@ One source: they were copied by hand into each mod's settings, and a wording cha
 others (review, 2026-09-26). The French texts are Apex Movement's panel_fr.py, generated into the two others.
 """
 
+from .ads_optic import ZOOMS
+
 THIRD_PERSON = {"display_name": "Third Person", "description": "Keep the on-foot camera behind the character."}
+# The AIMING page's rows of boxes (weapon_optic_options.py).
+_OPTIC = "BDL4 restores the game's first-person aim; zooms aim at the shoulder."
+WEAPON_OPTICS = {
+    "pistol_optics": {"display_name": "Pistol optic", "description": _OPTIC},
+    "smg_optics": {"display_name": "SMG optic", "description": _OPTIC},
+    "shotgun_optics": {"display_name": "Shotgun optic", "description": _OPTIC},
+    "assault_optics": {"display_name": "Assault rifle optic", "description": _OPTIC},
+    "sniper_optics": {"display_name": "Sniper optic", "description": _OPTIC},
+    "heavy_optics": {"display_name": "Heavy weapon optic", "description": _OPTIC},
+}
 AIM_VIEW = {"display_name": "Aim View", "true_text": "Third Person", "false_text": "First Person",
-            "description": "Sniper rifles and heavy weapons use first-person aiming."}
+            "description": "Each weapon type's optic is chosen below."}
 # The SDK's text menu reads On/Off for a switch; the shoulder's two values are sides (review, 2026-09-26).
 SHOULDER_SMOOTH = {"display_name": "Smooth shoulder switch", "description": "Animate camera movement when switching shoulders."}
 ORBIT_SMOOTH = {"display_name": "Smooth camera transitions",
@@ -31,6 +43,32 @@ CAMERA_DISTANCE_CLOSE = {"display_name": "Camera distance: close",
                          "description": "How far behind you the close camera sits, in metres. Normal is 2.56."}
 CAMERA_DISTANCE_FAR = {"display_name": "Camera distance: far",
                        "description": "How far behind you the far camera sits, in metres. Normal is 2.56."}
+# The SENSITIVITY page (look_sensitivity_options.py): percent of the game's own sensitivity, mouse and controller,
+# third person only.
+SENSITIVITY_LOOK = {"display_name": "Third-person look sensitivity",
+                    "description": "Camera turn speed in third person, mouse and controller, in percent of the game's."}
+SENSITIVITY_AIM = {"display_name": "Third-person aim sensitivity",
+                   "description": "Camera turn speed while aiming over the shoulder, mouse and controller, "
+                                  "in percent of the game's."}
+SENSITIVITY_WEAPONS = {"display_name": "Sensitivity per weapon type",
+                       "description": "While aiming in third person, each weapon type uses its own value below."}
+SENSITIVITY_PER_OPTIC = {"display_name": "Per optic zoom",
+                         "description": "Each zoom uses its own value below, with every weapon."}
+SENSITIVITY_WEAPON = {
+    "pistol": {"display_name": "Pistols", "description": "Aim speed with a pistol, in percent of the game's."},
+    "smg": {"display_name": "SMGs", "description": "Aim speed with an SMG, in percent of the game's."},
+    "shotgun": {"display_name": "Shotguns", "description": "Aim speed with a shotgun, in percent of the game's."},
+    "assault": {"display_name": "Assault rifles",
+                "description": "Aim speed with an assault rifle, in percent of the game's."},
+    "sniper": {"display_name": "Sniper rifles",
+               "description": "Aim speed with a sniper rifle, in percent of the game's."},
+    "heavy": {"display_name": "Heavy weapons",
+              "description": "Aim speed with a heavy weapon, in percent of the game's."},
+    # Named for the sniper rifle, the first weapon with optics: the names keep the players' saved values.
+    **{f"sniper_x{zoom}": {"display_name": f"Optic x{zoom}",
+                           "description": f"Aim speed with the x{zoom} zoom, in percent of the game's."}
+       for zoom in ZOOMS},
+}
 # Apex Movement and Omni Sprint only: Third Person & FOV always applies its FOV.
 CUSTOM_FOV = {"display_name": "Custom FOV", "description": "Use the FOV below instead of the game's."}
 FOV ={"display_name": "FOV", "description": "Field of view, up to 150."}
@@ -46,7 +84,8 @@ CAMERA_MOTION = {"display_name": "Camera motion",
                  "description": "The camera follows your changes of speed softly, and drifts a little when you stand still."}
 CAMERA_MOTION_STRENGTH = {"display_name": "Camera motion strength",
                           "description": "100% is the default; lower is softer, higher stronger."}
-# Shown on the COMMANDS page under Free Look's keys (free_look_options.py).
+# Shown on the CAMERA page (free_look_options.py).
+FREE_LOOK = {"display_name": "Free Look", "description": "Hold its key to turn the camera while you keep your direction."}
 FREE_LOOK_KEYBOARD_HOLD = {"display_name": "Keyboard: Hold for Free Look",
                            "description": "On: Free Look lasts while the key is held. Off: each press turns it on or off."}
 FREE_LOOK_CONTROLLER_HOLD = {"display_name": "Controller: Hold for Free Look",
@@ -54,6 +93,13 @@ FREE_LOOK_CONTROLLER_HOLD = {"display_name": "Controller: Hold for Free Look",
                                             "or off."}
 FREE_LOOK_HOLD_TIME = {"display_name": "Free Look hold time",
                        "description": "How long to hold before Free Look starts, in seconds."}
+# The OMNI DIRECTION page (omni_direction_options.py, Kevin 2026-10-09).
+OMNI_BODY = {"display_name": "Body Orientation", "description": "The hunter turns toward the direction of the run."}
+OMNI_ANGLE = {"display_name": "Angle",
+              "description": "360: on every side. 180: backward, the hunter backs up as in the game."}
+OMNI_SPRINT = {"display_name": "Sprint in All Directions", "description": "Also sprint sideways and backward."}
+OMNI_CROUCH = {"display_name": "Sides and Back",
+               "description": "Sprinting sideways or backward, crouching dashes or slides."}
 
 ADS_NOTICES = {
     "unsupported": "Shoulder aiming is unavailable on this version. Keep first-person aiming until the mod is updated.",

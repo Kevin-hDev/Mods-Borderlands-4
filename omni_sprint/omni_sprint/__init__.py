@@ -1,16 +1,17 @@
 """Omni Sprint: sprint in every direction in Borderlands 4, at the game's own sprint speed.
 
-Installs beside Apex Movement and Vehicle Driving: its own package name, hook identifier, settings file and window,
-and game values neither of them writes: the sprint angle limit and the body's backward run. Its camera settings
-apply while Apex Movement's are not in use.
+Installs beside Apex Movement and Vehicle Driving: its own package name, hook identifier, settings file and window.
+The sprint angle limit and the body's backward run are written by the camera runtime the camera mods share
+(docs/omni_direction/spec-omni-direction.md), from this mod's switch. Its camera settings apply while Apex
+Movement's are not in use.
 """
 
 from mods_base import build_mod
 from .settings_persistence import AtomicMod
 
-from . import animation, camera, frame, panel_open, panel_preferences, report, settings
+from . import camera, frame, panel_open, panel_preferences, report, settings
 
-__version__ = "1.0.15"
+__version__ = "1.2.0"
 __author__ = "kevin-hDev"
 
 
@@ -23,19 +24,16 @@ def _on_enable() -> None:
 
 
 def _on_disable() -> None:
-    try:
-        animation.stop()
-    except Exception:
-        report.error_once('animation_restore', 'backward animation restoration failed')
+    # The shared runtime puts the sprint limit and the backward run back once no mod asks for them any more.
     try:
         camera.stop()
     except Exception as exc:
         report.error_once("camera_restore", f"camera give back failed: {exc!r}")
-    restored, left = frame.stop()
-    line = f"disabled, game sprint limit put back in {restored} movement definition(s)"
-    if left:
-        line += f", {left} left alone: no longer recognised in memory"
-    report.note(line)
+    try:
+        frame.stop()
+    except Exception as exc:
+        report.error_once("sprint_restore", f"the open sprint's own copy could not give everything back: {exc!r}")
+    report.note("disabled")
 
 
 mod = build_mod(

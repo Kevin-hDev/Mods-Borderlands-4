@@ -48,7 +48,15 @@ ACTIONS = (
     # mods' settings that unpack the first six options by position keep theirs.
     Action("camera_distance", "camera_distance_key", "camera_distance_controller", key_at(TOP_ROW_EIGHT, "Eight"),
            "Camera Distance", "Switch the third-person camera between close, normal and far."),
+    # Free Look's keys by default (Kevin, 2026-10-09: « A » zooms while aiming, is Free Look otherwise; « A est
+    # accessible direct là où les doigts sont toujours »). Read by sniper_zoom.py.
+    Action("sniper_zoom", "sniper_zoom_key", "sniper_zoom_controller", key_at(RIGHT_OF_TAB, "Q"),
+           "Optic Zoom", "While aiming with two or more optic zooms, switch to the next one.",
+           controller_default="Gamepad_LeftThumbstick", polled=True),
 )
+# The only commands that may share a key: Free Look stops while aiming on foot (free_look.py), the zoom acts only
+# while aiming.
+SHARED = frozenset({("free_look", "sniper_zoom")})
 
 
 # A "Six" or "Seven" saved before the keyboard-named defaults (2026-10-07). On a keyboard whose 6 and 7 keys type
@@ -160,9 +168,11 @@ class CameraCommands:
         final = {identifier: option.value for identifier, option in self._options.items()}
         final.update(normalized)
         for identifiers in (
-                tuple(action.keyboard_id for action in ACTIONS),
-                tuple(action.controller_id for action in ACTIONS)):
-            values = [final[identifier] for identifier in identifiers if final[identifier] is not None]
+                {action.name: action.keyboard_id for action in ACTIONS},
+                {action.name: action.controller_id for action in ACTIONS}):
+            values = [final[identifier] for name, identifier in identifiers.items() if final[identifier] is not None
+                      and not any(name == second and final[identifier] == final[identifiers[first]]
+                                  for first, second in SHARED)]
             if len(values) != len(set(values)):
                 raise ValueError("duplicate camera command")
         return normalized

@@ -59,10 +59,13 @@ bool update_view(State& state, void* manager, void* view, float delta, Update or
         state.note_error(static_cast<uint32_t>(ERROR_CONTEXT));
         return false;
     }
-    const float zoomed = zoom_fov(base, sample.zoom_scale);
+    // The player's sniper optic replaces the weapon's own zoom, at once (idea n° 6, Kevin 2026-10-09).
+    const float optic = state.optic(before);
+    const float scale = optic > 0.0f ? optic : sample.zoom_scale;
+    const float zoomed = zoom_fov(base, scale);
     if (!std::isfinite(zoomed) || !(zoomed > 0.0f && zoomed < 180.0f)
             || !state.current(before) || !store_fov(view, zoomed)) return false;
-    state.record_fov(before, base, zoomed, sample.zoom_scale);
+    state.record_fov(before, base, zoomed, scale);
     return true;
 }
 }

@@ -1,9 +1,10 @@
 """Coordinate optional ADS presentation without owning another camera or weapon state."""
 import ctypes
 from .ads_feedback import Feedback
+from .ads_optic import CHOICES, OpticLink
 from .ads_policy import decide
 from .aiming import wants_to_aim
-from .generated_ads import ADS_ABI, CATEGORY_HEAVY, CATEGORY_SNIPER, ERROR_CONTEXT, ERROR_IDENTITY, AdsContext, ObjectId
+from .generated_ads import ADS_ABI, ERROR_CONTEXT, ERROR_IDENTITY, AdsContext, ObjectId
 
 
 class AdsSession:
@@ -20,6 +21,7 @@ class AdsSession:
         self._release_baseline = 0
         self._preflight_aim = False
         self.extra_zoom_pending = lambda: False
+        self.optic = OpticLink()
 
     def set_trial(self, enabled):
         if type(enabled) is not bool:
@@ -43,6 +45,7 @@ class AdsSession:
         self.wanted = self.effective = self._published = False
         self._released = self._input_aim = False
         self._snapshot = self._key = None
+        self.optic.clear()
         if self.reader is not None:
             self.reader.clear()
         if not self._generation or self.native is None:
@@ -138,15 +141,16 @@ class AdsSession:
             if error_kind is not None:
                 self.feedback.diagnostic("context", error_kind)
             return self.wanted
-        decision = decide(aiming=True, enabled=True, category=snapshot.category,
-                          foot_mode=foot_mode, vehicle=vehicle, pending=pending, supported=supported)
+        decision = decide(aiming=True, enabled=True, category=snapshot.category, foot_mode=foot_mode, vehicle=vehicle,
+                          pending=pending, supported=supported,
+                          optic=self.optic.allows(settings, self.native, snapshot.category))
         if decision != "third":
             if previous or self._published:
                 self.stop()
             self.wanted = False
-            if snapshot.category != CATEGORY_SNIPER:
-                self.feedback.report(self._key_for(snapshot),
-                                     "heavy_native" if snapshot.category == CATEGORY_HEAVY else "unknown_weapon")
+            # "BDL4" is the player's choice: only a weapon type without a row is reported.
+            if snapshot.category not in CHOICES:
+                self.feedback.report(self._key_for(snapshot), "unknown_weapon")
             return False
         key = self._key_for(snapshot)
         if key == self._blocked_key:
@@ -165,6 +169,7 @@ class AdsSession:
         if not self._input_aim and self._published:
             try:
                 if not self._released:
+                    self.optic.release(self.native)
                     self.native.release(self._generation)
                     self._released = True
                     self._release_baseline = status.fov_writes
@@ -210,12 +215,14 @@ class AdsSession:
                              (ObjectId * 8)(*self._snapshot.references), self._snapshot.paths)
         try:
             self.native.publish(context)
+            # Known before the optic, so a refused optic still clears this publication.
+            self._generation = self._counter
+            self.optic.publish(self.native, self._generation)
         except Exception as error:
             refused_key = self._blocked_key = self._key
             self.stop()
             self.feedback.exception(refused_key, "publication_refused", "publish", error)
             return False
-        self._generation = self._counter
         self._fov_baseline = status.fov_writes
         self._published = True
         self._released = False

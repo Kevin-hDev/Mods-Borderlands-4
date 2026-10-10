@@ -12,6 +12,8 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 from third_person_fov import settings  # noqa: E402
+from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, TOP_ROW_SIX, key_at  # noqa: E402
+SIX, SEVEN = key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
 
 fails = []
 
@@ -25,11 +27,21 @@ def check(label, condition):
 check("the public settings keep their exact camera order",
       [item.identifier for item in settings.OPTIONS if not item.is_hidden] ==
       ["third_person", "third_person_ads", "third_person_key", "third_person_controller",
-       "shoulder_left", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "shoulder_key", "shoulder_controller",
+       "shoulder_left", "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "shoulder_key", "shoulder_controller",
        "orbit", "orbit_key", "orbit_controller", "zoom_in_key", "zoom_in_controller",
-       "zoom_out_key", "zoom_out_controller", "fov", "extended_loot", "loot_reach",
+       "zoom_out_key", "zoom_out_controller", "free_look_key", "free_look_controller",
+       "camera_distance_key", "camera_distance_controller", "sniper_zoom_key", "sniper_zoom_controller",
+       "camera_distance_close", "camera_distance_far",
+       "free_look", "free_look_keyboard_hold",
+       "free_look_controller_hold", "free_look_hold_time", "fov", "extended_loot", "loot_reach",
        "speed_fov", "speed_fov_gain", "speed_fov_seconds",
-       "action_framing", "action_framing_strength", "camera_motion", "camera_motion_strength"])
+       "action_framing", "action_framing_strength", "camera_motion", "camera_motion_strength",
+       "omni_body", "omni_direction_sprint",
+       "sensitivity_look", "sensitivity_aim", "sensitivity_weapons", "sensitivity_weapon_pistol",
+       "sensitivity_weapon_smg", "sensitivity_weapon_shotgun", "sensitivity_weapon_assault",
+       "sensitivity_weapon_sniper", "sensitivity_weapon_heavy", "sensitivity_weapon_sniper_optics",
+       "sensitivity_weapon_sniper_x2", "sensitivity_weapon_sniper_x3", "sensitivity_weapon_sniper_x4",
+       "sensitivity_weapon_sniper_x6", "sensitivity_weapon_sniper_x8"])
 check("the standalone pack always applies its FOV while enabled",
       settings.custom_fov_enabled() is True and not hasattr(settings, "custom_fov"))
 check("third person stays off by default", settings.third_person.value is False)
@@ -37,10 +49,10 @@ check("the shortcut defaults to P and has one visible option",
       settings.third_person_key.default_value == "P"
       and settings.third_person_bind.is_hidden is True
       and settings.third_person_key.is_hidden is False)
-check("the new camera choices are off and use Six/Seven",
+check("the new camera choices are off and use the 6 and 7 keys",
       settings.shoulder_left.value is False and settings.orbit.value is False
-      and settings.shoulder_key.default_value == "Six"
-      and settings.orbit_key.default_value == "Seven")
+      and settings.shoulder_key.default_value == SIX
+      and settings.orbit_key.default_value == SEVEN)
 
 settings.third_person.mod = sdk_stubs.FakeMod(state)
 settings.set_third_person(True)
@@ -89,7 +101,7 @@ for bind, option in ((settings.shoulder_bind, settings.shoulder_key),
               and raw not in state["keybinds"])
 
 check("the shoulder's texts are the runtime's shared ones, its side named in the SDK's text menu",
-      settings.shoulder_left.display_name == "Shoulder"
+      settings.shoulder_left.display_name == "Shoulder switch"
       and (settings.shoulder_left.true_text, settings.shoulder_left.false_text) == ("Left", "Right")
       and settings.orbit.description == "The camera turns freely around the character.")
 

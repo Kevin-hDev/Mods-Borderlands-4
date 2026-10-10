@@ -36,10 +36,15 @@ class Settings:
     set_orbit_distance = staticmethod(camera_settings.zoom.save)
     camera_distance = staticmethod(camera_settings.distance.index)
     camera_distances = staticmethod(camera_settings.distance.distances)
+    look_sensitivity = staticmethod(camera_settings.sensitivity.values)
+    sniper_optics = staticmethod(camera_settings.optics.sniper_ticked)
+    weapon_optics = staticmethod(camera_settings.optics.weapon_ticked)
+    sniper_zoom_keys = staticmethod(camera_settings.optics.keys)
     set_camera_distance = staticmethod(camera_settings.distance.save)
     loot_distance = staticmethod(camera_settings.loot_distance)
     speed_fov = staticmethod(camera_settings.speed_fov.values)
     dynamic_camera = staticmethod(camera_settings.dynamic.values)
+    omni_direction = staticmethod(camera_settings.omni.values)
     free_look = staticmethod(camera_settings.free_look.values)
     fov_enabled = staticmethod(camera_settings.custom_fov_enabled)
     fov_value = staticmethod(camera_settings.fov_value)
@@ -151,6 +156,13 @@ def framing_status():
     if framing is None and getattr(controller, "_bridge_started", False):
         return "unavailable"
     return framing.reason if framing is not None else None
+
+
+def in_third_person() -> bool:
+    """The game shows the third-person view on foot, as the shared runtime last read it (omni_direction.py); False
+    with a runtime from an older mod's copy, which does not read it."""
+    omni = getattr(_runtime, "omni", None) if _registered else None
+    return getattr(omni, "third_person", False) is True
 
 
 def elected_elsewhere() -> bool:

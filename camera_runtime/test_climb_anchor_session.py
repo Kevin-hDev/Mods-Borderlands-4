@@ -22,7 +22,7 @@ class AnchorTests(NativeClimbFixture, unittest.TestCase):
         self.stop_refused = self.start_refused = self.refresh_refused = False
         self.manager._get_address = lambda: 0x30000
         self.actor._get_address = lambda: 0x20000
-        self.actor.Mesh = types.SimpleNamespace(_get_address=lambda: 0x40000)
+        self.actor.Mesh = types.SimpleNamespace(_get_address=lambda: 0x40000, GetAnimInstance=lambda: None)
         self.pc.Pawn = self.actor
         self.pc._get_address = lambda: 0x10000
         self.manager.CameraModeState = types.SimpleNamespace(_get_address=lambda: 0x50000)

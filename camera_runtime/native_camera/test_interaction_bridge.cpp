@@ -8,37 +8,48 @@
 
 namespace {
 unsigned calls = 0;
-bool response = true;
-apex_interaction::Sample source{{100, 200, 300}, {1, 2, 3}, {4, 5, 6}};
-bool original(void*, void* output) {
+apex_interaction::View source{{100, 200, 300}, {1, 2, 3}};
+void original(void*, void* location, void* rotation) {
     ++calls;
-    if (output) std::memcpy(output, &source, sizeof(source));
-    return response;
+    if (location) std::memcpy(location, source.origin, sizeof(source.origin));
+    if (rotation) std::memcpy(rotation, source.rotation, sizeof(source.rotation));
 }
 }
 
 int main() {
-    int owner{}, other{};
-    apex_interaction::Sample output{}, sampled{};
-    bool valid = false;
-    assert(apex_interaction::passive_call(original, &owner, &output, &owner, sampled, valid));
-    assert(valid && calls == 1 && std::memcmp(&output, &source, sizeof(source)) == 0);
-    assert(std::memcmp(&sampled, &source, sizeof(source)) == 0);
-    assert(apex_interaction::passive_call(original, &other, &output, &owner, sampled, valid));
-    assert(!valid && calls == 2);
-    response = false;
-    assert(!apex_interaction::passive_call(original, &owner, &output, &owner, sampled, valid));
-    assert(!valid && calls == 3);
-    response = true;
-    assert(apex_interaction::passive_call(original, &owner, nullptr, &owner, sampled, valid));
-    assert(!valid && calls == 4);
+    int hunter{}, enemy{};
+    double location[3]{}, rotation[3]{};
+    apex_interaction::View before{};
+    assert(apex_interaction::passive_call(original, &hunter, location, rotation, &hunter, before));
+    assert(calls == 1 && std::memcmp(location, source.origin, sizeof(location)) == 0
+           && std::memcmp(rotation, source.rotation, sizeof(rotation)) == 0);
+    assert(std::memcmp(&before, &source, sizeof(source)) == 0);
+    // Another character's eyes are the game's, and never read as the hunter's.
+    assert(!apex_interaction::passive_call(original, &enemy, location, rotation, &hunter, before));
+    assert(calls == 2);
+    assert(!apex_interaction::passive_call(original, &hunter, nullptr, rotation, &hunter, before));
+    assert(calls == 3);
     source.rotation[1] = std::numeric_limits<double>::quiet_NaN();
-    assert(apex_interaction::passive_call(original, &owner, &output, &owner, sampled, valid));
-    assert(!valid && calls == 5 && std::isnan(output.rotation[1]));
+    assert(!apex_interaction::passive_call(original, &hunter, location, rotation, &hunter, before));
+    assert(calls == 4 && std::isnan(rotation[1]));
+    source.rotation[1] = 2;
+    source.origin[0] = apex_interaction::max_coordinate * 2;
+    assert(!apex_interaction::passive_call(original, &hunter, location, rotation, &hunter, before));
+    assert(calls == 5);
     apex_interaction::Config config{apex_interaction::abi, 0, 0, 0, 0, 0};
-    assert(interaction_start(&config) != 0);
+    assert(interaction_start(&config) == 1);
+    // An address nothing occupies in this process: the pawn cannot be read.
+    config.pawn = 0x100000000000;
+    assert(interaction_start(&config) == 1);
+    config.controller = 0x30000;
+    config.abi += 1;
+    assert(interaction_start(&config) == 1);
+    config.abi -= 1;
+    assert(interaction_start(&config) == 2);
+    assert(interaction_start(nullptr) == 1);
     assert(interaction_stop() == 0);
     apex_interaction::Stats stats{};
-    assert(interaction_stats(&stats) == 0 && !stats.active && !stats.installed);
-    std::cout << "RESULTAT: OK - passive callback preserves original result and output\n";
+    assert(interaction_stats(&stats) == 0 && !stats.active && !stats.installed && !stats.calls);
+    assert(interaction_stats(nullptr) == 1);
+    std::cout << "RESULTAT: OK - the game's eyes answer first, only the hunter's are read\n";
 }

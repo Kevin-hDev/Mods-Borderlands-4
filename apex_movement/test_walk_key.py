@@ -304,8 +304,8 @@ frame.stop_all()
 check("the slow walk sits on the Movement page, after the speeds",
       [option.identifier for option in menu.movement.children]
       == ["walk_speed", "sprint_speed", "walk", "walk_key", "walk_toggle", "walk_key_speed"])
-check("the auto sprint's page holds its switch alone",
-      [option.identifier for option in menu.auto_sprint.children] == ["auto_sprint"])
+check("the auto sprint's page holds its switch and its third-person switch (Kevin, 2026-10-09)",
+      [option.identifier for option in menu.auto_sprint.children] == ["auto_sprint", "auto_sprint_third_person"])
 
 # Full pack only (Kevin, 2026-09-26): a separate file would show a slow walk that only half works, so it shows none.
 for carried in (("Auto sprint",), ("Movement",)):

@@ -23,6 +23,11 @@ class Values(NamedTuple):
     return_s: float
 
 
+def swap_due(shown_free: float, other_free: float | None) -> bool:
+    """The shown side is blocked and the other side free enough to go to."""
+    return shown_free < BLOCKED and other_free is not None and other_free >= CLEAR
+
+
 class AutoShoulder:
     def __init__(self) -> None:
         self.reset()
@@ -58,7 +63,7 @@ class AutoShoulder:
             self.clear_s = 0.0
             if self.waiting:
                 self.waiting = shown_free < CLEAR
-            elif shown_free < BLOCKED and other_free is not None and other_free >= CLEAR:
+            elif swap_due(shown_free, other_free):
                 self.blocked_s += seconds
                 if self.blocked_s >= swap_s:
                     self.override, self.blocked_s = not chosen_left, 0.0

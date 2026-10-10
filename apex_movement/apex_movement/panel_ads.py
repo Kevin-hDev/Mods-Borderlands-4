@@ -11,7 +11,7 @@ def refresh(form, widgets):
     elsewhere = camera.elected_elsewhere()
     if camera.framing_status() == "camera_outdated":
         # All three menus disclose the same protocol refusal, including hidden camera rows.
-        for name in ("group:camera", "group:command_external"):
+        for name in ("group:camera", "group:shoulder", "group:aiming", "group:sensitivity", "group:command_external"):
             if name in widgets:
                 widgets[name].SetText(i18n.text("camera_outdated", form.model.language))
     form.ads_blocked = elsewhere or form.shown["third_person"] is not True
@@ -25,6 +25,9 @@ def refresh(form, widgets):
         message = i18n.text(f"ads_{reason}", "FR") if form.model.language == "FR" else english
         description += "\n" + message
     widgets["description:third_person_ads"].SetText(description)
+    if "sniper_optics" in form.model.options:
+        from . import panel_optics
+        panel_optics.refresh(form, widgets)
 
 
 def refuses(values):

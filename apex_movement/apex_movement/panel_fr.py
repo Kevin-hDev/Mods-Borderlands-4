@@ -9,7 +9,7 @@ TEXT = {
     "undone_partial": "Réglages rétablis, sauf la caméra : un autre mod la contrôle.",
     "options": "OPTIONS", "options_desc_menu": "Langue du menu.", "languages": "LANGUES",
     # The sentence under the Options title on its camera and commands tabs (Kevin, 2026-10-06).
-    "camera_tab_desc": "Vue, visée, caméra orbitale et loot.",
+    "camera_tab_desc": "Vue, caméra orbitale et loot.",
     "commands_tab_desc": "Touches de la caméra, au clavier et à la manette.",
     "camera": "CAMÉRA", "camera_desc": "Vue, champ de vision et loot.",
     # The camera tab's two halves (Kevin, 2026-10-07).
@@ -17,7 +17,9 @@ TEXT = {
     "shoulder_tab_desc": "Épaule de la caméra et changement automatique.",
     "shoulder_desc": "Choisis l'épaule, et laisse la caméra changer d'épaule devant un mur.",
     "camera_page": "Vue à pied, champ de vision et vue libre.",
-    "aiming": "VISÉE", "aiming_page": "Visée en troisième personne et zoom.",
+    "aiming": "VISÉE", "aiming_page": "Visée en troisième personne et zoom.", "aiming_tab_desc": "Vue de visée et zoom en visée.",
+    "sensitivity": "SENSIBILITÉ", "sensitivity_tab_desc": "Vitesse de la caméra en troisième personne.",
+    "sensitivity_page": "En pourcentage de la sensibilité du jeu : 100 ne change rien.",
     "orbit_camera": "CAMÉRA ORBITALE", "orbit_camera_page": "Tourne autour du personnage, à la distance de ton choix.",
     "loot": "LOOT", "loot_page": "Ramasse le loot de plus loin.",
     "dynamic_camera": "CAMÉRA DYNAMIQUE", "dynamic_camera_tab_desc": "Champ de vision, cadrage et mouvements.",
@@ -38,6 +40,38 @@ TEXT = {
     "command_zoom_out": "ÉLOIGNER LA CAMÉRA", "command_zoom_out_desc": "Un cran par appui, en caméra orbitale.",
     "command_free_look": "VUE LIBRE", "command_free_look_desc": "Maintiens pour tourner la caméra en gardant ta direction.",
     "command_camera_distance": "DISTANCE DE LA CAMÉRA", "command_camera_distance_desc": "Proche, normale ou loin, à la troisième personne.",
+    "command_sniper_zoom": "ZOOM DE L'OPTIQUE",
+    "command_sniper_zoom_desc": "En visée avec plusieurs zooms cochés, passe au suivant.",
+    "popup_optics": "OPTIQUES", "popup_optics_desc": "Le zoom de chaque type d'arme en troisième personne.",
+    "optics_help_text": "BDL4 : l'arme vise comme dans le jeu, en première personne.\n\n"
+                        "x1 : l'arme vise à l'épaule avec un léger zoom.\n\n"
+                        "x2 et plus : l'arme vise à l'épaule avec ce zoom.\n\n"
+                        "Plusieurs zooms cochés : en visée, la touche de zoom passe au suivant, du plus petit au plus "
+                        "grand, puis revient au premier. La visée suivante avec ce type d'arme reprend le dernier zoom "
+                        "utilisé.",
+    "optics_help_key": "TOUCHE DE ZOOM", "optics_help_commands": "Elle se change dans l'onglet COMMANDES.",
+    "omni_direction": "OMNI DIRECTION", "omni_direction_tab_desc": "Le corps suit ta course, en troisième personne.",
+    "omni_direction_page": "Le corps suit ta course, en troisième personne.",
+    "omni_full_turn": "360°", "omni_half_turn": "180°", "omni_dash": "DASH", "omni_slide": "GLISSADE",
+    "popup_omni_body": "ORIENTATION DU CORPS", "popup_omni_body_desc": "Le chasseur se tourne vers sa course.",
+    "omni_body_help_text": "En troisième personne, le chasseur se tourne vers la direction où il court, au lieu de "
+                           "rester dos à la caméra.\n\n"
+                           "Il se retourne vers le viseur quand tu tires, lances une grenade, frappes au corps à corps "
+                           "ou utilises ta compétence, et reprend sa course une seconde après ta dernière action."
+                           "\n\n"
+                           "Quand tu vises, il fait face au viseur. Pendant une glissade, il reste tourné vers la "
+                           "glissade.",
+    "popup_omni_angle": "ANGLE", "popup_omni_angle_desc": "Jusqu'où le corps se tourne.",
+    "omni_angle_help_text": "360° : le chasseur se tourne vers sa course de tous les côtés. En arrière, il court face "
+                            "à la caméra.\n\n"
+                            "180° : il se tourne sur les côtés et vers l'avant. En arrière, il recule dos à la caméra, "
+                            "comme dans le jeu.",
+    "popup_omni_crouch": "CÔTÉS ET ARRIÈRE",
+    "popup_omni_crouch_desc": "S'accroupir en sprint sur le côté ou en arrière.",
+    "omni_crouch_help_text": "Quand tu sprintes sur le côté ou en arrière, s'accroupir lance :\n\n"
+                             "DASH : le dash, comme quand tu cours sans sprinter.\n\n"
+                             "GLISSADE : une glissade, comme en sprint vers l'avant.\n\n"
+                             "Vers l'avant, s'accroupir lance toujours une glissade.",
     "command_tools": "OPTIONS DES COMMANDES", "command_tools_desc": "Icônes de manette et touches caméra d'origine.",
     "commands_reset": "TOUCHES D'ORIGINE", "controller_icons": "ICÔNES DE MANETTE",
     "camera_draft_discarded": "Mod caméra changé : les réglages caméra non enregistrés ont été annulés.",
@@ -76,10 +110,27 @@ GROUPS = {
 }
 
 OPTIONS = {
+    "omni_body": ("Orientation du corps", "Le chasseur se tourne vers la direction où il court."),
+    "omni_angle": ("Angle", "360° : de tous les côtés. 180° : en arrière, il recule comme dans le jeu."),
+    "omni_direction_sprint": ("Sprint dans toutes les directions", "Sprinte aussi sur les côtés et en arrière."),
+    "omni_crouch": ("Côtés et arrière", "En sprint sur le côté ou en arrière, s'accroupir lance un dash ou une "
+                                        "glissade."),
     "extended_loot": ("Portée du loot augmentée", "Ramasse le loot et ouvre les coffres de plus loin."),
     "loot_reach": ("Portée du loot", "1 : portée du jeu ; 2 : deux fois plus loin."),
     "third_person": ("Troisième personne", "Garde la caméra derrière le personnage à pied."),
-    "third_person_ads": ("Visée", "Les fusils de précision et les armes lourdes gardent la visée en première personne."),
+    "third_person_ads": ("Visée", "L'optique de chaque type d'arme se choisit ci-dessous."),
+    "pistol_optics": ("Optique des pistolets",
+                      "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
+    "smg_optics": ("Optique des mitraillettes",
+                   "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
+    "shotgun_optics": ("Optique des fusils à pompe",
+                       "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
+    "assault_optics": ("Optique des fusils d'assaut",
+                       "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
+    "sniper_optics": ("Optique des fusils de précision",
+                      "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
+    "heavy_optics": ("Optique des armes lourdes",
+                     "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
     "shoulder_left": ("Changement d'épaule", "Place la caméra à gauche ou à droite du personnage."),
     "shoulder_auto": ("Changement d'épaule automatique",
                       "La caméra passe sur l'autre épaule quand un mur bouche la vue, puis revient."),
@@ -91,6 +142,25 @@ OPTIONS = {
                               "Distance derrière toi en position proche, en mètres. La normale est à 2,56."),
     "camera_distance_far": ("Distance de la caméra : loin",
                             "Distance derrière toi en position loin, en mètres. La normale est à 2,56."),
+    "sensitivity_look": ("Regard en troisième personne",
+                         "Vitesse de la caméra en troisième personne, souris et manette, en pourcentage de celle du jeu."),
+    "sensitivity_aim": ("Visée en troisième personne",
+                        "Vitesse de la caméra en visant par-dessus l'épaule, souris et manette, en pourcentage de celle du jeu."),
+    "sensitivity_weapons": ("Sensibilité par type d'arme",
+                            "En visée en troisième personne, chaque type d'arme prend sa propre valeur ci-dessous."),
+    "sensitivity_weapon_pistol": ("Pistolets", "Vitesse de visée au pistolet, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_smg": ("Mitraillettes", "Vitesse de visée à la mitraillette, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_shotgun": ("Fusils à pompe", "Vitesse de visée au fusil à pompe, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_assault": ("Fusils d'assaut", "Vitesse de visée au fusil d'assaut, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_sniper": ("Fusils de précision", "Vitesse de visée au fusil de précision, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_heavy": ("Armes lourdes", "Vitesse de visée à l'arme lourde, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_sniper_optics": ("Par zoom d'optique",
+                                         "Chaque zoom prend sa propre valeur ci-dessous, avec toutes les armes."),
+    "sensitivity_weapon_sniper_x2": ("Optique x2", "Vitesse de visée avec le zoom x2, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_sniper_x3": ("Optique x3", "Vitesse de visée avec le zoom x3, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_sniper_x4": ("Optique x4", "Vitesse de visée avec le zoom x4, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_sniper_x6": ("Optique x6", "Vitesse de visée avec le zoom x6, en pourcentage de celle du jeu."),
+    "sensitivity_weapon_sniper_x8": ("Optique x8", "Vitesse de visée avec le zoom x8, en pourcentage de celle du jeu."),
     "shoulder_smooth": ("Changement d'épaule fluide", "Déplace progressivement la caméra entre les deux épaules."),
     "orbit_smooth": ("Transitions caméra fluides", "Anime le décalage ajouté entre première et troisième personne et pour Orbit."),
     "shoulder_seconds": ("Animation de transition", "Durée commune du décalage d'épaule et des transitions caméra, en secondes."),
@@ -108,6 +178,7 @@ OPTIONS = {
                       "La caméra suit en douceur tes changements de vitesse, et bouge un peu à l'arrêt."),
     "camera_motion_strength": ("Force des mouvements",
                                "100 % par défaut ; plus bas, plus doux ; plus haut, plus fort."),
+    "free_look": ("Vue libre", "Maintiens sa touche pour tourner la caméra en gardant ta direction."),
     "free_look_keyboard_hold": ("Vue libre : maintenir au clavier",
                                 "OUI : la vue libre dure tant que la touche est tenue. NON : un appui l'allume, "
                                 "un autre l'éteint."),
@@ -119,6 +190,7 @@ OPTIONS = {
     "walk_speed": ("Vitesse de marche", "Valeur du jeu : 540."),
     "sprint_speed": ("Vitesse de course", "Valeur du jeu : 828."),
     "auto_sprint": ("Activé", "Courir en poussant le stick à fond."),
+    "auto_sprint_third_person": ("En troisième personne", "La course automatique aussi en troisième personne."),
     "walk": ("Marche lente",
              "Maintiens la touche pour marcher lentement. Avec la bascule, un seul appui suffit."),
     "walk_toggle": ("Marche lente en bascule",

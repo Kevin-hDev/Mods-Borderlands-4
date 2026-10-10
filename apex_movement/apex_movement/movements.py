@@ -25,6 +25,7 @@ UI_SHARED = (
     "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_options_tabs", "panel_pages",
     "panel_preferences", "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_theme_choice",
     "panel_toggle", "panel_view", "panel_widgets", "panel_size_choice", "panel_window_size", "panel_scroll", "panel_dynamic",
+    "panel_popup",
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.
@@ -32,12 +33,14 @@ UI_SHARED = (
 # lines and the slow_walk module that ends the sprint ship in the full pack only (Kevin, 2026-09-26), and a separate
 # file never walks slowly. shortcut_key serves its option and the menu's key capture in every file.
 SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", "movements", "ownership", "pack",
-          "report", "settings", "settings_persistence", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
+          "report", "settings", "settings_persistence", "settings_upgrade", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
 # Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
 # its shared native runtime, so these modules belong only to the full pack.
 FULL_ONLY = ("camera", "camera_settings", "panel_ads", "panel_camera_ownership", "panel_framing", "panel_framing_form", "panel_framing_text",
              "camera_control_actions", "camera_control_config",
-             "camera_control_form", "panel_camera_commands", "slow_walk")
+             "camera_control_form", "panel_camera_commands", "panel_weapon_sensitivity", "panel_optics",
+             "panel_omni_direction",
+             "slow_walk")
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,
 # which belong to two movements. The speeds every movement reads come from speed_order, not from settings.

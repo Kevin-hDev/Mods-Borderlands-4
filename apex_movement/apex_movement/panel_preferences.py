@@ -12,10 +12,12 @@ _COMMANDS = ("commands",) if pack.is_full() else ()
 _LANGUAGE = ("language",) if pack.is_full() else ()
 # After it for the same reason: the DYNAMIC CAMERA tab came later the same day.
 _DYNAMIC = ("dynamic_camera",) if pack.is_full() else ()
-# And the SHOULDER VIEW tab after it (2026-10-07).
-_SHOULDER = ("shoulder",) if pack.is_full() else ()
+# And the SHOULDER VIEW tab after it (2026-10-07), then AIMING and SENSITIVITY (2026-10-08).
+_SHOULDER = ("shoulder", "aiming", "sensitivity") if pack.is_full() else ()
+# And OMNI DIRECTION after them (2026-10-09).
+_OMNI = ("omni_direction",) if pack.is_full() else ()
 PAGE_KEYS = (*tuple(group.identifier.removesuffix("_menu") for group in menu.ALL), *_COMMANDS, "options",
-             *_LANGUAGE, *_DYNAMIC, *_SHOULDER)
+             *_LANGUAGE, *_DYNAMIC, *_SHOULDER, *_OMNI)
 french = BoolOption("menu_french", False, is_hidden=True)
 CONTROLLER_ICONS = ("PS5", "XSX")
 controller_icons = SpinnerOption("controller_icons", "PS5", list(CONTROLLER_ICONS), is_hidden=True)

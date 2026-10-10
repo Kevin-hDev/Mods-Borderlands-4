@@ -23,6 +23,7 @@ def refresh(form, widgets):
             framing.reset(widgets)
             discarded = True
     for name, visible in (*((f"{key}:settings", not elsewhere) for key in pages.PAGES),
+                          ("shoulder:settings", not elsewhere),
                           ("commands:settings", not elsewhere),
                           ("commands:external", elsewhere)):
         if name in widgets:

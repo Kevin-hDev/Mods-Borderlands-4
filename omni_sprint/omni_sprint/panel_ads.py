@@ -27,6 +27,9 @@ def refresh(form, widgets):
         message = i18n.text(f"ads_{reason}", "FR") if form.model.language == "FR" else english
         description += "\n" + message
     widgets["description:third_person_ads"].SetText(description)
+    if "sniper_optics" in form.model.options:
+        from . import panel_optics
+        panel_optics.refresh(form, widgets)
 
 
 def refuses(values):

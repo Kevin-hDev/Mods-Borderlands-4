@@ -2,6 +2,7 @@
 #include "ads_native_test_fixture.h"
 #include <cassert>
 #include <iostream>
+#include <limits>
 #include <thread>
 #include "ads_test_assert.h"
 
@@ -77,5 +78,27 @@ int main() {
     assert(state.statistics().error == 0); // A live cleanup must not inherit a prior refusal.
     context = fixture.context(UINT64_MAX);
     assert(state.publish(context) != 0);
+    fixture.put(4, ANIMATION_CATEGORY_OFFSET, static_cast<uint8_t>(CATEGORY_SNIPER));
+    assert(state.publish(fixture.context(10)) == 0);
+    fixture.put(4, ANIMATION_CATEGORY_OFFSET, static_cast<uint8_t>(CATEGORY_HEAVY));
+    assert(state.publish(fixture.context(11)) == 0);
+    fixture.put(4, ANIMATION_CATEGORY_OFFSET, static_cast<uint8_t>(CATEGORY_MAX));
+    assert(state.publish(fixture.context(12)) != 0 && state.statistics().error == ERROR_CONTEXT);
+    fixture.put(4, ANIMATION_CATEGORY_OFFSET, static_cast<uint8_t>(CATEGORY_ASSAULT));
+    assert(state.publish(fixture.context(12)) == 0);
+    Ticket optic_ticket{};
+    assert(state.ticket(fixture.manager(), optic_ticket) && state.optic(optic_ticket) == 0.0f);
+    assert(state.set_optic(11, 0.5f) != 0); // Only the published aim takes an optic.
+    for (float invalid : {-0.1f, 1.5f, std::numeric_limits<float>::quiet_NaN()}) {
+        assert(state.set_optic(12, invalid) != 0);
+    }
+    assert(state.set_optic(12, 0.125f) == 0 && state.optic(optic_ticket) == 0.125f);
+    assert(state.release(12) == 0 && state.set_optic(12, 1.0f) == 0 && state.optic(optic_ticket) == 1.0f);
+    std::thread optic_foreign([&] { assert(state.set_optic(12, 0.5f) != 0); });
+    optic_foreign.join();
+    assert(state.optic(optic_ticket) == 1.0f);
+    assert(state.clear(12) == 0 && state.set_optic(12, 0.5f) != 0);
+    assert(state.publish(fixture.context(13)) == 0);
+    assert(state.ticket(fixture.manager(), optic_ticket) && state.optic(optic_ticket) == 0.0f);
     std::cout << "RESULTAT: OK (ADS state, generation, identity and thread)\n";
 }

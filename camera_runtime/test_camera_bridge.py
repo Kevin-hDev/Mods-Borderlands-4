@@ -3,6 +3,7 @@ from types import SimpleNamespace as NS
 import unittest
 from camera_test_fixtures import Hooks, Manager, Settings
 from apex_camera_runtime.third_person import ThirdPersonController
+from apex_camera_runtime.constants import THIRD_PERSON_RIGHT as RIGHT
 
 try:
     from apex_camera_runtime.camera_bridge import CameraBridge
@@ -17,7 +18,7 @@ class View:
         self.refuse_stop = False
         self.suspended = False
 
-    def start(self, manager, right):
+    def start(self, manager):
         self.active = True
         return True
 
@@ -31,12 +32,6 @@ class View:
 
     def suspend_offset(self, value, _seconds):
         self.suspended = value
-
-    def offset_transition_active(self):
-        return self.blending
-
-    def set_right(self, value):
-        return abs(value) == 48.4
 
     def stats(self):
         return NS(active=int(self.active), suspended=int(self.suspended))
@@ -71,37 +66,64 @@ class BridgeTests(unittest.TestCase):
         self.pc = NS(_get_address=lambda: 0x10000, OakCharacter=self.actor)
 
     def test_one_start_binds_current_player_and_camera(self):
-        self.assertTrue(self.bridge.start(self.manager, 48.4, self.pc))
+        self.assertTrue(self.bridge.start(self.manager, RIGHT, self.pc))
         config = self.interaction.starts[0]
         self.assertEqual((config.controller, config.pawn, config.manager, config.camera_module),
                          (0x10000, 0x20000, 0x30000, 0x40000))
         self.assertIs(self.bridge.library, self.view.library)
         self.bridge.suspend(True)
         self.assertTrue(self.bridge.stats().suspended)
-        self.assertTrue(self.bridge.set_right(-48.4))
+        self.assertTrue(self.bridge.set_right(-RIGHT))
         self.bridge.stop()
         self.assertFalse(self.view.active or self.interaction.active or self.bridge.pending)
 
     def test_orbit_permission_expires_before_normal_third_person_aiming(self):
-        from apex_camera_runtime.collision import CollisionResolver
-        resolver = CollisionResolver(None, None, lambda x: lambda: x, self.messages.append)
-        self.bridge.collision = resolver
-        self.view.blending = True
+        clock = [0]
+        self.bridge.shoulder.clock = lambda: clock[0]
+        self.bridge.suspend(True)
         manager = NS(GetActorCameraMode=lambda _: 'ThirdPerson')
         self.bridge.suspend_orbit(False, 0.2, lambda *_: False)
-        self.assertFalse(resolver._mode_allowed(manager, self.actor))
-        self.view.blending = False
-        self.assertTrue(resolver._mode_allowed(manager, self.actor))
-        self.assertIsNone(resolver.offset_permission)
+        self.assertTrue(self.bridge.offset_transition_active())
+        self.assertFalse(self.bridge.shoulder.allows(manager, self.actor))
+        clock[0] = 300_000_000
+        self.assertFalse(self.bridge.offset_transition_active())
+        self.assertTrue(self.bridge.shoulder.allows(manager, self.actor))
+        self.assertIsNone(self.bridge.shoulder.permission)
+
+    def test_the_native_camera_starts_without_a_shoulder_the_game_gets_it(self):
+        self.assertTrue(self.bridge.start(self.manager, -RIGHT, self.pc))
+        self.assertEqual(self.bridge.shoulder.place(0.0, 0.0)[0], -RIGHT)
+        self.assertTrue(self.bridge.set_right(RIGHT))
+        self.assertEqual(self.bridge.shoulder.right, RIGHT)
+        self.bridge.stop()
+        self.assertEqual(self.bridge.shoulder.right, 0.0)
+
+    def test_climbing_glides_the_shoulder_over_its_measured_time_and_shows_in_its_mode(self):
+        from apex_camera_runtime.transition_catalog import CLIMB_SECONDS
+        clock = [0]
+        self.bridge.shoulder.clock = lambda: clock[0]
+        self.view.suspend_climb = lambda value: setattr(self.view, 'suspended', value)
+        self.bridge.start(self.manager, RIGHT, self.pc)
+        self.bridge.suspend_climb(True)
+        self.assertTrue(self.view.suspended)
+        clock[0] = int(CLIMB_SECONDS * 1e9 / 2)
+        self.assertAlmostEqual(self.bridge.shoulder.place(0.0, 0.0)[0], RIGHT / 2)
+        self.assertTrue(self.bridge.shoulder.allows(NS(GetActorCameraMode=lambda _: 'ThirdPersonClimbing'), None))
+        self.bridge.stop()
+
+    def test_an_invalid_shoulder_never_starts_the_native_camera(self):
+        self.assertFalse(self.bridge.start(self.manager, float('nan'), self.pc))
+        self.assertFalse(self.view.active or self.bridge.pending)
 
     def test_failed_alignment_start_keeps_view_and_cleans_partial_alignment(self):
         self.interaction.refuse_start = True
-        self.assertTrue(self.bridge.start(self.manager, 48.4, self.pc))
+        self.assertTrue(self.bridge.start(self.manager, RIGHT, self.pc))
         self.assertTrue(self.view.active)
         self.assertFalse(self.interaction.active)
-        self.assertEqual(len(self.messages), 1)
-        self.assertIn('unavailable', self.messages[0])
-        self.assertTrue(self.bridge.set_right(-48.4))
+        self.assertEqual(self.messages[0], 'aim alignment refused: RuntimeError (start refused)')
+        self.assertEqual(len(self.messages), 2)
+        self.assertIn('unavailable', self.messages[1])
+        self.assertTrue(self.bridge.set_right(-RIGHT))
         self.bridge.suspend(True)
         self.assertTrue(self.view.suspended)
         self.bridge.stop()
@@ -110,14 +132,14 @@ class BridgeTests(unittest.TestCase):
     def test_failed_rollback_remains_owned_and_retryable(self):
         self.interaction.refuse_start = self.interaction.refuse_stop = True
         with self.assertRaises(RuntimeError):
-            self.bridge.start(self.manager, 48.4, self.pc)
+            self.bridge.start(self.manager, RIGHT, self.pc)
         self.assertTrue(self.bridge.pending)
         self.interaction.refuse_stop = False
         self.bridge.stop()
         self.assertFalse(self.view.active or self.interaction.active or self.bridge.pending)
 
     def test_alignment_cleanup_error_does_not_skip_camera_stop(self):
-        self.bridge.start(self.manager, 48.4, self.pc)
+        self.bridge.start(self.manager, RIGHT, self.pc)
         self.interaction.refuse_stop = True
         with self.assertRaises(RuntimeError):
             self.bridge.stop()
@@ -129,16 +151,17 @@ class BridgeTests(unittest.TestCase):
 
     def test_invalid_alignment_config_does_not_disable_valid_framing(self):
         self.pc._get_address = lambda: 1
-        self.assertTrue(self.bridge.start(self.manager, 48.4, self.pc))
+        self.assertTrue(self.bridge.start(self.manager, RIGHT, self.pc))
         self.assertTrue(self.view.active)
         self.assertFalse(self.interaction.active)
-        self.assertEqual(len(self.messages), 1)
+        self.assertEqual(self.messages[0], 'aim alignment refused: ValueError (Invalid interaction owner)')
+        self.assertEqual(len(self.messages), 2)
         self.bridge.stop()
 
     def test_missing_alignment_warns_once_across_camera_restarts(self):
         self.bridge.interaction = None
         for _ in range(3):
-            self.assertTrue(self.bridge.start(self.manager, 48.4, self.pc))
+            self.assertTrue(self.bridge.start(self.manager, RIGHT, self.pc))
             self.assertTrue(self.view.active)
             self.bridge.stop()
         warnings = [message for message in self.messages if 'unavailable' in message]
@@ -147,30 +170,30 @@ class BridgeTests(unittest.TestCase):
 
     def test_recovered_alignment_can_start_on_next_enable(self):
         self.interaction.refuse_start = True
-        self.assertTrue(self.bridge.start(self.manager, 48.4, self.pc))
+        self.assertTrue(self.bridge.start(self.manager, RIGHT, self.pc))
         self.bridge.stop()
         self.interaction.refuse_start = False
-        self.assertTrue(self.bridge.start(self.manager, 48.4, self.pc))
+        self.assertTrue(self.bridge.start(self.manager, RIGHT, self.pc))
         self.assertTrue(self.interaction.active)
         self.bridge.stop()
 
     def test_partial_framing_failure_is_cleaned_and_not_treated_as_optional(self):
-        def broken_start(_manager, _right):
+        def broken_start(_manager):
             self.view.active = True
             raise RuntimeError('framing refused')
         self.view.start = broken_start
         with self.assertRaises(RuntimeError):
-            self.bridge.start(self.manager, 48.4, self.pc)
+            self.bridge.start(self.manager, RIGHT, self.pc)
         self.assertFalse(self.view.active or self.interaction.active or self.bridge.pending)
 
     def test_failed_framing_cleanup_remains_retryable(self):
-        def broken_start(_manager, _right):
+        def broken_start(_manager):
             self.view.active = True
             raise RuntimeError('framing refused')
         self.view.start = broken_start
         self.view.refuse_stop = True
         with self.assertRaises(RuntimeError):
-            self.bridge.start(self.manager, 48.4, self.pc)
+            self.bridge.start(self.manager, RIGHT, self.pc)
         self.assertTrue(self.bridge.pending)
         self.view.refuse_stop = False
         self.bridge.stop()

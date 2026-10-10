@@ -5,34 +5,36 @@
 #include <cstring>
 
 namespace apex_interaction {
-bool align_output(void* output, const Sample& before, const CameraView& view) {
-    if (!apex_camera::memory_access(output, sizeof(view), true)) return false;
+bool align(const View& eyes, const View& camera, View& aligned) {
     double distance_squared = 0;
     for (size_t i = 0; i < 3; ++i) {
-        if (!std::isfinite(view.origin[i]) || !std::isfinite(view.rotation[i])
-            || !std::isfinite(before.origin[i]) || std::abs(view.origin[i]) > max_coordinate
-            || std::abs(view.rotation[i]) > max_angle) return false;
-        const double delta = view.origin[i] - before.origin[i];
+        if (!std::isfinite(camera.origin[i]) || !std::isfinite(camera.rotation[i])
+            || !std::isfinite(eyes.origin[i]) || !std::isfinite(eyes.rotation[i])
+            || std::abs(camera.origin[i]) > max_coordinate || std::abs(camera.rotation[i]) > max_angle
+            || std::abs(eyes.origin[i]) > max_coordinate || std::abs(eyes.rotation[i]) > max_angle) return false;
+        const double delta = camera.origin[i] - eyes.origin[i];
         distance_squared += delta * delta;
     }
     if (distance_squared > max_camera_distance * max_camera_distance) return false;
-    const double pitch = view.rotation[0] * radians_per_degree;
-    const double yaw = view.rotation[1] * radians_per_degree;
+    const double pitch = camera.rotation[0] * radians_per_degree;
+    const double yaw = camera.rotation[1] * radians_per_degree;
     const double forward[] = {std::cos(pitch) * std::cos(yaw),
                               std::cos(pitch) * std::sin(yaw), std::sin(pitch)};
     double depth = 0;
-    for (size_t i = 0; i < 3; ++i) depth += (before.origin[i] - view.origin[i]) * forward[i];
+    for (size_t i = 0; i < 3; ++i) depth += (eyes.origin[i] - camera.origin[i]) * forward[i];
     if (depth < 0) return false;
-    CameraView aligned = view;
-    // Project onto the camera ray at the original depth: moving back to the camera
-    // itself would spend the finite interaction segment on the camera boom.
-    for (size_t i = 0; i < 3; ++i) aligned.origin[i] += depth * forward[i];
-    // Only the ray changes: the original anchor, range and ignored actors remain authoritative.
-    std::memcpy(output, &aligned, sizeof(aligned));
+    aligned = eyes;
+    // Onto the camera ray at the eyes' own depth: starting at the camera itself would spend 2.6 m of every
+    // fixed-length line (pickups) on the camera boom and meet what stands between the camera and the hunter.
+    for (size_t i = 0; i < 3; ++i) aligned.origin[i] = camera.origin[i] + depth * forward[i];
+    // Pitch and yaw make the direction, the crosshair's even while the dynamic camera turns the view;
+    // the game's roll stays, the eyes being level.
+    aligned.rotation[0] = camera.rotation[0];
+    aligned.rotation[1] = camera.rotation[1];
     return true;
 }
 
-int read_camera(const Config& config, ViewStats getter, CameraView& view) {
+int read_camera(const Config& config, ViewStats getter, View& view) {
     apex_view::Stats camera{};
     if (!getter || getter(&camera)) return -1;
     if (!camera.active || (camera.suspended && !camera.ads_effective)) return 0;

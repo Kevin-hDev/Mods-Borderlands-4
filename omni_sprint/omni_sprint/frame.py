@@ -1,10 +1,9 @@
-"""Runs Omni Sprint twice a second: finds the movement definition of the character played and keeps it open.
+"""Omni Sprint's clock: each update of the played body ticks the shared camera runtime, which since 2026-10-09 also
+opens the sprint and fills the sprint's backward slot (docs/omni_direction/spec-omni-direction.md); without that
+runtime, Omni Sprint's own copy does it (sprint_fallback.py).
 
-The hook is only a clock, as in Apex Movement and Vehicle Driving: any animation update ticks it, several times a
-frame, so a tick before the next check does nothing. Loading a game makes a new character, while a fast travel keeps
-it (2026-09-19, verified in game), and each character has its own definition, so a new movement component means a
-new search. A definition not found yet is searched again later; one never found, or found but not opened, is
-reported once and left alone until the character changes.
+The hook is only a clock, as in Apex Movement and Vehicle Driving: every animation update in the world calls it, so
+only the played body's own update counts.
 """
 
 import time
@@ -13,164 +12,63 @@ from typing import Any
 from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 
-from . import animation, camera, definition, limit, report, settings
+from . import camera, report, sprint_fallback
 
 HOOK_PATH = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
-MS = 1_000_000
-# Twice a second: a sprint started just after a zone change is opened within half a second.
-CHECK_NS = 500 * MS
-# While a game loads, the character exists before its definition can be found: on 2026-09-19 (13:39:40) the first
-# search missed, and the same character's search found it two minutes later. So a miss is searched again, waiting
-# twice as long each time up to RETRY_MAX_NS, and given up after MAX_TRIES, about two minutes in all.
-RETRY_FIRST_NS = 500 * MS
-RETRY_MAX_NS = 16_000 * MS
-MAX_TRIES = 12
 
-_shape: definition.Layout | None = None
-_shape_read = False
-_component = 0
-_definition = 0
-_tries = 0
-_next_search_ns = 0
-_given_up = False
-_next_ns = 0
-_player_present = False
 _camera_in_game = False
 
 
 def reset() -> None:
-    global _shape, _shape_read, _next_ns, _player_present, _camera_in_game
-    _shape, _shape_read, _next_ns = None, False, 0
-    _player_present = _camera_in_game = False
-    _follow(0, 0)
+    global _camera_in_game
+    _camera_in_game = False
 
 
-def _follow(component: int, now_ns: int) -> None:
-    global _component, _definition, _tries, _next_search_ns, _given_up
-    _component, _definition, _tries, _next_search_ns, _given_up = component, 0, 0, now_ns, False
-
-
-def _layout() -> definition.Layout | None:
-    # Read once per switch-on: the type is the game's own and does not change while it runs.
-    global _shape, _shape_read
-    if not _shape_read:
-        _shape_read = True
-        _shape = definition.layout()
-        if _shape is None:
-            report.error_once("layout", f"the game's {definition.TYPE_NAME} type has changed: nothing written")
-    return _shape
-
-
-def _component_address() -> int:
-    """The address of the played character's movement component, 0 without a character (title screen, wheel)."""
+def played(obj: Any) -> tuple[bool, Any]:
+    """Whether this update belongs to the played body, and the player controller. The live body is the authority:
+    player animation classes vary by character and state."""
     pc = get_pc(possibly_loading=True)
     character = getattr(pc, "OakCharacter", None) if pc is not None else None
-    movement = getattr(character, "CharacterMovement", None) if character is not None else None
-    return int(movement._get_address()) if movement is not None else 0
+    mesh = getattr(character, "Mesh", None) if character is not None else None
+    body = mesh.GetAnimInstance() if mesh is not None else None
+    return (body is not None and obj is not None and int(body._get_address()) == int(obj._get_address()),
+            pc if character is not None else None)
 
 
-def _look(shape: definition.Layout, now_ns: int) -> None:
-    global _definition, _tries, _next_search_ns, _given_up
-    found = definition.find(_component, shape)
-    _tries += 1
-    if found is not None:
-        _definition = found.address
-        after = f", after {_tries} searches" if _tries > 1 else ""
-        report.note(f"movement definition found at {found.address:#x}, movement component +{found.slot:#x}{after}")
-        return
-    if _tries >= MAX_TRIES:
-        _given_up = True
-        report.warning_once(
-            f"none:{_component:#x}",
-            f"no movement definition found for this character after {_tries} searches: nothing written, sprint as usual",
-        )
-        return
-    _next_search_ns = now_ns + min(RETRY_FIRST_NS * 2 ** (_tries - 1), RETRY_MAX_NS)
-
-
-def on_frame(now_ns: int) -> None:
-    global _next_ns, _component, _given_up, _player_present
-    if now_ns < _next_ns:
-        return
-    _next_ns = now_ns + CHECK_NS
-    shape = _layout()
-    component = _component_address() if shape is not None else 0
-    _player_present = component != 0
-    if not settings.sprint_enabled():
-        _give_back(shape)
-        return
-    if component == 0:
-        return
-    if component != _component:
-        _follow(component, now_ns)
-    if _given_up:
-        return
-    if _definition == 0:
-        if now_ns >= _next_search_ns:
-            _look(shape, now_ns)
-        if _definition == 0:
-            return
-    try:
-        line = limit.hold(_definition, shape)
-    except limit.Lost as exc:
-        report.note(f"{exc}: looking for it again")
-        _component = 0
-        return
-    except limit.NotOpened as exc:
-        report.error_once(str(exc), str(exc))
-        _given_up = True
-        return
-    if line is not None:
-        report.note(line)
-
-
-def _give_back(shape: definition.Layout | None) -> None:
-    """The sprint's switch is off: every limit opened goes back to the game's value, and stays there."""
-    restored, left = limit.put_back(shape)
-    if restored or left:
-        line = f"sprint switched off, game sprint limit put back in {restored} movement definition(s)"
-        report.note(line + (f", {left} left alone: no longer recognised in memory" if left else ""))
-
-
-def stop() -> tuple[int, int]:
-    """Puts back every limit opened: (put back, left alone)."""
-    shape = _shape
+def stop() -> None:
     reset()
-    return limit.put_back(shape)
+    sprint_fallback.stop()
 
 
 # The identifier carries the package's name, as Apex Movement's and Vehicle Driving's do on this same function: two
 # identifiers never replace each other, so the three mods run each frame.
 @hook(HOOK_PATH, Type.POST, hook_identifier=f"{__package__}:frame")
-def tick(_obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
+def tick(obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
     global _camera_in_game
     now_ns = time.perf_counter_ns()
-    player_frame = False
     try:
-        animation_frame = animation.inspect(_obj)
-        player_frame = animation_frame[0]
-        if settings.sprint_enabled():
-            animation.update(animation_frame, now_ns)
-        else:
-            animation.stop()
-    except Exception:
-        report.error_once('animation', 'backward animation update failed')
-        try:
-            animation.stop()
-        except Exception:
-            report.error_once('animation_restore', 'backward animation restoration failed')
-    try:
-        on_frame(now_ns)
+        player_frame, pc = played(obj)
     except Exception as exc:
-        report.error_once("frame", f"a check was skipped after an error: {exc!r}")
-    update_camera = player_frame is True
-    if update_camera:
+        report.error_once("frame", f"a frame was skipped after an error: {exc!r}")
+        return
+    update = player_frame
+    if update:
         _camera_in_game = True
-    elif _camera_in_game and not _player_present:
+    elif _camera_in_game and pc is None:
+        # The player left the game (title screen, loading): one last tick lets the runtime give everything back.
         _camera_in_game = False
-        update_camera = True
-    if update_camera:
+        update = True
+    if not update:
+        return
+    try:
+        camera.on_frame(now_ns)
+    except Exception as exc:
+        report.error_once("camera", f"a camera check was skipped after an error: {exc!r}")
+    try:
+        sprint_fallback.tick(pc, now_ns)
+    except Exception as exc:
+        report.error_once("sprint_fallback", f"the open sprint's own copy stopped after an error: {exc!r}")
         try:
-            camera.on_frame(now_ns)
-        except Exception as exc:
-            report.error_once("camera", f"a camera check was skipped after an error: {exc!r}")
+            sprint_fallback.stop()
+        except Exception as stop_error:
+            report.error_once("sprint_fallback_stop", f"and could not give everything back: {stop_error!r}")

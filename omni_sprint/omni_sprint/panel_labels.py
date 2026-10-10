@@ -29,7 +29,6 @@ def apply(form, widgets):
     widgets["enabled_label"].SetText(i18n.text("enabled" if enabled else "disabled", language))
     b.paint(widgets, "enabled", "on" if enabled else "off")
     widgets["tag"].SetText(f"{i18n.text('by', language)} {t.AUTHOR}")
-    widgets["settings_caption"].SetText(i18n.text("settings", language))
     widgets["meta"].SetText(f"{i18n.text('version', language)} {__version__} · "
                             f"{i18n.text('by', language)} {t.AUTHOR}")
     for group, key in zip(form.model.groups, form.model.pages):
@@ -63,6 +62,13 @@ def value(widgets, option, current, language):
                  else option.true_text if current else option.false_text)
         widgets[f"setting:{key}_label"].SetText(label)
         b.paint(widgets, f"setting:{key}", "on" if current else "off")
+    elif f"optic:{key}:bdl4" in widgets:
+        # An optic row, drawn as boxes (panel_optics.py).
+        from . import panel_optics
+        panel_optics.paint(widgets, key, current)
+    elif key in ("omni_body", "omni_angle", "omni_direction_sprint", "omni_crouch"):
+        from . import panel_omni_direction
+        panel_omni_direction.paint(widgets, option, current, language)
     elif key == "shoulder_left":
         widgets[f"setting:{key}_label"].SetText(i18n.text("left" if current else "right", language))
         b.paint(widgets, f"setting:{key}", "on" if current else "off")

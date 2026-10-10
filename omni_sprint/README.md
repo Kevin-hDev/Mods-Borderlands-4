@@ -1,6 +1,6 @@
 # Omni Sprint
 
-Version **1.0.15**.
+Version **1.2.0**.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -24,8 +24,16 @@ stops. Omni Sprint opens that limit to 180 degrees, so the sprint starts and hol
   70 to 150. With the switch off, the game's FOV is used.
 - The optional **Third Person** switch, off by default, keeps an over-the-shoulder camera on foot. Aim View defaults
   to third person with native weapon zoom and a visible reticle; choose first person in Camera settings if preferred.
-  Crouch and switch shoulders while aiming. Sniper rifles stay in first person; heavy and unsupported weapons keep
-  the native view. A downed character and a ground slam landing stay in third person. Its key is P by default.
+  Crouch and switch shoulders while aiming. A downed character and a ground slam landing stay in third person.
+  Its key is P by default.
+- **Optics**: Every weapon type has its optic on the AIMING page: BDL4 keeps the game's first-person aim, the zooms
+  you tick aim over the shoulder (pistols x1 to x3, SMGs and assault rifles x1 to x4, shotguns and heavy
+  weapons x1 and x2, sniper rifles x2 to x8). With several zooms ticked, a key switches from one to the next.
+  Unsupported weapons keep the native view.
+- **Omni direction**: in third person, the character turns toward where it runs, all the way round (360°) or up
+  to the sides (180°), sprints in every direction and stays turned when it stops.
+- **Sensitivity**: the camera's speed in third person, without aiming and while aiming, with mouse and
+  controller. Optional aim speeds per weapon type and per optic zoom, each with its own switch.
 - In third person, key 6 switches shoulders and key 7 switches to the orbit camera, which turns freely around the
   character; two more keys, none set by default, move it closer or farther away. Both switches are greyed while
   third person is off.

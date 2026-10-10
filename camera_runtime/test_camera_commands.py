@@ -71,6 +71,7 @@ identifiers = (
     "zoom_in_key", "zoom_in_controller", "zoom_out_key", "zoom_out_controller",
     "free_look_key", "free_look_controller",
     "camera_distance_key", "camera_distance_controller",
+    "sniper_zoom_key", "sniper_zoom_controller",
 )
 assert tuple(option.identifier for option in commands.options) == identifiers
 assert tuple(bind.identifier for bind in commands.binds) == identifiers
@@ -95,6 +96,8 @@ assert commands.slots() == (
     ("free_look", "controller", "free_look_controller"),
     ("camera_distance", "keyboard", "camera_distance_key"),
     ("camera_distance", "controller", "camera_distance_controller"),
+    ("sniper_zoom", "keyboard", "sniper_zoom_key"),
+    ("sniper_zoom", "controller", "sniper_zoom_controller"),
 )
 assert commands.identifier("shoulder", "controller") == "shoulder_controller"
 assert commands.defaults() == {
@@ -105,12 +108,13 @@ assert commands.defaults() == {
     "zoom_out_key": None, "zoom_out_controller": None,
     "free_look_key": FREE_LOOK, "free_look_controller": "Gamepad_LeftThumbstick",
     "camera_distance_key": EIGHT, "camera_distance_controller": None,
+    "sniper_zoom_key": FREE_LOOK, "sniper_zoom_controller": "Gamepad_LeftThumbstick",
 }
 assert all(bind.is_hidden is True and bind.event_filter == "IE_Pressed" for bind in commands.binds)
 assert all(option.is_hidden is False for option in commands.options)
 assert tuple(bind.key for bind in commands.binds) == ("P", None, SIX, None, SEVEN, None,
                                                     None, None, None, None, FREE_LOOK, "Gamepad_LeftThumbstick",
-                                                    EIGHT, None)
+                                                    EIGHT, None, FREE_LOOK, "Gamepad_LeftThumbstick")
 
 for bind in commands.binds:
     bind.callback()
@@ -134,6 +138,11 @@ for changes in (
      "shoulder_controller": "Gamepad_FaceButton_Left"},
     {"unknown": "K"},
     {"orbit_key": "Gamepad_FaceButton_Top"},
+    # The sniper zoom shares a key with Free Look only (Kevin, 2026-10-09).
+    {"sniper_zoom_key": "P"},
+    {"sniper_zoom_key": SIX},
+    {"sniper_zoom_controller": "Gamepad_FaceButton_Left", "shoulder_controller": "Gamepad_FaceButton_Left"},
+    {"free_look_key": "K", "sniper_zoom_key": "K", "orbit_key": "K"},
 ):
     try:
         commands.validate(changes)
@@ -142,6 +151,10 @@ for changes in (
     else:
         raise AssertionError(changes)
 
+assert commands.validate({"free_look_key": "K", "sniper_zoom_key": "K"}) == {"free_look_key": "K",
+                                                                            "sniper_zoom_key": "K"}
+assert commands.validate({"sniper_zoom_controller": "Gamepad_RightShoulder"}) == {
+    "sniper_zoom_controller": "Gamepad_RightShoulder"}
 commands.apply({"shoulder_controller": "Gamepad_FaceButton_Left"})
 assert commands.option("shoulder_controller").value == "Gamepad_FaceButton_Left"
 assert commands.option("shoulder_controller")._bind.key == "Gamepad_FaceButton_Left"
@@ -160,7 +173,7 @@ assert commands.option("orbit_controller").value is None
 commands.align()
 assert tuple(bind.key for bind in commands.binds) == ("Nine", None, "P", None, SEVEN, None,
                                                     None, None, None, None, FREE_LOOK, "Gamepad_LeftThumbstick",
-                                                    EIGHT, None)
+                                                    EIGHT, None, FREE_LOOK, "Gamepad_LeftThumbstick")
 commands.apply({"zoom_in_key": "MouseScrollUp", "zoom_out_key": "MouseScrollDown"})
 assert commands.option("zoom_in_key")._bind.key == "MouseScrollUp"
 commands.apply(commands.defaults())

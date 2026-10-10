@@ -39,10 +39,16 @@ class Settings:
     set_orbit_distance = staticmethod(settings.zoom.save)
     camera_distance = staticmethod(settings.distance.index)
     camera_distances = staticmethod(settings.distance.distances)
+    look_sensitivity = staticmethod(settings.sensitivity.values)
+    sniper_optics = staticmethod(settings.optics.sniper_ticked)
+    weapon_optics = staticmethod(settings.optics.weapon_ticked)
+    sniper_zoom_keys = staticmethod(settings.optics.keys)
     set_camera_distance = staticmethod(settings.distance.save)
     loot_distance = staticmethod(settings.loot_distance)
     speed_fov = staticmethod(settings.speed_fov.values)
     dynamic_camera = staticmethod(settings.dynamic.values)
+    omni_direction = staticmethod(settings.omni.values)
+    sprint_everywhere = staticmethod(settings.sprint_enabled)
     free_look = staticmethod(settings.free_look.values)
     @staticmethod
     def fov_enabled() -> bool:

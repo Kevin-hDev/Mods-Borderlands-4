@@ -1,5 +1,75 @@
 # Changelog
 
+## 1.2.16 - 2026-10-10
+
+- Auto sprint: a new In third person setting, off by default, to auto sprint in third person too.
+- Every weapon type now has its optic on the AIMING page: BDL4 keeps the game's first-person aim, zooms aim over the shoulder. Pistols x1 to x3, SMGs and assault rifles x1 to x4, shotguns and heavy weapons x1 and x2, sniper rifles x2 to x8. With several zooms ticked, the OPTIC ZOOM key switches from one to the next.
+- Heavy weapons can now aim over the shoulder.
+- x1 gives the same light zoom with every weapon.
+- SENSITIVITY page: a row for heavy weapons, and the speeds per zoom count for every weapon. They now turn on without the sensitivity per weapon type.
+- With OMNI DIRECTION, your character stays turned when you stop, instead of turning back to face forward.
+- Fixed: the first switch to third person after starting the game no longer takes 2 seconds.
+- The SETTINGS title above the menu's pages is gone.
+- The console no longer shows the camera's report every 30 seconds.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.15 - 2026-10-09
+
+- Fixed: the ground dash works again with sprint in all directions. Walking, crouching sideways or backwards always dashes; sprinting, it dashes or slides as chosen in Sides and Back.
+- With OMNI DIRECTION, slides now start the way you run, in every direction.
+- The OMNI DIRECTION page now says to turn on third person when it is off.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.14 - 2026-10-09
+
+- New OMNI DIRECTION tab in OPTIONS, for third person: your character turns toward where you run, all the way round (360°) or up to the sides (180°), and sprints in every direction. Each setting has a "?" help.
+- In third person, auto sprint is now off: sprint with your sprint key. First person is unchanged.
+- Sides and Back (dash or slide) is not active yet: crouching while sprinting sideways or backwards slides for now. It comes in a next update.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.13 - 2026-10-09
+
+- Sniper rifles now have a single aim speed in the SENSITIVITY tab, like the other weapon types. A "Sniper rifles per optic" switch, off by default, unfolds a speed for each zoom.
+- Speeds already set per zoom are kept: turn the switch on to use them again.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.12 - 2026-10-09
+
+- New in the AIMING tab of OPTIONS: in third person, sniper rifles can aim over the shoulder with a zoom of your choice, from x2 to x8. BDL4, the default, keeps the rifle's own scope, in first person.
+- With several zooms ticked, a key switches from one zoom to the next while aiming. It can be changed in the COMMANDS tab.
+- A "?" button beside the zooms explains how they work and shows your zoom key.
+- With sensitivity per weapon type on, each zoom has its own aim speed.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.11 - 2026-10-08
+
+Fixes
+- In third person, thrown grenades and knives now land where the crosshair points, no longer to the side of it.
+- In third person, the automatic shoulder switch no longer swaps the camera from one side to the other when your character walks through a doorway.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.10 - 2026-10-08
+
+- In third person, the camera no longer jumps onto your character's head when getting into a vehicle.
+- In third person, the camera jumps less when your character passes behind a pillar, a pole or a wall.
+- In third person, the animation of your character climbing onto a ledge shows correctly again.
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.9 - 2026-10-08
+
+- New SENSITIVITY settings: the camera's speed in third person, without aiming and while aiming, with mouse and controller.
+- Sensitivity per weapon type, off by default: its own aim speed for pistols, SMGs, shotguns and assault rifles.
+- The over-the-shoulder camera sits a little further to the side: the reticle is a little further from your character, and very slightly higher.
+- The automatic shoulder switch no longer triggers on a pillar, a pole, a railing or a step, only on a real wall.
+- Free Look now has a switch on the CAMERA page to turn it off.
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.8 - 2026-10-07
 
 - Fixed third-person camera activation on the Epic Games version of Borderlands 4. Third-person view and aiming were tested on both Epic Games and Steam.

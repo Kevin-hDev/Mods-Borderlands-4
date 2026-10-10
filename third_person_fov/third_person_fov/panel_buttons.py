@@ -30,8 +30,9 @@ KINDS = {
     "master": ("button", t.STROKE, t.SHADOW_SM, (t.SPACE_2, t.SPACE_3), True, t.MASTER_WIDTH),
     "nav": ("nav", t.STROKE, t.SHADOW_MD, (t.SPACE_3, t.SPACE_4), False, None),
     "lang": ("small_button", t.STROKE_THIN, 0, (t.SPACE_1, t.SPACE_3), True, t.STATE_WIDTH),
-    # Apex Movement's Options tabs: a switch, wider for its word (sketch A of 2026-10-06, options_onglets).
-    "tab": ("button", t.STROKE, t.SHADOW_SM, (t.SPACE_2, t.SPACE_5), True, None),
+    # Apex Movement's Options tabs: a switch, wider for its word (sketch A of 2026-10-06, options_onglets); a little
+    # lower since they sit on two rows (Kevin, 2026-10-08).
+    "tab": ("button", t.STROKE, t.SHADOW_SM, (t.SPACE_1, t.SPACE_5), True, None),
 }
 _STATES = (("UncheckedImage", None), ("UncheckedHoveredImage", t.HOVER_OVERLAY),
            ("UncheckedPressedImage", t.PRESS_OVERLAY), ("CheckedImage", None),

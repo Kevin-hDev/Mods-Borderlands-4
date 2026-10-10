@@ -22,6 +22,12 @@ class AdsBridge:
         ):
             function = getattr(library, name)
             function.argtypes, function.restype = arguments, ctypes.c_int
+        # A .dll built before the sniper optics (2026-10-09) lacks it: sniper rifles then keep the game's own aim.
+        self._optic = getattr(library, "ads_set_optic", None)
+        if self._optic is not None:
+            self._optic.argtypes, self._optic.restype = [ctypes.c_uint64, ctypes.c_float], ctypes.c_int
+        # A .dll built before heavy weapons could aim at the shoulder (2026-10-10) refuses them: they keep BDL4.
+        self.heavy = getattr(library, "ads_heavy_aim", None) is not None
         self._preflight = preflight if preflight is not None else Preflight(library.ads_verify_files, log)
 
     def start_preflight(self):
@@ -77,6 +83,18 @@ class AdsBridge:
 
     def release(self, generation):
         self._generation_call("ads_release", generation)
+
+    @property
+    def optics(self):
+        return self._optic is not None
+
+    def set_optic(self, generation, scale):
+        """scale: 1/N for a xN optic, 1 for no zoom, 0 for the weapon's own."""
+        if (type(generation) is not int or not 0 < generation < (1 << 64) or type(scale) is not float
+                or not 0.0 <= scale <= 1.0):
+            raise ValueError("Invalid aiming optic")
+        if self._optic is None or self._prepared is not True or self._optic(generation, scale):
+            raise RuntimeError("Aiming optic unavailable")
 
     def clear(self, generation):
         self._generation_call("ads_clear", generation)

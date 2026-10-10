@@ -29,7 +29,7 @@ check("the speeds have their own line, apart from the auto sprint switch",
       and menu.auto_sprint.children[0] is settings.auto_sprint)
 check("the auto sprint's line holds the walk key that stops it, and the key's speed",
       menu.movement.children[2:] == [walk_key.switch, walk_key.key, walk_key.toggle, walk_key.speed]
-      and menu.auto_sprint.children == [settings.auto_sprint])
+      and menu.auto_sprint.children == [settings.auto_sprint, settings.auto_sprint_third_person])
 check("each movement's line opens its switch and settings",
       menu.heavier_fall.children == [settings.heavier_fall, settings.fall_weight, settings.jump_height_bonus])
 check("slides hold their switch, the direction switch, speed, distance, downhill pull and top speed, and no steering",
@@ -49,7 +49,7 @@ check("the wall climb holds its switch, distance, speed, diagonal and wait", men
 ])
 
 every_option = [option for group in menu.MENU for option in group.children]
-check("every setting appears exactly once", len(every_option) == len(set(map(id, every_option))) == 34)
+check("every setting appears exactly once", len(every_option) == len(set(map(id, every_option))) == 35)
 check("group identifiers differ from the old top-level ones, so old settings files load cleanly",
       {group.identifier for group in menu.MENU}.isdisjoint({option.identifier for option in every_option}))
 

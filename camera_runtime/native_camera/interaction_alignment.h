@@ -10,11 +10,11 @@ constexpr uintptr_t cache_view_offset = 0x1910;
 constexpr double max_camera_distance = 2000.0;
 constexpr double radians_per_degree = 0.017453292519943295;
 using ViewStats = int (*)(apex_view::Stats*);
-struct CameraView { double origin[3], rotation[3]; };
-static_assert(sizeof(CameraView) == 48);
 
-bool align_output(void* output, const Sample& before, const CameraView& view);
+// The game's eyes moved onto the camera's line at their own depth, looking where the camera looks; false when the
+// view cannot be trusted, and then nothing is to be written.
+bool align(const View& eyes, const View& camera, View& aligned);
 // 1 = ready, 0 = mode/player no longer eligible, -1 = invalid camera data.
-int read_camera(const Config& config, ViewStats getter, CameraView& view);
+int read_camera(const Config& config, ViewStats getter, View& view);
 ViewStats validate_camera(const Config& config, uintptr_t module);
 }

@@ -38,6 +38,8 @@ class Native:
     def __init__(self):
         self.supported = True
         self.contexts, self.clears, self.releases = [], [], []
+        self.optics, self.optic_calls, self.optic_error = True, [], None
+        self.heavy = True
         self.status = NS(generation=0, fov_writes=0, zoom_scale=1.0, pending=0, active=0, error=0, wrong_thread=0)
 
     def prepare(self): return self.supported
@@ -59,5 +61,10 @@ class Native:
 
     def release(self, generation):
         self.releases.append(generation)
+
+    def set_optic(self, generation, scale):
+        if self.optic_error is not None:
+            raise self.optic_error
+        self.optic_calls.append((generation, scale))
 
     def stats(self): return self.status

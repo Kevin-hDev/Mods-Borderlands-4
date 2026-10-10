@@ -11,25 +11,19 @@ import re
 import secrets
 from typing import Any, Callable
 
-from .constants import THIRD_PERSON_UP
-from .generated_limits import SHOULDER_MAX_OFFSET
 from .generated_ads import VIEW_ABI, VIEW_UPDATE_SLOT as UPDATE_SLOT, VIEW_UPDATE_RVA, ViewConfig as Config, ViewStats as Stats
 
 ABI_VERSION = VIEW_ABI
 EXPECTED_UPDATE_RVA = VIEW_UPDATE_RVA
 MAX_LIBRARY_BYTES = 2_000_000
 _FILE_NAME = re.compile(r"^[A-Za-z0-9_.-]{1,80}\.dll$")
-MAX_RIGHT = SHOULDER_MAX_OFFSET
 LIBRARY_NAME = f"apex_camera_view_v{VIEW_ABI}.dll"
 HASH_NAME = f"apex_camera_view_v{VIEW_ABI}.sha256"
 
 
-def make_config(right: float) -> Config:
-    if (isinstance(right, bool) or not isinstance(right, (int, float))
-            or not math.isfinite(right) or abs(right) > MAX_RIGHT):
-        raise ValueError("invalid shoulder offset")
-    return Config(ABI_VERSION, 0, UPDATE_SLOT, 0, EXPECTED_UPDATE_RVA,
-                  float(right), THIRD_PERSON_UP)
+def make_config() -> Config:
+    # The native camera adds no shoulder of its own: the game places it with its collision (shoulder_offset.py).
+    return Config(ABI_VERSION, 0, UPDATE_SLOT, 0, EXPECTED_UPDATE_RVA, 0.0, 0.0)
 
 
 def install_library(payload: bytes, folder: pathlib.Path, name: str, expected_sha256: str) -> pathlib.Path:
@@ -80,26 +74,20 @@ class Bridge:
         library.view_stop.argtypes, library.view_stop.restype = [], ctypes.c_int
         library.view_set_suspended.argtypes = [ctypes.c_uint32]
         library.view_set_suspended.restype = ctypes.c_int
-        library.view_set_right.argtypes = [ctypes.c_double]
-        library.view_set_right.restype = ctypes.c_bool
         library.view_stats.argtypes = [ctypes.POINTER(Stats)]
         library.view_stats.restype = ctypes.c_int
-        for name, arguments in (('view_set_transition_duration', [ctypes.c_double]),
-                                ('view_set_climb_suspended', [ctypes.c_uint32]),
+        for name, arguments in (('view_set_climb_suspended', [ctypes.c_uint32]),
                                 ('view_set_offset_suspended', [ctypes.c_uint32, ctypes.c_double])):
             function = getattr(library, name, None)
             if function is not None:
                 function.argtypes, function.restype = arguments, ctypes.c_int
-        active = getattr(library, 'view_offset_transition_active', None)
-        if active is not None:
-            active.argtypes, active.restype = [], ctypes.c_bool
 
-    def start(self, manager: Any, right: float) -> bool:
+    def start(self, manager: Any) -> bool:
         try:
             address = int(manager._get_address())
-            config = make_config(right)
         except (AttributeError, TypeError, ValueError, OverflowError):
             return False
+        config = make_config()
         if address <= 0:
             return False
         target = self.library.view_update_rva()
@@ -111,23 +99,10 @@ class Bridge:
             raise RuntimeError(f"native camera start refused ({status})")
         return True
 
-    def set_right(self, right: float) -> bool:
-        if (isinstance(right, bool) or not isinstance(right, (int, float))
-                or not math.isfinite(right) or abs(right) > MAX_RIGHT):
-            return False
-        return bool(self.library.view_set_right(float(right)))
-
     def stop(self) -> None:
         status = self.library.view_stop()
         if status:
             raise RuntimeError(f"native camera stop refused ({status})")
-
-    def transition_duration(self, seconds: float) -> None:
-        from .transition_catalog import SHOULDER_SECONDS_MAX
-        if type(seconds) not in (int, float) or not math.isfinite(seconds) or not 0 <= seconds <= SHOULDER_SECONDS_MAX:
-            raise ValueError('Invalid camera transition duration')
-        if self.library.view_set_transition_duration(float(seconds)):
-            raise RuntimeError('Camera transition configuration refused')
 
     def suspend_climb(self, suspended: bool) -> None:
         if type(suspended) is not bool:
@@ -142,9 +117,6 @@ class Bridge:
             raise ValueError('Invalid camera offset transition')
         if self.library.view_set_offset_suspended(int(suspended), float(seconds)):
             raise RuntimeError('Camera offset transition refused')
-
-    def offset_transition_active(self) -> bool:
-        return bool(self.library.view_offset_transition_active())
 
     def suspend(self, suspended: bool) -> None:
         status = self.library.view_set_suspended(1 if suspended else 0)

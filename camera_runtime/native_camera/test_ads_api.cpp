@@ -14,6 +14,7 @@ int main() {
     assert(ads_identify(0x10000, &identity) != 0 && !identity.address);
     assert(ads_publish(nullptr) != 0);
     assert(ads_release(1) != 0);
+    assert(ads_set_optic(1, 0.5f) != 0);
     assert(ads_stats(nullptr) != 0);
     std::cout << "RESULTAT: OK (native API refuses unsupported process before hooking)\n";
 }

@@ -3,6 +3,8 @@ from types import SimpleNamespace as NS
 import importlib.util
 import unittest
 
+from collision_geometry_fixtures import Geometry
+
 
 class Tests(unittest.TestCase):
     def setUp(self):
@@ -37,6 +39,15 @@ class Tests(unittest.TestCase):
         self.answers = [(True, [], NS(Distance=18)), (True, [], NS(Distance=28))]
         self.assertEqual(self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0)), 18)
 
+    def test_nearest_contact_is_kept_for_the_automatic_shoulder_log(self):
+        nearer = NS(Distance=18)
+        self.answers = [(True, [], nearer), (True, [], NS(Distance=28))]
+        self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0))
+        self.assertIs(self.trace.hit, nearer)
+        self.answers = [(False, [], NS()), (False, [], NS())]
+        self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0))
+        self.assertIsNone(self.trace.hit)
+
     def test_clear_path_preserves_the_exact_requested_position(self):
         self.answers = [(False, [], NS()), (False, [], NS())]
         self.assertEqual(self.trace.distance(self.actor, (0, 0, 0), (0, 30, 40)), 50)
@@ -66,37 +77,6 @@ class Tests(unittest.TestCase):
                         (True, [], NS(Distance=12)), (False, [], NS())]
         self.assertEqual(self.trace.distance(self.actor, (0, 0, 0), (0, 40, 0)), 12)
 
-    def test_unknown_zero_depth_overlap_is_not_a_clear_endpoint(self):
-        overlap = NS(Distance=0, PenetrationDepth=0, bStartPenetrating=True)
-        self.answers = [(True, overlap), (True, overlap)]
-        self.assertFalse(self.trace.endpoint_clear(self.actor, (0, 0, 0)))
-        self.assertEqual(len(self.calls), 2)
-
-    def test_endpoint_contact_requires_a_real_clear_smaller_probe(self):
-        contact = NS(Distance=0, PenetrationDepth=0, bStartPenetrating=True)
-        self.answers = [(True, contact), (False, NS()), (False, NS())]
-        self.assertTrue(self.trace.endpoint_clear(self.actor, (0, 0, 0)))
-        self.assertEqual([call[5] for call in self.calls], [False, False, True])
-        self.assertGreaterEqual(self.calls[1][3], 11.9)
-        self.assertLess(self.calls[1][3], 12)
-        for call in self.calls:
-            self.assertLess(call[1].X, 0)
-            self.assertGreater(call[2].X, 0)
-            self.assertAlmostEqual((call[1].X + call[2].X) / 2, 0)
-            self.assertLessEqual(call[2].X - call[1].X, .02)
-            self.assertEqual((call[1].Y, call[1].Z, call[2].Y, call[2].Z), (0, 0, 0, 0))
-
-    def test_detailed_overlap_remains_blocked_after_simple_geometry_is_clear(self):
-        overlap = NS(Distance=0, PenetrationDepth=0, bStartPenetrating=True)
-        self.answers = [(False, NS()), (True, overlap), (True, overlap)]
-        self.assertFalse(self.trace.endpoint_clear(self.actor, (0, 0, 0)))
-        self.assertEqual([call[5] for call in self.calls], [False, True, True])
-
-    def test_stationary_proof_failure_is_not_a_clear_contact(self):
-        self.answers = [(True, NS(Distance=0, PenetrationDepth=0)), OSError('trace unavailable')]
-        with self.assertRaises(OSError):
-            self.trace.endpoint_clear(self.actor, (0, 0, 0))
-
     def test_two_rechecks_recover_rounded_contact_without_exceeding_one_mm(self):
         def rounded(*args):
             self.calls.append(args)
@@ -118,25 +98,15 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(self.calls), 6)
         self.assertGreaterEqual(min(call[3] for call in self.calls), 11.9 - 1e-9)
 
-    def test_release_contact_proof_also_keeps_the_total_one_mm_budget(self):
-        contact = NS(Distance=0, PenetrationDepth=0, bStartPenetrating=True)
-        self.answers = [(True, contact), (False, NS()), (True, contact), (False, NS())]
-        self.assertTrue(self.trace.endpoint_clear(self.actor, (0, 0, 0), extra_margin=1))
-        self.assertEqual(len(self.calls), 4)
-        self.assertGreaterEqual(min(call[3] for call in self.calls), 12.9 - 1e-9)
-        self.assertLessEqual(max(call[3] for call in self.calls), 13)
-
     def test_near_future_hit_is_not_a_departure_overlap_even_with_stale_depth(self):
         self.answers = [(True, NS(Distance=.03, PenetrationDepth=2, bStartPenetrating=False)),
                         (False, NS()), (False, NS())]
         self.assertEqual(self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0)), 0)
         self.assertEqual(len(self.calls), 2)
-        self.assertFalse(self.trace.reduced)
 
     def test_future_contact_beyond_one_mm_keeps_its_positive_distance(self):
         self.answers = [(True, NS(Distance=.15, bStartPenetrating=False)), (False, NS())]
         self.assertEqual(self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0)), .15)
-        self.assertFalse(self.trace.reduced)
 
     def test_initial_depth_larger_than_sphere_is_rejected_not_silently_blocked(self):
         for depth in (12.001, 13):
@@ -152,6 +122,21 @@ class Tests(unittest.TestCase):
         self.trace.kismet.SphereTraceSingle = contact
         self.assertEqual(self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0)), 100)
         self.assertGreaterEqual(min(call[3] for call in self.calls), 11.9 - 1e-9)
+
+    def test_two_rechecks_negotiate_distinct_departure_surfaces_and_later_obstacle(self):
+        from apex_camera_runtime.collision_sweep import SphereSweep
+        geometry = Geometry(planes=(((1, 0, 0), -258), ((0, 1, 0), -5), ((0, -1, 0), -40)))
+        distance = SphereSweep(geometry, self.sdk).distance(object(), (-250, 0, 80), (-250, 53.2, 80))
+        self.assertGreater(distance, 34)
+        # The narrowest departure surface is at 5 cm; contact separation may spend at most 1 mm.
+        self.assertLessEqual(distance, 35.1 + 1e-8)
+        self.assertEqual(geometry.spheres, 6)
+
+    def test_repeated_zero_depth_never_certifies_a_whole_segment_as_safe(self):
+        from apex_camera_runtime.collision_sweep import SphereSweep
+        unknown = NS(SphereTraceSingle=lambda *args: (True, NS(Distance=0, bStartPenetrating=True,
+                                                               PenetrationDepth=0)))
+        self.assertEqual(SphereSweep(unknown, self.sdk).distance(object(), (0, 0, 0), (0, 40, 0)), 0)
 
 
 if __name__ == "__main__":

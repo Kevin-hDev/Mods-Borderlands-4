@@ -41,7 +41,7 @@ class BuildGateTests(unittest.TestCase):
         config_values = []
         library.view_start = lambda _pointer, config: config_values.append(
             ctypes.cast(config, ctypes.POINTER(Config)).contents.expected_rva) or 0
-        self.assertTrue(api.start(types.SimpleNamespace(_get_address=lambda: 0x10000), 48.4))
+        self.assertTrue(api.start(types.SimpleNamespace(_get_address=lambda: 0x10000)))
         self.assertEqual(config_values, [0x3CC9ECA])
 
     def test_unqualified_native_target_never_starts(self):
@@ -49,7 +49,7 @@ class BuildGateTests(unittest.TestCase):
             "view_start", "view_stop", "view_set_suspended", "view_set_right", "view_stats", "view_update_rva")})
         api = Bridge(library)
         with self.assertRaises(RuntimeError):
-            api.start(types.SimpleNamespace(_get_address=lambda: 0x10000), 48.4)
+            api.start(types.SimpleNamespace(_get_address=lambda: 0x10000))
         self.assertEqual(library.view_start.calls, [])
 
 

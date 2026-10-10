@@ -1,9 +1,12 @@
 """The one writer of the camera manager's CameraLocationOffset on foot (dynamic camera plan, 2026-10-06).
 
 It sums what is asked of the offset each frame: in Orbit, the zoom's distance (orbit_zoom.py, which no longer writes
-itself); in ThirdPerson, the framing by action, the camera motion and the chosen camera distance (dynamic_camera.py). Two writers on one field
+itself); in ThirdPerson, the framing by action, the camera motion and the chosen camera distance (dynamic_camera.py);
+and the shoulder while it shows (shoulder_offset.py). Two writers on one field
 would end up contradicting each other. The game puts the offset back to zero each frame and checks walls after it
-(verified in game, 2026-09-26, releves/third_person_fov/2026-09-26-zoom-orbit): once nothing is asked, nothing stays.
+(verified in game, 2026-09-26, releves/third_person_fov/2026-09-26-zoom-orbit; for the shoulder, 2026-10-08, third
+trial of docs/third_person_fov/camera/enquetes/2026-10-08-sauts-camera-collisions.md): once nothing is asked, nothing
+stays.
 It writes at the hunter's animation update, as the Orbit zoom did: the offset read there was zero at every frame of
 the framing trial, so the write comes before the camera is placed. Interruptions never change a saved setting.
 """
@@ -16,6 +19,7 @@ from .constants import ORBIT_MODE, THIRD_PERSON_MODE
 from .dynamic_camera import DynamicCamera
 from .orbit_zoom_values import FRAME, OFFSET_TOLERANCE
 from .player_sample import read
+from .shoulder_offset import framing_share
 
 AXES = ("X", "Y", "Z")
 
@@ -45,11 +49,13 @@ class CameraOffset:
 
     def sync(self, settings: Any) -> None:
         self.settings = settings
-        if not self.ready() or not any(callable(getattr(settings, name, None))
-                                       for name in ("orbit_distance", "dynamic_camera", "camera_distance")):
+        # Every mod's third person needs the hook now: the shoulder goes through it, with or without the other offsets.
+        if not self.ready():
             return
         actor, _manager = self.controller._lifetime.owned()
-        animation = actor.Mesh.GetAnimInstance() if actor is not None else None
+        # A hunter without its mesh yet has no animation to hook: the next frame tries again.
+        mesh = getattr(actor, "Mesh", None)
+        animation = mesh.GetAnimInstance() if mesh is not None else None
         if animation is None:
             return
         address = self.controller._lifetime.address(animation)
@@ -75,6 +81,15 @@ class CameraOffset:
             raise RuntimeError("camera offset refused")
 
     def release(self) -> None:
+        """The mod's other offsets end here (climbing, aiming in Orbit); the shoulder stays while it shows, so its
+        glide out is not cut by a frame without it."""
+        shoulder = self._shoulder() if self.installed and self.ready() else None
+        if shoulder is None:
+            self._clear()
+        else:
+            self.write(shoulder)
+
+    def _clear(self) -> None:
         if self.written is None:
             return
         _actor, manager = self.controller._lifetime.owned()
@@ -92,9 +107,30 @@ class CameraOffset:
         orbit = self.controller.zoom.wanted_x()
         if orbit is not None:
             self.dynamic.reset()
-            return {"X": orbit}
-        offset = self._dynamic(now_ns)
-        return None if offset is None else dict(zip(AXES, offset))
+            values = {"X": orbit}
+        else:
+            offset = self._dynamic(now_ns)
+            values = None if offset is None else dict(zip(AXES, offset))
+        shoulder = self._shoulder()
+        if shoulder is None:
+            return values
+        values = dict(values or {})
+        for axis, value in shoulder.items():
+            values[axis] = values.get(axis, 0.0) + value
+        return values
+
+    def _shoulder(self) -> dict[str, float] | None:
+        """The shoulder's share while it shows in this mode (shoulder_offset.py), None otherwise."""
+        owner = self.controller
+        shoulder = getattr(owner.bridge, "shoulder", None)
+        if shoulder is None:
+            return None
+        actor, manager = owner._lifetime.owned()
+        if actor is None or manager is None or owner._in_vehicle or not shoulder.allows(manager, actor):
+            shoulder.withhold()
+            return None
+        side, up = shoulder.place(*framing_share(self.settings))
+        return {"Y": side, "Z": up} if side or up else None
 
     def _dynamic(self, now_ns: int) -> tuple | None:
         owner = self.controller
@@ -103,8 +139,9 @@ class CameraOffset:
         read_distance = getattr(self.settings, "camera_distance", None)
         read_lengths = getattr(self.settings, "camera_distances", None)
         actor, manager = owner._lifetime.owned()
+        # Climbing drops these offsets at once (camera_frame.py), even before the game's mode changes.
         if (not (callable(read_values) or callable(read_distance)) or actor is None or owner._in_vehicle
-                or owner._desired_mode == ORBIT_MODE
+                or owner._desired_mode == ORBIT_MODE or getattr(getattr(owner, "climb", None), "busy", False)
                 or str(manager.GetActorCameraMode(actor)) != THIRD_PERSON_MODE):
             self.dynamic.reset()
             return None
@@ -122,7 +159,7 @@ class CameraOffset:
         try:
             values = self.wanted(self.controller.clock()) if self.ready() else None
             if values is None:
-                self.release()
+                self._clear()
             else:
                 self.write(values)
         except Exception:
@@ -142,7 +179,7 @@ class CameraOffset:
                 hooks.remove_hook(FRAME, hooks.Type.POST, self.identifier)
             self.installed = False
         try:
-            self.release()
+            self._clear()
         except Exception:
             if not stale:
                 raise

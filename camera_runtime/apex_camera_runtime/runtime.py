@@ -5,7 +5,9 @@ from typing import Any
 from .arbitration import Arbiter, Client
 from .constants import PROTOCOL
 from .ads_coordination import transfer_pending
+from .ads_optic import held_zoom
 from .orbit_entry import OrbitEntry
+from .setup_gate import SetupGate
 from . import camera_distance_route, shoulder_route
 from .speed_fov import SpeedFov, step as speed_step
 
@@ -23,10 +25,16 @@ class CameraRuntime:
         # Free Look (free_look.py), made by shared.py too. Mixed versions need no new protocol: a runtime from an older
         # copy never reads the newer mods' Free Look settings, and an older mod's settings have none to read.
         self.free_look = None
+        # The third-person look sensitivity (look_sensitivity.py), made by shared.py, under the same rule.
+        self.sensitivity = None
+        # The sniper zoom key (sniper_zoom.py), made by shared.py, under the same rule.
+        self.sniper_zoom = None
+        # Omni direction (omni_direction.py), made by shared.py, under the same rule: an older mod's settings give it
+        # nothing to do.
+        self.omni = None
         self._active_client: Client | None = None
         self._next_fov_ns = 0
-        self._setup_owner: str | None = None
-        self._setup_failed = False
+        self.setup_gate = SetupGate()
         self.orbit_entry = OrbitEntry()
         self.speed_fov = SpeedFov()
 
@@ -47,8 +55,7 @@ class CameraRuntime:
             error = caught
         finally:
             self.arbiter.unregister(owner)
-            if self._setup_owner == owner:
-                self._setup_owner, self._setup_failed = None, False
+            self.setup_gate.forget(owner)
         if error is not None:
             raise error
 
@@ -64,21 +71,12 @@ class CameraRuntime:
         active = self.arbiter.active()
         if active is None or active.owner != owner:
             return None
-        if self._setup_owner != owner:
-            self._setup_owner, self._setup_failed = owner, False
-        if not (enabled or getattr(active.settings, 'orbit_enabled', lambda: False)()
-                or self.orbit_entry.pending):
-            self._setup_failed = False
-            return None
-        if self.third_person is not None or self._setup_failed:
-            return None
-        try:
-            setup(self)
-        except Exception as error:
-            self._setup_failed = True
+        wanted = bool(enabled or getattr(active.settings, 'orbit_enabled', lambda: False)()
+                      or self.orbit_entry.pending)
+        error = self.setup_gate.prepare(self, owner, wanted, setup)
+        if error is not None:
             self.orbit_entry.cancel(active)
-            return error
-        return None
+        return error
 
     def toggle_third_person(self, owner: str) -> bool:
         """Toggle only the elected owner's saved setting, so one key press has one authority."""
@@ -181,6 +179,12 @@ class CameraRuntime:
             self.vehicle.sync(client.settings)
         if self.free_look is not None:
             self.free_look.sync(client.settings)
+        if self.sensitivity is not None:
+            self.sensitivity.sync(client.settings, context, now_ns, held_zoom(self.third_person))
+        if self.sniper_zoom is not None:
+            self.sniper_zoom.sync(client.settings, context, self.third_person)
+        if self.omni is not None:
+            self.omni.sync(self.arbiter.clients(), client.settings, context, self.third_person, now_ns)
         player = context
         if hasattr(context, "Player"):
             player = context.Player if getattr(context, "OakCharacter", None) is not None else None
@@ -197,7 +201,8 @@ class CameraRuntime:
         self.orbit_entry.retirement.retire(self.third_person)
         self.orbit_entry.reset()
         errors = []
-        for unit in (self.loot, self.fov, self.vehicle, self.free_look):
+        for unit in (self.loot, self.fov, self.vehicle, self.free_look, self.sensitivity, self.sniper_zoom,
+                     self.omni):
             if unit is not None:
                 try:
                     unit.stop()

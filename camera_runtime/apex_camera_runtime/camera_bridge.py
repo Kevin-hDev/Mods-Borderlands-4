@@ -1,18 +1,26 @@
-"""Keep framing usable without alignment; retain ownership of unsafe cleanup."""
-from .interaction_bridge import make_config
+"""Keep framing usable without alignment; retain ownership of unsafe cleanup.
 
-STARTED_MESSAGE = 'third person interaction alignment installed'
-STOPPED_MESSAGE = 'third person interaction alignment released'
-UNAVAILABLE_MESSAGE = ('WARNING: Interaction alignment unavailable. '
-                       'Third-person camera remains active; loot targeting may be offset.')
+The game places the shoulder now (shoulder_offset.py, 2026-10-08): the native camera starts without one, and the
+shoulder's side, swap time and glides go to the shoulder offset. The native camera still hears every suspension: its
+aiming, framing zoom and the aim alignment (the hunter's eyes on the crosshair's line) read them.
+"""
+from .interaction_bridge import make_config
+from .shoulder_offset import ShoulderOffset
+from .transition_catalog import CLIMB_SECONDS
+
+STARTED_MESSAGE = 'third person aim alignment installed'
+STOPPED_MESSAGE = 'third person aim alignment released'
+UNAVAILABLE_MESSAGE = ('WARNING: Aim alignment unavailable. '
+                       'Third-person camera remains active; thrown objects and loot targeting may be offset.')
 
 
 class CameraBridge:
-    def __init__(self, view, interaction, log, collision=None):
+    def __init__(self, view, interaction, log, collision=None, shoulder=None):
         self.view = view
         self.interaction = interaction
         self.log = log
         self.collision = collision
+        self.shoulder = shoulder if shoulder is not None else ShoulderOffset()
         self._view_pending = False
         self._interaction_pending = False
         self._alignment_warned = False
@@ -32,7 +40,8 @@ class CameraBridge:
         # A native start may partly succeed before raising: own it before calling.
         self._view_pending = True
         try:
-            if not self.view.start(manager, right):
+            self.shoulder.reset()
+            if not self.shoulder.show(right) or not self.view.start(manager):
                 self.stop()
                 return False
             if self.collision is not None:
@@ -51,18 +60,21 @@ class CameraBridge:
             config = make_config(pc, manager, self.library)
             self._interaction_pending = True
             self.interaction.start(config)
-        except Exception:
+        except Exception as error:
             # Degrade only after confirmed cleanup; otherwise keep the normal retry path.
             if self._interaction_pending:
                 self.interaction.stop()
                 self._interaction_pending = False
-            self._warn_alignment()
+            self._warn_alignment(f'aim alignment refused: {type(error).__name__} ({error})')
             return
         self._alignment_warned = False
         self.log(STARTED_MESSAGE)
 
-    def _warn_alignment(self):
+    def _warn_alignment(self, cause=None):
         if not self._alignment_warned:
+            # The refusal code tells a moved game function from a camera that is not ready.
+            if cause is not None:
+                self.log(cause)
             self.log(UNAVAILABLE_MESSAGE)
             self._alignment_warned = True
 
@@ -75,8 +87,10 @@ class CameraBridge:
                 continue
             try:
                 resource.stop()
-                if resource is self.view and self.collision is not None:
-                    self.collision.release()
+                if resource is self.view:
+                    if self.collision is not None:
+                        self.collision.release()
+                    self.shoulder.reset()
                 setattr(self, flag, False)
             except Exception as error:
                 errors.append(error)
@@ -86,45 +100,36 @@ class CameraBridge:
             self.log(STOPPED_MESSAGE)
 
     def suspend(self, suspended):
-        # The native interaction hook reads this state on each call, including ADS/vehicle/Orbit.
+        # The native aim alignment reads this state on each call, including ADS/vehicle/Orbit.
         self.view.suspend(suspended)
-        if self.collision is not None:
-            self.collision.offset_permission = None
-            self.collision.climbing = False
+        self.shoulder.suspend(suspended)
         if suspended and self.collision is not None:
             self.collision.invalidate()
 
     def suspend_climb(self, suspended):
         self.view.suspend_climb(suspended)
+        self.shoulder.suspend(suspended, CLIMB_SECONDS, climbing=suspended)
         if self.collision is not None:
-            self.collision.offset_permission = None
-            self.collision.climbing = suspended
             self.collision.invalidate()
 
     def suspend_orbit(self, suspended, seconds, permission):
         self.view.suspend_offset(suspended, seconds)
+        self.shoulder.suspend(suspended, seconds, permission=permission)
         if self.collision is not None:
-            self.collision.climbing = False
-            def temporary_permission(manager, actor):
-                if not self.view.offset_transition_active():
-                    self.collision.offset_permission = None
-                    return None  # Finished: resume the normal ThirdPerson/ADS rule.
-                return permission(manager, actor)
-            self.collision.offset_permission = temporary_permission if seconds else None
             self.collision.invalidate()
 
     def cancel_orbit_transition(self, suspended):
-        if self.collision is not None and self.collision.offset_permission is not None:
+        if self.shoulder.permission is not None and self.shoulder.transition_active():
             self.suspend(suspended)
 
     def offset_transition_active(self):
-        return self.view.offset_transition_active()
+        return self.shoulder.transition_active()
 
     def transition_duration(self, seconds):
-        self.view.transition_duration(seconds)
+        self.shoulder.transition_duration(seconds)
 
     def set_right(self, right):
-        return self.view.set_right(right)
+        return self.shoulder.show(right)
 
     def stats(self):
         return self.view.stats()

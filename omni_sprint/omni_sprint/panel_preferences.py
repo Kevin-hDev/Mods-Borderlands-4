@@ -9,7 +9,10 @@ from .panel_theme import SIZES, THEMES
 
 LANGUAGES = ("EN", "FR")
 _COMMANDS = ("commands",)
-PAGE_KEYS = (*tuple(group.identifier.removesuffix("_menu") for group in menu.ALL), *_COMMANDS, "shoulder")
+# Saved by index: a page added later goes last, wherever the sidebar shows it (OMNI DIRECTION, 2026-10-09).
+_LATER = ("omni_direction",)
+_SHOWN = tuple(group.identifier.removesuffix("_menu") for group in menu.ALL)
+PAGE_KEYS = (*(key for key in _SHOWN if key not in _LATER), *_COMMANDS, "shoulder", *_LATER)
 french = BoolOption("menu_french", False, is_hidden=True)
 CONTROLLER_ICONS = ("PS5", "XSX")
 controller_icons = SpinnerOption("controller_icons", "PS5", list(CONTROLLER_ICONS), is_hidden=True)

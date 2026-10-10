@@ -1,52 +1,29 @@
-"""Retraction is immediate; recovery is smooth, frame-rate independent and bounded."""
-import importlib.util
+"""Camera points and segments from the game are checked before any sweep reads them."""
 import math
 import unittest
 
+from apex_camera_runtime.collision_config import MAX_COORDINATE, MAX_LENGTH
+from apex_camera_runtime.collision_path import point, segment
+
 
 class Tests(unittest.TestCase):
-    def setUp(self):
-        self.assertIsNotNone(importlib.util.find_spec("apex_camera_runtime.collision_path"),
-                             "Continuous collision path solver is missing")
-        from apex_camera_runtime.collision_path import CollisionPath
-        self.path = CollisionPath()
+    def test_a_point_comes_back_as_three_floats(self):
+        self.assertEqual(point([1, 2, 3]), (1.0, 2.0, 3.0))
+        self.assertEqual(point((-MAX_COORDINATE, 0, MAX_COORDINATE)), (-MAX_COORDINATE, 0.0, MAX_COORDINATE))
 
-    def test_wall_retracts_immediately_and_clearance_does_not_pop_back(self):
-        self.assertEqual(self.path.resolve((0, 0, 0), (100, 0, 0), 40, .016), (40, 0, 0))
-        returned = self.path.resolve((0, 0, 0), (100, 0, 0), 100, .016)
-        self.assertGreater(returned[0], 40)
-        self.assertLess(returned[0], 100)
-        self.assertEqual(self.path.resolve((0, 0, 0), (100, 0, 0), 20, .016), (20, 0, 0))
+    def test_a_malformed_or_unbounded_point_is_refused(self):
+        for value in ((1, 2), (1, 2, 3, 4), "abc", None, (math.nan, 0, 0), (0, math.inf, 0),
+                      (0, 0, MAX_COORDINATE * 1.01)):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                point(value)
 
-    def test_recovery_matches_at_30_60_and_120_fps(self):
-        values = []
-        for fps in (30, 60, 120):
-            self.path.reset()
-            self.path.resolve((0, 0, 0), (100, 0, 0), 40, 0)
-            for _ in range(fps):
-                position = self.path.resolve((0, 0, 0), (100, 0, 0), 100, 1 / fps)
-            values.append(position[0])
-        self.assertAlmostEqual(values[0], values[1], places=9)
-        self.assertAlmostEqual(values[1], values[2], places=9)
+    def test_a_segment_gives_its_ends_and_length(self):
+        self.assertEqual(segment((0, 0, 0), (0, 30, 40)), ((0.0, 0.0, 0.0), (0.0, 30.0, 40.0), 50.0))
 
-    def test_current_frame_anchor_and_direction_are_used_during_recovery(self):
-        self.path.resolve((0, 0, 0), (100, 0, 0), 40, .016)
-        self.assertEqual(self.path.resolve((10, 0, 0), (10, 100, 0), 20, .016), (10, 20, 0))
-
-    def test_clearance_never_exceeds_the_swept_prefix(self):
-        for distance in (25, 24, 30, 15, 100, 7):
-            point = self.path.resolve((0, 0, 0), (60, 80, 0), distance, .016)
-            self.assertLessEqual(math.dist((0, 0, 0), point), distance + 1e-9)
-
-    def test_invalid_geometry_does_not_advance_recovery(self):
-        for anchor, desired, distance, delta in (
-            ((math.nan, 0, 0), (100, 0, 0), 50, .016),
-            ((0, 0, 0), (100, 0, 0), 101, .016),
-            ((0, 0, 0), (100, 0, 0), 40, -1),
-        ):
-            with self.assertRaises(ValueError):
-                self.path.resolve(anchor, desired, distance, delta)
-        self.assertEqual(self.path.resolve((0, 0, 0), (100, 0, 0), 100, .016), (100, 0, 0))
+    def test_an_empty_or_too_long_segment_is_refused(self):
+        for end in ((0, 0, 0), (MAX_LENGTH + 1, 0, 0)):
+            with self.subTest(end=end), self.assertRaises(ValueError):
+                segment((0, 0, 0), end)
 
 
 if __name__ == "__main__":

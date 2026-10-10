@@ -2,25 +2,26 @@
 import unittest
 from types import SimpleNamespace as NS
 from apex_camera_runtime.camera_bridge import CameraBridge
-from apex_camera_runtime.collision import CollisionResolver
+from apex_camera_runtime.shoulder_offset import ShoulderOffset
 from native_climb_test_fixture import NativeClimbFixture
 
 class Tests(NativeClimbFixture, unittest.TestCase):
     def test_third_person_aim_cancels_orbit_offset_without_suspending_ads(self):
         self.make()
         calls = []
-        view = NS(suspend=lambda value: calls.append(value),
-                  transition_duration=lambda _: None)
-        resolver = CollisionResolver(None, None, lambda x: lambda: x, self.notes.append)
-        resolver.offset_permission = lambda *_: False
-        self.controller.bridge = CameraBridge(view, None, self.notes.append, resolver)
+        view = NS(suspend=lambda value: calls.append(value), suspend_offset=lambda *_: None)
+        # An Orbit glide under way, whose permission refuses ThirdPerson.
+        shoulder = ShoulderOffset(clock=lambda: 0)
+        self.controller.bridge = CameraBridge(view, None, self.notes.append, shoulder=shoulder)
+        shoulder.show(61.5)
+        self.controller.bridge.suspend_orbit(True, 0.5, lambda *_: False)
         self.controller.ads = NS(wanted=True, prepare=lambda *_args, **_kw: True,
                                  confirm=lambda _: None, pending=False)
         self.actor.ZoomState.bWantsToZoom = True
         self.frame(3)
         self.assertEqual(calls, [False])
-        self.assertIsNone(resolver.offset_permission)
-        self.assertTrue(resolver._mode_allowed(self.manager, self.actor))
+        self.assertIsNone(shoulder.permission)
+        self.assertTrue(shoulder.allows(self.manager, self.actor))
 
     def test_orbit_uses_shared_timing_and_aim_cancels_even_while_suspended(self):
         self.make()

@@ -44,6 +44,18 @@ class UnitTests(unittest.TestCase):
         unit.sync(type("Settings", (), {"free_look": staticmethod(lambda: Values((None, None), (True, True), 0.2))})())
         self.assertEqual(game.hooks.items, {})
 
+    def test_switched_off_it_stops_and_gives_the_camera_back(self):
+        # free_look_options.values() is None while its switch is off (Kevin, 2026-10-08).
+        pc = Controller("ThirdPerson")
+        unit, game = started(pc)
+        pc.held["A"] = 1.0
+        game.frames(unit, 20)
+        self.assertEqual(game.memory.method("ThirdPerson"), 1)
+        unit.sync(type("Settings", (), {"free_look": staticmethod(lambda: None)})())
+        self.assertEqual((game.hooks.items, game.memory.method("ThirdPerson")), ({}, 0))
+        game.frames(unit, 20)
+        self.assertEqual(game.memory.method("ThirdPerson"), 0)
+
     def test_held_past_the_hold_time_it_starts_and_the_release_puts_back(self):
         pc = Controller("ThirdPerson")
         unit, game = started(pc)

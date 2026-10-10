@@ -19,52 +19,46 @@ bool check(bool condition, const char* name) {
 }
 
 int main() {
-    // This is the real measured mismatch, with a signed shoulder displacement.
-    apex_interaction::Sample sample{{110770.179, -153943.301, 20663.374},
-                           {336.783, 80.483, 0}, {110770.179, -153943.301, 20592.374}};
-    apex_interaction::CameraView right{{110681.916, -154177.048, 20746.320}, {-23.218, 80.483, 0}};
-    apex_interaction::CameraView left{{110777.384, -154193.053, 20746.320}, {-23.218, 80.483, 0}};
+    // Measured on 2026-09-26: the game's eyes (the hunter plus 71 cm) and the camera on either shoulder.
+    const apex_interaction::View eyes{{110770.179, -153943.301, 20663.374}, {336.783, 80.483, 1.5}};
+    const apex_interaction::View right{{110681.916, -154177.048, 20746.320}, {-23.218, 80.483, 0}};
+    const apex_interaction::View left{{110777.384, -154193.053, 20746.320}, {-23.218, 80.483, 0}};
     bool ok = true;
-    for (const auto& view : {right, left}) {
-        std::array<unsigned char, 256> output{};
-        output.fill(0xA5);
-        std::memcpy(output.data(), &sample, sizeof(sample));
-        const float extended_loot_distance = 660.0F;
-        std::memcpy(output.data() + 0xC8, &extended_loot_distance, sizeof(extended_loot_distance));
-        const auto baseline = output;
-        const bool changed = apex_interaction::align_output(output.data(), sample, view);
-        ok &= check(changed, "measured shoulder ray must be replaced");
-        apex_interaction::CameraView corrected{};
-        std::memcpy(&corrected, output.data(), sizeof(corrected));
+    for (const auto& camera : {right, left}) {
+        apex_interaction::View aligned{};
+        ok &= check(apex_interaction::align(eyes, camera, aligned), "measured shoulder eyes must be moved");
         const double radians = 0.017453292519943295;
-        const double pitch = view.rotation[0] * radians, yaw = view.rotation[1] * radians;
+        const double pitch = camera.rotation[0] * radians, yaw = camera.rotation[1] * radians;
         const double forward[] = {std::cos(pitch) * std::cos(yaw),
                                   std::cos(pitch) * std::sin(yaw), std::sin(pitch)};
         double depth = 0, shift_depth = 0;
         for (int i = 0; i < 3; ++i) {
-            depth += (corrected.origin[i] - view.origin[i]) * forward[i];
-            shift_depth += (corrected.origin[i] - sample.origin[i]) * forward[i];
+            depth += (aligned.origin[i] - camera.origin[i]) * forward[i];
+            shift_depth += (aligned.origin[i] - eyes.origin[i]) * forward[i];
         }
-        ok &= check(std::abs(shift_depth) < 1e-8, "preserve original start depth and segment reach");
+        ok &= check(std::abs(shift_depth) < 1e-8, "the eyes keep their depth, and a fixed-length line its reach");
         for (int i = 0; i < 3; ++i) {
-            ok &= check(std::abs(corrected.origin[i] - view.origin[i] - depth * forward[i]) < 1e-8,
-                        "corrected interaction must lie on the camera center ray");
+            ok &= check(std::abs(aligned.origin[i] - camera.origin[i] - depth * forward[i]) < 1e-8,
+                        "the eyes lie on the camera's center ray");
         }
-        ok &= check(std::memcmp(corrected.rotation, view.rotation, sizeof(view.rotation)) == 0,
-                    "direction must match the rendered camera");
-        ok &= check(std::memcmp(output.data() + sizeof(view), baseline.data() + sizeof(view),
-                                output.size() - sizeof(view)) == 0,
-                    "anchor, range and all remaining metadata must stay unchanged");
+        ok &= check(aligned.rotation[0] == camera.rotation[0] && aligned.rotation[1] == camera.rotation[1],
+                    "the eyes look where the camera looks");
+        ok &= check(aligned.rotation[2] == eyes.rotation[2], "the game's roll stays");
     }
-    auto output = sample;
+    apex_interaction::View aligned = eyes;
     auto invalid = right;
     invalid.origin[1] = std::numeric_limits<double>::quiet_NaN();
-    ok &= check(!apex_interaction::align_output(&output, sample, invalid), "reject NaN");
+    ok &= check(!apex_interaction::align(eyes, invalid, aligned), "reject NaN");
     invalid = right;
     invalid.origin[0] += 10000;
-    ok &= check(!apex_interaction::align_output(&output, sample, invalid), "reject distant camera");
-    ok &= check(std::memcmp(&output, &sample, sizeof(sample)) == 0, "refusal cannot write");
-    ok &= check(!apex_interaction::align_output(nullptr, sample, right), "reject null output");
+    ok &= check(!apex_interaction::align(eyes, invalid, aligned), "reject distant camera");
+    invalid = right;
+    invalid.rotation[1] += 180;
+    ok &= check(!apex_interaction::align(eyes, invalid, aligned), "reject eyes behind the camera");
+    auto strange = eyes;
+    strange.rotation[0] = std::numeric_limits<double>::infinity();
+    ok &= check(!apex_interaction::align(strange, right, aligned), "reject the game's undefined eyes");
+    ok &= check(std::memcmp(&aligned, &eyes, sizeof(eyes)) == 0, "a refusal leaves the eyes as given");
     std::array<unsigned char, 0x500> pc{};
     std::array<unsigned char, 0x1980> manager{};
     apex_interaction::Config config{apex_interaction::abi, 0, reinterpret_cast<uint64_t>(pc.data()),
@@ -73,8 +67,7 @@ int main() {
     std::memcpy(pc.data() + apex_interaction::manager_offset, &config.manager, sizeof(config.manager));
     std::memcpy(manager.data() + apex_interaction::cache_view_offset, &right, sizeof(right));
     const float timestamp = 10;
-    std::memcpy(manager.data() + apex_interaction::cache_time_offset, &timestamp, sizeof(timestamp));
-    apex_interaction::CameraView observed{};
+    apex_interaction::View observed{};
     bridge_stats.active = 1;
     const float empty_timestamp = 0;
     std::memcpy(manager.data() + apex_interaction::cache_time_offset, &empty_timestamp, sizeof(empty_timestamp));
@@ -102,6 +95,6 @@ int main() {
     ok &= check(apex_interaction::read_camera(config, get_stats, observed) == 0, "reject changed manager");
     bridge_status = 3;
     ok &= check(apex_interaction::read_camera(config, get_stats, observed) == -1, "reject failed camera bridge");
-    std::cout << "RESULTAT: " << (ok ? "OK" : "ECHEC") << " - interaction ray alignment\n";
+    std::cout << "RESULTAT: " << (ok ? "OK" : "ECHEC") << " - the hunter's eyes on the camera ray\n";
     return ok ? 0 : 1;
 }

@@ -12,4 +12,6 @@ sprint = NestedOption(
 )
 CAMERA = panel_camera_pages.groups(settings, fov=[settings.custom_fov, settings.fov])
 
-ALL = MENU = [sprint, *CAMERA]
+# OMNI DIRECTION, the last camera page, right after OMNI SPRINT: its dash or slide follows that page's switch (Kevin,
+# 2026-10-09, sketch omni_direction/omni_sprint.png).
+ALL = MENU = [sprint, CAMERA[-1], *CAMERA[:-1]]

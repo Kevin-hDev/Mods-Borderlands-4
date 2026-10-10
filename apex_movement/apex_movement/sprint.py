@@ -5,15 +5,23 @@ is kept (design decision 11). The ground speeds moved to ground_speed.py on 2026
 sprint is on or off.
 """
 
-from typing import Any
+from typing import Any, Callable
 
-from . import game, report, walk_key
+from . import game, report, settings, walk_key
 
 # Not a slider (spec, section 3): nobody needed to change Auto Sprint's value, and each slider can break the feel.
 STICK_THRESHOLD = 0.95
 
 _requested = False
 _restarting = False
+# Whether the game shows the third-person view on foot; the full pack gives the camera's reading (set_view), a separate
+# file has no camera and stays in first person.
+_third_person: Callable[[], bool] = lambda: False
+
+
+def set_view(read: Callable[[], bool]) -> None:
+    global _third_person
+    _third_person = read
 
 
 def reset() -> None:
@@ -44,6 +52,14 @@ def refuse(movement: Any) -> bool:
 def update(character: Any, now_ns: int) -> None:
     global _restarting
     movement = character.CharacterMovement
+    if _third_person() and settings.auto_sprint_third_person.value is not True:
+        # Kevin, 2026-10-09: third-person moves are the same in every camera mod, and Apex Legends has no third
+        # person: there the hunter sprints with the sprint key, as in Omni Sprint and Third Person & FOV, unless the
+        # player turns auto sprint on for third person.
+        if _requested:
+            _request(movement, False)
+        _restarting = False
+        return
     aiming = game.is_aiming(character)
     pushed = game.stick(character) >= STICK_THRESHOLD
     walking = walk_key.walking()

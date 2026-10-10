@@ -85,7 +85,8 @@ assert root.kind == "UserWidget"
 # The window sits on a clear layer over the whole screen (panel_modal, 2026-10-06).
 assert (root.WidgetTree.RootWidget.kind == "CanvasPanel"
         and [child.kind for child in root.WidgetTree.RootWidget.children] == ["BackgroundBlur", "ScaleBox"])
-assert len(model.pages) == 14 and model.pages[-4:] == ("commands", "language", "dynamic_camera", "shoulder")
+assert len(model.pages) == 17 and model.pages[-7:] == ("commands", "language", "dynamic_camera", "shoulder", "aiming",
+                                                       "sensitivity", "omni_direction")
 assert len(widgets["pages"].children) == len(model.pages) + 1
 assert model.page == "options" and widgets["focus"] is widgets["options"]
 assert "EN" not in widgets and "FR" not in widgets
@@ -195,7 +196,7 @@ def shown():
 gold = (w.linear(theme.COLOR_GOLD),)
 assert model.page == "options" and shown() == len(model.pages)
 assert widgets["tab:options:options_fill"].calls["SetBrushColor"] == gold
-assert widgets["options_description:options"].calls["SetText"] == ("Vue, visée, caméra orbitale et loot.",)
+assert widgets["options_description:options"].calls["SetText"] == ("Vue, caméra orbitale et loot.",)
 click("tab:options:commands")
 assert model.page == "commands" and shown() == model.pages.index("commands")
 assert widgets["tab:commands:commands_label"].calls["SetText"] == ("COMMANDES",)
@@ -241,10 +242,15 @@ assert all(f"setting:{key}" in widgets for key in model.options)
 # Three fixed framing cards add 69 entries, the header's size button 5, the DYNAMIC CAMERA tab (its head, its card,
 # seven rows and a fourth tab button on every head) about 80, the FREE LOOK command card 17, the automatic shoulder's
 # three rows 42, the SHOULDER VIEW tab (its head, its card and a fifth tab button on every head) 55 (922 in all on
-# 2026-10-07); no dynamically growing registry.
-assert len(widgets) < 960, "the fixed widget registry must stay bounded"
+# 2026-10-07); the camera distance's two rows, the AIMING and SENSITIVITY tabs (their heads, cards and rows, and two
+# more tab buttons on every head) bring it to 1110 on 2026-10-08; the five weapon-type bars and their switch to 1149
+# the same day; the sniper optic row (six boxes and the slider holding its value), the SNIPER ZOOM command card and five
+# optic sensitivity bars to 1239 on 2026-10-09; the OMNI DIRECTION tab (its head, card, four rows, three pop-ups and an
+# eighth tab button on every head) to 1450 the same day; the other weapon types' five optic rows and the heavy
+# weapons' sensitivity bar to 1584 that evening; no dynamically growing registry.
+assert len(widgets) < 1650, "the fixed widget registry must stay bounded"
 # Free Look's settings sit on the CAMERA tab; COMMANDS only holds keys (Kevin, 2026-10-07).
-free_look = [widgets[f"setting:{key}"] for key in ("free_look_keyboard_hold", "free_look_controller_hold",
+free_look = [widgets[f"setting:{key}"] for key in ("free_look", "free_look_keyboard_hold", "free_look_controller_hold",
                                                    "free_look_hold_time")]
 assert all(widget in walk(widgets["camera:settings"]) for widget in free_look)
 assert not any(widget in walk(widgets["commands:settings"]) for widget in free_look)
@@ -257,6 +263,107 @@ assert not any(widget in walk(widgets["camera:settings"]) for widget in shoulder
 assert all(widgets[f"setting:{key}"] in walk(widgets["camera:settings"])
            for key in ("third_person", "orbit_smooth", "shoulder_seconds"))
 assert all(f"tab:{page}:shoulder" in widgets for page in ("options", "shoulder", "dynamic_camera", "commands"))
+# AIMING holds the aim view and the aim zoom, SENSITIVITY its two settings; neither stays on CAMERA VIEW, and every
+# head shows the seven tabs (Kevin, 2026-10-08).
+from apex_movement import panel_options  # noqa: E402
+assert all(f"tab:{page}:{tab}" in widgets for page in panel_options.TABS for tab in panel_options.TABS)
+moved = {"aiming": ("third_person_ads", "camera_framing_zoom"), "sensitivity": ("sensitivity_look", "sensitivity_aim")}
+for page, keys in moved.items():
+    inside = [widgets[f"setting:{key}"] for key in keys]
+    assert all(widget in walk(widgets[f"{page}:settings"]) for widget in inside), page
+    assert not any(widget in walk(widgets["camera:settings"]) for widget in inside), page
+assert widgets["setting:camera_framing_horizontal"] in walk(widgets["camera:settings"])
+
+# AIMING's optic rows (Kevin, 2026-10-09), one per weapon type in the game's order: BDL4 then the zooms; a zoom
+# unticks BDL4, BDL4 unticks every zoom.
+from apex_movement import panel_optics  # noqa: E402
+OPTIC_ROWS = ("pistol_optics", "smg_optics", "shotgun_optics", "assault_optics", "sniper_optics", "heavy_optics")
+aiming = list(walk(widgets["aiming:settings"]))
+assert all(widgets[panel_optics.box_name(row, zoom)] in aiming
+           for row in OPTIC_ROWS for zoom in panel_optics.boxes(row))
+assert [widget for widget in aiming if widget in [widgets[f"setting:{row}"] for row in OPTIC_ROWS]] == [
+    widgets[f"setting:{row}"] for row in OPTIC_ROWS]
+assert [box for box in widgets if box.startswith("optic:heavy_optics:") and "_" not in box[19:]] == [
+    "optic:heavy_optics:bdl4", "optic:heavy_optics:1", "optic:heavy_optics:2"]
+# A new install: x1 lit for pistols, BDL4 for heavy weapons, as they aimed before their rows.
+assert widgets["optic:pistol_optics:1_fill"].calls["SetBrushColor"] == gold
+assert widgets["optic:pistol_optics:bdl4_fill"].calls["SetBrushColor"] != gold
+assert widgets["optic:heavy_optics:bdl4_fill"].calls["SetBrushColor"] == gold
+form.shown["third_person"] = True
+click("optic:sniper_optics:6")
+assert form.pending["sniper_optics"] == 8
+assert widgets["optic:sniper_optics:6_fill"].calls["SetBrushColor"] == gold
+assert widgets["optic:sniper_optics:bdl4_fill"].calls["SetBrushColor"] != gold
+click("optic:sniper_optics:bdl4")
+assert "sniper_optics" not in form.pending and widgets["optic:sniper_optics:bdl4_fill"].calls["SetBrushColor"] == gold
+assert widgets["optic:sniper_optics:6_fill"].calls["SetBrushColor"] != gold
+click("optic:pistol_optics:3")
+assert form.pending["pistol_optics"] == 0b101 and "sniper_optics" not in form.pending
+click("optic:pistol_optics:3")
+assert "pistol_optics" not in form.pending
+# The « ? » opens a help pop-up over the whole window, never inside a page that could cut it; a click beside it, its
+# CLOSE button or Escape close it alone (Kevin: « attention à ce que ça ne ferme pas tout le menu »).
+popup = widgets["popup:optics"]
+assert popup in walk(widgets["popups"]) and popup not in walk(widgets["pages"])
+assert popup.calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+for closer in ("popup:optics:beside", "popup:optics:close", None):
+    click("optic:help")
+    assert form.popup == "optics" and popup.calls["SetVisibility"] == ("ESlateVisibility.SelfHitTestInvisible",)
+    if closer is None:
+        assert form.escape() is False, "Escape closes the pop-up, not the window"
+    else:
+        click(closer)
+    assert form.popup is None and popup.calls["SetVisibility"] == ("ESlateVisibility.Collapsed",), closer
+assert widgets["heading:popup_optics"].calls["SetText"] == ("OPTIQUES",)
+assert widgets["popup:optics:close_label"].calls["SetText"] == ("FERMER",)
+# It shows the zoom key as the COMMANDS page does, read again at each opening: a key changed there shows at once.
+for device in ("keyboard", "controller"):
+    assert (widgets[f"value:optics_help:{device}"].calls["SetText"]
+            == widgets[f"value:free_look:{device}"].calls["SetText"]), device
+camera_settings.commands.apply({"sniper_zoom_key": "K"})
+click("optic:help")
+assert widgets["value:optics_help:keyboard"].calls["SetText"] == ("K",)
+click("popup:optics:close")
+camera_settings.commands.apply(camera_settings.commands.defaults())
+
+# OMNI DIRECTION (Kevin, 2026-10-09): the eighth tab, last on the second row; four rows, two of boxes, three « ? ».
+assert panel_options.TAB_ROWS[1][-1] == "omni_direction"
+omni_rows = ("omni_body", "omni_angle", "omni_direction_sprint", "omni_crouch")
+assert all(widgets[f"setting:{key}"] in walk(widgets["omni_direction:settings"]) for key in omni_rows)
+assert not any(widgets[f"setting:{key}"] in walk(widgets["camera:settings"]) for key in omni_rows)
+click("tab:options:omni_direction")
+assert model.page == "omni_direction" and shown() == model.pages.index("omni_direction")
+assert widgets["tab:omni_direction:omni_direction_label"].calls["SetText"] == ("OMNI DIRECTION",)
+# The body turns in third person only: its tab says so while third person is off (Kevin, 2026-10-09: a greyed page
+# that said nothing).
+form.shown["third_person"] = False
+form.refresh_labels(form.resolve())
+needed = "\nActive la troisième personne dans l'onglet CAMÉRA."
+assert all(widgets[f"group:{page}"].calls["SetText"][0].endswith(needed)
+           for page in ("aiming", "sensitivity", "omni_direction"))
+form.shown["third_person"] = True
+form.refresh_labels(form.resolve())
+assert widgets["group:omni_direction"].calls["SetText"] == ("Le corps suit ta course, en troisième personne.",)
+assert widgets["omni:omni_crouch:1_label"].calls["SetText"] == ("GLISSADE",)
+assert widgets["omni:omni_crouch:1_fill"].calls["SetBrushColor"] == gold, "Apex Movement slides by default"
+assert widgets["omni:omni_angle:0_label"].calls["SetText"] == ("360°",)
+assert widgets["omni:omni_angle:0_fill"].calls["SetBrushColor"] == gold
+form.shown["third_person"] = True
+click("omni:omni_crouch:0")
+assert form.pending["omni_crouch"] == 0 and widgets["omni:omni_crouch:0_fill"].calls["SetBrushColor"] == gold
+click("omni:omni_crouch:1")
+assert "omni_crouch" not in form.pending
+for key, title in (("omni_body", "ORIENTATION DU CORPS"), ("omni_angle", "ANGLE"), ("omni_crouch", "CÔTÉS ET ARRIÈRE")):
+    help_popup = widgets[f"popup:{key}"]
+    assert help_popup in walk(widgets["popups"]) and help_popup not in walk(widgets["pages"])
+    assert widgets[f"omni:{key}:help_label"].calls["SetText"] == ("?",)
+    click(f"omni:{key}:help")
+    assert form.popup == key and widgets[f"heading:popup_{key}"].calls["SetText"] == (title,)
+    assert widgets[f"omni_help:{key}"].calls["SetText"][0].startswith(("En troisième", "360°", "Quand tu sprintes"))
+    click(f"popup:{key}:close")
+    assert form.popup is None
+assert "omni_direction_sprint" in form.model.options and "omni:omni_direction_sprint:help" not in widgets
+click("tab:omni_direction:options")
 
 # Each theme changes colours only, read when the window is drawn: no colour of another theme stays (2026-10-06).
 veils = {tuple(theme.HOVER_OVERLAY), tuple(theme.PRESS_OVERLAY)}

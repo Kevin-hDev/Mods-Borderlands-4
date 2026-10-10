@@ -8,6 +8,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from apex_camera_runtime.shoulder import ShoulderState, signed_right  # noqa: E402
+from apex_camera_runtime.constants import THIRD_PERSON_RIGHT as RIGHT  # noqa: E402
 from apex_camera_runtime.third_person import ThirdPersonController  # noqa: E402
 from camera_test_fixtures import Bridge, Hooks, Manager, Settings  # noqa: E402
 
@@ -63,17 +64,17 @@ class ControllerFailingSettings(Settings):
         raise RuntimeError("save failed")
 
 
-check("the default shoulder is the positive right side", signed_right(False) == 48.4)
-check("the left shoulder uses the negative offset", signed_right(True) == -48.4)
+check("the default shoulder is the positive right side", signed_right(False) == RIGHT)
+check("the left shoulder uses the negative offset", signed_right(True) == -RIGHT)
 state = ShoulderState()
 saved_left, applying = ShoulderSettings(True), ShoulderBridge()
 check("the saved side can be applied", state.apply_saved(applying, saved_left))
-check("the saved left side reaches the bridge", applying.values == [-48.4])
+check("the saved left side reaches the bridge", applying.values == [-RIGHT])
 
 settings, bridge = ShoulderSettings(), ShoulderBridge()
 check("a successful side change is saved", state.set(bridge, settings, True))
 check("success writes left once and saves once",
-      bridge.values == [-48.4] and settings.left and settings.saves == 1)
+      bridge.values == [-RIGHT] and settings.left and settings.saves == 1)
 
 refused_settings, refused_bridge = ShoulderSettings(), ShoulderBridge(False)
 check("a native refusal does not save", not state.set(refused_bridge, refused_settings, True))
@@ -82,7 +83,7 @@ check("the refused setting stays right", not refused_settings.left and refused_s
 failing_settings, rollback_bridge = ShoulderSettings(fail=True), ShoulderBridge()
 check("a save failure reports failure", not state.set(rollback_bridge, failing_settings, True))
 check("a save failure restores the visible right side",
-      rollback_bridge.values == [-48.4, 48.4] and not failing_settings.left)
+      rollback_bridge.values == [-RIGHT, RIGHT] and not failing_settings.left)
 
 unsafe_settings, unsafe_bridge = ShoulderSettings(fail=True), RollbackRefusingBridge()
 try:
@@ -92,7 +93,7 @@ except RuntimeError:
 else:
     rollback_refused = False
 check("a refused visible rollback is a fatal camera transaction",
-      rollback_refused and unsafe_bridge.values == [-48.4, 48.4]
+      rollback_refused and unsafe_bridge.values == [-RIGHT, RIGHT]
       and not unsafe_settings.left)
 
 manager, native, hooks = Manager(), Bridge(), Hooks()
@@ -103,7 +104,7 @@ controller_settings = Settings()
 controller_settings.left = True
 controller = ThirdPersonController(hooks, native, "camera")
 controller.sync("apex", pc, controller_settings, 0)
-check("controller startup passes the persisted signed side", native.start_rights == [-48.4])
+check("controller startup passes the persisted signed side", native.start_rights == [-RIGHT])
 controller.stop()
 
 unsafe_native, unsafe_manager = ControllerRollbackBridge(), Manager()

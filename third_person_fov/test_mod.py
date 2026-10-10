@@ -21,14 +21,18 @@ fake_camera.toggle_orbit = lambda: calls.append("orbit") or True
 sys.modules["third_person_fov.camera"] = fake_camera
 
 import third_person_fov  # noqa: E402
+from apex_camera_runtime.keyboard_layout import (RIGHT_OF_TAB, TOP_ROW_EIGHT, TOP_ROW_SEVEN, TOP_ROW_SIX,  # noqa: E402
+                                                 key_at)
+FREE_LOOK, SIX, SEVEN = key_at(RIGHT_OF_TAB, "Q"), key_at(TOP_ROW_SIX, "Six"), key_at(TOP_ROW_SEVEN, "Seven")
+EIGHT = key_at(TOP_ROW_EIGHT, "Eight")
 
 mod = third_person_fov.mod
-ok = third_person_fov.__version__ == "1.1.6"
+ok = third_person_fov.__version__ == "1.2.0"
 ok = ok and mod.kwargs["name"] == "Third Person & FOV" and mod.is_enabled
-ok = ok and calls == ["start"] and set(state["keybinds"]) == {"P", "Six", "Seven"}
+ok = ok and calls == ["start"] and set(state["keybinds"]) == {"P", SIX, SEVEN, EIGHT, FREE_LOOK, "Gamepad_LeftThumbstick"}
 state["keybinds"]["P"]()
-state["keybinds"]["Six"]()
-state["keybinds"]["Seven"]()
+state["keybinds"][SIX]()
+state["keybinds"][SEVEN]()
 ok = ok and calls[-3:] == ["toggle", "shoulder", "orbit"]
 mod.disable()
 ok = ok and calls[-1] == "stop" and not state["keybinds"]

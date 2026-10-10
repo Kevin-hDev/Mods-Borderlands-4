@@ -13,6 +13,14 @@ auto_sprint = BoolOption(
     display_name="Enabled",
     description="Sprint by pushing the move stick all the way.",
 )
+# Kevin, 2026-10-09: off by default in third person, where the hunter sprints with the sprint key as in the other
+# camera mods, and the player's to turn on. A file saved before this option keeps what auto sprint did there
+# (settings_upgrade.py): players' settings are never changed by an update.
+auto_sprint_third_person = BoolOption(
+    "auto_sprint_third_person", False,
+    display_name="In third person",
+    description="Auto sprint in third person too.",
+)
 # The whole slide movement, on top of its own options below (Kevin's rule, 2026-09-18: every movement can be turned
 # off on its own; the slides and the dash had no switch at all).
 slides = BoolOption(

@@ -45,9 +45,10 @@ movement = NestedOption(
     display_name="Movement",
     description="How fast you walk and sprint, and the slow walk key. These apply whether auto sprint is on or off.",
 )
+# Third person exists in the full pack only: a separate file has no camera.
 auto_sprint = _group(
     "auto_sprint_menu", "Auto sprint", "Sprint on a fully pushed stick, without pressing anything.",
-    settings.auto_sprint,
+    settings.auto_sprint, *([settings.auto_sprint_third_person] if pack.is_full() else []),
 )
 slides = _group(
     "slides_menu", "Slides", "How slides start, go on, and slow down.",

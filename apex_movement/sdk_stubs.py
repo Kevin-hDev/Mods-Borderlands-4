@@ -177,11 +177,18 @@ def destroy(character: Any) -> None:
     character.destroyed = True
 
 
+class FakeInputOwner(types.SimpleNamespace):
+    """Controller/input objects expose a stable SDK address, like the real UObjects."""
+
+    def _get_address(self) -> int:
+        return id(self)
+
+
 def use_character(state: dict, character: Any) -> None:
     """The player controller for a character, with its local player and that player's Enhanced Input subsystem."""
-    state["pc"] = None if character is None else types.SimpleNamespace(
+    state["pc"] = None if character is None else FakeInputOwner(
         OakCharacter=character,
-        PlayerInput=types.SimpleNamespace(EnhancedActionMappings=state["mappings"]),
+        PlayerInput=FakeInputOwner(EnhancedActionMappings=state["mappings"]),
         MinPassiveMantleButtonHoldDuration=0.075,
         Player=FakeLocalPlayer(),
     )

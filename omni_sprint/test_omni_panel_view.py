@@ -61,15 +61,35 @@ panel_assets.texture = lambda _world: None
 panel_fonts.build = lambda _root: {"title": object(), "body": object()}
 
 model, root, widgets, form = build()
-CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera")
-check("eight pages, SHOULDER VIEW last, opened on OMNI SPRINT, under the mod's name",
-      len(widgets["pages"].children) == len(model.pages) == 8 and model.pages[-1] == "shoulder" and widgets["focus"] is widgets["nav:omni_sprint"]
+CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity", "omni_direction")
+check("ten pages, SHOULDER VIEW last, opened on OMNI SPRINT, under the mod's name",
+      len(widgets["pages"].children) == len(model.pages) == 10 and model.pages[-1] == "shoulder" and widgets["focus"] is widgets["nav:omni_sprint"]
       and theme.BRAND == "OMNI SPRINT")
 check("the DYNAMIC CAMERA page has its three cards, FIELD OF VIEW, FRAMING and MOTION, with their settings",
       all(f"heading:dynamic:{key}" in widgets for key in ("fov", "framing", "motion"))
       and all(f"row:{key}" in widgets for key in ("speed_fov", "speed_fov_gain", "speed_fov_seconds", "action_framing",
                                                     "action_framing_strength", "camera_motion",
                                                     "camera_motion_strength")))
+# OMNI DIRECTION (Kevin, 2026-10-09): no sprint row, its sprint is OMNI SPRINT's switch; dash by default; the crouch
+# follows that switch, in every view.
+check("OMNI DIRECTION shows the body, the angle and the crouch, not a second sprint switch",
+      all(f"setting:{key}" in widgets for key in ("omni_body", "omni_angle", "omni_crouch"))
+      and "setting:omni_direction_sprint" not in widgets and model.pages[1] == "omni_direction")
+check("Omni Sprint dashes on the sides by default",
+      widgets["omni:omni_crouch:0_label"].calls["SetText"][0] in ("DASH",)
+      and widgets["omni:omni_crouch:0_fill"].calls["SetBrushColor"] != widgets["omni:omni_crouch:1_fill"].calls[
+          "SetBrushColor"])
+form.shown["third_person"] = False
+form.refresh_dependency(widgets)
+check("outside third person the body and the angle grey, the crouch follows OMNI SPRINT's switch",
+      widgets["row:omni_body"].calls["SetRenderOpacity"][0] < 1
+      and widgets["row:omni_angle"].calls["SetRenderOpacity"][0] < 1
+      and widgets["row:omni_crouch"].calls["SetRenderOpacity"] == (1.0,))
+form.shown["omni_sprint"] = False
+form.refresh_dependency(widgets)
+check("OMNI SPRINT's switch off greys the crouch", widgets["row:omni_crouch"].calls["SetRenderOpacity"][0] < 1)
+form.shown["omni_sprint"] = True
+form.refresh_dependency(widgets)
 check("EN and FR sit in the header, with no gear nor Options page",
       "EN" in widgets and "FR" in widgets and "options" not in widgets and "language:EN" not in widgets)
 check("the page's rows are the camera settings, the FOV row registered to be greyed",
@@ -123,13 +143,16 @@ placement = {"camera": ("setting:third_person", "setting:custom_fov", "setting:f
 check("each camera setting sits on its page (Kevin, 2026-10-06), spacing and height with the view on foot",
       all(page_of(widgets[name]) == key for key, names in placement.items() for name in names))
 hint = "Turn on third person in the CAMERA tab."
-check("only AIMING requires third person; Orbit is also available from first person",
-      widgets['group:aiming'].calls['SetText'][0].endswith('\n' + hint)
+check("AIMING, SENSITIVITY and OMNI DIRECTION require third person and say so; Orbit is also available from first "
+      "person (OMNI DIRECTION greyed without a word: Kevin, 2026-10-09)",
+      all(widgets[f"group:{key}"].calls['SetText'][0].endswith('\n' + hint)
+          for key in ("aiming", "sensitivity", "omni_direction"))
       and all(hint not in widgets[f"group:{key}"].calls["SetText"][0] for key in ("camera", "orbit_camera", "loot")))
 form.shown["third_person"] = True
 form.refresh_labels(form.resolve())
 check("with third person on, the line goes away",
       widgets["group:aiming"].calls["SetText"] == ("Third-person aiming and zoom.",)
+      and widgets["group:omni_direction"].calls["SetText"] == ("The body follows your run, in third person.",)
       and widgets["group:orbit_camera"].calls["SetText"] == ("Circles the character at the distance you choose.",))
 form.shown["third_person"] = model.options["third_person"].value
 check("the Orbit distance reads in metres, its bounds too",

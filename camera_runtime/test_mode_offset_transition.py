@@ -3,7 +3,7 @@ import unittest
 from types import SimpleNamespace as NS
 
 from apex_camera_runtime.camera_bridge import CameraBridge
-from apex_camera_runtime.collision import CollisionResolver
+from apex_camera_runtime.shoulder_offset import ShoulderOffset
 from camera_test_fixtures import Bridge
 from native_climb_test_fixture import NativeClimbFixture
 
@@ -68,22 +68,22 @@ class Tests(NativeClimbFixture, unittest.TestCase):
         self.assertEqual(self.manager.mode, 'Default')
         self.assertEqual(self.bridge.blends, [(False, 0.2)])
 
-    def test_entry_collision_permission_covers_unconfirmed_native_mode_only_while_active(self):
+    def test_entry_shoulder_permission_covers_unconfirmed_native_mode_only_while_active(self):
         self.make()
         self.settings.orbit_transition = lambda: 0.2
-        view = NS(suspend=lambda _: None, suspend_offset=lambda *_: None,
-                  offset_transition_active=lambda: True)
-        collision = CollisionResolver(None, None, lambda x: lambda: x, self.notes.append)
-        self.controller.bridge = CameraBridge(view, None, self.notes.append, collision)
+        view = NS(suspend=lambda _: None, suspend_offset=lambda *_: None)
+        clock = [0]
+        shoulder = ShoulderOffset(clock=lambda: clock[0])
+        self.controller.bridge = CameraBridge(view, None, self.notes.append, shoulder=shoulder)
         self.manager.mode = 'Default'
         self.controller.mode_offset.enter(self.controller, self.pc, self.settings)
-        self.assertTrue(collision._mode_allowed(self.manager, self.actor))
+        self.assertTrue(shoulder.allows(self.manager, self.actor))
         self.actor.ZoomState.bWantsToZoom = True
-        self.assertFalse(collision._mode_allowed(self.manager, self.actor))
+        self.assertFalse(shoulder.allows(self.manager, self.actor))
         self.actor.ZoomState.bWantsToZoom = False
-        view.offset_transition_active = lambda: False
-        self.assertFalse(collision._mode_allowed(self.manager, self.actor))
-        self.assertIsNone(collision.offset_permission)
+        clock[0] = 300_000_000
+        self.assertFalse(shoulder.allows(self.manager, self.actor))
+        self.assertIsNone(shoulder.permission)
 
     def test_turning_off_animation_during_exit_releases_resources(self):
         self.prepare()

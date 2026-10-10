@@ -10,7 +10,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import sprint  # noqa: E402
+from apex_movement import settings, sprint  # noqa: E402
 
 fails: list[str] = []
 
@@ -77,6 +77,31 @@ sprint.stop(player)
 check("stop leaves a sprint the mod did not ask for", movement.bWantsToSprint is True)
 sprint.stop(None)
 check("stop without a character does not raise", True)
+
+# Kevin, 2026-10-09: in third person the hunter sprints with the sprint key, as in the other camera mods.
+movement.bWantsToSprint = False
+sprint.update(player, 9)
+check("in first person the auto sprint asks its sprint", movement.bWantsToSprint is True)
+third_person = [True]
+sprint.set_view(lambda: third_person[0])
+sprint.update(player, 10)
+check("in third person it gives back the sprint it asked for", movement.bWantsToSprint is False)
+movement.bWantsToSprint = True
+sprint.update(player, 11)
+check("and leaves the sprint key's own sprint alone", movement.bWantsToSprint is True)
+movement.bWantsToSprint = False
+third_person[0] = False
+sprint.update(player, 12)
+check("back in first person, it sprints again", movement.bWantsToSprint is True)
+third_person[0] = True
+settings.auto_sprint_third_person.value = True
+sprint.update(player, 13)
+check("with auto sprint turned on for third person, it sprints there too", movement.bWantsToSprint is True)
+settings.auto_sprint_third_person.value = False
+sprint.update(player, 14)
+check("turned off again, it gives the sprint back in third person", movement.bWantsToSprint is False)
+sprint.set_view(lambda: False)
+sprint.stop(player)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

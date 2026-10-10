@@ -31,20 +31,19 @@ class Function:
         return self.result
 
 
-config = bridge.make_config(48.4)
+config = bridge.make_config()
 check("the production ABI has no probe deadline",
       (config.abi, config.duration_ms, config.slot_index, config.expected_rva)
       == (9, 0, 264, 0x3CD4832))
-check("the validated framing is the single configured value", (config.right, config.up) == (48.4, 5.0))
+check("the native camera adds no shoulder: the game places it", (config.right, config.up) == (0.0, 0.0))
 check("the ABI layouts are fixed", ctypes.sizeof(config) == 40 and ctypes.sizeof(bridge.Stats) == 112)
 from apex_camera_runtime import generated_ads
 check("Python uses the generated view contract without a duplicate", bridge.Config is generated_ads.ViewConfig
       and bridge.Stats is generated_ads.ViewStats)
 
-start, stop, suspend, set_right, stats = Function(), Function(), Function(), Function(True), Function()
+start, stop, suspend, stats = Function(), Function(), Function(), Function()
 offset = Function()
-library = types.SimpleNamespace(view_start=start, view_stop=stop,
-                                view_set_suspended=suspend, view_set_right=set_right,
+library = types.SimpleNamespace(view_start=start, view_stop=stop, view_set_suspended=suspend,
                                 view_stats=stats, view_set_offset_suspended=offset,
                                 view_update_rva=Function(0x3CD4832))
 api = bridge.Bridge(library)
@@ -65,15 +64,11 @@ if callable(getattr(api, 'suspend_offset', None)):
     except RuntimeError:
         check('native offset refusal propagates', True)
 manager = types.SimpleNamespace(_get_address=lambda: 0x12345678)
-check("a finite signed shoulder offset starts the bridge", api.start(manager, 48.4) is True)
+check("the bridge starts on the camera manager", api.start(manager) is True)
 started_config = ctypes.cast(start.calls[0][1], ctypes.POINTER(bridge.Config)).contents
-check("start passes the requested shoulder offset", started_config.right == 48.4)
-check("the shoulder changes without restarting", api.set_right(-48.4) is True)
-check("the signed shoulder value reaches the native boundary", set_right.calls == [(-48.4,)])
-check("a non-finite shoulder value is refused before native code",
-      api.set_right(float("nan")) is False and set_right.calls == [(-48.4,)])
-check("an out-of-range shoulder value is refused before native code",
-      api.set_right(150.001) is False and set_right.calls == [(-48.4,)])
+check("start passes no shoulder", (started_config.right, started_config.up) == (0.0, 0.0))
+check("a manager without an address never reaches native code",
+      api.start(types.SimpleNamespace()) is False and len(start.calls) == 1)
 api.suspend(True)
 api.stop()
 check("the wrapper passes the exact manager and suspension state",

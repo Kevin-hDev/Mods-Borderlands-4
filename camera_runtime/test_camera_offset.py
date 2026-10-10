@@ -5,6 +5,8 @@ import unittest
 from types import SimpleNamespace as NS
 
 from camera_test_fixtures import Bridge, Hooks, Manager, Settings
+from apex_camera_runtime.constants import THIRD_PERSON_RIGHT as RIGHT, THIRD_PERSON_UP as UP
+from apex_camera_runtime.shoulder_offset import ShoulderOffset
 from apex_camera_runtime.third_person import ThirdPersonController
 
 FRAME_NS = 16_666_667
@@ -129,6 +131,63 @@ class OffsetTests(unittest.TestCase):
         self.controller.stop()
         self.assertEqual((self.offset.X, self.offset.Y, self.offset.Z), (0.0, 0.0, 0.0))
         self.assertFalse(self.hooks.items)
+
+    def shoulder(self):
+        shoulder = ShoulderOffset(clock=lambda: self.now[0])
+        shoulder.show(RIGHT)
+        self.controller.bridge.shoulder = shoulder
+        return shoulder
+
+    def test_the_shoulder_goes_to_the_game_with_the_framings_spacing(self):
+        self.shoulder()
+        self.settings.strengths = (0.0, 0.0)
+        self.settings.framing_values = lambda: ((15, False), (50, False), (0, False))
+        self.frames(1)
+        self.assertEqual(self.controller.offset.written, {"Y": RIGHT * 1.5, "Z": UP})
+
+    def test_the_shoulder_adds_to_the_other_offsets(self):
+        self.shoulder()
+        self.controller.zoom.wanted_x = lambda: 25.0
+        self.frames(1)
+        self.assertEqual((self.offset.X, self.offset.Y, self.offset.Z), (25.0, RIGHT, UP))
+
+    def test_no_shoulder_in_a_vehicle(self):
+        shoulder = self.shoulder()
+        self.controller._in_vehicle = True
+        self.frames(1)
+        self.assertIsNone(self.controller.offset.written)
+        self.assertIsNone(shoulder.applied)
+
+    def test_releasing_the_other_offsets_keeps_the_shoulder(self):
+        self.shoulder()
+        self.frames(60)
+        self.controller.offset.release()
+        self.assertEqual(self.controller.offset.written, {"Y": RIGHT, "Z": UP})
+        self.assertEqual((self.offset.Y, self.offset.Z), (RIGHT, UP))
+
+    def test_climbing_drops_the_other_offsets_at_once_not_the_shoulders_glide(self):
+        self.shoulder()
+        self.frames(60)
+        self.controller.climb.phase = "hold"
+        self.frames(1)
+        self.assertEqual(self.controller.offset.written, {"Y": RIGHT, "Z": UP})
+
+    def test_the_hook_runs_for_a_mod_without_the_optional_offsets(self):
+        plain = Settings()
+        controller = ThirdPersonController(Hooks(), Bridge(), "plain", clock=lambda: self.now[0])
+        controller.bridge.shoulder = ShoulderOffset(clock=lambda: self.now[0])
+        controller.bridge.shoulder.show(RIGHT)
+        self.manager.mode = "Default"
+        controller.sync("test", self.pc, plain, 1)
+        controller.sync("test", self.pc, plain, 2)
+        self.assertTrue(controller.offset.installed)
+        controller.stop()
+
+    def test_stop_gives_back_the_shoulder_too(self):
+        self.shoulder()
+        self.frames(30)
+        self.controller.stop()
+        self.assertEqual((self.offset.X, self.offset.Y, self.offset.Z), (0.0, 0.0, 0.0))
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from apex_camera_runtime.shoulder_auto import RETURN_S, SWAP_S, AutoShoulder  # noqa: E402
+from apex_camera_runtime.shoulder_auto import BLOCKED, CLEAR, RETURN_S, SWAP_S, AutoShoulder, swap_due  # noqa: E402
 
 fails = []
 FRAME = 1 / 60
@@ -24,6 +24,10 @@ def run(auto, seconds, shown, other, chosen=False, allowed=True):
         side = auto.step(chosen, shown, other, allowed, FRAME)
     return side
 
+
+check("a blocked side with a free other side is due to swap", swap_due(0.2, 1.0))
+check("the swap thresholds are the rule's", not swap_due(BLOCKED, 1.0) and swap_due(0.2, CLEAR)
+      and not swap_due(0.2, CLEAR - 0.01) and not swap_due(0.2, None))
 
 auto = AutoShoulder()
 check("a clear shoulder stays", run(auto, 2.0, 1.0, 1.0) is False and auto.override is None)

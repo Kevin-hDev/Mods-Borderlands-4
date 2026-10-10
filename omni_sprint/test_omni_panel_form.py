@@ -99,16 +99,30 @@ names += [f"nav:{key}" for key in panel_camera_pages.PAGES] + [f"{key}:settings"
 names += ["nav:shoulder", "shoulder:settings", "heading:shoulder", "group:shoulder"]
 names += [f"tab:{page}:{tab}{part}" for page in ("camera", "shoulder") for tab in ("camera", "shoulder")
           for part in ("", "_label")]
-names += [f"{part}:{name}" for name in ("loot_reach", "camera_distance_close", "camera_distance_far", "shoulder_left", "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "orbit", "third_person_ads", "orbit_distance")
+names += [f"{part}:{name}" for name in ("loot_reach", "camera_distance_close", "camera_distance_far", "sensitivity_look", "sensitivity_aim", "sensitivity_weapons", "sensitivity_weapon_sniper_optics", "shoulder_left", "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return", "shoulder_smooth", "orbit_smooth", "shoulder_seconds", "orbit", "third_person_ads", "orbit_distance")
           for part in ("row", "description")]
 # The DYNAMIC CAMERA page's sliders, greyed under their switch (Kevin, 2026-10-06).
 DYNAMIC_SLIDERS = {"speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
                    "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
-names += [f"{part}:{name}" for name in DYNAMIC_SLIDERS for part in ("row", "description")]
+# Free Look's settings, greyed while it is switched off (Kevin, 2026-10-08).
+FREE_LOOK_ROWS = {"free_look_keyboard_hold": "free_look", "free_look_controller_hold": "free_look",
+                  "free_look_hold_time": "free_look"}
+names += [f"{part}:{name}" for name in {**DYNAMIC_SLIDERS, **FREE_LOOK_ROWS} for part in ("row", "description")]
 names += [f"setting:{key}" for key in model.options]
 for action, device in camera_control_config.SLOTS:
     names += [f"command:{action}:{device}", f"clear:{action}:{device}", f"value:{action}:{device}"]
 names += ["commands_reset", "commands_status"]
+# The weapon-type rows' fold (panel_weapon_sensitivity.py).
+names += ["weapons:rows", "weapons:optics"]
+# The optic rows' boxes, one row per weapon type (panel_optics.py).
+OPTIC_ROWS = {"pistol_optics": (1, 2, 3), "smg_optics": (1, 2, 3, 4), "shotgun_optics": (1, 2),
+              "assault_optics": (1, 2, 3, 4), "sniper_optics": (2, 3, 4, 6, 8), "heavy_optics": (1, 2)}
+names += ["optic:help"] + [f"optic:{row}:{box}" for row, zooms in OPTIC_ROWS.items() for box in ("bdl4", *zooms)]
+names += [f"{part}:{row}" for row in OPTIC_ROWS for part in ("row", "description")]
+# The OMNI DIRECTION page's rows, boxes and « ? » (panel_omni_direction.py, Kevin 2026-10-09).
+names += [f"{part}:{key}" for key in ("omni_body", "omni_angle", "omni_crouch") for part in ("row", "description")]
+names += [f"omni:{key}:{index}" for key in ("omni_angle", "omni_crouch") for index in (0, 1)]
+names += [f"omni:{key}:help" for key in ("omni_body", "omni_angle", "omni_crouch")]
 widgets = {name: Widget() for name in names}
 form = panel_form.PanelForm({name: (lambda item=item: item) for name, item in widgets.items()}, model)
 fov = widgets["setting:fov"]
@@ -136,7 +150,7 @@ for third_person, orbit, live in ((True, True, True), (False, True, True), (True
     check(f"the Orbit distance is {'live' if live else 'greyed'} with third person {third_person}, orbit {orbit}",
           distance.enabled is live)
 form.shown.update(third_person=True, orbit=settings.orbit.value)
-for slider, switch in DYNAMIC_SLIDERS.items():
+for slider, switch in {**DYNAMIC_SLIDERS, **FREE_LOOK_ROWS}.items():
     form.shown[switch] = False
     form.refresh_dependency(widgets)
     off = widgets[f"setting:{slider}"].enabled is False and widgets[f"row:{slider}"].opacity < 1
@@ -165,9 +179,12 @@ form.changed_at -= panel_theme.SAVE_DELAY_NS
 check("the sprint's switch turns the sprint off on its own, the camera settings untouched",
       not form.poll() and settings.omni_sprint.value is False and not settings.sprint_enabled()
       and settings.custom_fov.value is True)
+widgets["nav:omni_direction"].checked = True
+check("OMNI DIRECTION opens the second page", not form.poll() and widgets["pages"].active == 1
+      and model.page == "omni_direction")
 widgets["nav:camera"].checked = True
-check("CAMERA opens the second page", not form.poll() and widgets["pages"].active == 1 and model.page == "camera")
-for index, key in enumerate(("aiming", "orbit_camera", "loot"), start=2):
+check("CAMERA opens the third page", not form.poll() and widgets["pages"].active == 2 and model.page == "camera")
+for index, key in enumerate(("aiming", "orbit_camera", "loot"), start=3):
     widgets[f"nav:{key}"].checked = True
     check(f"{key} opens page {index + 1}", not form.poll() and widgets["pages"].active == index and model.page == key)
 

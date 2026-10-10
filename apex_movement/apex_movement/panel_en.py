@@ -9,7 +9,7 @@ TEXT = {
     "undone_partial": "Settings restored, except the camera: another mod controls it.",
     "options": "OPTIONS", "options_desc_menu": "Menu language.", "languages": "LANGUAGES",
     # The sentence under the Options title on its camera and commands tabs (Kevin, 2026-10-06).
-    "camera_tab_desc": "View, aiming, orbit camera and loot.",
+    "camera_tab_desc": "View, orbit camera and loot.",
     "commands_tab_desc": "Camera keys, on keyboard and controller.",
     "camera": "CAMERA", "camera_desc": "View, field of view and loot.",
     # The camera tab's two halves (Kevin, 2026-10-07).
@@ -18,7 +18,9 @@ TEXT = {
     "shoulder_desc": "Pick the shoulder, and let the camera switch shoulders in front of a wall.",
     # Omni Sprint and Third Person & FOV spread the camera settings over four pages (Kevin, 2026-10-06).
     "camera_page": "View on foot, field of view and Free Look.",
-    "aiming": "AIMING", "aiming_page": "Third-person aiming and zoom.",
+    "aiming": "AIMING", "aiming_page": "Third-person aiming and zoom.", "aiming_tab_desc": "Aim view and aim zoom.",
+    "sensitivity": "SENSITIVITY", "sensitivity_tab_desc": "Camera speed in third person.",
+    "sensitivity_page": "In percent of the game's own sensitivity: 100 changes nothing.",
     "orbit_camera": "ORBIT CAMERA", "orbit_camera_page": "Circles the character at the distance you choose.",
     "loot": "LOOT", "loot_page": "Pick up loot from farther away.",
     # The DYNAMIC CAMERA page, its three cards the same in the three camera mods (Kevin, 2026-10-06).
@@ -38,6 +40,35 @@ TEXT = {
     "command_zoom_out": "ORBIT CAMERA ZOOM OUT", "command_zoom_out_desc": "One step per press, in the Orbit Camera.",
     "command_free_look": "FREE LOOK", "command_free_look_desc": "Hold to turn the camera while you keep your direction.",
     "command_camera_distance": "CAMERA DISTANCE", "command_camera_distance_desc": "Close, normal or far, in third person.",
+    "command_sniper_zoom": "OPTIC ZOOM",
+    "command_sniper_zoom_desc": "While aiming with several zooms ticked, switch to the next one.",
+    "popup_optics": "OPTICS", "popup_optics_desc": "Each weapon type's zoom in third person.",
+    "optics_help_text": "BDL4: the weapon aims as in the game, in first person.\n\n"
+                        "x1: the weapon aims at the shoulder with a light zoom.\n\n"
+                        "x2 and up: the weapon aims at the shoulder with that zoom.\n\n"
+                        "Several zooms ticked: while aiming, the zoom key goes to the next one, smallest to largest, "
+                        "then back to the first. The next aim with that weapon type starts on the last zoom used.",
+    "optics_help_key": "ZOOM KEY", "optics_help_commands": "Change it on the COMMANDS page.",
+    "omni_direction": "OMNI DIRECTION", "omni_direction_tab_desc": "The body follows your run, in third person.",
+    "omni_direction_page": "The body follows your run, in third person.",
+    "omni_full_turn": "360°", "omni_half_turn": "180°", "omni_dash": "DASH", "omni_slide": "SLIDE",
+    "popup_omni_body": "BODY ORIENTATION", "popup_omni_body_desc": "The hunter turns toward the run.",
+    "omni_body_help_text": "In third person, the hunter turns toward the direction of the run instead of keeping "
+                           "their back to the camera.\n\n"
+                           "The hunter turns back to the crosshair to shoot, throw a grenade, melee or use the skill, "
+                           "and goes back to the run a second after the last action.\n\n"
+                           "While aiming, the hunter faces the crosshair. During a slide, the body keeps facing the "
+                           "slide.",
+    "popup_omni_angle": "ANGLE", "popup_omni_angle_desc": "How far the body turns.",
+    "omni_angle_help_text": "360°: the hunter turns toward the run on every side. Backward, the hunter runs facing "
+                            "the camera.\n\n"
+                            "180°: the hunter turns on the sides and forward. Backward, the hunter backs up with "
+                            "their back to the camera, as in the game.",
+    "popup_omni_crouch": "SIDES AND BACK", "popup_omni_crouch_desc": "Crouching while sprinting sideways or backward.",
+    "omni_crouch_help_text": "When you sprint sideways or backward, crouching starts:\n\n"
+                             "DASH: the dash, as when you run without sprinting.\n\n"
+                             "SLIDE: a slide, as when sprinting forward.\n\n"
+                             "Forward, crouching always slides.",
     "command_tools": "COMMAND OPTIONS", "command_tools_desc": "Controller icons and camera command defaults.",
     "commands_reset": "DEFAULT KEYS", "controller_icons": "CONTROLLER ICONS",
     "camera_draft_discarded": "Camera mod changed: unsaved camera settings were discarded.",

@@ -21,7 +21,8 @@ state = sdk_stubs.install()
 state["settings_exists"] = False
 
 import omni_sprint  # noqa: E402
-from omni_sprint import animation, camera, definition, frame, memory  # noqa: E402
+from omni_sprint import camera, frame  # noqa: E402
+from apex_camera_runtime import movement_definition as definition  # noqa: E402
 
 mod = state["mods"][0]
 from omni_sprint import panel_preferences, settings  # noqa: E402
@@ -50,36 +51,27 @@ check("nothing Apex Movement or Vehicle Driving writes is named: sprint request,
                                         "OakVehicleMovement", "VehicleDriverComponent")))
 
 fake = sdk_stubs.FakeMemory()
-sdk_stubs.patch_memory(memory, fake)
+sdk_stubs.patch(fake)
 COMPONENT, SIREN = sdk_stubs.BASE + 0x1000, sdk_stubs.BASE + 0x20000
 fake.put_definition(SIREN, definition.KNOWN)
 fake.put_pointer(COMPONENT + 0x1CF0, SIREN)
 state["pc"] = sdk_stubs.player(COMPONENT)
-frame.tick(object(), None, None, None)
-check("in game the limit is opened", fake.get_float(SIREN + 580) == 180.0)
-camera_stops = []
-original_camera_stop = camera.stop
-camera.stop = lambda: camera_stops.append(True)
-animation_stops = []
-original_animation_stop = animation.stop
-animation.stop = lambda: animation_stops.append(True)
+frame.tick(sdk_stubs.body(state["pc"]), None, None, None)
+check("in game, its switch opens the limit through the shared camera runtime", fake.get_float(SIREN + 580) == 180.0)
 mod.disable()
-check("switching off restores the private backward carrier", animation_stops == [True])
-check("switching off gives the shared camera back", camera_stops == [True])
-camera.stop = original_camera_stop
-animation.stop = original_animation_stop
-check("switched off, the game's limit is back and it says so",
+check("switched off, the runtime puts the game's limit back and says so",
       fake.get_float(SIREN + 580) == 60.0
-      and state["misc"][-1] == "[Omni Sprint] disabled, game sprint limit put back in 1 movement definition(s)")
+      and "[Camera Runtime] stopped, game sprint limit put back in 1 movement definition(s)" in state["misc"]
+      and state["misc"][-1] == "[Omni Sprint] disabled")
 check("its hook stops", not frame.tick.enabled)
 mod.enable()
-frame.tick(object(), None, None, None)
+frame.tick(sdk_stubs.body(state["pc"]), None, None, None)
 check("switched on again, the limit opens again at once", fake.get_float(SIREN + 580) == 180.0)
 
 fake.put_float(SIREN + sdk_stubs.OFFSETS["LadderFriction"], 2.0)
 mod.disable()
 check("a definition gone from memory is left alone and the line says so",
-      fake.get_float(SIREN + 580) == 180.0 and "1 left alone" in state["misc"][-1])
+      fake.get_float(SIREN + 580) == 180.0 and any("1 left alone" in line for line in state["misc"][-3:]))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

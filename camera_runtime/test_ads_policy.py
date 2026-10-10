@@ -1,4 +1,4 @@
-"""Unknown or excluded weapons must never enter shoulder ADS."""
+"""Unknown weapons, and weapons on "BDL4", must never enter shoulder ADS."""
 
 import sys
 import unittest
@@ -13,16 +13,22 @@ class PolicyTests(unittest.TestCase):
     def choose(self, category=4, **changes):
         self.assertIsNotNone(decide, "ADS policy missing")
         arguments = dict(aiming=True, enabled=True, foot_mode="ThirdPerson",
-                         vehicle=False, pending=False, supported=True, category=category)
+                         vehicle=False, pending=False, supported=True, category=category, optic=True)
         return decide(**(arguments | changes))
 
-    def test_ordinary_categories_can_use_shoulder_ads(self):
-        for category in (1, 2, 3, 4):
+    def test_every_weapon_type_with_a_ticked_zoom_can_use_shoulder_ads(self):
+        for category in (1, 2, 3, 4, 5, 6):
             with self.subTest(category=category):
                 self.assertEqual(self.choose(category), "third")
 
-    def test_snipers_heavy_and_unrecognized_categories_keep_native_ads(self):
-        for category in (None, 0, 5, 6, 7, 8, True, -1, 1.0, "4", 2**65):
+    def test_bdl4_keeps_native_ads(self):
+        for category in (1, 2, 3, 4, 5, 6):
+            with self.subTest(category=category):
+                self.assertEqual(self.choose(category, optic=False), "native")
+                self.assertEqual(self.choose(category, optic=1), "native")
+
+    def test_unrecognized_categories_keep_native_ads(self):
+        for category in (None, 0, 7, 8, True, -1, 1.0, "4", 2**65):
             with self.subTest(category=category):
                 self.assertEqual(self.choose(category), "native")
 

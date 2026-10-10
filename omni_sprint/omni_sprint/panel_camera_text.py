@@ -34,6 +34,21 @@ EN = {'camera_refused': 'The camera could not confirm this change. It was not sa
  'command_free_look_desc': 'Hold to turn the camera while you keep your direction.',
  'command_camera_distance': 'CAMERA DISTANCE',
  'command_camera_distance_desc': 'Close, normal or far, in third person.',
+ 'command_sniper_zoom': 'OPTIC ZOOM',
+ 'command_sniper_zoom_desc': 'While aiming with several zooms ticked, switch to the next one.',
+ 'popup_optics': 'OPTICS',
+ 'popup_optics_desc': "Each weapon type's zoom in third person.",
+ 'optics_help_text': 'BDL4: the weapon aims as in the game, in first person.\n'
+                     '\n'
+                     'x1: the weapon aims at the shoulder with a light zoom.\n'
+                     '\n'
+                     'x2 and up: the weapon aims at the shoulder with that zoom.\n'
+                     '\n'
+                     'Several zooms ticked: while aiming, the zoom key goes to the next one, '
+                     'smallest to largest, then back to the first. The next aim with that weapon '
+                     'type starts on the last zoom used.',
+ 'optics_help_key': 'ZOOM KEY',
+ 'optics_help_commands': 'Change it on the COMMANDS page.',
  'camera_draft_discarded': 'Camera mod changed: unsaved camera settings were discarded.',
  'camera_outdated': 'Camera mods of different versions are loaded. Update Apex Movement, Omni '
                     'Sprint and Third Person & FOV, then restart the game.',
@@ -60,7 +75,42 @@ EN = {'camera_refused': 'The camera could not confirm this change. It was not sa
  'camera_view': 'CAMERA VIEW',
  'shoulder_view': 'SHOULDER VIEW',
  'shoulder': 'SHOULDER VIEW',
- 'shoulder_desc': 'Pick the shoulder, and let the camera switch shoulders in front of a wall.'}
+ 'shoulder_desc': 'Pick the shoulder, and let the camera switch shoulders in front of a wall.',
+ 'sensitivity': 'SENSITIVITY',
+ 'sensitivity_page': "In percent of the game's own sensitivity: 100 changes nothing.",
+ 'omni_direction': 'OMNI DIRECTION',
+ 'omni_direction_page': 'The body follows your run, in third person.',
+ 'omni_full_turn': '360°',
+ 'omni_half_turn': '180°',
+ 'omni_dash': 'DASH',
+ 'omni_slide': 'SLIDE',
+ 'popup_omni_body': 'BODY ORIENTATION',
+ 'popup_omni_body_desc': 'The hunter turns toward the run.',
+ 'omni_body_help_text': 'In third person, the hunter turns toward the direction of the run instead '
+                        'of keeping their back to the camera.\n'
+                        '\n'
+                        'The hunter turns back to the crosshair to shoot, throw a grenade, melee '
+                        'or use the skill, and goes back to the run a second after the last '
+                        'action.\n'
+                        '\n'
+                        'While aiming, the hunter faces the crosshair. During a slide, the body '
+                        'keeps facing the slide.',
+ 'popup_omni_angle': 'ANGLE',
+ 'popup_omni_angle_desc': 'How far the body turns.',
+ 'omni_angle_help_text': '360°: the hunter turns toward the run on every side. Backward, the '
+                         'hunter runs facing the camera.\n'
+                         '\n'
+                         '180°: the hunter turns on the sides and forward. Backward, the hunter '
+                         'backs up with their back to the camera, as in the game.',
+ 'popup_omni_crouch': 'SIDES AND BACK',
+ 'popup_omni_crouch_desc': 'Crouching while sprinting sideways or backward.',
+ 'omni_crouch_help_text': 'When you sprint sideways or backward, crouching starts:\n'
+                          '\n'
+                          'DASH: the dash, as when you run without sprinting.\n'
+                          '\n'
+                          'SLIDE: a slide, as when sprinting forward.\n'
+                          '\n'
+                          'Forward, crouching always slides.'}
 FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a pas été enregistré.',
  'camera_timeout': 'La caméra n’a pas répondu. Les réglages précédents ont été rétablis. Réessaie '
                    'dans un moment.',
@@ -93,6 +143,21 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
  'command_free_look_desc': 'Maintiens pour tourner la caméra en gardant ta direction.',
  'command_camera_distance': 'DISTANCE DE LA CAMÉRA',
  'command_camera_distance_desc': 'Proche, normale ou loin, à la troisième personne.',
+ 'command_sniper_zoom': "ZOOM DE L'OPTIQUE",
+ 'command_sniper_zoom_desc': 'En visée avec plusieurs zooms cochés, passe au suivant.',
+ 'popup_optics': 'OPTIQUES',
+ 'popup_optics_desc': "Le zoom de chaque type d'arme en troisième personne.",
+ 'optics_help_text': "BDL4 : l'arme vise comme dans le jeu, en première personne.\n"
+                     '\n'
+                     "x1 : l'arme vise à l'épaule avec un léger zoom.\n"
+                     '\n'
+                     "x2 et plus : l'arme vise à l'épaule avec ce zoom.\n"
+                     '\n'
+                     'Plusieurs zooms cochés : en visée, la touche de zoom passe au suivant, du '
+                     'plus petit au plus grand, puis revient au premier. La visée suivante avec ce '
+                     "type d'arme reprend le dernier zoom utilisé.",
+ 'optics_help_key': 'TOUCHE DE ZOOM',
+ 'optics_help_commands': "Elle se change dans l'onglet COMMANDES.",
  'camera_draft_discarded': 'Mod caméra changé : les réglages caméra non enregistrés ont été '
                            'annulés.',
  'camera_outdated': 'Des mods de caméra de versions différentes sont chargés. Mets à jour Apex '
@@ -121,6 +186,41 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
  'shoulder_view': 'VUE ÉPAULES',
  'shoulder': 'VUE ÉPAULES',
  'shoulder_desc': "Choisis l'épaule, et laisse la caméra changer d'épaule devant un mur.",
+ 'sensitivity': 'SENSIBILITÉ',
+ 'sensitivity_page': 'En pourcentage de la sensibilité du jeu : 100 ne change rien.',
+ 'omni_direction': 'OMNI DIRECTION',
+ 'omni_direction_page': 'Le corps suit ta course, en troisième personne.',
+ 'omni_full_turn': '360°',
+ 'omni_half_turn': '180°',
+ 'omni_dash': 'DASH',
+ 'omni_slide': 'GLISSADE',
+ 'popup_omni_body': 'ORIENTATION DU CORPS',
+ 'popup_omni_body_desc': 'Le chasseur se tourne vers sa course.',
+ 'omni_body_help_text': 'En troisième personne, le chasseur se tourne vers la direction où il '
+                        'court, au lieu de rester dos à la caméra.\n'
+                        '\n'
+                        'Il se retourne vers le viseur quand tu tires, lances une grenade, frappes '
+                        'au corps à corps ou utilises ta compétence, et reprend sa course une '
+                        'seconde après ta dernière action.\n'
+                        '\n'
+                        'Quand tu vises, il fait face au viseur. Pendant une glissade, il reste '
+                        'tourné vers la glissade.',
+ 'popup_omni_angle': 'ANGLE',
+ 'popup_omni_angle_desc': "Jusqu'où le corps se tourne.",
+ 'omni_angle_help_text': '360° : le chasseur se tourne vers sa course de tous les côtés. En '
+                         'arrière, il court face à la caméra.\n'
+                         '\n'
+                         "180° : il se tourne sur les côtés et vers l'avant. En arrière, il recule "
+                         'dos à la caméra, comme dans le jeu.',
+ 'popup_omni_crouch': 'CÔTÉS ET ARRIÈRE',
+ 'popup_omni_crouch_desc': "S'accroupir en sprint sur le côté ou en arrière.",
+ 'omni_crouch_help_text': "Quand tu sprintes sur le côté ou en arrière, s'accroupir lance :\n"
+                          '\n'
+                          'DASH : le dash, comme quand tu cours sans sprinter.\n'
+                          '\n'
+                          "GLISSADE : une glissade, comme en sprint vers l'avant.\n"
+                          '\n'
+                          "Vers l'avant, s'accroupir lance toujours une glissade.",
  'aim_third': 'Troisième personne',
  'aim_first': 'Première personne',
  'ads_unsupported': "Visée à l'épaule indisponible avec cette version. Garde la visée première "
@@ -136,9 +236,21 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
  'ads_install_failed': "Activation de la visée à l'épaule impossible. Relance le jeu ; si cela "
                        'persiste, signale-le avec le journal.'}
 FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrière le personnage à pied.'),
- 'third_person_ads': ('Visée',
-                      'Les fusils de précision et les armes lourdes gardent la visée en première '
-                      'personne.'),
+ 'third_person_ads': ('Visée', "L'optique de chaque type d'arme se choisit ci-dessous."),
+ 'pistol_optics': ('Optique des pistolets',
+                   "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
+ 'smg_optics': ('Optique des mitraillettes',
+                "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
+ 'shotgun_optics': ('Optique des fusils à pompe',
+                    'BDL4 rétablit la visée du jeu en première personne ; un zoom vise à '
+                    "l'épaule."),
+ 'assault_optics': ("Optique des fusils d'assaut",
+                    'BDL4 rétablit la visée du jeu en première personne ; un zoom vise à '
+                    "l'épaule."),
+ 'sniper_optics': ('Optique des fusils de précision',
+                   "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
+ 'heavy_optics': ('Optique des armes lourdes',
+                  "BDL4 rétablit la visée du jeu en première personne ; un zoom vise à l'épaule."),
  'shoulder_left': ("Changement d'épaule", 'Place la caméra à gauche ou à droite du personnage.'),
  'shoulder_auto': ("Changement d'épaule automatique",
                    "La caméra passe sur l'autre épaule quand un mur bouche la vue, puis revient."),
@@ -154,6 +266,48 @@ FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrièr
  'camera_distance_far': ('Distance de la caméra : loin',
                          'Distance derrière toi en position loin, en mètres. La normale est à '
                          '2,56.'),
+ 'sensitivity_look': ('Regard en troisième personne',
+                      'Vitesse de la caméra en troisième personne, souris et manette, en '
+                      'pourcentage de celle du jeu.'),
+ 'sensitivity_aim': ('Visée en troisième personne',
+                     "Vitesse de la caméra en visant par-dessus l'épaule, souris et manette, en "
+                     'pourcentage de celle du jeu.'),
+ 'sensitivity_weapons': ("Sensibilité par type d'arme",
+                         "En visée en troisième personne, chaque type d'arme prend sa propre "
+                         'valeur ci-dessous.'),
+ 'sensitivity_weapon_pistol': ('Pistolets',
+                               'Vitesse de visée au pistolet, en pourcentage de celle du jeu.'),
+ 'sensitivity_weapon_smg': ('Mitraillettes',
+                            'Vitesse de visée à la mitraillette, en pourcentage de celle du jeu.'),
+ 'sensitivity_weapon_shotgun': ('Fusils à pompe',
+                                'Vitesse de visée au fusil à pompe, en pourcentage de celle du '
+                                'jeu.'),
+ 'sensitivity_weapon_assault': ("Fusils d'assaut",
+                                "Vitesse de visée au fusil d'assaut, en pourcentage de celle du "
+                                'jeu.'),
+ 'sensitivity_weapon_sniper': ('Fusils de précision',
+                               'Vitesse de visée au fusil de précision, en pourcentage de celle du '
+                               'jeu.'),
+ 'sensitivity_weapon_heavy': ('Armes lourdes',
+                              "Vitesse de visée à l'arme lourde, en pourcentage de celle du jeu."),
+ 'sensitivity_weapon_sniper_optics': ("Par zoom d'optique",
+                                      'Chaque zoom prend sa propre valeur ci-dessous, avec toutes '
+                                      'les armes.'),
+ 'sensitivity_weapon_sniper_x2': ('Optique x2',
+                                  'Vitesse de visée avec le zoom x2, en pourcentage de celle du '
+                                  'jeu.'),
+ 'sensitivity_weapon_sniper_x3': ('Optique x3',
+                                  'Vitesse de visée avec le zoom x3, en pourcentage de celle du '
+                                  'jeu.'),
+ 'sensitivity_weapon_sniper_x4': ('Optique x4',
+                                  'Vitesse de visée avec le zoom x4, en pourcentage de celle du '
+                                  'jeu.'),
+ 'sensitivity_weapon_sniper_x6': ('Optique x6',
+                                  'Vitesse de visée avec le zoom x6, en pourcentage de celle du '
+                                  'jeu.'),
+ 'sensitivity_weapon_sniper_x8': ('Optique x8',
+                                  'Vitesse de visée avec le zoom x8, en pourcentage de celle du '
+                                  'jeu.'),
  'shoulder_smooth': ("Changement d'épaule fluide",
                      'Déplace progressivement la caméra entre les deux épaules.'),
  'orbit_smooth': ('Transitions caméra fluides',
@@ -180,6 +334,7 @@ FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrièr
                    "l'arrêt."),
  'camera_motion_strength': ('Force des mouvements',
                             '100 % par défaut ; plus bas, plus doux ; plus haut, plus fort.'),
+ 'free_look': ('Vue libre', 'Maintiens sa touche pour tourner la caméra en gardant ta direction.'),
  'free_look_keyboard_hold': ('Vue libre : maintenir au clavier',
                              'OUI : la vue libre dure tant que la touche est tenue. NON : un appui '
                              "l'allume, un autre l'éteint."),
@@ -187,4 +342,11 @@ FR_OPTIONS = {'third_person': ('Troisième personne', 'Garde la caméra derrièr
                                'OUI : la vue libre dure tant que le bouton est tenu. NON : un '
                                "appui l'allume, un autre l'éteint."),
  'free_look_hold_time': ('Vue libre : durée du maintien',
-                         'Temps à tenir avant que la vue libre démarre, en secondes.')}
+                         'Temps à tenir avant que la vue libre démarre, en secondes.'),
+ 'omni_body': ('Orientation du corps', 'Le chasseur se tourne vers la direction où il court.'),
+ 'omni_angle': ('Angle',
+                '360° : de tous les côtés. 180° : en arrière, il recule comme dans le jeu.'),
+ 'omni_direction_sprint': ('Sprint dans toutes les directions',
+                           'Sprinte aussi sur les côtés et en arrière.'),
+ 'omni_crouch': ('Côtés et arrière',
+                 "En sprint sur le côté ou en arrière, s'accroupir lance un dash ou une glissade.")}

@@ -41,13 +41,13 @@ class AdsStatusTests(unittest.TestCase):
         self.assertTrue(self.prepare())
         self.assertIsNone(self.notice())
 
-    def test_heavy_message_waits_for_native_mode_confirmation(self):
-        self.animation.WeaponType = Kind.Heavy
+    def test_unknown_weapon_message_waits_for_native_mode_confirmation(self):
+        self.animation.WeaponType = Kind.Precision
         self.assertFalse(self.prepare())
         self.mode = "ThirdPerson"
         self.assertEqual(self.notice(), "cleanup_pending")
         self.mode = "Default"
-        self.assertEqual(self.notice(), "heavy_native")
+        self.assertEqual(self.notice(), "unknown_weapon")
 
     def test_unknown_category_and_missing_weapon_are_reported(self):
         self.animation.WeaponType = Kind.Precision
@@ -59,6 +59,11 @@ class AdsStatusTests(unittest.TestCase):
 
     def test_sniper_has_no_spurious_error(self):
         self.animation.WeaponType = Kind.Sniper
+        self.assertFalse(self.prepare())
+        self.assertIsNone(self.notice())
+
+    def test_a_heavy_weapon_on_bdl4_is_the_players_choice_not_an_error(self):
+        self.animation.WeaponType = Kind.Heavy
         self.assertFalse(self.prepare())
         self.assertIsNone(self.notice())
 
@@ -126,7 +131,7 @@ class AdsStatusTests(unittest.TestCase):
         self.assertEqual(self.notice(), "cleanup_pending")
 
     def test_lost_reference_does_not_claim_restored_first_person(self):
-        self.animation.WeaponType = Kind.Heavy
+        self.animation.WeaponType = Kind.Precision
         self.prepare()
         self.controller._lifetime.owned = lambda: (None, None)
         self.assertEqual(self.notice(), "cleanup_pending")

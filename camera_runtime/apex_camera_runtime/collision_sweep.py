@@ -1,17 +1,18 @@
 """SDK physics boundary: sweep volume against simple and detailed camera geometry."""
 import math
-from .collision_config import (CONTACT_TOLERANCE, ENDPOINT_PROBE_HALF_LENGTH, MARGIN,
-                               MAX_CONTACT_RELAXATION, MIN_RADIUS, RADIUS, TRACE_CHANNEL, VOLUME_RECHECKS)
+from .collision_config import (CONTACT_TOLERANCE, MARGIN, MIN_RADIUS, RADIUS, TRACE_CHANNEL,
+                               VOLUME_RECHECKS)
 from .collision_path import segment
 
 
 class SphereSweep:
     def __init__(self, kismet, sdk):
         self.kismet, self.sdk = kismet, sdk
-        self.reduced = False
+        # The contact behind the last distance, None when clear: the automatic shoulder names it in the log.
+        self.hit = None
 
     def distance(self, actor, anchor, desired):
-        self.reduced = False
+        self.hit = None
         start, end, length = segment(anchor, desired)
         first = self.sdk.make_struct("Vector", X=start[0], Y=start[1], Z=start[2])
         last = self.sdk.make_struct("Vector", X=end[0], Y=end[1], Z=end[2])
@@ -25,23 +26,9 @@ class SphereSweep:
             if not math.isfinite(measured) or not 0 <= measured <= length:
                 raise ValueError("invalid collision contact")
             # Include margin in the volume: a pathwise retreat loses clearance on diagonal steps.
-            distance = min(distance, measured)
+            if measured <= distance:
+                distance, self.hit = measured, hit
         return distance
-
-    def endpoint_clear(self, actor, position, extra_margin=0.0):
-        # The swept capsule contains the requested sphere without relying on zero-length overlap queries.
-        first = self.sdk.make_struct("Vector", X=position[0] - ENDPOINT_PROBE_HALF_LENGTH,
-                                     Y=position[1], Z=position[2])
-        last = self.sdk.make_struct("Vector", X=position[0] + ENDPOINT_PROBE_HALF_LENGTH,
-                                    Y=position[1], Z=position[2])
-        # A reduced departure volume cannot certify a later wall's full camera margin.
-        radius = RADIUS + MARGIN + extra_margin
-        for detailed in (False, True):
-            if self._sphere(actor, first, last, radius, detailed)[0]:
-                # Zero depth can mean unknown overlap, not contact: require an actual clear probe.
-                if self._sphere(actor, first, last, radius - MAX_CONTACT_RELAXATION, detailed)[0]:
-                    return False
-        return True
 
     def _sphere(self, actor, first, last, radius, complex_trace):
         answer = self.kismet.SphereTraceSingle(
@@ -79,7 +66,6 @@ class SphereSweep:
             # Preserve the native camera's measured clearance along the whole segment.
             # A touching departure is not a free segment: use the bounded contact budget and recheck the whole path.
             reduced = radius - depth - CONTACT_TOLERANCE
-            self.reduced = True
             if reduced < MIN_RADIUS:
                 return True, self.sdk.make_struct("HitResult", Distance=0.0)
             radius = reduced

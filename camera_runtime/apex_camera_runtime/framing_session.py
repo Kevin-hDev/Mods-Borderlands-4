@@ -5,6 +5,10 @@ from .framing_layout import make_context
 from .framing_status import PARTIAL_REASONS, confirmation
 from .framing_diagnostics import Diagnostics
 
+# The game places the shoulder with the framing's spacing and height now (shoulder_offset.py, 2026-10-08): the native
+# framing keeps the aim zoom only, or it would move the camera again after the game's collision.
+NATIVE_SHARE = tuple(1 if group.key == "zoom" else 0 for group in GROUPS)
+
 
 def confirm_settings(runtime, owner, settings, restoring=False):
     """Dormant choices may be stored; live changes need the elected renderer's acknowledgement."""
@@ -91,7 +95,8 @@ class FramingSession:
             identities = tuple(identity for _, identity in captured)
             key = tuple((ref.address, ref.index, ref.serial) for ref in identities), values
             if key != self._key:
-                context = make_context(actor, root, identities, values)
+                context = make_context(actor, root, identities,
+                                       tuple(value * kept for value, kept in zip(values, NATIVE_SHARE)))
                 if any(ref() is None or address(ref()) != identity.address for ref, identity in captured):
                     raise ValueError("Camera body expired")
                 self.bridge.publish(context)
