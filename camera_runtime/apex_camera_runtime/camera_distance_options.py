@@ -6,7 +6,7 @@ page shows them; normal stays the game's camera. The two ranges stay on their si
 closer than normal and far always farther.
 """
 
-from mods_base import SliderOption
+from mods_base import BoolOption, SliderOption
 
 from . import option_texts
 from .camera_distance import CLOSE, DISTANCES, FAR, NORMAL, NORMAL_CM, valid
@@ -25,11 +25,17 @@ class CameraDistanceOptions:
                                   is_integer=False, **option_texts.CAMERA_DISTANCE_CLOSE)
         self.far = SliderOption("camera_distance_far", FAR_M, MIN_FAR_M, MAX_FAR_M, step=0.01, is_integer=False,
                                 **option_texts.CAMERA_DISTANCE_FAR)
-        self.options = (self.close, self.far)
+        # The automatic distance (camera_distance_auto.py), on by default: Kevin validated it in game on 2026-10-11.
+        self.automatic = BoolOption("camera_distance_auto", True, **option_texts.CAMERA_DISTANCE_AUTO)
+        self.options = (self.close, self.far, self.automatic)
 
     def index(self) -> int:
         value = self.option.value
         return value if valid(value) else NORMAL
+
+    def automatic_enabled(self) -> bool:
+        """A hand-edited value counts as on, the default."""
+        return self.automatic.value is not False
 
     def distances(self) -> tuple[float, float, float]:
         """Close, normal and far in centimetres; a hand-edited file falls back to the defaults."""

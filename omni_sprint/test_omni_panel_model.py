@@ -42,7 +42,7 @@ SAVED = ("omni_sprint", "camera", "aiming", "orbit_camera", "loot", "dynamic_cam
 check("the sprint's page, OMNI DIRECTION, then the camera pages (Kevin, 2026-10-06), the recovery values left out",
       model.pages == PAGES and model.page == "omni_sprint" and not model.camera_elsewhere
       and list(model.options) == ["omni_sprint", "omni_body", "omni_angle", "omni_crouch", "third_person", "custom_fov", "fov", "camera_distance_close",
-                                  "camera_distance_far", "orbit_smooth", "shoulder_seconds",
+                                  "camera_distance_far", "camera_distance_auto", "orbit_smooth", "shoulder_seconds",
                                   "free_look", "free_look_keyboard_hold", "free_look_controller_hold", "free_look_hold_time",
                                   "shoulder_left", "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return",
                                   "shoulder_smooth",
@@ -164,11 +164,11 @@ check("asking which mod drives the camera never creates the runtime",
 shared = runtime.shared(weak_ref=weakref.ref, address_of=id)
 shared.register("omni_sprint", 100, object(), constants.PROTOCOL)
 check("while Omni Sprint drives the camera, its pages show all their settings",
-      not Model(mod).camera_elsewhere and len(Model(mod).options) == 53 and len(Model(mod).command_options) == 16)
+      not Model(mod).camera_elsewhere and len(Model(mod).options) == 54 and len(Model(mod).command_options) == 16)
 shared.register("apex_movement", 200, object(), constants.PROTOCOL)
 elsewhere = Model(mod)
 check("while Apex Movement is on, stable camera controls refuse writes but the sprint remains writable",
-      elsewhere.camera_elsewhere and len(elsewhere.options) == 53 and len(elsewhere.command_options) == 16
+      elsewhere.camera_elsewhere and len(elsewhere.options) == 54 and len(elsewhere.command_options) == 16
       and not elsewhere.write({"orbit_distance": 400})
       and not elsewhere.write({"fov": 130}) and elsewhere.write({"omni_sprint": False})
       and elsewhere.command_actions is not None and elsewhere.restore() and settings.omni_sprint.value is True

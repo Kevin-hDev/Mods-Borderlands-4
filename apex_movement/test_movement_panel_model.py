@@ -45,7 +45,7 @@ assert model.pages[-7:] == ("commands", "language", "dynamic_camera", "shoulder"
 assert tuple(model.camera_options) == ("third_person", "third_person_ads", "pistol_optics", "smg_optics",
                                        "shotgun_optics", "assault_optics", "sniper_optics", "heavy_optics",
                                        "custom_fov", "fov",
-                                       "camera_distance_close", "camera_distance_far", "shoulder_left",
+                                       "camera_distance_close", "camera_distance_far", "camera_distance_auto", "shoulder_left",
                                        "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return", "shoulder_smooth",
                                        "orbit_smooth", "shoulder_seconds",
                                        "free_look", "free_look_keyboard_hold", "free_look_controller_hold", "free_look_hold_time",
@@ -69,7 +69,7 @@ assert tuple(model.command_options) == (
 # sensitivity bars came on 2026-10-09 (idea n° 6), then the sniper rifle's own bar and the switch folding the five,
 # then the OMNI DIRECTION tab's four; the other weapon types' five optic rows and the heavy weapons' bar the same
 # evening.
-assert len(model.options) == 87
+assert len(model.options) == 88
 assert ([key for key in model.options if key.startswith("walk")]
         == ["walk_speed", "walk", "walk_key", "walk_toggle", "walk_key_speed"])
 assert "native_fov" not in model.options and "applied_fov" not in model.options

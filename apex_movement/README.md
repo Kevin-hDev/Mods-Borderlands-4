@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.2.17**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.18**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. The custom climbing body animation is also not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -63,6 +63,9 @@ The full pack also carries an optional camera, on the Options page:
 - **Camera distance**: in third person, the 8 key moves the camera from close to normal to far, with a glide;
   aiming keeps the usual aiming distance. Normal is the game's camera; close (1.80 m) and far (3.60 m) are set
   to the centimetre on the CAMERA VIEW tab.
+- **Automatic camera distance**: under a low ceiling or in a narrow passage, the camera comes in to the close
+  distance on its own, then goes back to the chosen one once out. On by default; switched off on the CAMERA
+  VIEW page.
 - **Custom FOV**: a field of view from 70 to 150, off by default. Switched off, the game's own FOV is used.
 - **Extended loot reach**: pick up loot and open containers from farther away, from 1× to 3×, 2× by default. Vendors,
   characters and vehicles keep the game's own reach.

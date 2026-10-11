@@ -24,6 +24,8 @@ def cycle(runtime: Any, owner: str) -> bool:
     except Exception:
         settings.note("camera distance shortcut: setting could not be saved")
         return False
+    # The key wins over the automatic distance, which then waits until the hunter is out of the cramped place.
+    controller.offset.distance_follow.player_key()
     controller.log(f"camera distance {NAMES[index]}")
     return True
 

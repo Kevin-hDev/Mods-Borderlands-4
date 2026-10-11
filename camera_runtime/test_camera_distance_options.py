@@ -43,7 +43,7 @@ class OptionTests(unittest.TestCase):
     def test_close_and_far_are_shown_in_metres_and_stay_on_their_side_of_normal(self):
         distance = CameraDistanceOptions()
         self.assertEqual([option.identifier for option in distance.options],
-                         ["camera_distance_close", "camera_distance_far"])
+                         ["camera_distance_close", "camera_distance_far", "camera_distance_auto"])
         self.assertFalse(any(option.kwargs.get("is_hidden") for option in distance.options))
         self.assertEqual(distance.distances(), DISTANCES)
         self.assertLess(distance.close.max_value * 100, NORMAL_CM)
@@ -55,6 +55,15 @@ class OptionTests(unittest.TestCase):
                                                 distance.far.min_value * 100))
         distance.close.value, distance.far.value = "1.5", float("nan")
         self.assertEqual(distance.distances(), DISTANCES)
+
+    def test_the_automatic_distance_is_on_by_default_and_a_hand_edited_value_keeps_it_on(self):
+        distance = CameraDistanceOptions()
+        self.assertIs(distance.automatic.value, True)
+        self.assertTrue(distance.automatic_enabled())
+        distance.automatic.value = False
+        self.assertFalse(distance.automatic_enabled())
+        distance.automatic.value = "no"
+        self.assertTrue(distance.automatic_enabled())
 
 
 if __name__ == "__main__":

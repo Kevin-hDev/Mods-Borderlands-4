@@ -7,6 +7,7 @@ from types import SimpleNamespace as NS
 from camera_test_fixtures import Bridge, Hooks, Manager, Settings
 from apex_camera_runtime import camera_distance_route
 from apex_camera_runtime.camera_distance import CLOSE, FAR, NORMAL, offset
+from apex_camera_runtime.camera_distance_room import Reading
 from apex_camera_runtime.third_person import ThirdPersonController
 
 FRAME_NS = 16_666_667
@@ -63,6 +64,23 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(self.settings.index, CLOSE)
         self.frames(60)
         self.assertAlmostEqual(self.offset.X, offset(CLOSE), places=3)
+
+    def test_a_low_ceiling_brings_the_close_distance_and_the_key_still_wins(self):
+        self.controller.bridge.collision = NS(room=NS(take=lambda: Reading(100.0, 1000.0)))
+        self.frames(90)
+        self.assertAlmostEqual(self.offset.X, offset(CLOSE), places=3)
+        self.assertEqual(self.lines[-1], "automatic distance: close (ceiling 100 cm, narrowest 1000 cm)")
+        self.assertTrue(camera_distance_route.cycle(self.runtime, "apex_movement"))
+        self.frames(90)
+        self.assertEqual(self.settings.index, FAR)
+        self.assertAlmostEqual(self.offset.X, offset(FAR), places=3)
+
+    def test_the_switch_off_keeps_the_chosen_distance(self):
+        self.controller.bridge.collision = NS(room=NS(take=lambda: Reading(100.0, 1000.0)))
+        self.settings.camera_distance_auto = lambda: False
+        self.assertTrue(camera_distance_route.cycle(self.runtime, "apex_movement"))
+        self.frames(90)
+        self.assertAlmostEqual(self.offset.X, offset(FAR), places=3)
 
     def test_the_camera_follows_the_distances_set_on_the_page(self):
         self.settings.camera_distances = lambda: (125.0, 256.0, 450.0)

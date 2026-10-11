@@ -67,5 +67,18 @@ check("the game zooming out: the distance already comes back", out is not None a
 out, now = run_far(camera, sample((0.0, 0.0, 0.0), aiming=True), 60, now)
 check("and reaches it during the zoom-out", out is not None and abs(out[0] - FAR) < 0.5)
 
+# An automatic distance move glides over its own, longer time (camera_distance_follow.py).
+CLOSE = 76.0
+moves = []
+for glide_s in (0.25, 0.5):
+    camera.reset()
+    now = FRAME_NS
+    camera.step((0.0, 0.0), sample((0.0, 0.0, 0.0)), 0.0, 0.0, now, 0.0, glide_s)
+    for _ in range(9):
+        now += FRAME_NS
+        out = camera.step((0.0, 0.0), sample((0.0, 0.0, 0.0)), 0.0, 0.0, now, CLOSE, glide_s)
+    moves.append(out[0])
+check("a longer glide moves the distance slower", 0.0 < moves[1] < moves[0] < CLOSE)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

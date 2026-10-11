@@ -142,6 +142,8 @@ OPTIONS = {
                               "Distance derrière toi en position proche, en mètres. La normale est à 2,56."),
     "camera_distance_far": ("Distance de la caméra : loin",
                             "Distance derrière toi en position loin, en mètres. La normale est à 2,56."),
+    "camera_distance_auto": ("Distance automatique",
+                             "Sous un plafond bas ou dans un passage étroit, la caméra se rapproche, puis revient."),
     "sensitivity_look": ("Regard en troisième personne",
                          "Vitesse de la caméra en troisième personne, souris et manette, en pourcentage de celle du jeu."),
     "sensitivity_aim": ("Visée en troisième personne",

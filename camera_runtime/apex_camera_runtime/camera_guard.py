@@ -5,7 +5,9 @@ unchanged, after the game's camera and its collision, each third-person frame. I
 - getting into a vehicle, the game's camera folds onto the hunter's head for one frame that stays about 0.1 s on
   screen (docs/third_person_fov/camera/enquetes/2026-10-08-saccade-vehicule.md); that frame, and any failure within
   HOLD_NS of a good frame, keep the last good camera instead (Kevin, 2026-10-08);
-- the automatic shoulder reads the shown side's room here, on the game's tick (shoulder_clearance.py).
+- the automatic shoulder reads the shown side's room here, on the game's tick (shoulder_clearance.py);
+- the automatic camera distance reads the room around the hunter here, one direction per frame
+  (camera_distance_room.py).
 """
 import ctypes
 import math
@@ -13,6 +15,7 @@ import threading
 import time
 
 from . import collision_config as config
+from .camera_distance_room import CameraDistanceRoom
 from .collision_diagnostics import CollisionDiagnostics
 from .collision_path import point
 from .collision_sweep import SphereSweep
@@ -34,6 +37,9 @@ class CameraGuard:
     def __init__(self, kismet, sdk, weak_ref, note, shoulder, status=None):
         self.sweep = SphereSweep(kismet, sdk)
         self.clearance = ShoulderClearance()
+        self.room = CameraDistanceRoom()
+        # Its own sweep: the shoulder's keeps its last contact for the automatic shoulder's log line.
+        self.room_sweep = SphereSweep(kismet, sdk)
         self.lifetime = CameraLifetime(weak_ref)
         self.shoulder = shoulder
         self.callback = None
@@ -83,6 +89,7 @@ class CameraGuard:
 
     def invalidate(self):
         self.clearance.clear()
+        self.room.clear()
 
     def _give_back(self):
         self.invalidate()
@@ -117,6 +124,7 @@ class CameraGuard:
             if folded(camera, hunter):
                 raise ValueError("camera folded onto the hunter")
             self._measure(actor, manager, camera, hunter)
+            self.room.record(self.room_sweep, actor, hunter)
             self._owned(query)
             for index, value in enumerate(camera):
                 output[index] = value

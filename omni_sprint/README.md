@@ -1,6 +1,6 @@
 # Omni Sprint
 
-Version **1.2.1**.
+Version **1.2.2**.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -40,6 +40,9 @@ stops. Omni Sprint opens that limit to 180 degrees, so the sprint starts and hol
 - **Camera distance**: in third person, the 8 key moves the camera from close to normal to far, with a glide;
   aiming keeps the usual aiming distance. Normal is the game's camera; close (1.80 m) and far (3.60 m) are set
   to the centimetre on the CAMERA VIEW part of the Camera page.
+- **Automatic camera distance**: under a low ceiling or in a narrow passage, the camera comes in to the close
+  distance on its own, then goes back to the chosen one once out. On by default; switched off on the CAMERA
+  VIEW page.
 - **Automatic shoulder switch**: when a wall blocks the view ahead, the camera moves to the other shoulder, then
   comes back once the view is clear. On by default, never while aiming; its switch and both delays sit next to the
   shoulder, in the Camera page's SHOULDER VIEW.

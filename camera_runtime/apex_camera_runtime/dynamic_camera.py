@@ -22,10 +22,10 @@ class DynamicCamera:
         self._last_ns: int | None = None
 
     def step(self, values: tuple[float, float], sample: Sample | None, pitch: float, yaw: float,
-             now_ns: int, distance: float = 0.0) -> tuple | None:
+             now_ns: int, distance: float = 0.0, glide_s: float = camera_distance.SECONDS) -> tuple | None:
         """values: the framing's and the motion's strength (0 when off); distance: the chosen camera distance's
-        forward offset (camera_distance.py). The offset (forward, right, up), or None once all rest at nothing, so the
-        camera is left to the game."""
+        forward offset (camera_distance.py), eased over glide_s. The offset (forward, right, up), or None once all rest
+        at nothing, so the camera is left to the game."""
         framing_strength, motion_strength = values
         # The camera's places follow the held aim button: they come back while the game zooms out, in one move with
         # it. Waiting for the zoom-out to end made a second move after it (Kevin, 2026-10-11, close and far distances).
@@ -40,7 +40,7 @@ class DynamicCamera:
         self._last_ns = now_ns
         x, z = self.framing.step(action_framing.target(sample, framing_strength), action_framing.seconds(sample),
                                  step_s)
-        (chosen,) = self.distance.step(goal, camera_distance.SECONDS, step_s)
+        (chosen,) = self.distance.step(goal, glide_s, step_s)
         motion = self.motion.step(motion_strength, sample, pitch, yaw, step_s)
         offset = (x + chosen + motion[0], motion[1], z + motion[2])
         return None if offset == ZERO else offset

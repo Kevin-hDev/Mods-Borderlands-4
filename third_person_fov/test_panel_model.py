@@ -30,7 +30,7 @@ check("only camera settings, over the camera pages (Kevin, 2026-10-06), and eigh
       model.pages == ("camera", "omni_direction", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity",
                       "commands", "shoulder")
       and model.page == "camera"
-      and list(model.options) == ["third_person", "fov", "camera_distance_close", "camera_distance_far",
+      and list(model.options) == ["third_person", "fov", "camera_distance_close", "camera_distance_far", "camera_distance_auto",
                                   "orbit_smooth", "shoulder_seconds",
                                   "free_look", "free_look_keyboard_hold", "free_look_controller_hold", "free_look_hold_time",
                                   "shoulder_left", "shoulder_auto", "shoulder_auto_swap", "shoulder_auto_return",

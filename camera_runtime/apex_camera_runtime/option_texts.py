@@ -43,6 +43,9 @@ CAMERA_DISTANCE_CLOSE = {"display_name": "Camera distance: close",
                          "description": "How far behind you the close camera sits, in metres. Normal is 2.56."}
 CAMERA_DISTANCE_FAR = {"display_name": "Camera distance: far",
                        "description": "How far behind you the far camera sits, in metres. Normal is 2.56."}
+CAMERA_DISTANCE_AUTO = {"display_name": "Automatic camera distance",
+                        "description": "Under a low ceiling or in a narrow passage, the camera comes closer, "
+                                       "then back."}
 # The SENSITIVITY page (look_sensitivity_options.py): percent of the game's own sensitivity, mouse and controller,
 # third person only.
 SENSITIVITY_LOOK = {"display_name": "Third-person look sensitivity",

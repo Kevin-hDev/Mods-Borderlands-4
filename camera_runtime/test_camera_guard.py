@@ -1,12 +1,13 @@
 """The camera guard hands the game's camera back unchanged, holds the last good camera through the vehicle climb's
 folded frame and any failure right after a good frame, and reads the shown shoulder's room for the automatic
-shoulder."""
+shoulder, and the room around the hunter for the automatic camera distance."""
 import ctypes
 import unittest
 from types import SimpleNamespace as NS
 from unittest.mock import patch
 
 from apex_camera_runtime import camera_guard, collision_config
+from apex_camera_runtime.camera_distance_room import DIRECTIONS, HEAD_CM, REACH_CM, Reading
 from apex_camera_runtime.generated_ads import CollisionQuery
 from apex_camera_runtime.shoulder_offset import ShoulderOffset
 
@@ -63,8 +64,19 @@ class GuardTests(unittest.TestCase):
 
     def test_the_games_camera_comes_back_unchanged(self):
         self.assertEqual(self.invoke(), (0, (-250, 92, 50)))
-        self.assertEqual(self.physics.lines, [])
+        # Only the room's first direction, up from the head, swept simple then detailed.
+        self.assertEqual(self.physics.lines, [((0, 0, HEAD_CM), (0, 0, HEAD_CM + REACH_CM))] * 2)
         self.assertEqual(self.guard.diagnostics.frames, 1)
+
+    def test_the_room_is_read_one_direction_per_frame(self):
+        for _ in range(len(DIRECTIONS) - 1):
+            self.invoke()
+            self.assertIsNone(self.guard.room.take())
+        self.invoke()
+        self.assertEqual(self.guard.room.take(), Reading(REACH_CM, 2 * REACH_CM))
+        self.mode = 'Orbit'
+        self.invoke()
+        self.assertIsNone(self.guard.room.take())
 
     def test_the_vehicle_climb_keeps_the_last_good_camera(self):
         self.invoke()

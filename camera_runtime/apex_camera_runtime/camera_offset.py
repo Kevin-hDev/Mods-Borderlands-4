@@ -1,8 +1,9 @@
 """The one writer of the camera manager's CameraLocationOffset on foot (dynamic camera plan, 2026-10-06).
 
 It sums what is asked of the offset each frame: in Orbit, the zoom's distance (orbit_zoom.py, which no longer writes
-itself); in ThirdPerson, the framing by action, the camera motion and the chosen camera distance (dynamic_camera.py);
-and the shoulder while it shows (shoulder_offset.py). Two writers on one field
+itself); in ThirdPerson, the framing by action, the camera motion and the chosen camera distance (dynamic_camera.py),
+or the close one in a low or narrow place (camera_distance_follow.py); and the shoulder while it shows
+(shoulder_offset.py). Two writers on one field
 would end up contradicting each other. The game puts the offset back to zero each frame and checks walls after it
 (verified in game, 2026-09-26, releves/third_person_fov/2026-09-26-zoom-orbit; for the shoulder, 2026-10-08, third
 trial of docs/third_person_fov/camera/enquetes/2026-10-08-sauts-camera-collisions.md): once nothing is asked, nothing
@@ -14,7 +15,8 @@ the framing trial, so the write comes before the camera is placed. Interruptions
 import math
 from typing import Any
 
-from .camera_distance import DISTANCES, offset as distance_offset
+from .camera_distance import CLOSE, DISTANCES, offset as distance_offset
+from .camera_distance_follow import CameraDistanceFollow
 from .constants import ORBIT_MODE, THIRD_PERSON_MODE
 from .dynamic_camera import DynamicCamera
 from .orbit_zoom_values import FRAME, OFFSET_TOLERANCE
@@ -36,6 +38,7 @@ class CameraOffset:
         self.settings = None
         self.faulted = False
         self.dynamic = DynamicCamera()
+        self.distance_follow = CameraDistanceFollow()
 
     @property
     def pending(self) -> bool:
@@ -106,7 +109,7 @@ class CameraOffset:
     def wanted(self, now_ns: int) -> dict[str, float] | None:
         orbit = self.controller.zoom.wanted_x()
         if orbit is not None:
-            self.dynamic.reset()
+            self._reset_dynamic()
             values = {"X": orbit}
         else:
             offset = self._dynamic(now_ns)
@@ -143,14 +146,28 @@ class CameraOffset:
         if (not (callable(read_values) or callable(read_distance)) or actor is None or owner._in_vehicle
                 or owner._desired_mode == ORBIT_MODE or getattr(getattr(owner, "climb", None), "busy", False)
                 or str(manager.GetActorCameraMode(actor)) != THIRD_PERSON_MODE):
-            self.dynamic.reset()
+            self._reset_dynamic()
             return None
         rotation = manager.GetCameraRotation()
         pc = owner._lifetime.pc_ref() if owner._lifetime.pc_ref else None
         values = read_values() if callable(read_values) else (0.0, 0.0)
         lengths = read_lengths() if callable(read_lengths) else DISTANCES
-        distance = distance_offset(read_distance(), lengths) if callable(read_distance) else 0.0
-        return self.dynamic.step(values, read(pc), float(rotation.Pitch), float(rotation.Yaw), now_ns, distance)
+        sample = read(pc)
+        distance = 0.0
+        if callable(read_distance):
+            chosen = read_distance()
+            aiming = sample is not None and sample.aim_held
+            # A mod from before the switch has the automatic distance on, its default.
+            read_auto = getattr(self.settings, "camera_distance_auto", None)
+            enabled = read_auto() if callable(read_auto) else True
+            close = self.distance_follow.close(owner, chosen, aiming, now_ns, enabled)
+            distance = distance_offset(CLOSE if close else chosen, lengths)
+        return self.dynamic.step(values, sample, float(rotation.Pitch), float(rotation.Yaw), now_ns, distance,
+                                 self.distance_follow.glide_s)
+
+    def _reset_dynamic(self) -> None:
+        self.dynamic.reset()
+        self.distance_follow.reset()
 
     def on_frame(self, obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
         if (self.faulted or not self.installed or not self.animation_id
@@ -187,5 +204,5 @@ class CameraOffset:
             self.controller.log("stale camera offset abandoned after map or character change")
         self.animation_ref = self.settings = None
         self.animation_id = 0
-        self.dynamic.reset()
+        self._reset_dynamic()
         self.faulted = False

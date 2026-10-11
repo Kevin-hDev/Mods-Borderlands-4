@@ -36,6 +36,7 @@ class Settings:
     set_orbit_distance = staticmethod(camera_settings.zoom.save)
     camera_distance = staticmethod(camera_settings.distance.index)
     camera_distances = staticmethod(camera_settings.distance.distances)
+    camera_distance_auto = staticmethod(camera_settings.distance.automatic_enabled)
     look_sensitivity = staticmethod(camera_settings.sensitivity.values)
     sniper_optics = staticmethod(camera_settings.optics.sniper_ticked)
     weapon_optics = staticmethod(camera_settings.optics.weapon_ticked)

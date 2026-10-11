@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2 - 2026-10-11
+
+- New: automatic camera distance. Under a low ceiling or in a narrow passage, the camera comes in to your close distance on its own, then goes back to your distance once you are out. Switch it off with "Automatic camera distance" on the CAMERA VIEW page.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.1 - 2026-10-11
 
 - Fixed: when aiming over the shoulder, the optic's zoom now follows the camera's move, both when you start and when you stop aiming, instead of jumping at once.
