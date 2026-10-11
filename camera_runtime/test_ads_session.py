@@ -9,6 +9,7 @@ from apex_camera_runtime.ads_session import AdsSession
 class SessionTests(unittest.TestCase):
     def setUp(self):
         self.pc, self.actor, self.manager, self.animation, self.weapon, collector = player()
+        self.collector = collector
         self.actor.ZoomState = NS(bWantsToZoom=True)
         self.native, self.logs = Native(), []
         self.reader = ContextReader(lambda item: lambda: item, self.native.identify, lambda _: [collector])
@@ -47,6 +48,21 @@ class SessionTests(unittest.TestCase):
         self.animation.WeaponType = Kind.Assault
         for change in ({"foot_mode": "Orbit"}, {"vehicle": True}, {"pending": True}):
             self.assertFalse(self.prepare(**change))
+
+    def test_each_publication_asks_the_game_for_the_reticle_once(self):
+        self.prepare(); self.session.confirm("ThirdPerson")
+        self.assertEqual(self.collector.zoom_calls, [0])
+        self.prepare(); self.session.confirm("ThirdPerson")
+        self.assertEqual(self.collector.zoom_calls, [0])
+
+    def test_a_refused_reticle_request_keeps_the_aim_and_is_noted_once(self):
+        def refuse(_level):
+            raise RuntimeError("unavailable")
+        self.collector.OnZoomInChange = refuse
+        self.prepare()
+        self.assertTrue(self.session.confirm("ThirdPerson"))
+        self.assertEqual(len(self.native.contexts), 1)
+        self.assertEqual(sum("reticle_refresh" in line for line in self.logs), 1)
 
     def test_release_keeps_the_native_zoom_tail_without_republishing(self):
         self.prepare(); self.session.confirm("ThirdPerson")

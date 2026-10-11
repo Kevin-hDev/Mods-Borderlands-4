@@ -29,7 +29,8 @@ def player():
     manager = obj(0x16000, CameraModeState=state, CameraModeInputs=inputs)
     pc = obj(0x17000, OakCharacter=actor, PlayerCameraManager=manager)
     state.Inputs, inputs.Controller = inputs, pc
-    collector = obj(0x18000, Outer=obj(0x13000))
+    collector = obj(0x18000, Outer=obj(0x13000), zoom_calls=[])
+    collector.OnZoomInChange = collector.zoom_calls.append
     return pc, actor, manager, animation, weapon, collector
 
 

@@ -1,10 +1,11 @@
 """Coordinate optional ADS presentation without owning another camera or weapon state."""
-import ctypes
 from .ads_feedback import Feedback
 from .ads_optic import CHOICES, OpticLink
 from .ads_policy import decide
+from .ads_publication import context, next_generation, owner_key
+from .ads_reticle_refresh import refresh
 from .aiming import wants_to_aim
-from .generated_ads import ADS_ABI, ERROR_CONTEXT, ERROR_IDENTITY, AdsContext, ObjectId
+from .generated_ads import ERROR_CONTEXT, ERROR_IDENTITY
 
 
 class AdsSession:
@@ -61,10 +62,6 @@ class AdsSession:
         except Exception as error:
             self.feedback.exception(None, "cleanup_failed", "clear", error)
             return False
-
-    @staticmethod
-    def _key_for(snapshot):
-        return tuple((ref.address, ref.index, ref.serial) for ref in snapshot.references), snapshot.category
 
     def _enabled(self, settings):
         read = getattr(settings, "third_person_ads", None)
@@ -150,9 +147,9 @@ class AdsSession:
             self.wanted = False
             # "BDL4" is the player's choice: only a weapon type without a row is reported.
             if snapshot.category not in CHOICES:
-                self.feedback.report(self._key_for(snapshot), "unknown_weapon")
+                self.feedback.report(owner_key(snapshot), "unknown_weapon")
             return False
-        key = self._key_for(snapshot)
+        key = owner_key(snapshot)
         if key == self._blocked_key:
             self.wanted = False
             self.feedback.report(key, "reference_unavailable")
@@ -206,15 +203,14 @@ class AdsSession:
             self.stop()
             self.feedback.exception(refused_key, "reference_unavailable", "confirm_stats", error)
             return False
-        self._counter = max(self._counter, status.generation) + 1
-        if self._counter >= (1 << 64) - 1:
+        generation = next_generation(self._counter, status.generation)
+        if generation is None:
             self.stop()
             self.feedback.report(self._key, "publication_refused")
             return False
-        context = AdsContext(ADS_ABI, ctypes.sizeof(AdsContext), 1, 0, self._counter,
-                             (ObjectId * 8)(*self._snapshot.references), self._snapshot.paths)
+        self._counter = generation
         try:
-            self.native.publish(context)
+            self.native.publish(context(self._snapshot, generation))
             # Known before the optic, so a refused optic still clears this publication.
             self._generation = self._counter
             self.optic.publish(self.native, self._generation)
@@ -227,4 +223,5 @@ class AdsSession:
         self._published = True
         self._released = False
         self.effective = False
+        refresh(self._snapshot, self.feedback)
         return True

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.19 - 2026-10-11
+
+- Fixed: when aiming over the shoulder, the reticle no longer disappears at the start of the zoom.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.18 - 2026-10-11
 
 - New: automatic camera distance. Under a low ceiling or in a narrow passage, the camera comes in to your close distance on its own, then goes back to your distance once you are out. Switch it off with "Automatic camera distance" on the CAMERA VIEW page.
