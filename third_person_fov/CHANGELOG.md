@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.1 - 2026-10-11
+
+- Fixed: when aiming over the shoulder, the optic's zoom now follows the camera's move, both when you start and when you stop aiming, instead of jumping at once.
+- Fixed: with the close or far camera distance, the camera comes back to its place in a single move when you stop aiming.
+- With the close camera distance, aiming now moves in from your close camera: the zoom feels the same as at the other distances.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.0 - 2026-10-10
 
 - Every weapon type now has its optic on the AIMING page: BDL4 keeps the game's first-person aim, zooms aim over the shoulder. Pistols x1 to x3, SMGs and assault rifles x1 to x4, shotguns and heavy weapons x1 and x2, sniper rifles x2 to x8. With several zooms ticked, the OPTIC ZOOM key switches from one to the next.

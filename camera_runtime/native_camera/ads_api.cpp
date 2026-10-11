@@ -112,6 +112,8 @@ int ads_set_optic(uint64_t generation, float scale) {
 
 int ads_heavy_aim() { return 0; }
 
+int ads_eased_optic() { return 0; }
+
 int ads_stats(apex_ads::AdsStats* output) {
     const auto result = state.statistics();
     return apex_ads::write_memory(reinterpret_cast<uintptr_t>(output), 0, result) ? 0 : 1;

@@ -12,4 +12,6 @@ ADS_API int ads_release(uint64_t generation);
 ADS_API int ads_set_optic(uint64_t generation, float scale);
 // Present when heavy weapons can aim at the shoulder: the Python side asks for it before offering them.
 ADS_API int ads_heavy_aim();
+// Present when an optic follows the game's aim progress (ads_view.cpp): the Python side then keeps it on release.
+ADS_API int ads_eased_optic();
 ADS_API int ads_stats(apex_ads::AdsStats* output);

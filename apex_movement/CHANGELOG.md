@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.17 - 2026-10-11
+
+- Fixed: when aiming over the shoulder, the optic's zoom now follows the camera's move, both when you start and when you stop aiming, instead of jumping at once.
+- Fixed: with the close or far camera distance, the camera comes back to its place in a single move when you stop aiming.
+- With the close camera distance, aiming now moves in from your close camera: the zoom feels the same as at the other distances.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.16 - 2026-10-10
 
 - Auto sprint: a new In third person setting, off by default, to auto sprint in third person too.

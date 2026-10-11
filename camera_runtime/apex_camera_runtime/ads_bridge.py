@@ -28,6 +28,8 @@ class AdsBridge:
             self._optic.argtypes, self._optic.restype = [ctypes.c_uint64, ctypes.c_float], ctypes.c_int
         # A .dll built before heavy weapons could aim at the shoulder (2026-10-10) refuses them: they keep BDL4.
         self.heavy = getattr(library, "ads_heavy_aim", None) is not None
+        # A .dll built before the optic followed the game's aim progress (2026-10-11) sets it at once both ways.
+        self.eased = getattr(library, "ads_eased_optic", None) is not None
         self._preflight = preflight if preflight is not None else Preflight(library.ads_verify_files, log)
 
     def start_preflight(self):

@@ -40,6 +40,7 @@ class Native:
         self.contexts, self.clears, self.releases = [], [], []
         self.optics, self.optic_calls, self.optic_error = True, [], None
         self.heavy = True
+        self.eased = False
         self.status = NS(generation=0, fov_writes=0, zoom_scale=1.0, pending=0, active=0, error=0, wrong_thread=0)
 
     def prepare(self): return self.supported

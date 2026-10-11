@@ -36,7 +36,16 @@ float zoom_fov(float base, float scale) {
     return static_cast<float>(2.0 * std::atan(std::tan(base * radians / 2.0) * scale) / radians);
 }
 
-bool update_view(State& state, void* manager, void* view, float delta, Update original) {
+float optic_scale(float optic, bool known, float progress) {
+    // Without the game's progress the optic is set at once, as it was until 2026-10-11.
+    if (!known) return optic;
+    // The last thousandth ends exactly at 1: the Python side lets a released aim go on a write at 1.
+    if (progress <= 0.001f) return 1.0f;
+    if (progress >= 1.0f) return optic;
+    return 1.0f - (1.0f - optic) * progress;
+}
+
+bool update_view(State& state, void* manager, void* view, float delta, Update original, AimProgress progress) {
     apex_performance::Measurement timing(apex_performance::Stage::view, false);
     Ticket before{};
     const bool allowed = state.ticket(manager, before);
@@ -59,9 +68,15 @@ bool update_view(State& state, void* manager, void* view, float delta, Update or
         state.note_error(static_cast<uint32_t>(ERROR_CONTEXT));
         return false;
     }
-    // The player's sniper optic replaces the weapon's own zoom, at once (idea n° 6, Kevin 2026-10-09).
+    // The player's optic replaces the weapon's own zoom (idea n° 6, Kevin 2026-10-09). It follows the game's aim
+    // progress in and out, as the camera moving to the shoulder does: set at once, it made the view jump before that
+    // move and pop back after it (Kevin, 2026-10-11: « ça casse tout le rendu des transitions »).
     const float optic = state.optic(before);
-    const float scale = optic > 0.0f ? optic : sample.zoom_scale;
+    float aim{};
+    const bool known = optic > 0.0f && progress
+        && progress(manager, reinterpret_cast<void*>(before.context.references[1].address), aim)
+        && std::isfinite(aim) && aim >= 0.0f && aim <= 1.0f;
+    const float scale = optic > 0.0f ? optic_scale(optic, known, aim) : sample.zoom_scale;
     const float zoomed = zoom_fov(base, scale);
     if (!std::isfinite(zoomed) || !(zoomed > 0.0f && zoomed < 180.0f)
             || !state.current(before) || !store_fov(view, zoomed)) return false;

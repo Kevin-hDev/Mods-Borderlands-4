@@ -10,8 +10,8 @@ from apex_camera_runtime.ads_optic import CHOICES, ZOOMS, OpticLink, Optics, hel
 
 
 class Native:
-    def __init__(self, optics=True, heavy=True):
-        self.optics, self.heavy, self.calls = optics, heavy, []
+    def __init__(self, optics=True, heavy=True, eased=False):
+        self.optics, self.heavy, self.eased, self.calls = optics, heavy, eased, []
 
     def set_optic(self, generation, value):
         self.calls.append((generation, value))
@@ -117,6 +117,15 @@ class LinkTests(unittest.TestCase):
         self.assertEqual(held_zoom(NS(ads=NS(optic=link))), 2)
         link.release(native)
         self.assertEqual(native.calls, [(3, 0.5), (3, 1.0)])
+        self.assertIsNone(held_zoom(NS(ads=NS(optic=link))))
+
+    def test_an_optic_following_the_games_aim_stays_on_release_and_eases_out_with_it(self):
+        link, native = OpticLink(), Native(eased=True)
+        link.allows(self.settings(**{"1": (1, 2)}), native, 1)
+        link.publish(native, 7)
+        link.release(native)
+        self.assertEqual(native.calls, [(7, 0.75)])
+        self.assertFalse(link.active)
         self.assertIsNone(held_zoom(NS(ads=NS(optic=link))))
 
     def test_each_weapon_type_remembers_its_own_last_zoom(self):

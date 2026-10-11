@@ -40,6 +40,14 @@ void reset_mode() {
     fixture.put(2, MANAGER_MODE_OBJECT_OFFSET, reinterpret_cast<uintptr_t>(fixture.mode));
     NativeFixture::store(fixture.mode, MODE_BLEND_REMAINING_OFFSET, 0.0f);
 }
+float aim_progress = 1.0f;
+bool aim_known = true;
+void* aim_actor{};
+bool progress(void*, void* actor, float& output) {
+    aim_actor = actor;
+    output = aim_progress;
+    return aim_known;
+}
 float read_fov(const unsigned char* view) {
     float result{};
     std::memcpy(&result, view + FOV_OFFSET, sizeof(result));
@@ -103,6 +111,32 @@ int main() {
     assert(state.set_optic(generation, 0.0f) == 0);
     assert(update_view(state, fixture.manager(), view, 0.016f, &original));
     assert(std::abs(read_fov(view) - 71.05929f) < 0.001f && state.statistics().zoom_scale == 0.5f);
+    // An optic follows the game's aim progress in and out, and ends exactly at 1 for the release.
+    assert(state.set_optic(generation, 0.5f) == 0);
+    for (float step : {0.0f, 0.5f, 1.0f, 0.0005f}) {
+        aim_progress = step;
+        assert(update_view(state, fixture.manager(), view, 0.016f, &original, &progress));
+        const float expected = step == 0.5f ? 0.75f : step == 1.0f ? 0.5f : 1.0f;
+        assert(state.statistics().zoom_scale == expected);
+        assert(std::abs(read_fov(view) - zoom_fov(110.0f, expected)) < 0.001f);
+    }
+    assert(aim_actor == reinterpret_cast<void*>(fixture.context(generation).references[1].address));
+    // Without a readable progress, the optic is set at once as before.
+    aim_known = false;
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original, &progress));
+    assert(state.statistics().zoom_scale == 0.5f);
+    aim_known = true;
+    for (float invalid : {-0.1f, 1.5f, std::numeric_limits<float>::quiet_NaN()}) {
+        aim_progress = invalid;
+        assert(update_view(state, fixture.manager(), view, 0.016f, &original, &progress));
+        assert(state.statistics().zoom_scale == 0.5f);
+    }
+    aim_progress = 1.0f;
+    // The weapon's own zoom never reads the progress.
+    assert(state.set_optic(generation, 0.0f) == 0);
+    aim_actor = nullptr;
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original, &progress));
+    assert(aim_actor == nullptr && state.statistics().zoom_scale == 0.5f);
     state.clear(generation);
     assert(state.publish(fixture.context(++generation)) == 0);
     const auto writes = state.statistics().fov_writes;

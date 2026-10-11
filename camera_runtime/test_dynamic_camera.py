@@ -19,8 +19,8 @@ def check(label, condition):
         fails.append(label)
 
 
-def sample(velocity, sprinting=False, in_air=False):
-    return Sample(sprinting, False, in_air, False, abs(velocity[0]), False, False, velocity)
+def sample(velocity, sprinting=False, in_air=False, aiming=False, held=False):
+    return Sample(sprinting, False, in_air, False, abs(velocity[0]), aiming, False, velocity, held)
 
 
 def run(camera, values, the_sample, frames, now):
@@ -43,6 +43,29 @@ check("both off: back to nothing, then None", out is None)
 camera.reset()
 out, _ = run(camera, (1.0, 1.0), sample((0.0, 0.0, 0.0), in_air=True), 60, 0)
 check("in the air: up as well", out is not None and out[2] > 20.0)
+
+# The far distance (104 back): aiming brings it to the game's aim camera, and it comes back while the game zooms out,
+# in one move with it, not after (Kevin, 2026-10-11).
+FAR = -104.0
+
+
+def run_far(camera, the_sample, frames, now):
+    out = None
+    for _ in range(frames):
+        now += FRAME_NS
+        out = camera.step((0.0, 0.0), the_sample, 0.0, 0.0, now, FAR)
+    return out, now
+
+
+camera.reset()
+out, now = run_far(camera, sample((0.0, 0.0, 0.0)), 5, 0)
+check("the far distance at once on entering", out is not None and abs(out[0] - FAR) < 0.01)
+out, now = run_far(camera, sample((0.0, 0.0, 0.0), aiming=True, held=True), 60, now)
+check("aiming: back to the aim camera", out is None)
+out, now = run_far(camera, sample((0.0, 0.0, 0.0), aiming=True), 6, now)
+check("the game zooming out: the distance already comes back", out is not None and out[0] < -10.0)
+out, now = run_far(camera, sample((0.0, 0.0, 0.0), aiming=True), 60, now)
+check("and reaches it during the zoom-out", out is not None and abs(out[0] - FAR) < 0.5)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

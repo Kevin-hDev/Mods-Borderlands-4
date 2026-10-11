@@ -42,6 +42,10 @@ check("a stale copy is not read when the game says no move runs",
       read(pc(move=None)).sliding is False)
 check("wanting to aim counts at once", read(pc(wants=True)).aiming)
 check("zoomed in without the button counts too", read(pc(state="ZoomedIn")).aiming)
+check("the button held is the held aim", read(pc(wants=True)).aim_held)
+zooming_out = read(pc(state="ZoomingOut"))
+check("the game's zoom-out is still aiming, but no longer the held aim",
+      zooming_out.aiming and not zooming_out.aim_held)
 check("a speed the game gives as not a number reads as stopped",
       read(pc(velocity=(float("nan"), 0.0, 0.0))).speed == 0.0)
 check("crouched, as the game says", read(pc(crouched=True)).crouched and not read(pc()).crouched)

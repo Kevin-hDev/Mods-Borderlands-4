@@ -1,5 +1,7 @@
 """The framing by action and the camera motion on foot, summed into one camera offset per frame."""
 
+from dataclasses import replace
+
 from . import action_framing, camera_distance
 from .camera_motion import Motion
 from .easing import MAX_STEP_S, Easing
@@ -25,8 +27,12 @@ class DynamicCamera:
         forward offset (camera_distance.py). The offset (forward, right, up), or None once all rest at nothing, so the
         camera is left to the game."""
         framing_strength, motion_strength = values
-        # Aiming keeps the game's aim camera, as the framing does.
-        goal = (0.0 if action_framing.action(sample) == "aim" else distance,)
+        # The camera's places follow the held aim button: they come back while the game zooms out, in one move with
+        # it. Waiting for the zoom-out to end made a second move after it (Kevin, 2026-10-11, close and far distances).
+        sample = None if sample is None else replace(sample, aiming=sample.aim_held)
+        # Aiming keeps the game's aim camera, as the framing does, but from the close distance: brought back there,
+        # the camera no longer came forward and the aim's zoom looked like a stretched picture (Kevin, 2026-10-11).
+        goal = (max(distance, 0.0) if action_framing.action(sample) == "aim" else distance,)
         if self._last_ns is None:
             # Entering third person puts the camera at its distance at once; only a key press glides.
             self.distance.snap(goal)

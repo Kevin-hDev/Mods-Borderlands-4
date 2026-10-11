@@ -6,9 +6,9 @@ the game's own aim in first person. x1 is a light zoom, the same on every weapon
 weapon's own zoom (Kevin: « x1 = visée actuelle »), but trial 2 (2026-10-10) measured that zoom from 1.3 to 3.5
 times with the weapon's scope: a pistol's x1 showed its x2, an assault rifle's fell between its x3 and x4. A .dll
 built before the optics keeps the weapon's own zoom for x1, the aim it can show. The zoom key goes to the next ticked
-zoom, smallest to largest and back to the smallest. The next aim with that weapon type starts on its last zoom used, as an Apex optic keeps its zoom (Kevin:
-« elle revient sur le dernier zoom donc on mémorise ça »), for the game session only: written to the settings file at
-each press, it would bring the player nothing more.
+zoom, smallest to largest and back to the smallest. The next aim with that weapon type starts on its last zoom used,
+as an Apex optic keeps its zoom (Kevin: « elle revient sur le dernier zoom donc on mémorise ça »), for the game
+session only: written to the settings file at each press, it would bring the player nothing more.
 """
 
 from .generated_ads import (CATEGORY_ASSAULT, CATEGORY_HEAVY, CATEGORY_PISTOL, CATEGORY_SHOTGUN, CATEGORY_SMG,
@@ -129,11 +129,12 @@ class OpticLink:
         return zoom
 
     def release(self, native) -> None:
-        """Let go: the zoom goes at once, then the aim ends as for the other weapons, on a fresh write at 1; without
-        the .dll's optics, on the weapon's own curve."""
+        """Let go: the aim ends as for the other weapons, on a fresh write at 1. A .dll whose optic follows the game's
+        aim progress keeps it, so the zoom eases out with the camera; dropped at once, it made the view pop back
+        (Kevin, 2026-10-11). An older .dll drops it at once; without the .dll's optics, the weapon's own curve."""
         if self.active:
             self.released = True
-            if self.native_optics:
+            if self.native_optics and getattr(native, "eased", False) is not True:
                 native.set_optic(self.generation, 1.0)
 
     def clear(self) -> None:

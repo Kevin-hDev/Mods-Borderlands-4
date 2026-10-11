@@ -38,7 +38,8 @@ void dispatch(void* manager, void* view_target, float delta_time) {
         if (ads_generation) ads.clear(ads_generation);
     }
     bool effective = false;
-    if (owned) effective = apex_ads::update_view(ads, manager, view_target, delta_time, original);
+    if (owned) effective = apex_ads::update_view(ads, manager, view_target, delta_time, original,
+                                                 &apex_framing::native_progress);
     else original(manager, view_target, delta_time);
     if (!owned) return;
     const auto ads_stats = ads.statistics();

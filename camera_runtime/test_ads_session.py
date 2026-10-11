@@ -237,6 +237,25 @@ class SessionTests(unittest.TestCase):
         self.assertFalse(self.prepare())
         self.assertEqual(self.native.clears, [1])
 
+    def test_an_eased_optic_stays_on_release_until_the_dll_writes_the_view_without_zoom(self):
+        self.native.eased = True
+        self.sniper()
+        self.prepare(); self.session.confirm("ThirdPerson")
+        self.native.status.fov_writes = 1
+        self.native.status.zoom_scale = 1 / 3
+        self.actor.ZoomState.bWantsToZoom = False
+        self.assertTrue(self.prepare())
+        self.assertEqual(self.native.optic_calls, [(1, 1 / 3)])
+        self.assertEqual(self.native.releases, [1])
+        self.native.status.fov_writes += 1
+        self.native.status.zoom_scale = 0.6
+        self.assertTrue(self.prepare())
+        self.assertEqual(self.native.clears, [])
+        self.native.status.fov_writes += 1
+        self.native.status.zoom_scale = 1.0
+        self.assertFalse(self.prepare())
+        self.assertEqual(self.native.clears, [1])
+
     def test_the_next_aim_starts_on_the_last_zoom_used(self):
         self.sniper()
         self.prepare(); self.session.confirm("ThirdPerson")

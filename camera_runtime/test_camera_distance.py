@@ -1,5 +1,5 @@
-"""Close, normal and far in turn; normal is the game's camera; a key press glides, entering third person does not,
-and aiming gives the game's aim camera back."""
+"""Close, normal and far in turn; normal is the game's camera; a key press glides, entering third person does not;
+aiming keeps the close distance and gives the game's aim camera back from far."""
 
 import pathlib
 import sys
@@ -15,7 +15,7 @@ from apex_camera_runtime.player_sample import Sample  # noqa: E402
 fails = []
 FRAME_NS = 16_666_667
 STILL = Sample(False, False, False, False, 0.0, False)
-AIMING = Sample(False, False, False, False, 0.0, True)
+AIMING = Sample(False, False, False, False, 0.0, True, aim_held=True)
 
 
 def check(label, condition):
@@ -49,9 +49,12 @@ out, now = run(camera, offset(CLOSE), STILL, frames, now)
 check("the glide ends within its seconds",
       out is not None and abs(out[0] - offset(CLOSE)) < 0.05 * (offset(CLOSE) - offset(FAR)))
 out, now = run(camera, offset(CLOSE), AIMING, 60, now)
-check("aiming gives the game's aim camera back", out is None)
-out, now = run(camera, offset(CLOSE), STILL, 60, now)
-check("after aiming the distance comes back", out == (offset(CLOSE), 0.0, 0.0))
+check("aiming keeps the close distance: the aim comes closer still", out == (offset(CLOSE), 0.0, 0.0))
+out, now = run(camera, offset(FAR), STILL, 60, now)
+out, now = run(camera, offset(FAR), AIMING, 60, now)
+check("aiming from far gives the game's aim camera back", out is None)
+out, now = run(camera, offset(FAR), STILL, 60, now)
+check("after aiming the far distance comes back", out == (offset(FAR), 0.0, 0.0))
 out, now = run(camera, offset(NORMAL), STILL, 60, now)
 check("back to normal: nothing written", out is None)
 

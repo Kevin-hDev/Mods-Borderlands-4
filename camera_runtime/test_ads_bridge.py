@@ -86,6 +86,11 @@ class BridgeTests(unittest.TestCase):
         self.assertFalse(self.bridge.optics)
         with self.assertRaises(RuntimeError): self.bridge.set_optic(7, 0.25)
 
+    def test_only_a_library_that_eases_the_optic_says_so(self):
+        self.assertFalse(self.bridge.eased)
+        self.library.ads_eased_optic = Function(lambda: 0)
+        self.assertTrue(AdsBridge(self.library).eased)
+
     def test_the_optic_reaches_native_code_with_its_generation(self):
         self.library.ads_set_optic = Function(
             lambda generation, scale: self.calls.append(("optic", generation, scale)) or self.code)

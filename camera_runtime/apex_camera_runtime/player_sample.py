@@ -22,6 +22,8 @@ class Sample:
     aiming: bool
     crouched: bool = False
     velocity: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    # The aim button held: `aiming` also covers the game's zoom-out after it, which the FOV waits for.
+    aim_held: bool = False
 
     @property
     def flat_speed(self) -> float:
@@ -48,6 +50,6 @@ def read(pc: Any) -> Sample | None:
         return Sample(bool(movement.bIsSprinting), move is not None and str(getattr(move, "Name", "")) == SLIDE_MOVE,
                       mode is not None and mode.group(0) == "MOVE_Falling", driven,
                       math.sqrt(sum(value * value for value in velocity)), aiming,
-                      bool(getattr(character, "bIsCrouched", False)), velocity)
+                      bool(getattr(character, "bIsCrouched", False)), velocity, bool(zoom.bWantsToZoom))
     except (AttributeError, TypeError, ValueError):
         return None

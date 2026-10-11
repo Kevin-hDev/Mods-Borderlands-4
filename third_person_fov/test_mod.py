@@ -27,7 +27,7 @@ FREE_LOOK, SIX, SEVEN = key_at(RIGHT_OF_TAB, "Q"), key_at(TOP_ROW_SIX, "Six"), k
 EIGHT = key_at(TOP_ROW_EIGHT, "Eight")
 
 mod = third_person_fov.mod
-ok = third_person_fov.__version__ == "1.2.0"
+ok = third_person_fov.__version__ == "1.2.1"
 ok = ok and mod.kwargs["name"] == "Third Person & FOV" and mod.is_enabled
 ok = ok and calls == ["start"] and set(state["keybinds"]) == {"P", SIX, SEVEN, EIGHT, FREE_LOOK, "Gamepad_LeftThumbstick"}
 state["keybinds"]["P"]()
