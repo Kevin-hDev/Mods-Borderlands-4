@@ -2,6 +2,11 @@
 
 Hi Maxunit,
 
+**Source investigation follow-up:** [proposed changes and code examples](2026-10-11-code-investigation.md).
+It identifies the exact reticle refusal, adds the ADS zoom handoff failure, and
+explains the feature-specific checks needed before enabling native code on Epic.
+The original observations below remain the baseline, not a corrected mod.
+
 We tested your original **0.3.8.17** package on the Epic Games version of
 Borderlands 4. **The third-person view does activate**, but the SDK log shows
 several native components refusing to initialize. This is partial compatibility,
