@@ -13,6 +13,7 @@ from typing import Any, Callable
 from .backward_carrier import BackwardCarrier, players
 from .backward_carrier_assets import build, same
 from .body_actions import Actions
+from .body_channel import BodyChannel
 from .body_facing import BodyFacing
 from .body_pose import Pose
 from .crouch_dash import CrouchDash
@@ -38,6 +39,9 @@ class Game:
     clock: Callable[[], int]
     # (identifier, key, callback(event)) -> a binding with disable(); nothing it binds blocks the key.
     bind: Callable[[str, str, Callable[[Any], None]], Any]
+    # The game's body rotation channel (body_channel.py): left alone when a test gives neither.
+    find_class: Callable[[str], Any] | None = None
+    make_tag: Callable[[str], Any] | None = None
 
 
 class OmniDirection:
@@ -60,7 +64,10 @@ class OmniDirection:
         carrier = BackwardCarrier(game.weak, lambda source, owner: build(source, owner, game.find, game.construct),
                                   game.log)
         self.slot = SprintSlot(carrier, players, same, game.weak, game.log)
-        self.facing = BodyFacing(game.make_rotator)
+        channel = None
+        if game.find_class is not None and game.make_tag is not None:
+            channel = BodyChannel(game.find_class, game.make_tag, game.make_rotator, game.weak, game.log)
+        self.facing = BodyFacing(game.make_rotator, channel)
         self.pose = Pose()
         self.actions = Actions(game.make_key, game.log)
         self.crouch = CrouchDash(game.bind, self.keeper, game.get_pc, game.clock, game.log, self.identifier)
@@ -131,7 +138,7 @@ class OmniDirection:
 
     def _forget_body(self) -> None:
         """A new body (map change, respawn, a new look) starts with the game's own pose: the old one is let go."""
-        self.facing.holding, self.facing.offset, self.facing.kept_yaw = False, 0.0, None
+        self.facing.forget()
         self.pose.original = None
         self.actions.reset()
 
@@ -194,5 +201,6 @@ def game_modules() -> Game:
                   lambda pitch, yaw, roll: unrealsdk.make_struct("Rotator", Pitch=pitch, Yaw=yaw, Roll=roll),
                   lambda name: unrealsdk.make_struct("Key", KeyName=name), WeakPointer, unrealsdk.find_object,
                   unrealsdk.construct_object, hooks, lambda message: logging.info(f"[Camera Runtime] {message}"),
-                  time.perf_counter_ns, bind)
+                  time.perf_counter_ns, bind, lambda name: unrealsdk.find_class(name),
+                  lambda name: unrealsdk.make_struct("GameplayTag", TagName=name))
     return loaded

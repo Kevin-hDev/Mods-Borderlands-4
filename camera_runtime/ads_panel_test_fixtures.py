@@ -85,10 +85,7 @@ class AdsPanelTests:
         self.settings.third_person.commit(True)
         self.settings.ads.option.value = True
         self.package.panel_preferences.french.value = False
-        # The public repository still holds camera mods published before the saved language (menu_language);
-        # drop the check once Apex Movement and Omni Sprint are published with it.
-        if hasattr(self.package.panel_preferences, "language"):
-            self.package.panel_preferences.language.value = "EN"
+        self.package.panel_preferences.language.value = "EN"
 
     def test_choice_labels_in_both_languages_and_reopening(self):
         widgets, form = self.build()

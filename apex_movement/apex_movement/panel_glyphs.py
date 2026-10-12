@@ -26,8 +26,16 @@ BUTTONS = {
     "Gamepad_DPad_Right": ("D-pad right", "Croix directionnelle droite", "D-pad right"),
 }
 
+# Chinese players name the PlayStation face buttons by their shapes, and the D-pad on either controller 方向键.
+CHINESE_SHAPES = {"Gamepad_FaceButton_Bottom": "×键", "Gamepad_FaceButton_Right": "○键",
+                  "Gamepad_FaceButton_Left": "□键", "Gamepad_FaceButton_Top": "△键"}
+CHINESE_DPAD = {"Gamepad_DPad_Up": "方向键上", "Gamepad_DPad_Down": "方向键下",
+                "Gamepad_DPad_Left": "方向键左", "Gamepad_DPad_Right": "方向键右"}
+
 
 def label(key, family, language):
+    if language == "ZH" and (key in CHINESE_DPAD or key in CHINESE_SHAPES and family != "XSX"):
+        return CHINESE_DPAD.get(key) or CHINESE_SHAPES[key]
     choices = BUTTONS.get(key)
     return choices[2 if family == "XSX" else int(language == "FR")] if choices else key
 

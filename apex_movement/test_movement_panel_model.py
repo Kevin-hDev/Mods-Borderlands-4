@@ -83,6 +83,18 @@ assert panel_preferences.PAGE_KEYS[-8:] == ("options", "language", "dynamic_came
                                             "sensitivity", "omni_direction", "profiles")
 assert model.change_language("FR") and model.language == "FR"
 assert not model.change_language("other")
+# The language is a code since Chinese came (2026-10-12); the yes/no French was saved as still counts.
+assert panel_preferences.language in panel_preferences.ALL and panel_preferences.french in panel_preferences.ALL
+assert panel_preferences.language.value == "FR" and panel_preferences.french.value is False
+panel_preferences.language.value, panel_preferences.french.value = "EN", True
+assert model.language == "FR"  # A player who chose French before keeps it.
+assert model.change_language("EN") and model.language == "EN" and panel_preferences.french.value is False
+# Chinese copied from another mod's settings, or a value this mod does not offer, reads as English.
+assert "ZH" not in panel_preferences.LANGUAGES and not model.change_language("ZH")
+for unknown in ("ZH", "DE", None):
+    panel_preferences.language.value = unknown
+    assert model.language == "EN"
+panel_preferences.language.value = "EN"
 assert model.change_page("dash") and model.page == "dash"
 assert model.change_page("options") and model.page == "options"
 assert model.change_page("language") and model.page == "language"

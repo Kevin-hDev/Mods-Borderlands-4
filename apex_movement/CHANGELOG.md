@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.23 - 2026-10-12
+
+- Fixed: with OMNI DIRECTION, walking diagonally forward-left in third person no longer crosses the hunter's legs or twists the ankle.
+
+- When a profile name is refused, the message now says it needs at least one letter or digit.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.22 - 2026-10-12
 
 - Fixed: a camera key you set to another command's default key (for example third person on 7) no longer goes back to its default when the game starts, and the other command no longer loses its own.

@@ -59,8 +59,10 @@ def aiming(character: Any) -> bool:
 
 
 class BodyFacing:
-    def __init__(self, make_rotator: Callable[[float, float, float], Any]) -> None:
+    def __init__(self, make_rotator: Callable[[float, float, float], Any], channel: Any = None) -> None:
         self.make_rotator = make_rotator
+        # The game's body rotation channel (body_channel.py), aimed where the body is turned; None leaves it alone.
+        self.channel = channel
         self.holding = False
         self.offset = 0.0  # the body's yaw from the view, while held
         self.behind = False  # at 180 degrees: the run is behind the sides
@@ -109,16 +111,27 @@ class BodyFacing:
         else:
             goal = 0.0 if run is None else run
             self.offset = turned(self.offset, goal, (ACTION_TURN_RATE if acting else TURN_RATE) * step_s)
-        rotation = self.make_rotator(float(body.Pitch), (view + self.offset) % 360.0, float(body.Roll))
-        character.K2_SetActorRotation(rotation, False)
+        yaw = (view + self.offset) % 360.0
+        character.K2_SetActorRotation(self.make_rotator(float(body.Pitch), yaw, float(body.Roll)), False)
         pose.apply(anim, self.offset, None if run is None or still else signed_gap(run, self.offset))
         # Only once an action, an aim or a glide has turned it back: standing still, it stays kept even facing the
         # camera, where it often stands right after an aim.
         if run is None and self.offset == 0.0:
             self.release(anim, pose)
+        elif self.channel is not None:
+            self.channel.aim(character, yaw)
         return self.holding
 
     def release(self, anim: Any, pose: Any) -> None:
         """The body is the game's again: the chest's twist goes back to the game's."""
         self.holding, self.offset, self.behind, self.kept_yaw = False, 0.0, False, None
+        if self.channel is not None:
+            self.channel.give_back()
         pose.restore(anim)
+
+    def forget(self) -> None:
+        """A new body (map change, respawn, a new look): the old one is let go without touching its pose, and the
+        game's channel given back."""
+        self.holding, self.offset, self.kept_yaw = False, 0.0, None
+        if self.channel is not None:
+            self.channel.give_back()

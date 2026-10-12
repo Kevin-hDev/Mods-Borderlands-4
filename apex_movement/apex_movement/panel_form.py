@@ -6,6 +6,7 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, 
 from . import panel_options_tabs as tabs, panel_theme_choice
 from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
+from .panel_preferences import LANGUAGES
 
 # A setting that changes nothing while its switch is off: FOV under Custom FOV, the walk key's toggle and speed under
 # the walk key, loot reach under its switch and the shoulder outside third person. Orbit and the common camera
@@ -191,7 +192,7 @@ class PanelForm(Lifecycle):
             return False
         if tabs.poll(self, widgets):
             return False
-        for language in ("EN", "FR"):
+        for language in LANGUAGES:
             if self.take(widgets[f"language:{language}"]):
                 if self.flush(widgets) and self.model.change_language(language):
                     self.refresh_labels(widgets)

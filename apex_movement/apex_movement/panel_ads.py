@@ -22,7 +22,8 @@ def refresh(form, widgets):
     status = camera.aim_status() if not elsewhere else None
     if status is not None and (status[0] == "cleanup_pending" or not form.ads_blocked and option.value is True):
         reason, english = status
-        message = i18n.text(f"ads_{reason}", "FR") if form.model.language == "FR" else english
+        language = form.model.language
+        message = i18n.text(f"ads_{reason}", language) if language in i18n.TABLES else english
         description += "\n" + message
     widgets["description:third_person_ads"].SetText(description)
     if "sniper_optics" in form.model.options:

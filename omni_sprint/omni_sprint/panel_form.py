@@ -9,6 +9,7 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, 
 from . import panel_theme_choice
 from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
+from .panel_preferences import LANGUAGES
 
 # A setting that changes nothing while its switch is off; the walk key's rows are Apex Movement's.
 DEPENDS_ON = {"fov": "custom_fov", "loot_reach": "extended_loot", "shoulder_left": "third_person", "sensitivity_look": "third_person", "sensitivity_aim": "third_person", "sensitivity_weapons": "third_person", "sensitivity_weapon_sniper_optics": "third_person", "shoulder_auto": "third_person", "shoulder_auto_swap": "shoulder_auto", "shoulder_auto_return": "shoulder_auto", "free_look_keyboard_hold": "free_look", "free_look_controller_hold": "free_look", "free_look_hold_time": "free_look", "camera_distance_close": "third_person", "camera_distance_far": "third_person", "camera_distance_auto": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth",
@@ -190,7 +191,7 @@ class PanelForm(Lifecycle):
         if self.take(widgets["window_size"]):
             panel_size_choice.choose(self, widgets)
             return False
-        for language in ("EN", "FR"):
+        for language in LANGUAGES:
             if self.take(widgets[language]):
                 if self.flush(widgets) and self.model.change_language(language):
                     self.refresh_labels(widgets)

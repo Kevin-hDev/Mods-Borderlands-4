@@ -13,6 +13,11 @@ _COMMANDS = ("commands",)
 _LATER = ("omni_direction",)
 _SHOWN = tuple(group.identifier.removesuffix("_menu") for group in menu.ALL)
 PAGE_KEYS = (*(key for key in _SHOWN if key not in _LATER), *_COMMANDS, "shoulder", *_LATER, "profiles")
+# The language as a code, since a third one came (Chinese, 2026-10-12). A value this mod does not offer reads as
+# English (panel_model.py).
+language = SpinnerOption("menu_language", "EN", list(LANGUAGES), is_hidden=True)
+# The yes/no French was saved as before: still read, so a player who chose French keeps it, and set back to no
+# the first time they pick a language.
 french = BoolOption("menu_french", False, is_hidden=True)
 CONTROLLER_ICONS = ("PS5", "XSX")
 controller_icons = SpinnerOption("controller_icons", "PS5", list(CONTROLLER_ICONS), is_hidden=True)
@@ -24,4 +29,4 @@ last_page = SliderOption("menu_last_page", 0, 0, max(1, len(PAGE_KEYS) - 1),
 theme = SpinnerOption("menu_theme", THEMES[0], list(THEMES), is_hidden=True)
 # Each mod keeps its own window size, as its theme (Kevin, 2026-10-06).
 window_size = SpinnerOption("menu_window_size", SIZES[0], list(SIZES), is_hidden=True)
-ALL = (french, controller_icons, last_page, theme, window_size, last_scroll)
+ALL = (language, french, controller_icons, last_page, theme, window_size, last_scroll)

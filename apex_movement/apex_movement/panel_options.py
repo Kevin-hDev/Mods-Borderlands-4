@@ -8,6 +8,7 @@ sentence. "options" stays the camera tab's page key, the one a saved page alread
 
 from . import panel_buttons as b, panel_dynamic, panel_pages as p, panel_shortcut as sc
 from . import panel_text as tx, panel_theme as t, panel_widgets as w
+from .panel_preferences import LANGUAGES
 
 # The page each tab shows, in the order of its buttons. Without the camera, Apex Movement's separate files keep one
 # page, the language under the OPTIONS title, and no tab.
@@ -47,7 +48,8 @@ def _language_card(body, widgets, template):
     widgets["menu_language"] = tx.text(line, "", "label", wrap=True)
     w.row(line, w.sized(line, widgets["menu_language"], width=t.ROW_LABEL_WIDTH), valign="Center")
     choices = w.new("HorizontalBox", line)
-    for language, gap in (("EN", t.SPACE_3), ("FR", 0)):
+    for index, language in enumerate(LANGUAGES):
+        gap = t.SPACE_3 if index < len(LANGUAGES) - 1 else 0
         w.row(choices, b.button(choices, widgets, f"language:{language}", "switch", template, "off"),
               padding=w.pad(0, gap, 0, 0), valign="Center")
     w.row(line, choices, padding=w.pad(0, t.SPACE_6), valign="Center")

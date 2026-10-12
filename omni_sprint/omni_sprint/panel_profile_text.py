@@ -20,7 +20,8 @@ EN = {
     "profile_word": "Profile",
     "profile_cancel": "CANCEL",
     "profile_save": "SAVE",
-    "name_invalid": "Name refused: 1 to 24 letters, digits, spaces, hyphens, apostrophes or underscores.",
+    "name_invalid": "Name refused: 1 to 24 letters, digits, spaces, hyphens, apostrophes or underscores, "
+                    "with at least one letter or digit.",
     "name_taken": "Another profile already has this name: choose another one.",
     "key_taken": "Another profile already uses this key: choose another one.",
     "key_command": "This key is already a camera command's (COMMANDS page): choose another one.",
@@ -68,7 +69,8 @@ FR = {
     "profile_word": "Profil",
     "profile_cancel": "ANNULER",
     "profile_save": "ENREGISTRER",
-    "name_invalid": "Nom refusé : de 1 à 24 lettres, chiffres, espaces, traits d'union, apostrophes ou tirets bas.",
+    "name_invalid": "Nom refusé : de 1 à 24 lettres, chiffres, espaces, traits d'union, apostrophes ou "
+                    "tirets bas, dont au moins une lettre ou un chiffre.",
     "name_taken": "Un autre profil porte déjà ce nom : choisis-en un autre.",
     "key_taken": "Un autre profil a déjà cette touche : choisis-en une autre.",
     "key_command": "Cette touche sert déjà à une commande de caméra (page COMMANDES) : choisis-en une autre.",
@@ -102,9 +104,51 @@ FR = {
     "profile_off_page": "Éteins-le dans PROFILS.",
     "profile_off_key": "Éteins-le dans PROFILS ou avec sa touche.",
 }
+ZH = {
+    "profile_new": "新建预设",
+    "profile_edit": "编辑预设",
+    "profile_desc": "边看游戏画面边调整。选择「取消」或「保存」返回菜单；按 Esc 关闭菜单。",
+    "profile_name": "预设名称",
+    "profile_key": "预设按键",
+    "profile_close": "距离：近",
+    "profile_far": "距离：远",
+    "profile_word": "预设",
+    "profile_cancel": "取消",
+    "profile_save": "保存",
+    "name_invalid": "名称无效：需为 1 到 24 个字符，可使用汉字、字母、数字、空格、连字符、撇号或下划线，"
+                    "且至少包含一个汉字、字母或数字。",
+    "name_taken": "已有其他预设使用此名称：请换一个。",
+    "key_taken": "已有其他预设使用此按键：请换一个。",
+    "key_command": "此按键已用于某个镜头指令（「按键」页面）：请换一个。",
+    "command_held": "预设“{name}”已使用此按键：请换一个，或在「预设」页面更改该预设的按键。",
+    "key_invalid": "此按键无法开启预设：请换一个。",
+    "profiles_full": "你已经有 10 个预设，已达上限：这个预设未保存。",
+    "profile_unknown": "此预设已不存在：请选择「取消」关闭窗口。",
+    "save_failed": "无法写入预设文件：未保存任何内容，你的设置仍保留在此窗口中。",
+    "profile_refused": "无法保存此预设：你的设置仍保留在此窗口中。",
+    "profiles_desc": "同一时间只能开启一个预设。按它的按键开启；再按一次，恢复你在「镜头视角」和「越肩视角」中的设置。",
+    "profile_on": "已开启",
+    "profile_off": "已关闭",
+    "profile_modify": "编辑",
+    "profile_delete": "删除",
+    "profile_values": "FOV {fov} · 近 {close} · 远 {far} · 间距 {spacing} · 高度 {height}。手柄：{controller}。",
+    "profile_no_key": "无",
+    "toggle_failed": "无法写入预设文件：没有任何改变。",
+    "delete_failed": "无法写入预设文件：预设未删除。",
+    "profile_delete_title": "删除预设",
+    "profile_delete_key": "预设“{name}”及其按键将被删除。",
+    "profile_delete_keys": "预设“{name}”及其按键将被删除。",
+    "profile_delete_plain": "预设“{name}”将被删除。",
+    "profile_delete_on": "该预设当前已开启：镜头将恢复你在「镜头视角」和「越肩视角」中的设置。",
+    "profile_delete_rest": "你的其他预设，以及「镜头视角」和「越肩视角」中的设置，都不会改变。",
+    "profile_held_camera": "FOV 和距离由预设“{name}”控制。",
+    "profile_held": "由预设“{name}”控制。",
+    "profile_off_page": "请在「预设」页面将它关闭。",
+    "profile_off_key": "请在「预设」页面或用它的按键将它关闭。",
+}
 # The store's refusals the window names (profile_store.py); any other reads as profile_refused.
 REFUSALS = ("name_invalid", "name_taken", "key_taken", "key_invalid", "profiles_full", "profile_unknown")
 
 
 def text(key, language):
-    return (FR if language == "FR" else EN)[key]
+    return {"FR": FR, "ZH": ZH}.get(language, EN)[key]

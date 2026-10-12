@@ -73,6 +73,10 @@ class Parts:
         self.calls.append(("release",))
         self.holding = False
 
+    def forget(self) -> None:
+        self.calls.append(("forget",))
+        self.holding = False
+
     def reset(self) -> None:
         self.calls.append(("reset",))
 
@@ -152,7 +156,8 @@ parts.calls.clear()
 frame(obj(99), None, None, None)
 check("another animation's update does nothing", parts.calls == [])
 frame(anim, None, None, None)
-check("the body's first update forgets any old hold", parts.calls[0] == ("reset",) and unit.body_id == 10)
+check("the body's first update forgets any old hold, the game's channel with it",
+      parts.calls[:2] == [("forget",), ("reset",)] and unit.body_id == 10)
 parts.holding = True
 clock[0] = 50
 frame(anim, None, None, None)
@@ -232,6 +237,17 @@ check("an error while syncing stops it too", broken.failed)
 unstarted = omni_direction.OmniDirection(lambda: 1 / 0)
 unstarted.stop()
 check("stopping a unit never started does nothing", unstarted.game is None)
+
+# The game's body channel goes with the body's turn when the game's modules give it (2026-10-12, body_channel.py).
+full_game = omni_direction.Game(lambda: pc, None, None, lambda value: lambda: value, None, None, Hooks(), lines.append,
+                                lambda: 0, None, lambda name: None, lambda name: name)
+with_channel = omni_direction.OmniDirection(lambda: full_game)
+with_channel._start()
+check("the game's modules give the body's turn the game's body channel",
+      type(with_channel.facing.channel).__name__ == "BodyChannel")
+without = omni_direction.OmniDirection(lambda: game)
+without._start()
+check("a test game without them leaves the channel alone", without.facing.channel is None)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

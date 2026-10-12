@@ -1,21 +1,29 @@
 """One language lookup for the settings window, with English fallback."""
 
-from . import panel_en, panel_fr
+from importlib import import_module
+
+from . import panel_en
+from .panel_preferences import LANGUAGES
+
+# Each language past English keeps its TEXT, OPTIONS and GROUPS in panel_<code>.py; LANGUAGES says which ones ship.
+TABLES = {code: import_module(f".panel_{code.lower()}", __package__) for code in LANGUAGES if code != "EN"}
 
 
 def text(key, language):
-    source = panel_fr.TEXT if language == "FR" and key in panel_fr.TEXT else panel_en.TEXT
-    return source[key]
+    table = TABLES.get(language)
+    return table.TEXT[key] if table is not None and key in table.TEXT else panel_en.TEXT[key]
 
 
 def option_text(option, language):
-    if language == "FR" and option.identifier in panel_fr.OPTIONS:
-        return panel_fr.OPTIONS[option.identifier]
+    table = TABLES.get(language)
+    if table is not None and option.identifier in table.OPTIONS:
+        return table.OPTIONS[option.identifier]
     return option.display_name, option.description
 
 
 def group_text(group, key, language):
-    return panel_fr.GROUPS[key] if language == "FR" else group.description
+    table = TABLES.get(language)
+    return table.GROUPS[key] if table is not None and key in table.GROUPS else group.description
 
 
 def number(option, value):

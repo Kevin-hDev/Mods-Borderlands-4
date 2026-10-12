@@ -256,5 +256,53 @@ player.view_yaw = 150.0
 facing.step(player, anim, pose, False, True, START + 22 * FRAME)
 check("and the camera turns around it", player.yaw == 100.0 and facing.offset == -50.0)
 
+# The game's own body channel follows the turned body, and goes back to the game whenever the body does: walking,
+# the game turned it back toward the camera every frame and the legs crossed (2026-10-12, body_channel.py).
+class FakeChannel:
+    def __init__(self) -> None:
+        self.calls: list[tuple] = []
+
+    def aim(self, character, yaw) -> None:
+        self.calls.append(("aim", round(yaw, 3)))
+
+    def give_back(self) -> None:
+        self.calls.append(("give_back",))
+
+
+channel = FakeChannel()
+facing, pose = body_facing.BodyFacing(rotator, channel), FakePose()
+player.view_yaw, player.yaw = 0.0, 0.0
+player.ZoomState.bWantsToZoom = False
+player.ZoomState.State = types.SimpleNamespace(name="NotZoomed")
+movement.Velocity = vector(0.0, -621.0)  # world yaw 270: left
+START = 70 * 10**9
+facing.step(player, anim, pose, False, True, START)
+check("the channel is aimed at the body as turned this frame", channel.calls == [("aim", round(player.yaw, 3))])
+for frame in range(1, 20):
+    facing.step(player, anim, pose, False, True, START + frame * FRAME)
+check("each frame, where the body faces", channel.calls[-1] == ("aim", 270.0) and len(channel.calls) == 20)
+movement.Velocity = vector(0.0, 0.0)
+facing.step(player, anim, pose, False, True, START + 20 * FRAME)
+check("standing, kept where he stopped, the channel with him", channel.calls[-1] == ("aim", 270.0))
+player.ZoomState.bWantsToZoom = True
+for frame in range(21, 60):
+    facing.step(player, anim, pose, False, True, START + frame * FRAME)
+check("aiming, turned back to the camera and handed back: the channel given back, not aimed that frame",
+      not facing.holding and channel.calls[-1] == ("give_back",) and channel.calls[-2][0] == "aim")
+count = len(channel.calls)
+facing.step(player, anim, pose, False, True, START + 60 * FRAME)
+check("the game's again: nothing more asked", len(channel.calls) == count)
+player.ZoomState.bWantsToZoom = False
+movement.Velocity = vector(0.0, 621.0)  # right
+facing.step(player, anim, pose, False, True, START + 61 * FRAME)
+facing.release(anim, pose)
+check("released another way (third person off, the mod stopped): the channel given back",
+      channel.calls[-2][0] == "aim" and channel.calls[-1] == ("give_back",))
+facing.step(player, anim, pose, False, True, START + 62 * FRAME)
+facing.forget()
+check("a new body: the old hold forgotten, the channel given back",
+      not facing.holding and facing.kept_yaw is None and channel.calls[-1] == ("give_back",))
+check("without a channel the turn works as before", body_facing.BodyFacing(rotator).channel is None)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)
