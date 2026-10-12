@@ -15,6 +15,10 @@ def confirm_settings(runtime, owner, settings, restoring=False):
     client = runtime.arbiter.active()
     if client is None or client.owner != owner:
         return restoring
+    profiles = getattr(runtime, "profiles", None)
+    if profiles is not None and profiles.shown() is not None:
+        # A camera profile or its window places the camera: the player's own framing is stored now, shown once off.
+        return True
     if not settings.third_person_enabled():
         return True
     controller = runtime.third_person

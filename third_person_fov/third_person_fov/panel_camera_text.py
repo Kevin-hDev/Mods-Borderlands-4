@@ -110,7 +110,11 @@ EN = {'camera_refused': 'The camera could not confirm this change. It was not sa
                           '\n'
                           'SLIDE: a slide, as when sprinting forward.\n'
                           '\n'
-                          'Forward, crouching always slides.'}
+                          'Forward, crouching always slides.',
+ 'profiles': 'PROFILES',
+ 'profiles_full_floppy': 'You already have 10 profiles: delete one in PROFILES.',
+ 'profile_key_back': "A camera profile has a key a command would take back: change the profile's "
+                     'key in PROFILES first.'}
 FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a pas été enregistré.',
  'camera_timeout': 'La caméra n’a pas répondu. Les réglages précédents ont été rétablis. Réessaie '
                    'dans un moment.',
@@ -221,6 +225,10 @@ FR = {'camera_refused': 'La caméra n’a pas confirmé ce changement. Il n’a 
                           "GLISSADE : une glissade, comme en sprint vers l'avant.\n"
                           '\n'
                           "Vers l'avant, s'accroupir lance toujours une glissade.",
+ 'profiles': 'PROFILS',
+ 'profiles_full_floppy': 'Tu as déjà 10 profils : supprimes-en un dans PROFILS.',
+ 'profile_key_back': "Un profil de caméra a une touche qu'une commande reprendrait : change "
+                     "d'abord celle du profil dans PROFILS.",
  'aim_third': 'Troisième personne',
  'aim_first': 'Première personne',
  'ads_unsupported': "Visée à l'épaule indisponible avec cette version. Garde la visée première "

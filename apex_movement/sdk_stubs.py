@@ -116,6 +116,9 @@ def install() -> dict:
     unrealsdk_module.make_struct = lambda name, **fields: types.SimpleNamespace(**fields)
 
     mods_base = types.ModuleType("mods_base")
+    # The camera profiles' folder (profile_store.py) never exists here: no profile is read, and a write fails
+    # instead of reaching the game's settings.
+    mods_base.SETTINGS_DIR = str(Path(__file__).resolve().parent / "no_settings_folder")
     mods_base.BoolOption = FakeOption
     mods_base.KeybindOption = FakeKeybindOption
     mods_base.SliderOption = FakeOption

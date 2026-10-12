@@ -35,10 +35,11 @@ check("the camera declaration contains no command row",
       not ({option.identifier for group in menu.CAMERA for option in group.children}
            & {option.identifier for option in settings.commands.options}))
 # OMNI DIRECTION right after OMNI SPRINT (Kevin, 2026-10-09), saved last so an index saved before still names its page.
+# PROFILES after them all, in the switcher and saved (2026-10-12); the sidebar shows it under COMMANDS.
 PAGES = ("omni_sprint", "omni_direction", "camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity",
-         "commands", "shoulder")
+         "commands", "shoulder", "profiles")
 SAVED = ("omni_sprint", "camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity", "commands",
-         "shoulder", "omni_direction")
+         "shoulder", "omni_direction", "profiles")
 check("the sprint's page, OMNI DIRECTION, then the camera pages (Kevin, 2026-10-06), the recovery values left out",
       model.pages == PAGES and model.page == "omni_sprint" and not model.camera_elsewhere
       and list(model.options) == ["omni_sprint", "omni_body", "omni_angle", "omni_crouch", "third_person", "custom_fov", "fov", "camera_distance_close",

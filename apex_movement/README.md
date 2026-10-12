@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.2.19**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.20**. Open Apex Movement in the SDK mods menu for its English/French settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. The custom climbing body animation is also not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -135,6 +135,16 @@ Camera presets and custom sliders adjust aim zoom, shoulder spacing, and height.
 Standard adds 15% aim zoom and 10% shoulder spacing; height is unchanged.
 Weapon-specific zoom remains active. Near obstacles, collision handling may
 temporarily reduce the chosen framing. The reticle remains centered.
+
+Shoulder spacing goes from -60% to +120% and height from -240% to +100%, both on
+SHOULDER VIEW.
+
+Camera profiles keep the FOV, both camera distances, shoulder spacing and height
+under a name, with a key or a controller button that switches the profile on in
+game. The floppy disk at the top of the window creates one; the PROFILES page
+lists up to 10 and switches, edits or deletes them. While a profile is on, the
+settings it holds are greyed with its name. Apex Movement, Omni Sprint and Third
+Person & FOV share the same profiles (`sdk_mods/settings/camera_profiles.json`).
 
 ## Tests
 

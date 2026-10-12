@@ -92,7 +92,7 @@ panel_labels.value = lambda _widgets, option, current, _language: shown.__setite
 mod = Mod()
 model = panel_model.Model(mod)
 names = ["focus", "pages", "notice", "close", "theme", "window_size", "EN", "FR", "restore", "undo", "enabled", "nav:omni_sprint",
-         "nav:commands", "row:fov", "description:fov", "icons:PS5", "icons:XSX",
+         "nav:commands", "nav:profiles", "row:fov", "description:fov", "icons:PS5", "icons:XSX",
          "commands:settings", "commands:external"]
 names += [f"nav:{key}" for key in panel_camera_pages.PAGES] + [f"{key}:settings" for key in panel_camera_pages.PAGES]
 # CAMERA VIEW and SHOULDER VIEW, the CAMERA page's two halves, and their buttons (Kevin, 2026-10-07).

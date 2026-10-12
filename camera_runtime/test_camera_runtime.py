@@ -2,6 +2,7 @@
 
 import pathlib
 import sys
+import tempfile
 import weakref
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -12,6 +13,10 @@ from apex_camera_runtime.constants import PROTOCOL  # noqa: E402
 from apex_camera_runtime.fov import FovEngine, single  # noqa: E402
 from apex_camera_runtime.runtime import CameraRuntime  # noqa: E402
 from apex_camera_runtime.shared import reset_for_tests, shared  # noqa: E402
+from profile_test_fixtures import values  # noqa: E402
+from apex_camera_runtime.profile_overlay import ProfiledSettings  # noqa: E402
+from apex_camera_runtime.profile_store import Store  # noqa: E402
+from apex_camera_runtime.profiles import Profiles  # noqa: E402
 
 fails: list[str] = []
 
@@ -335,6 +340,54 @@ check("the sensitivity follows the elected client's settings each frame, and sto
       ("sync", apex_settings, frame_player, None) in unit.calls and unit.calls[-1] == ("stop",))
 check("so does the sniper zoom key, with the camera controller",
       ("sync", apex_settings, frame_player, None) in zoom_unit.calls and zoom_unit.calls[-1] == ("stop",))
+
+
+class NoKeys:
+    def pressed(self, _pc, _profiles):
+        return None
+
+    def pause(self):
+        pass
+
+
+profile_folder = tempfile.TemporaryDirectory()
+profile_store = Store(lambda: pathlib.Path(profile_folder.name) / "camera_profiles.json")
+profiled = CameraRuntime(FovEngine(weakref.ref, lambda item: item.address))
+profiled.profiles = Profiles(profile_store, NoKeys())
+profile_settings = Settings(True, 120.0)
+profile_settings.shows_profiles = True
+profiled.register("apex_movement", 200, profile_settings, PROTOCOL)
+profile_client = profiled.arbiter.active()
+check("a runtime with profiles registers the mod's settings under them",
+      isinstance(profile_client.settings, ProfiledSettings) and profile_client.settings.base is profile_settings)
+profile_player = Player(14, 90.0)
+profiled.tick(profile_player, 1_000_000_000)
+check("without a profile the mod's FOV applies, and is the FOV seen",
+      profile_player.BaseFOV == 120.0 and profiled.fov.seen == 120.0)
+profile_store.load()
+combat = profile_store.put(None, "Combat", values(fov=100))
+profiled.profiles.toggle(combat.ident)
+profiled.tick(profile_player, 1_100_000_000)
+check("a profile switched on changes the FOV at the next frame, not half a second later",
+      profile_player.BaseFOV == 100.0 and profiled.fov.seen == 100.0)
+profiled.profiles.toggle(combat.ident)
+profiled.tick(profile_player, 1_200_000_000)
+check("switched back off, the mod's FOV is back at the next frame", profile_player.BaseFOV == 120.0)
+profiled.unregister("apex_movement")
+older_settings = Settings(True, 130.0)
+profiled.register("third_person_fov", 150, older_settings, PROTOCOL)
+profiled.profiles.toggle(combat.ident)
+profiled.tick(profile_player, 1_300_000_000)
+check("an older mod's copy, whose menu shows no profiles, keeps its own FOV under a profile switched on",
+      profiled.arbiter.active().settings is older_settings and profile_player.BaseFOV == 130.0)
+profiled.unregister("third_person_fov")
+profile_folder.cleanup()
+seen_engine = FovEngine(weakref.ref, lambda item: item.address)
+check("no FOV is seen before the first frame", seen_engine.seen is None)
+seen_engine.apply("apex_movement", Player(15, 95.0), Settings(False, 120.0))
+check("while the mod's own FOV is off, the FOV seen is the game's", seen_engine.seen == 95.0)
+seen_engine.apply("apex_movement", Player(15, 95.0), Settings(False, 120.0), 5.0, 10.0)
+check("the speed gain is not part of the FOV seen", seen_engine.seen == 95.0)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

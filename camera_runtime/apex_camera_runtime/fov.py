@@ -20,6 +20,8 @@ class FovEngine:
     def __init__(self, weak_ref: Callable, address_of: Callable) -> None:
         self._weak_ref = weak_ref
         self._address_of = address_of
+        # The base FOV on screen, the speed gain left out: a new camera profile starts from it (profiles.py).
+        self.seen: float | None = None
         self._clear()
 
     def _clear(self) -> None:
@@ -76,6 +78,7 @@ class FovEngine:
             self._release()
             if player is not None:
                 self._restore_saved(player, settings)
+                self.seen = float(player.BaseFOV)
             return
         if player is None:
             self._release()
@@ -90,6 +93,7 @@ class FovEngine:
         if native is None:
             raise ValueError("native FOV missing")
         base = self._wanted(settings) if custom else native
+        self.seen = base
         wanted = single(min(FOV_CEILING, base + gain))
         if not owned and recovered is None and current == wanted:
             # Already the value wanted: nothing to own until a write is needed.

@@ -20,10 +20,12 @@ class Form:
             widgets[f"setting:{option.identifier}"].SetValue(float(value))
 
     def enabled(self, group):
-        shown = self.form.shown
+        shown, profile_form = self.form.shown, self.form.profile_form
         return (not camera.elected_elsewhere() and not self.form.model.transaction.pending
                 and shown.get("third_person") is True and shown.get("orbit") is not True
-                and (group.key != "zoom" or shown.get("third_person_ads") is True))
+                and (group.key != "zoom" or shown.get("third_person_ads") is True)
+                # A profile switched on holds spacing and height (panel_profile_grey.py).
+                and not (profile_form is not None and profile_form.holds(group.key)))
 
     def flush(self, widgets):
         if not self.pending:

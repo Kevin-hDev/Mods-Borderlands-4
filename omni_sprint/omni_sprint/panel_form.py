@@ -32,8 +32,9 @@ class PanelForm(Lifecycle):
         if model.command_actions is not None:
             from .camera_control_form import Form
             from .panel_glyphs import Catalogue
-            self.command_form = Form(widgets, model)
-            self.command_catalogue = Catalogue()
+            from .panel_profile_form import ProfileForm
+            self.command_form, self.command_catalogue = Form(widgets, model), Catalogue()
+            self.profile_form = ProfileForm(self)
         self.sync(self.resolve())
         panel_ownership.refresh(self, self.resolve())
 
@@ -74,6 +75,8 @@ class PanelForm(Lifecycle):
         if "omni_body" in self.model.options:
             from . import panel_omni_direction
             panel_omni_direction.grey(self, widgets)
+        if self.profile_form is not None:
+            self.profile_form.grey(widgets)
 
     def refresh_labels(self, widgets):
         labels.apply(self, widgets)
@@ -239,4 +242,4 @@ class PanelForm(Lifecycle):
                                  for key, option in self.model.options.items())
         commands_selecting = (self.command_form is not None and self.model.pages[self.page] == "commands"
                               and self.command_form.selecting())
-        return settings_selecting or commands_selecting
+        return settings_selecting or commands_selecting or bool(self.profile_form and self.profile_form.selecting())

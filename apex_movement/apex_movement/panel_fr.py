@@ -14,7 +14,7 @@ TEXT = {
     "camera": "CAMÉRA", "camera_desc": "Vue, champ de vision et loot.",
     # The camera tab's two halves (Kevin, 2026-10-07).
     "camera_view": "VUE CAMÉRA", "shoulder_view": "VUE ÉPAULES", "shoulder": "VUE ÉPAULES",
-    "shoulder_tab_desc": "Épaule de la caméra et changement automatique.",
+    "shoulder_tab_desc": "Épaule de la caméra, écart, hauteur et changement automatique.",
     "shoulder_desc": "Choisis l'épaule, et laisse la caméra changer d'épaule devant un mur.",
     "camera_page": "Vue à pied, champ de vision et vue libre.",
     "aiming": "VISÉE", "aiming_page": "Visée en troisième personne et zoom.", "aiming_tab_desc": "Vue de visée et zoom en visée.",
@@ -52,6 +52,10 @@ TEXT = {
     "optics_help_key": "TOUCHE DE ZOOM", "optics_help_commands": "Elle se change dans l'onglet COMMANDES.",
     "omni_direction": "OMNI DIRECTION", "omni_direction_tab_desc": "Le corps suit ta course, en troisième personne.",
     "omni_direction_page": "Le corps suit ta course, en troisième personne.",
+    "profiles": "PROFILS", "profiles_tab_desc": "Tes réglages de caméra enregistrés, à allumer d'une touche.",
+    "profiles_full_floppy": "Tu as déjà 10 profils : supprimes-en un dans PROFILS.",
+    "profile_key_back": "Un profil de caméra a une touche qu'une commande reprendrait : change d'abord celle du profil "
+                        "dans PROFILS.",
     "omni_full_turn": "360°", "omni_half_turn": "180°", "omni_dash": "DASH", "omni_slide": "GLISSADE",
     "popup_omni_body": "ORIENTATION DU CORPS", "popup_omni_body_desc": "Le chasseur se tourne vers sa course.",
     "omni_body_help_text": "En troisième personne, le chasseur se tourne vers la direction où il court, au lieu de "

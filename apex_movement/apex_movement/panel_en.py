@@ -14,7 +14,7 @@ TEXT = {
     "camera": "CAMERA", "camera_desc": "View, field of view and loot.",
     # The camera tab's two halves (Kevin, 2026-10-07).
     "camera_view": "CAMERA VIEW", "shoulder_view": "SHOULDER VIEW", "shoulder": "SHOULDER VIEW",
-    "shoulder_tab_desc": "Camera shoulder and automatic switch.",
+    "shoulder_tab_desc": "Camera shoulder, spacing, height and automatic switch.",
     "shoulder_desc": "Pick the shoulder, and let the camera switch shoulders in front of a wall.",
     # Omni Sprint and Third Person & FOV spread the camera settings over four pages (Kevin, 2026-10-06).
     "camera_page": "View on foot, field of view and Free Look.",
@@ -51,6 +51,10 @@ TEXT = {
     "optics_help_key": "ZOOM KEY", "optics_help_commands": "Change it on the COMMANDS page.",
     "omni_direction": "OMNI DIRECTION", "omni_direction_tab_desc": "The body follows your run, in third person.",
     "omni_direction_page": "The body follows your run, in third person.",
+    "profiles": "PROFILES", "profiles_tab_desc": "Your saved camera settings, switched on with one key.",
+    "profiles_full_floppy": "You already have 10 profiles: delete one in PROFILES.",
+    "profile_key_back": "A camera profile has a key a command would take back: change the profile's key in PROFILES "
+                        "first.",
     "omni_full_turn": "360°", "omni_half_turn": "180°", "omni_dash": "DASH", "omni_slide": "SLIDE",
     "popup_omni_body": "BODY ORIENTATION", "popup_omni_body_desc": "The hunter turns toward the run.",
     "omni_body_help_text": "In third person, the hunter turns toward the direction of the run instead of keeping "

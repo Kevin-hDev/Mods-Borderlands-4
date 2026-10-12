@@ -30,6 +30,8 @@ _refusal = None
 
 
 class Settings:
+    # Its menu shows the camera profiles, so the shared runtime puts them over these settings (runtime.register).
+    shows_profiles = True
     framing_values = staticmethod(camera_settings.framing.snapshot)
     third_person_ads = staticmethod(camera_settings.ads.enabled)
     orbit_distance = staticmethod(camera_settings.zoom.distance)
@@ -171,6 +173,19 @@ def elected_elsewhere() -> bool:
         return True
     owner = elected()
     return owner is not None and owner != OWNER
+
+
+def profiles() -> Any:
+    """The shared camera profiles while this mod's camera is the one shown, else None: a runtime from an older mod's
+    copy has none, and the menu then hides them (decisions of 2026-10-12)."""
+    if not _registered or elected_elsewhere():
+        return None
+    return getattr(_runtime, "profiles", None)
+
+
+def shown_fov() -> float | None:
+    """The FOV on screen at the camera's last frame (fov.py), where a new profile starts."""
+    return getattr(getattr(_runtime, "fov", None), "seen", None) if _registered else None
 
 
 def stop() -> None:

@@ -37,22 +37,18 @@ class FramingOptions:
         definition = group(key)
         return GROUPS.index(definition)
 
-    @staticmethod
-    def _valid(definition, value, custom):
-        return (definition.valid(value) and type(custom) is bool
-                and (custom or any(value == preset for _, preset in definition.presets)))
-
     def read(self, key):
         index = self._index(key)
         value, custom = (option.value for option in self.options[index * 2:index * 2 + 2])
         definition = GROUPS[index]
-        if not self._valid(definition, value, custom):
+        if not definition.valid(value) or type(custom) is not bool:
             if not self._reported[index] and self.note is not None:
                 self.note(INVALID_SETTING_NOTE)
             self._reported[index] = True
             return definition.default, False
         self._reported[index] = False
-        return value, custom
+        # A preset the catalog no longer has (Tight 0, Higher 10 before 2026-10-11) keeps the player's value, as custom.
+        return value, custom or all(value != preset for _, preset in definition.presets)
 
     def snapshot(self):
         return tuple(self.read(definition.key) for definition in GROUPS)

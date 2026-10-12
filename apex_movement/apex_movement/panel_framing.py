@@ -1,5 +1,5 @@
 """The existing camera page gains three preset rows and the existing slider style."""
-from . import camera_control_config as config, panel_buttons as b, panel_pages as p
+from . import camera_control_config as config, panel_buttons as b, panel_pages as p, panel_profile_grey
 from . import panel_framing_text as labels, panel_slider as s, panel_text as tx
 from . import panel_theme as t, panel_widgets as w
 
@@ -11,6 +11,8 @@ def build(body, widgets, template, keys):
         key = "framing:" + group.key
         option = config.FRAMING_OPTIONS.options[index * 2]
         rows = p.card(body, widgets, key)
+        # Names the profile holding the setting while one is on (panel_profile_grey.py).
+        panel_profile_grey.notice(rows, widgets, key)
         choices = w.new("HorizontalBox", rows)
         for preset, _choice in enumerate(group.presets):
             name = f"{key}:preset:{preset}"
@@ -24,13 +26,23 @@ def build(body, widgets, template, keys):
         w.column(rows, line, padding=w.pad(t.SPACE_2, 0, t.SPACE_3))
 
 
+def percent(value, language):
+    return f"{value:+d}" + (" %" if language == "FR" else "%")
+
+
+def describe(group, choice, language):
+    """The card's sentence: what the setting does, then its preset, or Custom, with the value."""
+    value, custom = choice
+    _title, description = labels.text(group.key, language)
+    name = "Custom" if custom else next(label for label, number in group.presets if number == value)
+    return f"{description} {labels.text(name, language)} ({percent(value, language)})."
+
+
 def show(widgets, group, option, choice, language, enabled, unavailable):
     key = "framing:" + group.key
     value, custom = choice
-    title, description = labels.text(group.key, language)
-    percent = f"{value:+d}" + (" %" if language == "FR" else "%")
-    name = "Custom" if custom else next(label for label, number in group.presets if number == value)
-    description += " " + labels.text(name, language) + f" ({percent})."
+    title = labels.text(group.key, language)[0]
+    description = describe(group, choice, language)
     if unavailable:
         reason = unavailable if unavailable in ("zoom_unavailable", "position_unavailable") else "unavailable"
         description += "\n" + labels.text(reason, language)
@@ -39,7 +51,7 @@ def show(widgets, group, option, choice, language, enabled, unavailable):
     widgets[f"setting:{option.identifier}"].SetIsEnabled(enabled)
     widgets[f"setting:{option.identifier}"].SetRenderOpacity(1.0 if enabled else t.OPACITY_DISABLED)
     s.show(widgets, option, value)
-    widgets[f"value:{option.identifier}"].SetText(percent)
+    widgets[f"value:{option.identifier}"].SetText(percent(value, language))
     for index, (label, number) in enumerate(group.presets):
         name = f"{key}:preset:{index}"
         widgets[name].SetIsEnabled(enabled)

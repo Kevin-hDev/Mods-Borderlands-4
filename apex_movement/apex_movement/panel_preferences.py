@@ -16,8 +16,10 @@ _DYNAMIC = ("dynamic_camera",) if pack.is_full() else ()
 _SHOULDER = ("shoulder", "aiming", "sensitivity") if pack.is_full() else ()
 # And OMNI DIRECTION after them (2026-10-09).
 _OMNI = ("omni_direction",) if pack.is_full() else ()
+# And PROFILES after it (2026-10-12).
+_PROFILES = ("profiles",) if pack.is_full() else ()
 PAGE_KEYS = (*tuple(group.identifier.removesuffix("_menu") for group in menu.ALL), *_COMMANDS, "options",
-             *_LANGUAGE, *_DYNAMIC, *_SHOULDER, *_OMNI)
+             *_LANGUAGE, *_DYNAMIC, *_SHOULDER, *_OMNI, *_PROFILES)
 french = BoolOption("menu_french", False, is_hidden=True)
 CONTROLLER_ICONS = ("PS5", "XSX")
 controller_icons = SpinnerOption("controller_icons", "PS5", list(CONTROLLER_ICONS), is_hidden=True)

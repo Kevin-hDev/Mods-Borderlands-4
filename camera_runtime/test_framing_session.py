@@ -138,6 +138,18 @@ class Tests(unittest.TestCase):
         self.controller._in_vehicle = True
         self.assertTrue(confirm_settings(runtime, "test", self.settings))
 
+    def test_a_profile_placing_the_camera_lets_the_players_framing_be_stored_at_once(self):
+        from apex_camera_runtime.framing_session import confirm_settings
+        self.settings.third_person_enabled = lambda: True
+        self.controller.framing = self.session
+        shown = NS(value=object())
+        profiles = NS(shown=lambda: shown.value)
+        runtime = NS(arbiter=NS(active=lambda: NS(owner="test")), third_person=self.controller, profiles=profiles)
+        self.assertTrue(confirm_settings(runtime, "test", self.settings))
+        self.assertFalse(confirm_settings(runtime, "other", self.settings))
+        shown.value = None
+        self.assertIsNone(confirm_settings(runtime, "test", self.settings))
+
     def test_old_native_refusal_does_not_reject_a_new_zero_zoom_candidate(self):
         self.bridge.status = lambda: 4
         self.sync()

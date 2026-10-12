@@ -11,8 +11,9 @@ movement_ui_fixture.install()
 from apex_movement import camera_settings, menu, panel_i18n, panel_theme
 
 # Three Options tabs close the list: their pages have no sidebar button (2026-10-06).
-assert len(panel_theme.PAGES) == 17 and panel_theme.PAGES[-7:] == ("commands", "language", "dynamic_camera", "shoulder",
-                                                                   "aiming", "sensitivity", "omni_direction")
+assert len(panel_theme.PAGES) == 18 and panel_theme.PAGES[-8:] == ("commands", "language", "dynamic_camera", "shoulder",
+                                                                   "aiming", "sensitivity", "omni_direction",
+                                                                   "profiles")
 for group, page in zip(menu.MENU, panel_theme.PAGES[:-3]):
     assert panel_i18n.text(page, "FR")
     assert panel_i18n.group_text(group, page, "FR")

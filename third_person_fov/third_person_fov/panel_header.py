@@ -73,6 +73,10 @@ def header(owner, world, widgets, template):
           padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")
     w.row(line, b.button(line, widgets, "theme", "lang", template, "lang_off"),
           padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")
+    # The camera profiles' floppy, collapsed until profiles can be kept (panel_profile_form.py).
+    from . import panel_profile_floppy
+    w.row(line, panel_profile_floppy.button(line, widgets, template), padding=w.pad(0, 0, 0, t.SPACE_2),
+          valign="Center")
     for language in ("EN", "FR"):
         w.row(line, b.button(line, widgets, language, "lang", template, "lang_off"),
               padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")

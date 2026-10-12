@@ -1,0 +1,209 @@
+"""The camera profile window (decisions of 2026-10-12), alone in the screen's top right corner over the game: the
+floppy hides the menu and its blur, so the player tunes while watching the game (Kevin: « pour éviter les
+allers-retours », mockup profils/6_coin.png). Its five settings on the left, drawn as on their pages, its name and keys
+on the right, CANCEL and SAVE in a row under them.
+
+It lies on the screen's layer beside the menu (panel_modal.held), drawn at the menu's scale: a stage of the reference
+size whose top right corner is the screen's. Only the card takes clicks; beside it, the layer keeps them from the game.
+"""
+
+from typing import NamedTuple
+
+from . import camera_control_config as config, panel_buttons as b, panel_camera_commands as commands
+from . import panel_modal as modal, panel_pages as p, panel_slider as s, panel_text as tx, panel_theme as t
+from . import panel_widgets as w, panel_window_size as size
+
+# The validated mockup's card on a 1920 x 1080 screen, its labels and values narrower than the pages' to fit beside
+# the right column; the right column holds CHANGE and NONE side by side.
+WIDTH, SIDE_WIDTH, LABEL_WIDTH, VALUE_WIDTH = 930, 290, 130, 90
+# CHANGE's box: PRESS A KEY, wider, shrinks to it rather than widening the button (Kevin, 2026-09-25: the button keeps
+# its size while it waits).
+CHANGE_WIDTH = 160
+# The page option of each of the profile's settings (profile_values.FIELDS), then the framing group of the last two.
+OPTIONS = {"fov": "fov", "close": "camera_distance_close", "far": "camera_distance_far"}
+FRAMING = {"spacing": "horizontal", "height": "height"}
+FIELDS = (*OPTIONS, *FRAMING)
+DEVICES = ("keyboard", "controller")
+
+
+class Field(NamedTuple):
+    """A profile setting's slider: its page option's bounds and step, under the window's own widget name."""
+    identifier: str
+    min_value: float
+    max_value: float
+    step: float
+    value: float
+    is_integer: bool
+
+
+def sources(model):
+    """Each setting's page option, the one authority on what the menu allows, and its framing group or None."""
+    found = {field: (model.camera_options[key], None) for field, key in OPTIONS.items()}
+    groups = [group.key for group in config.FRAMING_GROUPS]
+    for field, key in FRAMING.items():
+        index = groups.index(key)
+        found[field] = (config.FRAMING_OPTIONS.options[index * 2], config.FRAMING_GROUPS[index])
+    return found
+
+
+def slider_field(field, option):
+    return Field(f"profile:{field}", option.min_value, option.max_value, option.step, option.value,
+                 option.is_integer)
+
+
+def _through(widget):
+    """Lets the clicks through to the card, or beside it to the layer that keeps them from the game."""
+    widget.SetVisibility(w.enum("ESlateVisibility", "SelfHitTestInvisible"))
+    return widget
+
+
+def _setting(rows, widgets, template, field, option, group):
+    """A setting's row, without the pages' sentence under it; spacing and height have their presets over their
+    slider, as on their cards."""
+    key = f"profile:{field}"
+    w.column(rows, w.line(rows, t.COLOR_HOVER, height=t.STROKE_THIN), padding=w.pad(t.SPACE_2, 0, 0))
+    line = w.new("HorizontalBox", rows)
+    widgets[f"label:{key}"] = tx.text(line, "", "label", wrap=True)
+    w.row(line, w.sized(line, widgets[f"label:{key}"], width=LABEL_WIDTH), valign="Center")
+    control = s.slider(line, widgets, slider_field(field, option), template)
+    if group is not None:
+        stack = w.new("VerticalBox", line)
+        choices = w.new("HorizontalBox", stack)
+        for index, _preset in enumerate(group.presets):
+            w.row(choices, b.button(choices, widgets, f"{key}:preset:{index}", "lang", template, "off"),
+                  padding=w.pad(0, t.SPACE_3, 0, 0))
+        w.column(stack, choices, padding=w.pad(0, 0, t.SPACE_2))
+        w.column(stack, control)
+        control = stack
+    w.row(line, control, padding=w.pad(0, t.SPACE_3), fill=True, valign="Center")
+    value = s.value_box(line, widgets, key)
+    value.SetWidthOverride(float(VALUE_WIDTH))
+    w.row(line, value, valign="Center")
+    w.column(rows, line, padding=w.pad(t.SPACE_3, 0, t.SPACE_3))
+
+
+def _caption(owner, widgets, name, top):
+    """The mockup's orange caption over the name and over the keys."""
+    widgets[name] = tx.text(owner, "", "caption")
+    widgets[name].SetColorAndOpacity(w.slate(t.COLOR_SPARK))
+    w.column(owner, widgets[name], padding=w.pad(top, 0, t.SPACE_2))
+
+
+def _name_box(owner, widgets):
+    """The arena's search box (bl4_arena/panel_search.py, verified in game on 2026-10-10), framed in gold as in the
+    mockup, on the cards' colour so the LIGHT theme's dark text still reads."""
+    frame, fill = w.framed(owner, t.COLOR_CARD, t.STROKE, w.pad(t.SPACE_1, t.SPACE_3), frame=t.COLOR_GOLD)
+    box = w.new("EditableTextBox", fill)
+    w.cosmetic("profile_name_font", lambda: tx.configure(box.WidgetStyle.TextStyle.Font, "label"))
+    w.cosmetic("profile_name_colour", lambda: setattr(box.WidgetStyle, "ForegroundColor", w.slate(t.COLOR_TEXT)))
+    w.cosmetic("profile_name_text", lambda: setattr(box.WidgetStyle.TextStyle, "ColorAndOpacity",
+                                                    w.slate(t.COLOR_TEXT)))
+    w.cosmetic("profile_name_fill", lambda: setattr(box.WidgetStyle, "BackgroundColor", w.slate(t.COLOR_CARD)))
+    fill.SetContent(box)
+    widgets["profile:name"] = box
+    w.column(owner, frame)
+
+
+def _device(owner, widgets, template, device):
+    """The device and its key, as the COMMANDS page shows a key with its controller icon (panel_camera_commands.py),
+    then CHANGE, which captures, and NONE."""
+    name = f"profile:{device}"
+    top = w.new("HorizontalBox", owner)
+    widgets[f"device:{name}"] = tx.text(top, "", "label")
+    w.row(top, widgets[f"device:{name}"], fill=True, valign="Center")
+    w.row(top, commands._value(top, widgets, name), valign="Center")
+    w.column(owner, top, padding=w.pad(t.SPACE_3, 0, t.SPACE_2))
+    line = w.new("HorizontalBox", owner)
+    selector = p.selector(line, "", template)
+    selector.SetAllowGamepadKeys(device == "controller")
+    widgets[f"command:{name}"] = selector
+    fit = w.new("ScaleBox", line)
+    fit.SetStretch(w.enum("EStretch", "ScaleToFit"))
+    fit.SetStretchDirection(w.enum("EStretchDirection", "DownOnly"))
+    fit.SetContent(selector)
+    w.row(line, w.sized(line, fit, width=CHANGE_WIDTH), valign="Center")
+    w.row(line, b.button(line, widgets, f"clear:{name}", "action", template, "secondary"),
+          padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")
+    w.column(owner, line)
+
+
+def _side(owner, widgets, template):
+    side = w.new("VerticalBox", owner)
+    _caption(side, widgets, "profile:name_caption", t.SPACE_2)
+    _name_box(side, widgets)
+    _caption(side, widgets, "profile:key_caption", t.SPACE_5)
+    for device in DEVICES:
+        _device(side, widgets, template, device)
+    widgets["profile:status"] = tx.text(side, "", "status", wrap=True)
+    w.column(side, widgets["profile:status"], padding=w.pad(t.SPACE_4, 0))
+    return side
+
+
+def _buttons(rows, widgets, template):
+    """CANCEL and SAVE in a row under the two columns (Kevin, 2026-10-12, on the mockup)."""
+    w.column(rows, w.line(rows, t.COLOR_HOVER, height=t.STROKE_THIN), padding=w.pad(t.SPACE_2, 0, 0))
+    line = w.new("HorizontalBox", rows)
+    w.row(line, b.button(line, widgets, "profile:cancel", "action", template, "secondary"), valign="Center")
+    w.row(line, b.button(line, widgets, "profile:save", "action", template, "primary"),
+          padding=w.pad(0, 0, 0, t.SPACE_6), valign="Center")
+    w.column(rows, line, halign="Right", padding=w.pad(t.SPACE_4, 0, t.SPACE_2))
+
+
+def build(holder, menu, widgets, model, template):
+    """The window, closed, on the screen's layer that holds the menu; its texts and values are the profile form's
+    (panel_profile_form.py), as are hiding the menu and its blur."""
+    screen = holder.WidgetTree.RootWidget
+    corner = w.new("ScaleBox", screen)
+    corner.SetStretch(w.enum("EStretch", "ScaleToFit"))
+    corner.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
+    stage = _through(w.new("Overlay", corner))
+    box = _through(w.sized(corner, stage, size.STAGE_WIDTH, size.STAGE_HEIGHT))
+    slot = corner.SetContent(box)
+    # Past a 16:9 screen, the stage keeps to the top right and the bands go left and below.
+    w.cosmetic("profile_corner", lambda: w.place(slot, halign="Right", valign="Top"))
+    holder_box = w.new("VerticalBox", stage)
+    w.layer(stage, w.sized(stage, holder_box, width=WIDTH), padding=w.pad(t.SPACE_3, t.SPACE_3, 0, 0),
+            halign="Right", valign="Top")
+    rows = p.card(holder_box, widgets, "profile_window")
+    columns = w.new("HorizontalBox", rows)
+    settings = w.new("VerticalBox", columns)
+    for field, (option, group) in sources(model).items():
+        _setting(settings, widgets, template, field, option, group)
+    w.row(columns, settings, fill=True)
+    w.row(columns, w.sized(columns, _side(columns, widgets, template), width=SIDE_WIDTH),
+          padding=w.pad(0, 0, 0, t.SPACE_5))
+    w.column(rows, columns)
+    _buttons(rows, widgets, template)
+    modal._span(screen.AddChildToCanvas(corner), 0.0, 0.0)
+    widgets["profile:window"], widgets["profile:menu"] = corner, menu
+    # panel_modal.held lays the blur under the menu first.
+    w.cosmetic("profile_backdrop", lambda: widgets.__setitem__("profile:backdrop", screen.GetChildAt(0)))
+
+
+def _blur(widgets, strength):
+    backdrop = widgets.get("profile:backdrop")
+    if backdrop is not None:
+        # A clear layer, where the blur was refused, has no strength to set (panel_modal.py).
+        w.cosmetic("profile_blur", lambda: backdrop.SetBlurStrength(float(strength)))
+
+
+def show(widgets):
+    """The window alone over the game: the menu and its blur gone."""
+    widgets["profile:menu"].SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
+    _blur(widgets, 0.0)
+    widgets["profile:window"].SetVisibility(w.enum("ESlateVisibility", "SelfHitTestInvisible"))
+
+
+def hide(widgets):
+    """The menu back as it was drawn, a ScaleBox's own visibility (panel_view.py), its blur and its keyboard."""
+    widgets["profile:window"].SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
+    _blur(widgets, t.BACKDROP_BLUR)
+    widgets["profile:menu"].SetVisibility(w.enum("ESlateVisibility", "Visible"))
+    widgets["focus"].SetKeyboardFocus()
+
+
+def hold_focus(widgets):
+    """The keyboard stays in the window, never on the hidden menu, where the window's watch would give it back
+    (control_window_focus.py) and fail: the name box takes it, as a click on it would."""
+    if not widgets["profile:window"].HasFocusedDescendants():
+        widgets["profile:name"].SetKeyboardFocus()

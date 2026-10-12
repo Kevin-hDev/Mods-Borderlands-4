@@ -10,9 +10,10 @@ from . import panel_theme_choice
 from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
 
-# A setting that changes nothing while its switch is off; this mod's FOV has no switch of its own.
+# A setting that changes nothing while its switch is off; this mod's FOV has no switch of its own, so it is
+# always on, and on again when a camera profile that held it goes off (panel_profile_grey.py).
 DEPENDS_ON = {"loot_reach": "extended_loot", "shoulder_left": "third_person", "sensitivity_look": "third_person", "sensitivity_aim": "third_person", "sensitivity_weapons": "third_person", "sensitivity_weapon_sniper_optics": "third_person", "shoulder_auto": "third_person", "shoulder_auto_swap": "shoulder_auto", "shoulder_auto_return": "shoulder_auto", "free_look_keyboard_hold": "free_look", "free_look_controller_hold": "free_look", "free_look_hold_time": "free_look", "camera_distance_close": "third_person", "camera_distance_far": "third_person", "camera_distance_auto": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth", "orbit": None,
-              "third_person_ads": "third_person", "orbit_distance": "orbit",
+              "third_person_ads": "third_person", "orbit_distance": "orbit", "fov": None,
               "speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
               "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
 
@@ -32,8 +33,9 @@ class PanelForm(Lifecycle):
         if model.command_actions is not None:
             from .camera_control_form import Form
             from .panel_glyphs import Catalogue
-            self.command_form = Form(widgets, model)
-            self.command_catalogue = Catalogue()
+            from .panel_profile_form import ProfileForm
+            self.command_form, self.command_catalogue = Form(widgets, model), Catalogue()
+            self.profile_form = ProfileForm(self)
         self.sync(self.resolve())
         panel_ownership.refresh(self, self.resolve())
 
@@ -74,6 +76,8 @@ class PanelForm(Lifecycle):
         if "omni_body" in self.model.options:
             from . import panel_omni_direction
             panel_omni_direction.grey(self, widgets)
+        if self.profile_form is not None:
+            self.profile_form.grey(widgets)
 
     def refresh_labels(self, widgets):
         labels.apply(self, widgets)
@@ -239,4 +243,4 @@ class PanelForm(Lifecycle):
                                  for key, option in self.model.options.items())
         commands_selecting = (self.command_form is not None and self.model.pages[self.page] == "commands"
                               and self.command_form.selecting())
-        return settings_selecting or commands_selecting
+        return settings_selecting or commands_selecting or bool(self.profile_form and self.profile_form.selecting())

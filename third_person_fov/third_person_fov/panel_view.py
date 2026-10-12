@@ -23,6 +23,10 @@ def _sidebar(owner, widgets, template):
         w.column(nav, button, padding=w.pad(0, 0, t.SPACE_2))
         if tabs.hidden(page):
             button.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
+        if page == "profiles":
+            # Collapsed until a profile is saved (panel_profile_list.py).
+            button.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
+            widgets[f"nav:{page}_body"] = button
     w.column(column, scroll, fill=True)
     widgets["meta"] = tx.text(column, "", "meta", wrap=True)
     w.column(column, widgets["meta"], padding=w.pad(t.SPACE_5, t.SPACE_4 + t.SPACE_2, t.SPACE_3))
@@ -76,6 +80,9 @@ def _window(root, world, model, widgets, template):
         switcher.AddChild(commands.page(switcher, model, widgets, template))
     if tabs.SHOULDER in model.pages:
         switcher.AddChild(tabs.shoulder_page(switcher, model, widgets, template))
+    if "profiles" in model.pages:
+        from . import panel_profile_page
+        switcher.AddChild(panel_profile_page.page(switcher, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))
     w.column(stack, _footer(stack, widgets, template))
@@ -93,10 +100,15 @@ def build_view(pc, model, _return_to_menu=True):
     try:
         widgets = {}
         avatar = _window(root, pc, model, widgets, template)
+        holder = modal.held(pc, root)
+        if model.camera_options:
+            # The camera profile window, beside the menu on the screen's layer, closed (panel_profile_window.py).
+            from . import panel_profile_window
+            panel_profile_window.build(holder, root, widgets, model, template)
     finally:
         tx.use({})
     widgets["focus"] = widgets[f"nav:{model.page}"]
     report.note(f"settings window: fonts={'+'.join(sorted(loaded)) or 'engine'}, "
                 f"avatar={'shown' if avatar else 'hidden'}")
-    return modal.held(pc, root), widgets
+    return holder, widgets
 

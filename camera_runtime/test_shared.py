@@ -7,6 +7,7 @@ import types
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
+import profile_test_fixtures  # noqa: E402,F401  (the profiles read mods_base, as every camera mod does)
 from apex_camera_runtime import shared as shared_module  # noqa: E402
 
 fails = []
@@ -108,6 +109,9 @@ check("probes consume the elected package's canonical ADS readers",
       and getattr(state, "ads_paths_reader", None) ==
       (generated_ads.PathsConfig, generated_ads.PathsSample,
        ads_paths_reader.make_config, ads_paths_reader.object_parts))
+from apex_camera_runtime.profiles import Profiles  # noqa: E402
+check("the shared runtime holds the camera profiles, their file not read yet",
+      isinstance(getattr(runtime, "profiles", None), Profiles) and not runtime.profiles.store.loaded)
 check("old clients reject the reserved state without starting a second camera",
       getattr(sys.modules["_apex_camera_runtime_v1"], "protocol", None) != 1
       and all(getattr(sys.modules[f"_apex_camera_runtime_v{version}"], "protocol", None) != version

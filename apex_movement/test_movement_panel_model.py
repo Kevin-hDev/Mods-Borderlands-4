@@ -37,11 +37,11 @@ mod = Mod()
 model = panel_model.Model(mod)
 assert not ({option.identifier for option in camera_settings.VISIBLE}
             & {option.identifier for option in camera_settings.commands.options})
-assert len(model.groups) == 10 and len(model.pages) == 17
+assert len(model.groups) == 10 and len(model.pages) == 18
 assert model.pages == panel_theme.PAGES
 # The Options tabs past the camera's.
-assert model.pages[-7:] == ("commands", "language", "dynamic_camera", "shoulder", "aiming", "sensitivity",
-                           "omni_direction")
+assert model.pages[-8:] == ("commands", "language", "dynamic_camera", "shoulder", "aiming", "sensitivity",
+                           "omni_direction", "profiles")
 assert tuple(model.camera_options) == ("third_person", "third_person_ads", "pistol_optics", "smg_optics",
                                        "shotgun_optics", "assault_optics", "sniper_optics", "heavy_optics",
                                        "custom_fov", "fov",
@@ -79,8 +79,8 @@ assert model.change_controller_icons("XSX") and model.controller_icons == "XSX"
 assert not model.change_controller_icons("other")
 assert panel_preferences.french.default_value is False
 # A page index saved before the language tab still names the same page.
-assert panel_preferences.PAGE_KEYS[-7:] == ("options", "language", "dynamic_camera", "shoulder", "aiming",
-                                            "sensitivity", "omni_direction")
+assert panel_preferences.PAGE_KEYS[-8:] == ("options", "language", "dynamic_camera", "shoulder", "aiming",
+                                            "sensitivity", "omni_direction", "profiles")
 assert model.change_language("FR") and model.language == "FR"
 assert not model.change_language("other")
 assert model.change_page("dash") and model.page == "dash"

@@ -28,7 +28,7 @@ check("SDK entry opens the custom window", getattr(mod, panel_open.MARKER, False
 # OMNI DIRECTION right after CAMERA, the mod's main page (Kevin, 2026-10-09).
 check("only camera settings, over the camera pages (Kevin, 2026-10-06), and eight separate command pairs are exposed",
       model.pages == ("camera", "omni_direction", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity",
-                      "commands", "shoulder")
+                      "commands", "shoulder", "profiles")
       and model.page == "camera"
       and list(model.options) == ["third_person", "fov", "camera_distance_close", "camera_distance_far", "camera_distance_auto",
                                   "orbit_smooth", "shoulder_seconds",

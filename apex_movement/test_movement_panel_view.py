@@ -82,11 +82,12 @@ camera_settings.shoulder_controller.value = "Gamepad_FaceButton_Top"
 model = panel_model.Model(SimpleNamespace(is_enabled=True))
 root, widgets = panel_view.build_view(SimpleNamespace(), model)
 assert root.kind == "UserWidget"
-# The window sits on a clear layer over the whole screen (panel_modal, 2026-10-06).
+# The window sits on a clear layer over the whole screen (panel_modal, 2026-10-06), the camera profile window beside
+# it, in the screen's corner (panel_profile_window, 2026-10-12).
 assert (root.WidgetTree.RootWidget.kind == "CanvasPanel"
-        and [child.kind for child in root.WidgetTree.RootWidget.children] == ["BackgroundBlur", "ScaleBox"])
-assert len(model.pages) == 17 and model.pages[-7:] == ("commands", "language", "dynamic_camera", "shoulder", "aiming",
-                                                       "sensitivity", "omni_direction")
+        and [child.kind for child in root.WidgetTree.RootWidget.children] == ["BackgroundBlur", "ScaleBox", "ScaleBox"])
+assert len(model.pages) == 18 and model.pages[-8:] == ("commands", "language", "dynamic_camera", "shoulder", "aiming",
+                                                       "sensitivity", "omni_direction", "profiles")
 assert len(widgets["pages"].children) == len(model.pages) + 1
 assert model.page == "options" and widgets["focus"] is widgets["options"]
 assert "EN" not in widgets and "FR" not in widgets
@@ -247,8 +248,12 @@ assert all(f"setting:{key}" in widgets for key in model.options)
 # the same day; the sniper optic row (six boxes and the slider holding its value), the SNIPER ZOOM command card and five
 # optic sensitivity bars to 1239 on 2026-10-09; the OMNI DIRECTION tab (its head, card, four rows, three pop-ups and an
 # eighth tab button on every head) to 1450 the same day; the other weapon types' five optic rows and the heavy
-# weapons' sensitivity bar to 1584 that evening; no dynamically growing registry.
-assert len(widgets) < 1650, "the fixed widget registry must stay bounded"
+# weapons' sensitivity bar to 1584 that evening; the camera profile window (its card, five rows and two rows of
+# presets, the name box, two key rows, CANCEL and SAVE) and the header's floppy, 97, to 1688 on 2026-10-12; the
+# PROFILES tab (its head, a ninth tab button on every head, ten profile rows drawn ahead with their three buttons, key
+# and values, the DELETE pop-up) and the three profile notices, 328, to 2016 the same night; no dynamically growing
+# registry.
+assert len(widgets) < 2100, "the fixed widget registry must stay bounded"
 # Free Look's settings sit on the CAMERA tab; COMMANDS only holds keys (Kevin, 2026-10-07).
 free_look = [widgets[f"setting:{key}"] for key in ("free_look", "free_look_keyboard_hold", "free_look_controller_hold",
                                                    "free_look_hold_time")]
@@ -272,7 +277,10 @@ for page, keys in moved.items():
     inside = [widgets[f"setting:{key}"] for key in keys]
     assert all(widget in walk(widgets[f"{page}:settings"]) for widget in inside), page
     assert not any(widget in walk(widgets["camera:settings"]) for widget in inside), page
-assert widgets["setting:camera_framing_horizontal"] in walk(widgets["camera:settings"])
+# Spacing and height sit on SHOULDER VIEW (Kevin, 2026-10-11).
+framing = [widgets[f"setting:camera_framing_{key}"] for key in ("horizontal", "height")]
+assert all(widget in walk(widgets["shoulder:settings"]) for widget in framing)
+assert not any(widget in walk(widgets["camera:settings"]) for widget in framing)
 
 # AIMING's optic rows (Kevin, 2026-10-09), one per weapon type in the game's order: BDL4 then the zooms; a zoom
 # unticks BDL4, BDL4 unticks every zoom.
@@ -326,8 +334,9 @@ assert widgets["value:optics_help:keyboard"].calls["SetText"] == ("K",)
 click("popup:optics:close")
 camera_settings.commands.apply(camera_settings.commands.defaults())
 
-# OMNI DIRECTION (Kevin, 2026-10-09): the eighth tab, last on the second row; four rows, two of boxes, three « ? ».
-assert panel_options.TAB_ROWS[1][-1] == "omni_direction"
+# OMNI DIRECTION (Kevin, 2026-10-09): the eighth tab, on the second row before PROFILES (2026-10-12); four rows, two of
+# boxes, three « ? ».
+assert panel_options.TAB_ROWS[1][-2:] == ("omni_direction", "profiles")
 omni_rows = ("omni_body", "omni_angle", "omni_direction_sprint", "omni_crouch")
 assert all(widgets[f"setting:{key}"] in walk(widgets["omni_direction:settings"]) for key in omni_rows)
 assert not any(widgets[f"setting:{key}"] in walk(widgets["camera:settings"]) for key in omni_rows)

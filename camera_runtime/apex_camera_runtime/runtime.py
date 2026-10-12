@@ -32,6 +32,8 @@ class CameraRuntime:
         # Omni direction (omni_direction.py), made by shared.py, under the same rule: an older mod's settings give it
         # nothing to do.
         self.omni = None
+        # The camera profiles (profiles.py), made by shared.py: the one they show goes over the elected mod's settings.
+        self.profiles = None
         self._active_client: Client | None = None
         self._next_fov_ns = 0
         self.setup_gate = SetupGate()
@@ -39,6 +41,9 @@ class CameraRuntime:
         self.speed_fov = SpeedFov()
 
     def register(self, owner: str, priority: int, settings: Any, protocol: int = PROTOCOL) -> None:
+        # Only a mod whose menu shows the profiles takes them: an older copy's menu could not switch one off.
+        if self.profiles is not None and getattr(settings, "shows_profiles", False):
+            settings = self.profiles.wrap(settings)
         self.arbiter.register(Client(owner, priority, settings), protocol)
 
     def ads_status(self, owner: str) -> str | None:
@@ -171,6 +176,9 @@ class CameraRuntime:
                 return
         if client is None:
             return
+        if self.profiles is not None and self.profiles.sync(context):
+            # A profile switched on, or a change in its window, shows at once rather than at the next FOV check.
+            self._next_fov_ns = 0
         self.orbit_entry.observe(client, context)
         if self.loot is not None:
             self.loot.sync(client.owner, context, client.settings, now_ns)

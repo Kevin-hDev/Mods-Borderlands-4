@@ -18,20 +18,24 @@ from . import panel_text as tx, panel_theme as t, panel_widgets as w
 # AIMING and SENSITIVITY came on 2026-10-08 (Kevin: sensitivity is « des réglages différents », and Apex Movement gets
 # the AIMING page the two other camera mods have). Seven tabs no longer fit one row: two rows right of the title, the
 # camera first, then what is not the view (Kevin: « si on met les boutons sur deux lignes [...] ça passe facilement »).
-# OMNI DIRECTION, the eighth, last on the second row (Kevin, 2026-10-09).
+# OMNI DIRECTION, the eighth, last on the second row (Kevin, 2026-10-09). PROFILES after it (mockup
+# profils/3_page.png, 2026-10-12), shown only while a profile is saved (panel_profile_list.py).
 TAB_ROWS = (("options", "shoulder", "aiming", "dynamic_camera"),
-            ("sensitivity", "commands", "language", "omni_direction"))
+            ("sensitivity", "commands", "language", "omni_direction", "profiles"))
 TABS = tuple(tab for row in TAB_ROWS for tab in row)
 # Each tab's button and the sentence under the title.
 NAMES = {"options": "camera_view", "shoulder": "shoulder_view", "aiming": "aiming", "dynamic_camera": "dynamic_camera",
          "sensitivity": "sensitivity", "commands": "commands", "language": "languages",
-         "omni_direction": "omni_direction"}
+         "omni_direction": "omni_direction", "profiles": "profiles"}
 SENTENCES = {"options": "camera_tab_desc", "shoulder": "shoulder_tab_desc", "aiming": "aiming_tab_desc",
              "dynamic_camera": "dynamic_camera_tab_desc", "sensitivity": "sensitivity_tab_desc",
              "commands": "commands_tab_desc", "language": "options_desc_menu",
-             "omni_direction": "omni_direction_tab_desc"}
+             "omni_direction": "omni_direction_tab_desc", "profiles": "profiles_tab_desc"}
 # The camera settings of the tabs other than CAMERA VIEW, by identifier.
 CARD_PAGES = ("shoulder", "aiming", "sensitivity", "omni_direction")
+# The framing cards below a tab's settings. Spacing and height place the camera beside the shoulder: they moved from
+# CAMERA VIEW to SHOULDER VIEW (Kevin, 2026-10-11). The zoom is aiming only.
+FRAMING = {"shoulder": ("horizontal", "height"), "aiming": ("zoom",)}
 
 
 def _language_card(body, widgets, template):
@@ -64,8 +68,12 @@ def head(body, widgets, template, page, tabs):
             continue
         buttons = w.new("HorizontalBox", rows)
         for index, tab in enumerate(shown):
-            w.row(buttons, b.button(buttons, widgets, f"tab:{page}:{tab}", "tab", template, "off"),
-                  padding=w.pad(0, 0, 0, 0 if index == 0 else t.SPACE_3), valign="Center")
+            button = b.button(buttons, widgets, f"tab:{page}:{tab}", "tab", template, "off")
+            if tab == "profiles":
+                # Collapsed until a profile is saved (panel_profile_list.py).
+                button.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
+                widgets[f"tab:{page}:{tab}_body"] = button
+            w.row(buttons, button, padding=w.pad(0, 0, 0, 0 if index == 0 else t.SPACE_3), valign="Center")
         w.column(rows, buttons, padding=w.pad(t.SPACE_2 if number else 0, 0, 0))
     w.row(line, rows, padding=w.pad(0, 0, 0, t.SPACE_7), valign="Center")
     description = tx.text(body, "", "body", wrap=True)
@@ -94,6 +102,9 @@ def options_page(owner, model, widgets, template):
         return page
     page, body = tab_page(owner, widgets, template, "options")
     rows = p.card(body, widgets, "camera")
+    # Names the profile holding FOV and distances while one is on (panel_profile_grey.py).
+    from . import panel_profile_grey
+    panel_profile_grey.notice(rows, widgets, "camera")
     controls = w.new("VerticalBox", rows)
     widgets["camera:settings"] = controls
     w.column(rows, controls)
@@ -102,14 +113,12 @@ def options_page(owner, model, widgets, template):
                  | {name for page in CARD_PAGES for name in CARD_SETTINGS[page]})
     sc.rows(controls, [option for key, option in model.camera_options.items() if key not in elsewhere], widgets,
             template)
-    from . import panel_framing
-    panel_framing.build(controls, widgets, template, ("horizontal", "height"))
     return page
 
 
 def card_page(owner, model, widgets, template, page):
     """A tab of one card holding its own camera settings (CARD_PAGES), hidden with the camera's while another camera
-    mod is in charge. AIMING also holds the aim zoom's framing card."""
+    mod is in charge, then its framing cards (FRAMING)."""
     from .camera_settings import CARD_SETTINGS
     frame, body = tab_page(owner, widgets, template, page)
     rows = p.card(body, widgets, page)
@@ -132,9 +141,9 @@ def card_page(owner, model, widgets, template, page):
         panel_optics.build(controls, optics, widgets, template)
     if page == "sensitivity":
         weapons.build(controls, weapon_rows, widgets, template)
-    if page == "aiming":
+    if page in FRAMING:
         from . import panel_framing
-        panel_framing.build(controls, widgets, template, ("zoom",))
+        panel_framing.build(controls, widgets, template, FRAMING[page])
     return frame
 
 
@@ -146,6 +155,14 @@ def dynamic_page(owner, model, widgets, template):
     widgets[f"{panel_dynamic.PAGE}:settings"] = controls
     w.column(rows, controls)
     panel_dynamic.build(controls, model.camera_options.values(), widgets, template)
+    return page
+
+
+def profiles_page(owner, widgets, template):
+    """The PROFILES tab (panel_profile_page.py)."""
+    from . import panel_profile_page
+    page, body = tab_page(owner, widgets, template, "profiles")
+    panel_profile_page.card(body, widgets, template)
     return page
 
 

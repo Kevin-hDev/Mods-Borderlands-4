@@ -33,13 +33,20 @@ class OptionsTests(unittest.TestCase):
         self.assertEqual(reopened.read("zoom"), (25, False))
 
     def test_invalid_loaded_value_falls_back_without_mutating_the_sdk_option(self):
-        for value, custom in ((True, True), (-1, True), (51, True), ("25", True),
-                              (17, False), (25, 1)):
+        for value, custom in ((True, True), (-1, True), (51, True), ("25", True), (25, 1)):
             with self.subTest(value=value, custom=custom):
                 self.options.options[0].value, self.options.options[1].value = value, custom
                 self.assertEqual(self.options.read("zoom"), (15, False))
                 self.assertIs(self.options.options[0].value, value)
                 self.assertIs(self.options.options[1].value, custom)
+
+    def test_a_preset_the_catalog_no_longer_has_keeps_the_players_value(self):
+        # Tight 0 and Higher 10 were presets until 2026-10-11.
+        self.options.options[2].value, self.options.options[3].value = 0, False
+        self.options.options[4].value, self.options.options[5].value = 10, False
+        self.assertEqual(self.options.read("horizontal"), (0, True))
+        self.assertEqual(self.options.read("height"), (10, True))
+        self.assertEqual(self.notes, [])
 
     def test_invalid_loaded_group_does_not_discard_other_valid_values(self):
         self.options.options[0].value = float("inf")

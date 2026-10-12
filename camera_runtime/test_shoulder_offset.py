@@ -53,6 +53,7 @@ shoulder.show(-RIGHT)
 check("a swap starts on the side shown", near(shoulder.place(0.0, 0.0), (RIGHT, UP)))
 at(200)
 check("halfway through its time it crosses the middle, the height kept", near(shoulder.place(0.0, 0.0), (0.0, UP)))
+check("the framing's height too, however large", near(shoulder.place(0.5, -2.4), (0.0, UP - 2.4 * RIGHT)))
 check("a swap is not a glide other code waits for", not shoulder.transition_active())
 at(400)
 check("and lands on the other side", near(shoulder.place(0.0, 0.0), (-RIGHT, UP)))
@@ -119,9 +120,9 @@ check("a reset forgets the side and every glide", shoulder.right == 0.0 and not 
 
 check("a mod without the framing gives no spacing", framing_share(NS()) == (0.0, 0.0))
 check("the framing's choices are fractions",
-      framing_share(NS(framing_values=lambda: ((15, False), (50, True), (-10, False)))) == (0.5, -0.1))
+      framing_share(NS(framing_values=lambda: ((15, False), (120, True), (-240, True)))) == (1.2, -2.4))
 check("an invalid choice counts as none, the framing refusing it too",
-      framing_share(NS(framing_values=lambda: ((15, False), (51, True), (0, False)))) == (0.0, 0.0))
+      framing_share(NS(framing_values=lambda: ((15, False), (121, True), (-241, True)))) == (0.0, 0.0))
 check("an unreadable snapshot gives none", framing_share(NS(framing_values=lambda: ((15, False),))) == (0.0, 0.0)
       and framing_share(NS(framing_values=lambda: ((15, False), 50, (0, False)))) == (0.0, 0.0))
 

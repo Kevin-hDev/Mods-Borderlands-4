@@ -58,7 +58,8 @@ class Form:
         if self.take(widgets["commands_reset"]):
             restore = getattr(self.actions, "default_commands", None) or self.actions.defaults
             success = restore()
-            self.changed, self.notice = True, "restored" if success else "failed"
+            status_owner = getattr(self.actions, "command_actions", self.actions)
+            self.changed, self.notice = True, "restored" if success else getattr(status_owner, "last_status", "failed")
             widgets["commands_status"].SetText(self.notice)
             return False
         active = [f"command:{action}:{device}" for action, device in SLOTS

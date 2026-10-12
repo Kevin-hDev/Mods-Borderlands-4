@@ -28,6 +28,9 @@ def shoulder_page(owner, model, widgets, template):
     page, body = frame(owner, widgets, template, SHOULDER)
     rows = panel_ownership.section(p.card(body, widgets, SHOULDER), widgets, f"{SHOULDER}:settings")
     sc.rows(rows, [model.options[key] for key in SHOULDER_PAGE], widgets, template)
+    # Spacing and height place the camera beside the shoulder: they moved here from CAMERA VIEW (Kevin, 2026-10-11).
+    from . import panel_framing
+    panel_framing.build(rows, widgets, template, ("horizontal", "height"))
     return page
 
 

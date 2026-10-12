@@ -117,7 +117,9 @@ class ShoulderOffset:
         now = self.clock()
         lateral, lift = self._value(now)
         side = lateral * (1.0 + spacing)
-        up = lift * THIRD_PERSON_UP + height * abs(lateral)
+        # The height rides on the lift, not on the sideways glide: a side swap passes through the middle and would drop
+        # a camera lowered 1.5 m (framing_catalog.py) back to its standard height halfway.
+        up = lift * (THIRD_PERSON_UP + height * abs(self.right))
         self.applied = (side, up, now)
         return side, up
 

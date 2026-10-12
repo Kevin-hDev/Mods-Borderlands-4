@@ -17,13 +17,17 @@ class Group:
                 and (value - self.minimum) % self.step == 0)
 
 
-# Percentages describe actual projected effects, never fractions of an internal offset.
+# Percentages describe actual projected effects, never fractions of an internal offset. Spacing and height are shares of
+# the hunter's sideways distance from the crosshair, 61.5 cm (shoulder_offset.py). Kevin, 2026-10-11, wants the player
+# to place the crosshair anywhere around the hunter: from against the shoulder (-60 %, 25 cm from the body's middle) to
+# twice the standard gap (+120 %), from the ankles (-240 %) to above the head (+100 %), looking straight ahead (body
+# 186 cm, pivot 71 cm above its middle).
 GROUPS = (
     Group("zoom", "Aim Zoom", 15, 0, 50, (("Wide", 0), ("Standard", 15), ("Close", 25))),
-    Group("horizontal", "Shoulder Spacing", 10, 0, 50,
-          (("Tight", 0), ("Standard", 10), ("Open", 20))),
-    Group("height", "Camera Height", 0, -50, 50,
-          (("Standard", 0), ("Higher", 10), ("Lower", -10))),
+    Group("horizontal", "Shoulder Spacing", 10, -60, 120,
+          (("Tight", -40), ("Standard", 10), ("Open", 60))),
+    Group("height", "Camera Height", 0, -240, 100,
+          (("Lower", -40), ("Standard", 0), ("Higher", 40))),
 )
 
 OPTION_PREFIX = "camera_framing_"

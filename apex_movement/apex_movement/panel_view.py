@@ -82,6 +82,8 @@ def _window(root, world, model, widgets, template):
     for key in o.CARD_PAGES:
         if key in model.pages:
             switcher.AddChild(o.card_page(switcher, model, widgets, template, key))
+    if "profiles" in model.pages:
+        switcher.AddChild(o.profiles_page(switcher, widgets, template))
     switcher.AddChild(o.options_page(switcher, model, widgets, template))
     w.row(middle, switcher, fill=True)
     w.column(stack, w.line(stack, t.COLOR_INK, height=t.STROKE_THICK))
@@ -100,10 +102,15 @@ def build_view(pc, model, _return_to_menu=True):
     try:
         widgets = {}
         avatar = _window(root, pc, model, widgets, template)
+        holder = modal.held(pc, root)
+        if model.camera_options:
+            # The camera profile window, beside the menu on the screen's layer, closed (panel_profile_window.py).
+            from . import panel_profile_window
+            panel_profile_window.build(holder, root, widgets, model, template)
     finally:
         tx.use({})
     widgets["focus"] = widgets["options" if model.page in o.TABS else f"nav:{model.page}"]
     report.note(f"settings window: fonts={'+'.join(sorted(loaded)) or 'engine'}, "
                 f"avatar={'shown' if avatar else 'hidden'}")
-    return modal.held(pc, root), widgets
+    return holder, widgets
 

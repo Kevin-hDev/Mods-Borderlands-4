@@ -4,6 +4,8 @@
 class Lifecycle:
     # The open pop-up's key (panel_popup.py), or None.
     popup = None
+    # The camera profile window's form (panel_profile_form.py), made by the camera mods' form only.
+    profile_form = None
 
     def resolve(self):
         widgets = {name: reference() for name, reference in self.widgets.items()}
@@ -30,7 +32,9 @@ class Lifecycle:
         return self.flush(self.resolve())
 
     def poll_popup(self, widgets):
-        """True while a pop-up is open: it alone takes the clicks."""
+        """True while a pop-up or the camera profile window is open: it alone takes the clicks."""
+        if self.profile_form is not None and self.profile_form.poll(widgets):
+            return True
         if self.popup is None:
             return False
         from . import panel_popup

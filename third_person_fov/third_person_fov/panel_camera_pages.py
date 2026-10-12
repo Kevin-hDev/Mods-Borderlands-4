@@ -10,8 +10,8 @@ from .panel_camera_text import EN
 # SENSITIVITY after it for the same reason (Kevin, 2026-10-08: its own page, after DYNAMIC CAMERA).
 # OMNI DIRECTION after them all for the same reason (Kevin, 2026-10-09); menu.py shows it after the mod's main page.
 PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity", "omni_direction")
-# Spacing and height shape the view on foot as well as aiming, so they stay on CAMERA; the zoom is aiming only.
-FRAMING = {"camera": ("horizontal", "height"), "aiming": ("zoom",)}
+# The zoom is aiming only; spacing and height are on SHOULDER VIEW (panel_camera_tabs.py, Kevin, 2026-10-11).
+FRAMING = {"aiming": ("zoom",)}
 # Orbit also works from first person; aiming, its speeds and the body's orientation need the third-person switch, and
 # their page says so (OMNI DIRECTION greyed without a word: Kevin, 2026-10-09).
 NEEDS_THIRD_PERSON = ("aiming", "sensitivity", "omni_direction")
@@ -42,6 +42,10 @@ def build(rows, key, group, widgets, template):
     if key in PAGES:
         # One section per page: another camera mod's ownership hides every camera setting.
         rows = panel_ownership.section(rows, widgets, f"{key}:settings")
+    if key == "camera":
+        # Names the profile holding FOV and distances while one is on (panel_profile_grey.py).
+        from . import panel_profile_grey
+        panel_profile_grey.notice(rows, widgets, key)
     if key == "dynamic_camera":
         from . import panel_dynamic
         panel_dynamic.build(rows, group.children, widgets, template)

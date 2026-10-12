@@ -26,6 +26,8 @@ UI_SHARED = (
     "panel_preferences", "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_theme_choice",
     "panel_toggle", "panel_view", "panel_widgets", "panel_size_choice", "panel_window_size", "panel_scroll", "panel_dynamic",
     "panel_popup",
+    # The header draws the camera profiles' floppy in every file, collapsed where there is no camera (2026-10-12).
+    "panel_profile_floppy",
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.
@@ -39,7 +41,8 @@ SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", 
 FULL_ONLY = ("camera", "camera_settings", "panel_ads", "panel_camera_ownership", "panel_framing", "panel_framing_form", "panel_framing_text",
              "camera_control_actions", "camera_control_config",
              "camera_control_form", "panel_camera_commands", "panel_weapon_sensitivity", "panel_optics",
-             "panel_omni_direction",
+             "panel_omni_direction", "panel_profile_form", "panel_profile_paint", "panel_profile_text",
+             "panel_profile_window", "panel_profile_grey", "panel_profile_list", "panel_profile_page",
              "slow_walk")
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,

@@ -62,8 +62,9 @@ panel_fonts.build = lambda _root: {"title": object(), "body": object()}
 
 model, root, widgets, form = build()
 CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity", "omni_direction")
-check("ten pages, SHOULDER VIEW last, opened on OMNI SPRINT, under the mod's name",
-      len(widgets["pages"].children) == len(model.pages) == 10 and model.pages[-1] == "shoulder" and widgets["focus"] is widgets["nav:omni_sprint"]
+check("eleven pages, SHOULDER VIEW then PROFILES last, opened on OMNI SPRINT, under the mod's name",
+      len(widgets["pages"].children) == len(model.pages) == 11 and model.pages[-2:] == ("shoulder", "profiles")
+      and widgets["focus"] is widgets["nav:omni_sprint"]
       and theme.BRAND == "OMNI SPRINT")
 check("the DYNAMIC CAMERA page has its three cards, FIELD OF VIEW, FRAMING and MOTION, with their settings",
       all(f"heading:dynamic:{key}" in widgets for key in ("fov", "framing", "motion"))
@@ -133,14 +134,14 @@ def page_of(widget):
 
 
 placement = {"camera": ("setting:third_person", "setting:custom_fov", "setting:fov", "setting:orbit_smooth",
-                        "setting:shoulder_seconds", "setting:free_look_hold_time",
-                        "heading:framing:horizontal", "heading:framing:height"),
+                        "setting:shoulder_seconds", "setting:free_look_hold_time"),
              "shoulder": ("setting:shoulder_left", "setting:shoulder_auto", "setting:shoulder_auto_swap",
-                          "setting:shoulder_auto_return", "setting:shoulder_smooth"),
+                          "setting:shoulder_auto_return", "setting:shoulder_smooth",
+                          "heading:framing:horizontal", "heading:framing:height"),
              "aiming": ("setting:third_person_ads", "heading:framing:zoom"),
              "orbit_camera": ("setting:orbit", "setting:orbit_distance"),
              "loot": ("setting:extended_loot", "setting:loot_reach")}
-check("each camera setting sits on its page (Kevin, 2026-10-06), spacing and height with the view on foot",
+check("each camera setting sits on its page (Kevin, 2026-10-06), spacing and height on SHOULDER VIEW (2026-10-11)",
       all(page_of(widgets[name]) == key for key, names in placement.items() for name in names))
 hint = "Turn on third person in the CAMERA tab."
 check("AIMING, SENSITIVITY and OMNI DIRECTION require third person and say so; Orbit is also available from first "

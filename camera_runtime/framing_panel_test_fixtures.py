@@ -55,10 +55,10 @@ class FramingPanelTests(AdsPanelTests):
 
     def test_framing_language_and_zoom_dependency(self):
         widgets, form = self.build()
-        self.assertEqual(widgets["framing:height:preset:0_label"].calls["SetText"], ("Standard",))
+        self.assertEqual(widgets["framing:height:preset:0_label"].calls["SetText"], ("Lower",))
         form.model.change_language("FR")
         form.refresh_labels(widgets)
-        self.assertEqual(widgets["framing:height:preset:0_label"].calls["SetText"], ("Standard",))
+        self.assertEqual(widgets["framing:height:preset:0_label"].calls["SetText"], ("Plus bas",))
         self.assertEqual(widgets["framing:zoom:preset:0_label"].calls["SetText"], ("Large",))
         self.settings.ads.option.value = False
         form.sync(widgets)

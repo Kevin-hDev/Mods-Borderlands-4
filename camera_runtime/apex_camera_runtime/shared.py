@@ -65,6 +65,8 @@ def shared(weak_ref: Callable | None = None, address_of: Callable | None = None)
     state.runtime.sniper_zoom = sniper_zoom.SniperZoom(sniper_zoom.game_modules)
     from . import omni_direction
     state.runtime.omni = omni_direction.OmniDirection(omni_direction.game_modules)
+    from . import profiles
+    state.runtime.profiles = profiles.make()
     from . import ads_category, ads_paths_reader, generated_ads
     state.ads_category_reader = ads_category.category
     state.ads_object_address = ads_category.address

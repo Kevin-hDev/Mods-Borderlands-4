@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.4 - 2026-10-12
+
+- New: camera profiles. The floppy disk at the top of the menu saves your FOV, camera distances, shoulder spacing and camera height as a profile, with a key or a controller button to switch it on in game. Up to 10 profiles, on the new PROFILES page.
+- Shoulder spacing and camera height now go much further, from the crosshair against your shoulder to twice the standard gap, and from your ankles to above your head. They are now on the SHOULDER VIEW page.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.3 - 2026-10-11
 
 - Fixed: when aiming over the shoulder, the reticle no longer disappears at the start of the zoom.

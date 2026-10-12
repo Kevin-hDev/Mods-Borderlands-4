@@ -2,6 +2,7 @@
 
 from . import camera_control_config as config, panel_buttons as b, panel_glyphs, panel_i18n as i18n
 from . import panel_key_view as keys, panel_pages as p, panel_text as tx, panel_theme as t, panel_widgets as w
+from . import panel_profile_text as words
 
 
 def _value(rows, widgets, name):
@@ -71,7 +72,7 @@ def refresh(form, widgets, catalogue):
     widgets["heading:command_tools"].SetText(i18n.text("command_tools", language))
     widgets["group:command_tools"].SetText(i18n.text("command_tools_desc", language))
     widgets["commands_reset_label"].SetText(i18n.text("commands_reset", language))
-    widgets["commands_status"].SetText(i18n.text(form.command_form.notice, language))
+    widgets["commands_status"].SetText(_status(form, language))
     widgets["icons_label"].SetText(i18n.text("controller_icons", language))
     for choice in ("PS5", "XSX"):
         widgets[f"icons:{choice}_label"].SetText(choice)
@@ -86,3 +87,11 @@ def _show_value(widgets, name, value, family, language, catalogue):
         image.SetBrush(brush)
     label.SetVisibility(w.enum("ESlateVisibility", "Collapsed" if brush else "HitTestInvisible"))
     label.SetText(panel_glyphs.label(value, family, language) if value else i18n.text("no_key", language))
+
+
+def _status(form, language):
+    """The page's last answer; a key a saved camera profile holds names that profile (panel_model._held_by_profile)."""
+    notice = form.command_form.notice
+    if notice == "command_held":
+        return words.text(notice, language).format(name=form.model.profile_holder.upper())
+    return i18n.text(notice, language)

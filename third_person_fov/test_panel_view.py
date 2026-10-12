@@ -10,7 +10,8 @@ from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, key_at
 
 CAMERA_PAGES = ("camera", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity", "omni_direction")
 root, widgets, form = f.build()
-assert len(widgets["pages"].children) == 9, "seven camera pages, COMMANDS, then SHOULDER VIEW (Kevin, 2026-10-09)"
+assert len(widgets["pages"].children) == 10, ("seven camera pages, COMMANDS, then SHOULDER VIEW (Kevin, 2026-10-09)"
+                                              " and PROFILES (2026-10-12)")
 assert all(f"setting:{key}" in widgets for key in ("omni_body", "omni_angle", "omni_direction_sprint", "omni_crouch"))
 
 from third_person_fov import panel_camera_tabs  # noqa: E402
@@ -21,11 +22,11 @@ assert "EN" in widgets and "FR" in widgets and "options" not in widgets
 assert all(f"row:{key}" in widgets for key in ("third_person", "shoulder_left", "orbit", "orbit_distance", "fov",
                                                 "extended_loot", "loot_reach"))
 placement = {"camera": ("setting:third_person", "setting:orbit_smooth", "setting:shoulder_seconds", "setting:fov",
-                        "setting:free_look_hold_time", "heading:framing:horizontal", "heading:framing:height",
-                        "tab:camera:camera", "tab:camera:shoulder"),
+                        "setting:free_look_hold_time", "tab:camera:camera", "tab:camera:shoulder"),
+             # Spacing and height sit on SHOULDER VIEW (Kevin, 2026-10-11).
              "shoulder": ("setting:shoulder_left", "setting:shoulder_auto", "setting:shoulder_auto_swap",
                           "setting:shoulder_auto_return", "setting:shoulder_smooth", "tab:shoulder:camera",
-                          "tab:shoulder:shoulder"),
+                          "tab:shoulder:shoulder", "heading:framing:horizontal", "heading:framing:height"),
              "aiming": ("setting:third_person_ads", "heading:framing:zoom"),
              "orbit_camera": ("setting:orbit", "setting:orbit_distance"),
              "loot": ("setting:extended_loot", "setting:loot_reach")}
@@ -44,7 +45,9 @@ f.click(form, widgets, "tab:shoulder:camera")
 assert form.model.pages[form.page] == "camera" and widgets["pages"].calls["SetActiveWidgetIndex"] == (0,)
 assert widgets["setting:orbit_distance"].calls["SetIsEnabled"] == (False,), "the distance waits for the orbit camera"
 assert widgets["value:orbit_distance"].calls["SetText"] == ("3 m",)
-assert "row:custom_fov" not in widgets and "SetIsEnabled" not in widgets["setting:fov"].calls, "the FOV has no switch"
+# No switch: always on, set again each turn so that a camera profile's grey goes with it (panel_profile_grey.py).
+assert ("row:custom_fov" not in widgets
+        and widgets["setting:fov"].calls["SetIsEnabled"] == (True,)), "the FOV has no switch"
 # The shoulder and the orbit camera wait for third person, the loot reach for its switch (review, 2026-09-26).
 assert widgets['setting:shoulder_left'].calls['SetIsEnabled'] == (False,)
 assert widgets['setting:orbit'].calls['SetIsEnabled'] == (True,)

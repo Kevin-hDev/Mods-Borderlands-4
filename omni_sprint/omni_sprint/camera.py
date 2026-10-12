@@ -30,6 +30,8 @@ _refusal = None
 
 
 class Settings:
+    # Its menu shows the camera profiles, so the shared runtime puts them over these settings (runtime.register).
+    shows_profiles = True
     shoulder_transition = staticmethod(settings.shoulder_transition.seconds)
     shoulder_auto = staticmethod(settings.shoulder_transition.automatic.values)
     orbit_transition = staticmethod(settings.shoulder_transition.orbit_seconds)
@@ -199,6 +201,19 @@ def framing_status():
     if framing is None and getattr(controller, "_bridge_started", False):
         return "unavailable"
     return framing.reason if framing is not None else None
+
+
+def profiles() -> Any:
+    """The shared camera profiles while this mod's camera is the one shown, else None: a runtime from an older mod's
+    copy has none, and the menu then hides them (decisions of 2026-10-12)."""
+    if not _registered or elected_elsewhere():
+        return None
+    return getattr(_runtime, "profiles", None)
+
+
+def shown_fov() -> float | None:
+    """The FOV on screen at the camera's last frame (fov.py), where a new profile starts."""
+    return getattr(getattr(_runtime, "fov", None), "seen", None) if _registered else None
 
 
 def stop() -> None:

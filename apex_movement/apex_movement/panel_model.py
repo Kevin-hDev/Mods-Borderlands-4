@@ -31,7 +31,7 @@ class Model(Restore):
             self.command_actions = Actions(camera_settings.commands, mod)
             # The Options tabs past the camera's (panel_options.TABS), pages without a sidebar button.
             self.pages += ("commands", "language", "dynamic_camera", "shoulder", "aiming", "sensitivity",
-                           "omni_direction")
+                           "omni_direction", "profiles")
         self.options = {**movement, **self.camera_options}
         self._undo, self._command_undo = (), {}
         self._command_plan = None
@@ -161,6 +161,9 @@ class Model(Restore):
     def assign_command(self, action, device, key):
         if not self._commands_ready():
             return False
+        if self._held_by_profile((key,)):
+            self.command_actions.last_status = "command_held"
+            return False
         success = self.command_actions.assign(action, device, key)
         if success:
             self._undo, self._command_undo = (), {}
@@ -168,6 +171,9 @@ class Model(Restore):
 
     def default_commands(self):
         if not self._commands_ready():
+            return False
+        if self._held_by_profile(self.command_actions.commands.defaults().values()):
+            self.command_actions.last_status = "profile_key_back"
             return False
         success = self.command_actions.defaults()
         if success:
@@ -177,6 +183,31 @@ class Model(Restore):
     def _commands_ready(self):
         return (not self.camera_elsewhere and self.command_actions is not None and not self.transaction.pending
                 and self._command_plan is None)
+
+    def restore(self):
+        held = self.command_actions is not None and not self.camera_elsewhere and self._held_by_profile(
+            self.command_actions.commands.defaults().values())
+        return self._refused_for_profile() if held else super().restore()
+
+    def undo(self):
+        held = self._command_undo and not self.camera_elsewhere and self._held_by_profile(self._command_undo.values())
+        return self._refused_for_profile() if held else super().undo()
+
+    def _refused_for_profile(self):
+        # The footer's line for a refusal is the transaction's reason (panel_form_lifecycle.failure_notice).
+        self.transaction.failure_reason = "profile_key_back"
+        return False
+
+    def _held_by_profile(self, keys):
+        """Whether a saved camera profile holds a key this would give a command: refused then, as the profile window
+        refuses a command's key (panel_profile_form._set_key), so one press never does both."""
+        from . import camera
+        profiles, wanted = camera.profiles(), {key for key in keys if key is not None}
+        holder = None if profiles is None else next(
+            (profile for profile in profiles.ready().profiles if wanted & {profile.keyboard, profile.controller}), None)
+        if holder is not None:
+            self.profile_holder = holder.name
+        return holder is not None
 
     def toggle_enabled(self):
         if self.transaction.pending:
