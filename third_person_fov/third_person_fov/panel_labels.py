@@ -5,6 +5,8 @@ from . import panel_camera_pages as pages, panel_camera_tabs as tabs
 from . import panel_buttons as b, panel_i18n as i18n, panel_shortcut as sc, panel_slider as s, panel_theme as t
 from . import panel_theme_choice
 from . import panel_size_choice
+from .panel_header import language_button
+from .panel_preferences import LANGUAGES
 
 
 def apply(form, widgets):
@@ -19,8 +21,8 @@ def apply(form, widgets):
     b.paint(widgets, "undo", "secondary" if available and form.model.can_undo else "disabled")
     panel_size_choice.paint(widgets, form.model.window_size, language)
     panel_theme_choice.paint(widgets, form.model.theme, language)
-    for lang in ("EN", "FR"):
-        widgets[f"{lang}_label"].SetText(lang)
+    for lang in LANGUAGES:
+        widgets[f"{lang}_label"].SetText(language_button(lang))
         b.paint(widgets, lang, "lang_on" if lang == language else "lang_off")
     for index, key in enumerate(form.model.pages):
         widgets[f"nav:{key}_label"].SetText(i18n.text(key, language))
@@ -58,7 +60,7 @@ def value(widgets, option, current, language):
     if sc.is_shortcut(option):
         sc.show_key(widgets[f"key:{key}"], current)
     elif key == "third_person_ads":
-        label = (i18n.text("aim_third" if current else "aim_first", language) if language == "FR"
+        label = (i18n.text("aim_third" if current else "aim_first", language) if language in i18n.TABLES
                  else option.true_text if current else option.false_text)
         widgets[f"setting:{key}_label"].SetText(label)
         b.paint(widgets, f"setting:{key}", "on" if current else "off")

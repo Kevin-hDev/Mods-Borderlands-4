@@ -41,7 +41,9 @@ class Model(Restore):
 
     @property
     def language(self):
-        return "FR" if prefs.french.value is True else "EN"
+        if prefs.french.value is True:
+            return "FR"
+        return prefs.language.value if prefs.language.value in prefs.LANGUAGES else "EN"
 
     @property
     def page(self):
@@ -95,7 +97,7 @@ class Model(Restore):
         return True
 
     def change_language(self, value):
-        return value in prefs.LANGUAGES and self.save(((prefs.french, value == "FR"),))
+        return value in prefs.LANGUAGES and self.save(((prefs.language, value), (prefs.french, False)))
 
     @property
     def theme(self):

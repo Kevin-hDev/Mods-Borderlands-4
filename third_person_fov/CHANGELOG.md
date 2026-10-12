@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.7 - 2026-10-12
+
+- New: the settings window is now also in Simplified Chinese. Choose 中文 at the top of the window.
+
+- When a profile name is refused, the message now says it needs at least one letter or digit.
+
 ## 1.2.6 - 2026-10-12
 
 - Fixed: a camera key you set to another command's default key (for example third person on 7) no longer goes back to its default when the game starts, and the other command no longer loses its own.

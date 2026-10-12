@@ -9,6 +9,7 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, 
 from . import panel_theme_choice
 from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
+from .panel_preferences import LANGUAGES
 
 # A setting that changes nothing while its switch is off; this mod's FOV has no switch of its own, so it is
 # always on, and on again when a camera profile that held it goes off (panel_profile_grey.py).
@@ -191,7 +192,7 @@ class PanelForm(Lifecycle):
         if self.take(widgets["window_size"]):
             panel_size_choice.choose(self, widgets)
             return False
-        for language in ("EN", "FR"):
+        for language in LANGUAGES:
             if self.take(widgets[language]):
                 if self.flush(widgets) and self.model.change_language(language):
                     self.refresh_labels(widgets)

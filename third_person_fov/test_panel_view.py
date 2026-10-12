@@ -155,5 +155,19 @@ assert all(widgets[f"{key}:settings"].calls["SetVisibility"] == ("ESlateVisibili
            for key in CAMERA_PAGES)
 assert widgets["restore"].calls["SetIsEnabled"] == (False,), "Restore must be disabled without owned settings"
 assert f.click(elsewhere, widgets, "close")
+
+# Chinese, the third language (2026-10-12): its button named in its own words, kept at the next opening.
+assert prefs.LANGUAGES == ("EN", "FR", "ZH")
+root, widgets, form = f.build()
+assert widgets["ZH_label"].calls["SetText"][-1] == "中文" and widgets["EN_label"].calls["SetText"][-1] == "EN"
+f.click(form, widgets, "ZH")
+assert form.model.language == "ZH" and prefs.language.value == "ZH" and prefs.french.value is False
+assert widgets["close_label"].calls["SetText"][-1] == "关闭"
+assert f.click(form, widgets, "close") and form.close_ready()
+root, widgets, form = f.build()
+assert form.model.language == "ZH" and widgets["close_label"].calls["SetText"][-1] == "关闭"
+f.click(form, widgets, "EN")
+assert form.model.language == "EN" and widgets["close_label"].calls["SetText"][-1] == "CLOSE"
+assert f.click(form, widgets, "close")
 shared.reset_for_tests()
 print("RESULTAT: TOUS LES TESTS PASSENT")
