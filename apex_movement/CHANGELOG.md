@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.22 - 2026-10-12
+
+- Fixed: a camera key you set to another command's default key (for example third person on 7) no longer goes back to its default when the game starts, and the other command no longer loses its own.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.21 - 2026-10-12
 
 - Fixed: at rest, your character keeps its direction and the camera turns around it, also after the orbit camera, first person, aiming or firing. Before, you had to walk to get this back.

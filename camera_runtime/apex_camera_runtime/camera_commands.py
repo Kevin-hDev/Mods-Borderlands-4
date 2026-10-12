@@ -4,9 +4,9 @@ from typing import Any, Callable, NamedTuple
 
 from mods_base import EInputEvent, keybind
 
+from .camera_key_options import CameraControllerOption, CameraKeyboardOption, normalize_camera_key
+from .key_option import normalize_controller_key
 from .keyboard_layout import RIGHT_OF_TAB, TOP_ROW_EIGHT, TOP_ROW_SEVEN, TOP_ROW_SIX, key_at
-from .key_option import (ControllerKeybindOption, KeyboardKeybindOption,
-                         normalize_controller_key, normalize_keyboard_key)
 
 KEYBOARD, CONTROLLER = "keyboard", "controller"
 # The SDK's text menu lists both entries of an action: under one name, a player could not tell the keyboard's from the
@@ -57,47 +57,6 @@ ACTIONS = (
 # The only commands that may share a key: Free Look stops while aiming on foot (free_look.py), the zoom acts only
 # while aiming.
 SHARED = frozenset({("free_look", "sniper_zoom")})
-
-
-# A "Six" or "Seven" saved before the keyboard-named defaults (2026-10-07). On a keyboard whose 6 and 7 keys type
-# something else (Hyphen and E_AccentGrave on AZERTY), no key press gives that name: it can only be the old default,
-# which never fired there (Kevin, 2026-10-07: his Omni Sprint still had Six and Seven saved). It becomes the key's name.
-UNREACHABLE = {old: new for old, new in (("Six", key_at(TOP_ROW_SIX, "Six")), ("Seven", key_at(TOP_ROW_SEVEN, "Seven")))
-               if new != old}
-
-
-def normalize_camera_key(value: Any) -> str | None:
-    value = normalize_keyboard_key(value)
-    return UNREACHABLE.get(value, value)
-
-
-class _CameraOption:
-    normalizer: Callable[[Any], str | None]
-
-    def attach(self, commands: "CameraCommands") -> None:
-        object.__setattr__(self, "_camera_commands", commands)
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name == "value":
-            try:
-                value = self.normalizer(value)
-            except ValueError:
-                value = None
-            commands = getattr(self, "_camera_commands", None)
-            if commands is not None and not commands.applying:
-                try:
-                    commands.validate({self.identifier: value})
-                except ValueError:
-                    return
-        super().__setattr__(name, value)
-
-
-class CameraKeyboardOption(_CameraOption, KeyboardKeybindOption):
-    normalizer = staticmethod(normalize_camera_key)
-
-
-class CameraControllerOption(_CameraOption, ControllerKeybindOption):
-    normalizer = staticmethod(normalize_controller_key)
 
 
 class CameraCommands:
@@ -187,11 +146,32 @@ class CameraCommands:
             self.applying = False
         return normalized
 
+    def _drop_duplicates(self) -> None:
+        """A saved file edited by hand can still give one key to two commands: the later one loses it, rather than
+        the earlier one going back to its default."""
+        self.applying = True
+        try:
+            for identifiers in ({action.name: action.keyboard_id for action in ACTIONS},
+                                {action.name: action.controller_id for action in ACTIONS}):
+                holders: dict[str, str] = {}
+                for name, identifier in identifiers.items():
+                    option = self._options[identifier]
+                    if option.value is None:
+                        continue
+                    holder = holders.get(option.value)
+                    if holder is None:
+                        holders[option.value] = name
+                    elif (holder, name) not in SHARED:
+                        option.value = None
+        finally:
+            self.applying = False
+
     def apply(self, changes: Any) -> dict[str, str | None]:
         normalized = self.set_values(changes)
         self.align()
         return normalized
 
     def align(self) -> None:
+        self._drop_duplicates()
         for bind, option in zip(self.binds, self.options):
             bind.key = option.value

@@ -33,6 +33,10 @@ class FakeKeybindOption:
         if name == "value" and getattr(self, "_bind", None) is not None:
             self._bind.key = value
 
+    def _from_json(self, value):
+        """As mods_base's KeybindOption reads a saved key."""
+        self.value = None if value is None else str(value)
+
 
 mods_base = types.ModuleType("mods_base")
 mods_base.KeybindOption = FakeKeybindOption
@@ -181,10 +185,10 @@ assert commands.option("zoom_in_key")._bind.key is None
 
 # A "Six" or "Seven" saved before the keyboard-named defaults becomes the key's name where it cannot be typed
 # (Kevin's Omni Sprint, AZERTY, 2026-10-07), and stays as it is on QWERTY.
-from apex_camera_runtime import camera_commands  # noqa: E402
-saved = dict(camera_commands.UNREACHABLE)
-camera_commands.UNREACHABLE.clear()
-camera_commands.UNREACHABLE.update({"Six": "Hyphen", "Seven": "E_AccentGrave"})
+from apex_camera_runtime import camera_key_options  # noqa: E402
+saved = dict(camera_key_options.UNREACHABLE)
+camera_key_options.UNREACHABLE.clear()
+camera_key_options.UNREACHABLE.update({"Six": "Hyphen", "Seven": "E_AccentGrave"})
 commands.applying = True
 commands.option("shoulder_key").value = "Six"
 commands.option("orbit_key").value = "Seven"
@@ -192,10 +196,48 @@ commands.applying = False
 commands.align()
 assert commands.option("shoulder_key").value == "Hyphen" and commands.option("orbit_key").value == "E_AccentGrave"
 assert commands.option("shoulder_key")._bind.key == "Hyphen"
-assert camera_commands.normalize_camera_key("Nine") == "Nine"
-camera_commands.UNREACHABLE.clear()
+assert camera_key_options.normalize_camera_key("Nine") == "Nine"
+camera_key_options.UNREACHABLE.clear()
 commands.option("shoulder_key").value = "Six"
 assert commands.option("shoulder_key").value == "Six", "QWERTY keeps its Six"
-camera_commands.UNREACHABLE.update(saved)
-assert camera_commands.UNREACHABLE == {old: new for old, new in (("Six", SIX), ("Seven", SEVEN)) if new != old}
-print("RESULTAT: OK | camera commands validate, group, align and keep callbacks")
+camera_key_options.UNREACHABLE.update(saved)
+assert camera_key_options.UNREACHABLE == {old: new for old, new in (("Six", SIX), ("Seven", SEVEN)) if new != old}
+
+
+def launch(saved):
+    """A new set reading a saved file the way mods_base's load_options_dict does, key by key in the options' order,
+    then aligned as the mods do when they are enabled."""
+    loaded = CameraCommands(third_person=callback("third_person"), shoulder=callback("shoulder"),
+                            orbit=callback("orbit"), zoom_in=callback("zoom_in"), zoom_out=callback("zoom_out"),
+                            camera_distance=callback("camera_distance"))
+    for option in loaded.options:
+        if option.identifier in saved:
+            option._from_json(saved[option.identifier])
+    loaded.align()
+    return loaded
+
+
+# A key saved for one command that is another command's default comes back (Kevin, 2026-10-12: third person on 7,
+# the Orbit Camera without a key, came back as P).
+loaded = launch({"third_person_key": SEVEN, "orbit_key": None})
+assert loaded.option("third_person_key").value == SEVEN and loaded.option("orbit_key").value is None
+assert loaded.option("third_person_key")._bind.key == SEVEN
+loaded = launch({"third_person_key": SEVEN, "orbit_key": "P"})
+assert loaded.option("third_person_key").value == SEVEN and loaded.option("orbit_key").value == "P", "swapped keys"
+loaded = launch({"shoulder_controller": "Gamepad_FaceButton_Left", "orbit_controller": None,
+                 "free_look_controller": "Gamepad_FaceButton_Top"})
+assert loaded.option("shoulder_controller").value == "Gamepad_FaceButton_Left"
+# A file edited by hand with one key on two commands: the later one loses it, the earlier keeps it.
+loaded = launch({"third_person_key": "K", "orbit_key": "K"})
+assert loaded.option("third_person_key").value == "K" and loaded.option("orbit_key").value is None
+assert loaded.option("orbit_key")._bind.key is None
+loaded = launch({"free_look_key": "K", "sniper_zoom_key": "K", "camera_distance_key": "K"})
+assert (loaded.option("free_look_key").value, loaded.option("sniper_zoom_key").value,
+        loaded.option("camera_distance_key").value) == ("K", "K", None), "Free Look and the zoom may share"
+# Read back, a key still goes through its checks; set from a menu, a taken key is still refused.
+loaded = launch({"orbit_key": "Gamepad_FaceButton_Top"})
+assert loaded.option("orbit_key").value is None
+loaded.option("orbit_key").value = SEVEN
+loaded.option("shoulder_key").value = "P"
+assert loaded.option("shoulder_key").value == SIX
+print("RESULTAT: OK | camera commands validate, group, align, read back saved keys and keep callbacks")
