@@ -4,9 +4,10 @@ Off sprint, the game keeps the body facing the camera and plays its side runs; K
 on every side. Trials 1 to 6 (docs/investigations/apex_movement/animation/2026-10-09-corps-gauche-droite.md) turned
 the actor's yaw just before each update of its animation: the body turns toward the run at TURN_RATE, slides included,
 then back to the camera once the hunter aims, glides or leaves the ground and the air, and is handed back to the game.
-An action turns it back to the crosshair at ACTION_TURN_RATE (body_actions.py). A hunter who stops stays turned where
-he stopped while the camera turns around him (Kevin, 2026-10-09: « c'est exactement ça qu'il nous faudrait »), until
-he acts, aims or runs again; stopped facing the camera, he is the game's.
+An action turns it back to the crosshair at ACTION_TURN_RATE (body_actions.py). A hunter standing still is kept where
+he stands while the camera turns around him, whatever came before: a run, an aim, an action, another view (Kevin,
+2026-10-09: « c'est exactement ça qu'il nous faudrait »; 2026-10-12: « au repos la caméra doit continuer de faire son
+mouvement orbital »). An action or an aim turns him back to the crosshair first, and he is the game's while it lasts.
 
 At 180 degrees (Kevin's second mode), a run behind the hunter's sides leaves the body facing the camera, and the game
 plays its own backward run.
@@ -93,7 +94,7 @@ class BodyFacing:
         view = float(controller.GetControlRotation().Yaw)
         run = None if acting else self.run_gap(character, anim, view, full_turn)
         still = run == STILL
-        if (run is None or still) and not self.holding:
+        if run is None and not self.holding:
             return False
         if not still:
             self.kept_yaw = None
@@ -111,7 +112,9 @@ class BodyFacing:
         rotation = self.make_rotator(float(body.Pitch), (view + self.offset) % 360.0, float(body.Roll))
         character.K2_SetActorRotation(rotation, False)
         pose.apply(anim, self.offset, None if run is None or still else signed_gap(run, self.offset))
-        if (run is None or still) and self.offset == 0.0:
+        # Only once an action, an aim or a glide has turned it back: standing still, it stays kept even facing the
+        # camera, where it often stands right after an aim.
+        if run is None and self.offset == 0.0:
             self.release(anim, pose)
         return self.holding
 

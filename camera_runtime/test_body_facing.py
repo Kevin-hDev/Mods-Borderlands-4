@@ -70,11 +70,16 @@ anim = types.SimpleNamespace(bIsGliding=False)
 player, pose = Player(), FakePose()
 movement = player.CharacterMovement
 facing = body_facing.BodyFacing(rotator)
-check("standing still, the body is left to the game",
-      facing.step(player, anim, pose, False, True, 0) is False and player.set_calls == [])
+check("standing still, the body is kept where it stands, the legs the game's",
+      facing.step(player, anim, pose, False, True, 0) is True and player.set_calls == [(0.0, False)]
+      and pose.applied == [(0.0, None)] and facing.kept_yaw == 0.0)
 movement.Velocity = vector(0.0, -50.0)
-check("too slow, the body is left to the game", facing.step(player, anim, pose, False, True, FRAME) is False)
-check("left to the game, the animation is left alone", pose.applied == [])
+check("too slow to be a run, it stays kept", facing.step(player, anim, pose, False, True, FRAME) is True
+      and facing.offset == 0.0)
+# Handed back, as on leaving third person: the next run takes the body from where the game left it.
+facing.release(anim, pose)
+pose = FakePose()
+player.set_calls.clear()
 
 # The game had already turned the body 30 degrees right of the view, as it does in sprint.
 player.view_yaw, player.yaw = 10.0, 40.0
@@ -195,8 +200,8 @@ check("firing, it turns back to the crosshair at the action rate", abs(facing.of
 for frame in range(42, 60):
     facing.step(player, anim, pose, True, True, START + frame * FRAME)
 check("facing the crosshair, it is the game's again", not facing.holding and pose.restored == 1)
-check("the shot over, standing still facing the camera stays the game's",
-      facing.step(player, anim, pose, False, True, START + 60 * FRAME) is False and facing.kept_yaw is None)
+check("the shot over, standing still, it is kept again where it faces",
+      facing.step(player, anim, pose, False, True, START + 60 * FRAME) is True and facing.kept_yaw == 60.0)
 
 player.view_yaw, player.yaw = 0.0, 0.0
 movement.Velocity = vector(-621.0, 0.0)  # world yaw 180: straight back
@@ -212,8 +217,8 @@ check("running again, the body turns toward the new run at the run rate",
 for frame in range(92, 120):
     facing.step(player, anim, pose, False, True, START + frame * FRAME)
 movement.Velocity = vector(0.0, 0.0)
-check("stopped after running forward, the body is the game's",
-      facing.step(player, anim, pose, False, True, START + 120 * FRAME) is False)
+check("stopped after running forward, facing the camera, the body stays kept",
+      facing.step(player, anim, pose, False, True, START + 120 * FRAME) is True and facing.offset == 0.0)
 
 movement.Velocity = vector(0.0, 621.0)  # right
 for frame in range(121, 140):
@@ -226,6 +231,30 @@ check("aiming while standing turns the body back to the camera", abs(facing.offs
 player.ZoomState.bWantsToZoom = False
 facing.release(anim, pose)
 check("released, the kept direction is forgotten", facing.kept_yaw is None)
+
+# At rest the camera keeps turning around the body, whatever came before (Kevin, 2026-10-12: « au repos la caméra
+# doit continuer de faire son mouvement orbital »): another view, an aim, a shot.
+facing, pose = body_facing.BodyFacing(rotator), FakePose()
+player.view_yaw, player.yaw = 0.0, 40.0
+START = 50 * 10**9
+check("back from another view, standing: the body is kept where it stands",
+      facing.step(player, anim, pose, False, True, START) is True and player.yaw == 40.0
+      and facing.offset == 40.0 and facing.kept_yaw == 40.0)
+player.view_yaw = 100.0
+facing.step(player, anim, pose, False, True, START + FRAME)
+check("the camera turning around him leaves the body there", player.yaw == 40.0 and facing.offset == -60.0)
+player.ZoomState.bWantsToZoom = True
+for frame in range(2, 20):
+    facing.step(player, anim, pose, False, True, START + frame * FRAME)
+check("aiming, it turns back to the crosshair and is the game's while he aims",
+      not facing.holding and player.yaw == 100.0 and pose.restored == 1)
+check("still aiming, nothing more is turned", facing.step(player, anim, pose, False, True, START + 20 * FRAME) is False)
+player.ZoomState.bWantsToZoom = False
+check("the aim released, standing facing the camera: kept again",
+      facing.step(player, anim, pose, False, True, START + 21 * FRAME) is True and facing.offset == 0.0)
+player.view_yaw = 150.0
+facing.step(player, anim, pose, False, True, START + 22 * FRAME)
+check("and the camera turns around it", player.yaw == 100.0 and facing.offset == -50.0)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

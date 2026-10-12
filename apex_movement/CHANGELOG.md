@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.21 - 2026-10-12
+
+- Fixed: at rest, your character keeps its direction and the camera turns around it, also after the orbit camera, first person, aiming or firing. Before, you had to walk to get this back.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
 ## 1.2.20 - 2026-10-12
 
 - New: camera profiles. The floppy disk at the top of the menu saves your FOV, camera distances, shoulder spacing and camera height as a profile, with a key or a controller button to switch it on in game. Up to 10 profiles, on the new PROFILES page.

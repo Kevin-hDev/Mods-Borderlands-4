@@ -1,6 +1,6 @@
 # Third Person & FOV
 
-Version **1.2.4**.
+Version **1.2.5**.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -19,7 +19,7 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
   weapons x1 and x2, sniper rifles x2 to x8). With several zooms ticked, a key switches from one to the next.
   Unsupported weapons keep the native view.
 - **Omni direction**: in third person, the character turns toward where it runs, all the way round (360°) or up
-  to the sides (180°), sprints in every direction and stays turned when it stops.
+  to the sides (180°), sprints in every direction and keeps its direction at rest while the camera turns around it.
 - **Sensitivity**: the camera's speed in third person, without aiming and while aiming, with mouse and
   controller. Optional aim speeds per weapon type and per optic zoom, each with its own switch.
 - Sliding, leaving a vehicle, landing a ground slam and being downed keep the selected on-foot camera.
