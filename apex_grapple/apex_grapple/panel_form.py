@@ -7,6 +7,7 @@ from .control_bindings import RESERVED
 from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t, panel_theme_choice
 from . import panel_key_display
 from . import panel_size_choice
+from .panel_preferences import LANGUAGES
 
 
 class PanelForm(Form):
@@ -114,7 +115,7 @@ class PanelForm(Form):
         if self.take(widgets["window_size"]):
             panel_size_choice.choose(self, widgets)
             return False
-        for language in ("EN", "FR"):
+        for language in LANGUAGES:
             if self.take(widgets[language]):
                 if self.flush(widgets) and self.model.change_language(language):
                     self.refresh_labels(widgets)

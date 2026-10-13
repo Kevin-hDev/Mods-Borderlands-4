@@ -89,9 +89,11 @@ assert panel_preferences.language.value == "FR" and panel_preferences.french.val
 panel_preferences.language.value, panel_preferences.french.value = "EN", True
 assert model.language == "FR"  # A player who chose French before keeps it.
 assert model.change_language("EN") and model.language == "EN" and panel_preferences.french.value is False
-# Chinese copied from another mod's settings, or a value this mod does not offer, reads as English.
-assert "ZH" not in panel_preferences.LANGUAGES and not model.change_language("ZH")
-for unknown in ("ZH", "DE", None):
+# Chinese is offered since every text of the window exists in it (2026-10-13).
+assert model.change_language("ZH") and model.language == "ZH"
+# A value this mod does not offer, copied from another mod's settings, reads as English.
+assert not model.change_language("DE")
+for unknown in ("DE", "", None):
     panel_preferences.language.value = unknown
     assert model.language == "EN"
 panel_preferences.language.value = "EN"

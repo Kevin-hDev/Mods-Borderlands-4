@@ -10,6 +10,7 @@ from .command_form import Form
 from .panel_glyphs import Catalogue
 from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
+from .panel_preferences import LANGUAGES
 
 
 class PanelForm(Lifecycle):
@@ -105,6 +106,8 @@ class PanelForm(Lifecycle):
         if outcome is not None:
             self.notice = self.failure_notice() if outcome == "failed" else outcome
             self.sync(widgets)
+        if self.poll_popup(widgets):
+            return False
         self.read_changes(widgets, now)
         if panel_vehicles.poll(self, widgets):
             return False
@@ -116,7 +119,7 @@ class PanelForm(Lifecycle):
         if self.take(widgets["window_size"]):
             panel_size_choice.choose(self, widgets)
             return False
-        for language in ("EN", "FR"):
+        for language in LANGUAGES:
             if self.take(widgets[language]):
                 if self.flush(widgets) and self.model.change_language(language):
                     self.refresh_labels(widgets)

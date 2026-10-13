@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.9 - 2026-10-13
+
+- The menu now reopens where you left it: same page and same place in the page, even after restarting the game.
+- New: the mod's window is now also in Simplified Chinese. Choose 中文 at the top of the window.
+
 ## 1.0.8 - 2026-10-06
 
 - New WINDOW button at the top of the menu, beside THEME: three sizes, LARGE (default), FULL SCREEN and NORMAL (the previous size). More room, same text size. Each mod keeps its own.

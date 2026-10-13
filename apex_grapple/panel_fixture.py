@@ -3,7 +3,7 @@
 from types import SimpleNamespace as NS
 import control_fixture as f
 import unrealsdk
-from apex_grapple import panel_factory, panel_form, panel_model, panel_theme
+from apex_grapple import panel_factory, panel_form, panel_model, panel_preferences, panel_theme
 
 BUTTON_PARTS = ("", "_label", "_fill", "_frame", "_shadow")
 unrealsdk.find_enum = lambda name: NS(Visible="Visible", Collapsed="Collapsed",
@@ -77,7 +77,8 @@ def names(model):
     found.update(("icons_label", "pad_summary", "pad_label", "pad_first", "pad_second",
                   "pad_separator", "pad_second_box", "first:icon", "second:icon",
                   "first:key_label", "second:key_label"))
-    buttons = ["window_size", "theme", "EN", "FR", "close", "restore", "undo", "enabled", "two", "reset"]
+    buttons = ["window_size", "theme", *panel_preferences.LANGUAGES, "close", "restore", "undo", "enabled", "two",
+               "reset"]
     buttons += [f"nav:{page}" for page in panel_theme.PAGES]
     buttons += ["icons:PS5", "icons:XSX"]
     for page in panel_theme.PAGES:

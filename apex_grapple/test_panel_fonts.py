@@ -15,6 +15,8 @@ def check(condition, message):
 
 
 fixture.install()
+# Apex Grapple offers Chinese (2026-10-13); the windows generated from it without Chinese are played first.
+panel_fonts.LANGUAGES = ("EN", "FR")
 paths = {name: f"C:/game/settings/{name}" for name in panel_assets.FONTS}
 panel_assets.path = lambda name: paths.get(name)
 fonts = panel_fonts.build("outer")
@@ -30,6 +32,28 @@ check([entry.Name for entry in body.CompositeFont.DefaultTypeface.Fonts] == ["Me
       "Barlow carries the mockup's three weights")
 check(panel_fonts.face("body", t.WEIGHT_BOLD) == "ExtraBold" and panel_fonts.face("title", None) == "Regular",
       "CSS weights map to the shipped faces")
+
+
+def fallback(font):
+    # The fixture's structs make up any field read; a fallback never written has no list of faces.
+    faces = font.CompositeFont.FallbackTypeface.Typeface.Fonts
+    return [(entry.Name, entry.Font.FontFilename) for entry in faces] if isinstance(faces, list) else []
+
+
+check(not fallback(title) and not fallback(body), "A mod not offering Chinese builds no Chinese fallback")
+panel_fonts.LANGUAGES = ("EN", "FR", "ZH")
+fonts = panel_fonts.build("outer")
+check(fallback(fonts["title"]) == [("Black", paths["NotoSansSC-Black.ttf"])], "Titles: Noto Sans SC Black")
+check(fallback(fonts["body"]) == [("Medium", paths["NotoSansSC-Medium.ttf"]),
+                                  ("ExtraBold", paths["NotoSansSC-ExtraBold.ttf"])], "Body: Medium and ExtraBold")
+check(fonts["body"].CompositeFont.FallbackTypeface.ScalingFactor == 1.0, "Chinese at the Latin size")
+body_faces = [entry.Name for entry in fonts["body"].CompositeFont.DefaultTypeface.Fonts]
+check(body_faces == ["Medium", "SemiBold", "ExtraBold"], "Barlow stays the font: Chinese is only the fallback")
+paths.pop("NotoSansSC-Medium.ttf")
+fonts = panel_fonts.build("outer")
+check(set(fonts) == {"title", "body"} and not fallback(fonts["body"]) and fallback(fonts["title"]),
+      "A missing Chinese file costs the fallback, never the Latin font")
+panel_fonts.LANGUAGES = ("EN", "FR")
 paths.pop("BarlowCondensed-ExtraBold.ttf")
 check(set(panel_fonts.build("outer")) == {"title"}, "A family missing one file falls back to the engine font")
 construct = unrealsdk.construct_object

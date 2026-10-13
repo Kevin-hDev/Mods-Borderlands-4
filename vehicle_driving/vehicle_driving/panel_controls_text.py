@@ -16,3 +16,9 @@ FR = {'controls': 'COMMANDES',
  'XSX': 'XBOX',
  'reserved_key': 'Non enregistré : cette touche est réservée à la console ou à l’annulation. '
                  'Commandes précédentes conservées.'}
+ZH = {'controls': '按键',
+ 'reset_controls': '默认按键',
+ 'controller_icons': '手柄图标',
+ 'PS5': 'PLAYSTATION',
+ 'XSX': 'XBOX',
+ 'reserved_key': '未保存：此按键已保留给控制台或取消操作。之前的按键保持不变。'}

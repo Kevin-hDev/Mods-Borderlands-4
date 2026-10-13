@@ -3,7 +3,7 @@ option a row sets, the keys by default, and the checks a key passes before it is
 
 Apex Heirloom's command_keys.py, without its two rules that cannot apply here: a key another command holds (this page
 has one command, and its two rows are on different devices) and the mouse wheel (Heirloom's keys put a weapon away,
-which the wheel changes). Why each refusal has its own words (panel_en.py, panel_fr.py), the previous key always kept:
+which the wheel changes). Why each refusal has its own words (panel_<language>.py), the previous key always kept:
 a player told the real cause knows what to choose instead. A key is refused when:
 - it is a console key, or Escape, which cancels a capture (control_reserved.py);
 - it is a controller button on the keyboard's row, or a key on the controller's, or the left mouse button, which

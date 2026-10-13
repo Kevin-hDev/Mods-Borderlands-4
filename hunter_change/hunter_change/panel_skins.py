@@ -10,7 +10,7 @@ change nothing (the menus' rule of 2026-09-21, working or invisible).
 from typing import Any
 
 from . import hunters, panel_buttons as b, panel_i18n as i18n, panel_pages as p, panel_text as tx
-from . import panel_theme as t, panel_widgets as w
+from . import panel_hunter_names as names, panel_theme as t, panel_widgets as w
 
 # Each row: the part it chooses, and the name of its widgets and texts.
 ROWS = ((hunters.BODY, "body"), (hunters.HEAD, "head"))
@@ -60,7 +60,7 @@ def paint(widgets: dict, status: Any, language: str) -> None:
     for part, key in ROWS:
         widgets[f"label:skin_{key}"].SetText(i18n.text(f"skin_{key}", language))
         widgets[f"description:skin_{key}"].SetText(i18n.text(f"skin_{key}_hint", language).format(
-            worn=worn.hunter.name))
+            worn=names.name(worn.hunter, language)))
         current = worn.body if part == hunters.BODY else worn.head
         for skin in hunters.SKINS:
             name = _button(key, skin)

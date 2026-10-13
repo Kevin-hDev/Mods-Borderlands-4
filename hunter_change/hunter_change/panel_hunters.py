@@ -18,7 +18,8 @@ page is never read by the other.
 from typing import Any
 
 from . import hunters, menu, panel_assets as assets, panel_buttons as b, panel_hunters_theme as ht
-from . import panel_i18n as i18n, panel_notice, panel_pages as p, panel_skins, panel_text as tx, panel_theme as t
+from . import panel_hunter_names as names, panel_i18n as i18n, panel_notice, panel_pages as p, panel_skins
+from . import panel_text as tx, panel_theme as t
 from . import panel_widgets as w, wardrobe
 
 APPLIES, OFF = "applies", "look_off"
@@ -153,7 +154,7 @@ def paint_card(widgets: dict, prefix: str, hunter: hunters.Hunter, language: str
     """One card of `prefix`: its name, its class in the class's colour, YOUR HUNTER when `own`, CHOSEN when `chosen`,
     and the gold frame and shadow when `framed`."""
     name = f"{prefix}:{hunter.code}"
-    widgets[f"{name}_name"].SetText(hunter.name.upper())
+    widgets[f"{name}_name"].SetText(names.name(hunter, language).upper())
     widgets[f"{name}_name"].SetColorAndOpacity(w.slate(ht.CARD_TEXT))
     widgets[f"{name}_class"].SetText(i18n.text(f"class:{hunter.code}", language))
     widgets[f"{name}_class"].SetColorAndOpacity(w.slate(ht.CLASS_COLOURS[hunter.code]))
@@ -185,7 +186,8 @@ def paint(widgets: dict, state: wardrobe.Status | None, language: str, enabled: 
                    framed=worn_here)
     key = "own_look" if worn == played else "worn_look"
     widgets["hunter_state"].SetText(i18n.text(key, language).format(
-        played=played.name, worn=worn.name, own=played.name.upper()))
+        played=names.name(played, language), worn=names.name(worn, language),
+        own=names.name(played, language).upper()))
 
 
 def poll(form: Any, widgets: dict) -> bool:

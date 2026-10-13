@@ -11,7 +11,7 @@ KEYBOARD, CONTROLLER = "keyboard", "controller"
 
 
 class Command(NamedTuple):
-    name: str  # its card's words are command_<name> and command_<name>_desc in panel_en.py and panel_fr.py
+    name: str  # its card's words are command_<name> and command_<name>_desc in each panel_<language>.py
     keyboard: Any  # the keyboard or mouse key's option
     controller: Any  # the controller button's option
     binds: tuple  # the keyboard's bind then the controller's, which the options' keys reach

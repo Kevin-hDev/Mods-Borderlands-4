@@ -13,7 +13,7 @@ sdk_stubs.install()
 
 from omni_sprint import camera_control_config, panel_camera_commands, panel_camera_pages, panel_form  # noqa: E402
 from omni_sprint import panel_ownership  # noqa: E402
-from omni_sprint import panel_labels, panel_model, panel_theme, settings  # noqa: E402
+from omni_sprint import panel_labels, panel_model, panel_preferences, panel_theme, settings  # noqa: E402
 
 fails: list[str] = []
 
@@ -91,8 +91,8 @@ shown = {}  # What the labels would show beside each setting: for the shortcut, 
 panel_labels.value = lambda _widgets, option, current, _language: shown.__setitem__(option.identifier, current)
 mod = Mod()
 model = panel_model.Model(mod)
-names = ["focus", "pages", "notice", "close", "theme", "window_size", "EN", "FR", "restore", "undo", "enabled", "nav:omni_sprint",
-         "nav:commands", "nav:profiles", "row:fov", "description:fov", "icons:PS5", "icons:XSX",
+names = ["focus", "pages", "notice", "close", "theme", "window_size", *panel_preferences.LANGUAGES, "restore",
+         "undo", "enabled", "nav:omni_sprint", "nav:commands", "nav:profiles", "row:fov", "description:fov", "icons:PS5", "icons:XSX",
          "commands:settings", "commands:external"]
 names += [f"nav:{key}" for key in panel_camera_pages.PAGES] + [f"{key}:settings" for key in panel_camera_pages.PAGES]
 # CAMERA VIEW and SHOULDER VIEW, the CAMERA page's two halves, and their buttons (Kevin, 2026-10-07).

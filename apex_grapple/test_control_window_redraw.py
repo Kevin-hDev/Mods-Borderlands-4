@@ -16,6 +16,7 @@ sdk.commands = NS(remove_command=lambda *args: None, has_command=lambda *args: F
 sys.modules["unrealsdk"] = sdk
 base = ModuleType("mods_base")
 base.get_pc = lambda **kwargs: None
+base.SliderOption = lambda identifier, value, *args, **kwargs: NS(value=value)
 sys.modules["mods_base"] = base
 import ui_clock_fixture
 ui_clock_fixture.install(sdk)
@@ -68,7 +69,7 @@ def setup(build_fails=False, accept=True, old_fails=False):
     pc = NS(bShowMouseCursor=False, CurrentMouseCursor=None)
     session = NS(form=old_form, root=lambda: old_root, pc=lambda: pc, bindings="bindings", return_to_menu=True,
                  viewport=lambda: viewport, selector=old_form.focus,
-                 focus=lambda: events.append("focus"))
+                 focus=lambda: events.append("focus"), scroll=None)
     return session, old_form, new_form, new_root, reports
 
 

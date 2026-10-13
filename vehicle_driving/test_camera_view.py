@@ -133,5 +133,30 @@ check("a summary every 5 seconds a view writes, with the reticle's clearance ove
 watched.draw()
 check("another view starts its own count", summary.step(5050 * MS, car, watched, "Closer", ZERO) == [])
 
+from vehicle_driving import camera_share  # noqa: E402
+
+check("no camera mod at the wheel: nothing to add", camera_share.framing() == ZERO)
+shared = camera_view.CameraView()
+pulled = sdk_stubs.CameraManager()
+camera_share.publish((-80.0, 0.0, 0.0))
+shared.step(20_000 * MS, car, pulled, "Default", ZERO)
+check("the camera mods' framing is written on the game's own view, and the camera mods are told not to write",
+      offset(pulled) == (-80.0, 0.0, 0.0) and camera_share.claimed())
+pulled.draw()
+shared.step(20_001 * MS, car, pulled, "Close", ZERO)
+check("a view keeps its place and the framing adds to it", near(offset(pulled), (40.0, 0.0, -3.0)))
+pulled.draw()
+shared.step(20_002 * MS, car, pulled, "Close", ZERO)
+check("drawn with both, the next frame writes the same: the zoom does not count the framing twice",
+      near(offset(pulled), (40.0, 0.0, -3.0)))
+pulled.draw()
+shared.step(20_003 * MS, car, pulled, "Custom", (200.0, -30.0, 90.0))
+check("Custom's sliders plus the framing", offset(pulled) == (120.0, -30.0, 90.0))
+pulled.draw()
+sys.modules[camera_share.SLOT].framing_ns = 1
+shared.step(20_004 * MS, car, pulled, "Default", ZERO)
+check("a framing from a frame long gone (camera mod switched off) is never added", offset(pulled) == ZERO)
+shared.release()
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

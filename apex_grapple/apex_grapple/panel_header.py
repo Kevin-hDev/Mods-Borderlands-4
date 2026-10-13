@@ -5,6 +5,14 @@ import math
 
 from . import panel_assets as assets, panel_buttons as b, panel_text as tx, panel_theme as t, panel_widgets as w
 from . import panel_window_size as size
+from .panel_preferences import LANGUAGES
+
+# A language's button is named in its own words, so a player lost in another one still finds theirs (2026-09-24).
+BUTTON_NAMES = {"ZH": "中文"}
+
+
+def language_button(language):
+    return BUTTON_NAMES.get(language, language)
 
 
 def hazard(owner):
@@ -72,7 +80,7 @@ def header(owner, world, widgets, template):
           padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")
     w.row(line, b.button(line, widgets, "theme", "lang", template, "lang_off"),
           padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")
-    for language in ("EN", "FR"):
+    for language in LANGUAGES:
         w.row(line, b.button(line, widgets, language, "lang", template, "lang_off"),
               padding=w.pad(0, 0, 0, t.SPACE_2), valign="Center")
     w.row(line, b.button(line, widgets, "close", "action", template, "secondary"),

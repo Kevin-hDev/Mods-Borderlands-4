@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.8 - 2026-10-13
+
+- New: the settings window is now also in Simplified Chinese. Choose 中文 at the top of the window.
+
 ## 1.2.7 - 2026-10-12
 
 - Fixed: with OMNI DIRECTION, walking diagonally forward-left in third person no longer crosses the hunter's legs or twists the ankle.

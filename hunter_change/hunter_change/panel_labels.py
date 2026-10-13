@@ -4,6 +4,8 @@
 from . import panel_buttons as b, panel_hunters as hunter_page, panel_i18n as i18n, panel_slider as s, panel_switch, panel_theme as t
 from . import panel_theme_choice
 from . import panel_size_choice
+from .panel_header import language_button
+from .panel_preferences import LANGUAGES
 
 
 def apply(form, widgets):
@@ -13,8 +15,8 @@ def apply(form, widgets):
         widgets[f"{name}_label"].SetText(i18n.text(name, language))
     panel_size_choice.paint(widgets, form.model.window_size, language)
     panel_theme_choice.paint(widgets, form.model.theme, language)
-    for lang in ("EN", "FR"):
-        widgets[f"{lang}_label"].SetText(lang)
+    for lang in LANGUAGES:
+        widgets[f"{lang}_label"].SetText(language_button(lang))
         b.paint(widgets, lang, "lang_on" if lang == language else "lang_off")
     for index, key in enumerate(form.model.pages):
         widgets[f"nav:{key}_label"].SetText(i18n.text(key, language))
@@ -23,7 +25,6 @@ def apply(form, widgets):
     widgets["enabled_label"].SetText(i18n.text("enabled" if enabled else "disabled", language))
     b.paint(widgets, "enabled", "on" if enabled else "off")
     widgets["tag"].SetText(f"{i18n.text('by', language)} {t.AUTHOR}")
-    widgets["settings_caption"].SetText(i18n.text("settings", language))
     widgets["meta"].SetText(f"{i18n.text('version', language)} {__version__} · "
                             f"{i18n.text('by', language)} {t.AUTHOR}")
     for group, key in zip(form.model.groups, form.model.pages):

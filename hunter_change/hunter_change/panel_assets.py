@@ -11,13 +11,15 @@ import unrealsdk
 
 from . import file_replace, menu, panel_widgets as w, report
 
+# Noto Sans SC cut to the Chinese a mod's texts use (outils/chinese_font.py), shipped by the mods offering Chinese.
+CHINESE_FONTS = ("NotoSansSC-Black.ttf", "NotoSansSC-Medium.ttf", "NotoSansSC-ExtraBold.ttf")
 FONTS = ("Anton-Regular.ttf", "BarlowCondensed-Medium.ttf", "BarlowCondensed-SemiBold.ttf",
-         "BarlowCondensed-ExtraBold.ttf")
+         "BarlowCondensed-ExtraBold.ttf", *CHINESE_FONTS)
 AVATAR = "avatar.png"
 NAMES = (*FONTS, AVATAR, *(picture[0] for picture in menu.PICTURES.values()))
 FOLDER = "hunter_change_ui"
-# Each shipped file is under 200 kB; anything larger is not ours and is refused.
-MAX_BYTES = 1_000_000
+# The largest shipped file is a Chinese face, 1.1 MB with the everyday characters; anything larger is refused.
+MAX_BYTES = 2_000_000
 SIGNATURES = {".ttf": b"\x00\x01\x00\x00", ".png": b"\x89PNG\r\n\x1a\n"}
 
 _copied = {}  # name -> path, or None after a failure; bounded by NAMES

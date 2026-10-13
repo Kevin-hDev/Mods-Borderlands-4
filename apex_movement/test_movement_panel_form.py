@@ -11,7 +11,7 @@ import movement_ui_fixture
 movement_ui_fixture.install()
 
 from apex_movement import camera, camera_settings, panel_camera_commands, panel_form, panel_labels, panel_model
-from apex_movement import panel_theme, panel_widgets, settings
+from apex_movement import panel_preferences, panel_theme, panel_widgets, settings
 
 
 from movement_ui_fixture import Widget
@@ -42,8 +42,8 @@ shown = {}  # What the labels would show beside each setting: for the shortcut, 
 panel_labels.value = lambda _widgets, option, current, _language: shown.__setitem__(option.identifier, current)
 mod = Mod()
 model = panel_model.Model(mod)
-names = ["focus", "pages", "notice", "close", "theme", "window_size", "options", "language:EN", "language:FR",
-         "restore", "undo", "enabled", "row:fov", "description:fov",
+names = ["focus", "pages", "notice", "close", "theme", "window_size", "options",
+         *(f"language:{code}" for code in panel_preferences.LANGUAGES), "restore", "undo", "enabled", "row:fov", "description:fov",
          "row:walk_toggle", "description:walk_toggle", "row:walk_key_speed", "description:walk_key_speed",
          "row:loot_reach", "description:loot_reach", "row:shoulder_left", "description:shoulder_left",
          "row:orbit", "description:orbit", "row:third_person_ads", "description:third_person_ads",

@@ -7,7 +7,7 @@ Tested in single player on game version **1.10.2-4845623**, Steam version, on Wi
 
 ## What it does
 
-Open the console with `~`, type `mods`, and choose **Hunter Change**: its settings window, in English and French, has
+Open the console with `~`, type `mods`, and choose **Hunter Change**: its settings window, in English, French and Simplified Chinese, has
 two pages.
 
 - **APPEARANCE.** Wear another hunter's look in the game you play. It applies at once and comes back each time you load

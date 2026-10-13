@@ -1,11 +1,26 @@
-"""Simplified Chinese for the camera words Apex Movement shares with the other camera mods, translated once here:
-outils/sync_menu_camera_text.py copies them into each camera window.
+"""Simplified Chinese for Apex Movement's window. Its camera words, shared with the other camera mods, are translated
+once here: outils/sync_menu_camera_text.py copies them into each camera window.
 
-Apex Movement itself does not offer Chinese yet (outils/menu_languages.py): its movement pages are still to translate.
-Page names in a sentence are written 「…」, the way Chinese interfaces quote a button or a tab.
+Page names in a sentence are written 「…」, the way Chinese interfaces quote a button or a tab. 疾跑 is the sprint and
+冲刺 the dash, everywhere.
 """
 
+from .panel_common_zh import TEXT as COMMON
+
 TEXT = {
+    **COMMON,
+    "options": "选项", "options_desc_menu": "菜单语言。", "languages": "语言",
+    "camera_tab_desc": "视角、环绕镜头和战利品。", "commands_tab_desc": "键盘和手柄上的镜头按键。",
+    "shoulder_tab_desc": "镜头所在的肩膀、间距、高度和自动切换。",
+    "aiming_tab_desc": "瞄准视角和瞄准倍率。", "sensitivity_tab_desc": "第三人称下的镜头速度。",
+    "dynamic_camera_tab_desc": "视野、构图和镜头运动。",
+    "omni_direction_tab_desc": "第三人称下，身体跟随你的奔跑方向。",
+    "profiles_tab_desc": "你保存的镜头设置，一键开启。",
+    "language": "语言", "menu_language": "菜单语言", "language_name": "中文",
+    # Axle is a hunter's name, kept as written.
+    "movement": "移动", "auto_sprint": "自动疾跑", "slides": "滑铲", "axle_slide": "Axle 滑铲", "dash": "冲刺",
+    "glide": "滑翔", "air_crouch": "重击落地与滑铲", "air_strafe": "空中转向", "heavier_fall": "加强重力",
+    "wall_climb": "爬墙",
     "camera_refused": "镜头未确认此更改，未保存。",
     "camera_timeout": "镜头没有响应，已恢复之前的设置。请稍后再试。",
     "undone_partial": "设置已恢复，镜头除外：另一个模组正在控制镜头。",
@@ -26,9 +41,9 @@ TEXT = {
     "optics_help_text": "BDL4：武器按游戏原本的方式瞄准，即第一人称。\n\n"
                         "x1：武器以越肩方式瞄准，带轻微放大。\n\n"
                         "x2 及以上：武器以越肩方式按该倍率瞄准。\n\n"
-                        "勾选了多个倍率：瞄准时，倍率键切换到下一个，从小到大，然后回到第一个。"
+                        "勾选了多个倍率：瞄准时，瞄具倍率键切换到下一个，从小到大，然后回到第一个。"
                         "该武器类型下次瞄准时，从上次使用的倍率开始。",
-    "optics_help_key": "倍率键", "optics_help_commands": "可在「按键」页面更改。",
+    "optics_help_key": "瞄具倍率键", "optics_help_commands": "可在「按键」页面更改。",
     "camera_draft_discarded": "镜头模组已更改：未保存的镜头设置已被放弃。",
     "camera_outdated": "加载了不同版本的镜头模组。请更新 Apex Movement、Omni Sprint 和 Third Person & FOV，"
                        "然后重启游戏。",
@@ -50,13 +65,13 @@ TEXT = {
     # Translated, like the other page names (Kevin, 2026-10-12); 全方向 as in the sprint's 全方向疾跑.
     "omni_direction": "全方向","omni_direction_page": "第三人称下，身体跟随你的奔跑方向。",
     "omni_full_turn": "360°", "omni_half_turn": "180°", "omni_dash": "冲刺", "omni_slide": "滑铲",
-    "popup_omni_body": "身体朝向", "popup_omni_body_desc": "猎人转向奔跑的方向。",
-    "omni_body_help_text": "第三人称下，猎人会转向奔跑的方向，而不是一直背对镜头。\n\n"
+    "popup_omni_body": "身体朝向", "popup_omni_body_desc": "秘藏猎人转向奔跑的方向。",
+    "omni_body_help_text": "第三人称下，秘藏猎人会转向奔跑的方向，而不是一直背对镜头。\n\n"
                            "当你射击、投掷手雷、近战攻击或使用技能时，猎人会转回准星方向，"
                            "并在你最后一个动作一秒后重新转向奔跑方向。\n\n"
                            "瞄准时，猎人面向准星。滑铲时，身体保持朝向滑铲的方向。",
     "popup_omni_angle": "角度", "popup_omni_angle_desc": "身体可以转动的范围。",
-    "omni_angle_help_text": "360°：猎人在任何方向都会转向奔跑方向。向后时，猎人面朝镜头奔跑。\n\n"
+    "omni_angle_help_text": "360°：秘藏猎人在任何方向都会转向奔跑方向。向后时，猎人面朝镜头奔跑。\n\n"
                             "180°：猎人只在两侧和前方转向。向后时，猎人背对镜头后退，和游戏原本一样。",
     "popup_omni_crouch": "侧向和后方", "popup_omni_crouch_desc": "向侧面或后方疾跑时蹲下。",
     "omni_crouch_help_text": "向侧面或后方疾跑时，蹲下会触发：\n\n"
@@ -72,7 +87,19 @@ TEXT = {
     "ads_wrong_thread": "瞄准显示不可用：仍使用第一人称瞄准。请附上日志报告此问题。",
     "ads_mode_unavailable": "瞄准视角未确认：仍使用第一人称瞄准。请松开后重新瞄准。",
     "ads_cleanup_pending": "正在恢复游戏视角。请稍等，再更换镜头模组。",
-    "ads_install_failed": "无法启用越肩瞄准。请重启游戏；如果问题仍然存在，请附上日志报告。",
+    "ads_install_failed": "无法开启越肩瞄准。请重启游戏；如果问题仍然存在，请附上日志报告。",
+}
+GROUPS = {
+    "movement": "步行和疾跑的速度，以及慢走按键。",
+    "auto_sprint": "摇杆推到底时自动疾跑。",
+    "slides": "滑铲的起步、距离和速度。",
+    "axle_slide": "像 Axle 一样操控滑铲并加速。",
+    "dash": "冲刺距离。",
+    "glide": "滑翔速度。",
+    "air_crouch": "重击落地，落地时滑铲。",
+    "air_strafe": "在空中快速改变方向。",
+    "heavier_fall": "重力和跳跃高度。",
+    "wall_climb": "攀爬、方向，以及再次攀爬前的等待。",
 }
 OPTIONS = {'third_person': ('第三人称', '步行时镜头保持在角色身后。'),
  'third_person_ads': ('瞄准视角', '在下方为每种武器类型选择瞄具。'),
@@ -80,7 +107,7 @@ OPTIONS = {'third_person': ('第三人称', '步行时镜头保持在角色身�
  'smg_optics': ('冲锋枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'shotgun_optics': ('霰弹枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'assault_optics': ('突击步枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
- 'sniper_optics': ('狙击步枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
+ 'sniper_optics': ('狙击枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'heavy_optics': ('重武器瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'shoulder_left': ('切换肩膀', '将镜头放在角色的左侧或右侧。'),
  'shoulder_auto': ('自动切换肩膀', '墙壁挡住视线时，镜头切到另一侧肩膀，然后再切回来。'),
@@ -96,7 +123,7 @@ OPTIONS = {'third_person': ('第三人称', '步行时镜头保持在角色身�
  'sensitivity_weapon_smg': ('冲锋枪', '使用冲锋枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
  'sensitivity_weapon_shotgun': ('霰弹枪', '使用霰弹枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
  'sensitivity_weapon_assault': ('突击步枪', '使用突击步枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
- 'sensitivity_weapon_sniper': ('狙击步枪', '使用狙击步枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
+ 'sensitivity_weapon_sniper': ('狙击枪', '使用狙击枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
  'sensitivity_weapon_heavy': ('重武器', '使用重武器时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
  'sensitivity_weapon_sniper_optics': ('按瞄具倍率', '每个倍率使用下方各自的数值，适用于所有武器。'),
  'sensitivity_weapon_sniper_x2': ('瞄具 x2', '使用 x2 倍率时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
@@ -124,7 +151,41 @@ OPTIONS = {'third_person': ('第三人称', '步行时镜头保持在角色身�
  'free_look_keyboard_hold': ('自由视角：键盘按住模式', '开：按住按键期间保持自由视角。关：按一次开启，再按一次关闭。'),
  'free_look_controller_hold': ('自由视角：手柄按住模式', '开：按住按钮期间保持自由视角。关：按一次开启，再按一次关闭。'),
  'free_look_hold_time': ('自由视角：按住时长', '自由视角启动前需要按住的时间，单位为秒。'),
- 'omni_body': ('身体朝向', '猎人转向奔跑的方向。'),
+ 'omni_body': ('身体朝向', '秘藏猎人转向奔跑的方向。'),
  'omni_angle': ('角度', '360°：所有方向。180°：向后时，像游戏原本一样后退。'),
  'omni_direction_sprint': ('全方向疾跑', '也可以向两侧和后方疾跑。'),
- 'omni_crouch': ('侧向和后方', '向侧面或后方疾跑时，蹲下会触发冲刺或滑铲。')}
+ 'omni_crouch': ('侧向和后方', '向侧面或后方疾跑时，蹲下会触发冲刺或滑铲。'),
+ 'walk_speed': ('步行速度', '游戏默认值：540。'),
+ 'sprint_speed': ('疾跑速度', '游戏默认值：828。'),
+ 'auto_sprint': ('启用', '将摇杆推到底即可疾跑。'),
+ 'auto_sprint_third_person': ('第三人称', '第三人称下也自动疾跑。'),
+ 'walk': ('慢走', '按住按键慢走。开启切换模式后，按一次即可。'),
+ 'walk_toggle': ('慢走切换模式', '关：按住按键慢走。开：按一次开始慢走，再按一次停止。'),
+ 'walk_key_speed': ('慢走速度', '最高 540，即游戏的步行速度。'),
+ 'slides': ('启用', '更快、更远的滑铲。'),
+ 'momentum_slides': ('跟随惯性', '滑铲沿着你的移动方向，而不是准星方向。'),
+ 'slide_speed': ('起步速度', '滑铲开始时的速度。'),
+ 'slide_distance': ('平地距离', '在平地上滑行的距离。'),
+ 'slide_downhill_pull': ('坡度影响', '坡道会让滑铲加速或减速。'),
+ 'slide_max_speed': ('最高速度', '滑铲的最高速度。'),
+ 'axle_slide': ('启用', '像 Axle 一样可操控、更快的滑铲。'),
+ 'axle_steering': ('转向', '用摇杆转动滑铲的速度。'),
+ 'axle_speed_boost': ('速度加成', '额外的速度，以百分比表示。'),
+ 'axle_flat_distance_boost': ('平地距离', '平地上额外的距离，以百分比表示。'),
+ 'axle_slope_boost': ('坡度影响', '坡道上额外的距离，以百分比表示。'),
+ 'dash': ('启用', '更长的冲刺。'),
+ 'dash_distance': ('冲刺距离', '以百分比表示。100 = 游戏原本的冲刺。'),
+ 'glide': ('启用', '更快的滑翔。'),
+ 'glide_speed': ('滑翔速度', '以百分比表示。100 = 游戏原本的速度。'),
+ 'air_crouch': ('启用', '在空中同时按跳跃和蹲下即可重击落地，蹲着落地即可滑铲。'),
+ 'landing_slide_min_speed': ('最低落地速度', '落地时滑铲所需的速度。'),
+ 'air_strafe': ('启用', '在空中和地面上快速改变方向。'),
+ 'air_acceleration': ('空中加速度', '在空中和地面上改变方向的速度。'),
+ 'heavier_fall': ('启用', '下落更快，跳跃高度不变。'),
+ 'fall_weight': ('下落重力', '重力强度。1 = 游戏原本的重力。'),
+ 'jump_height_bonus': ('额外跳跃高度', '所有跳跃增加的高度。'),
+ 'wall_climb': ('启用', '攀爬墙壁。'),
+ 'climb_height': ('攀爬距离', '以角色身高的百分比表示。'),
+ 'climb_speed': ('攀爬速度', '在墙上移动的速度。'),
+ 'climb_lean': ('斜向攀爬', '攀爬时能向斜侧偏离多远。'),
+ 'reclimb_delay': ('再次攀爬延迟', '再次攀爬前的等待时间。落地后会取消等待。')}

@@ -9,8 +9,11 @@ The buttons are the switches' own, gold for the choice in use, as the sketches d
 EN and FR buttons. Past the last name, the next arrow comes back to the first.
 """
 
-from . import menu, panel_buttons as b, panel_en, panel_fr, panel_slider as s, panel_text as tx, panel_theme as t
+from importlib import import_module
+
+from . import menu, panel_buttons as b, panel_en, panel_slider as s, panel_text as tx, panel_theme as t
 from . import panel_widgets as w
+from .panel_preferences import LANGUAGES
 
 # The name's box, as wide as sketch H2 drew it and a little more, for the longest names in French.
 NAME_WIDTH = 260
@@ -26,9 +29,14 @@ def _name(option, choice):
     return f"setting:{option.identifier}:{choice}"
 
 
+# Each language the window offers names the choices in its own panel_<code>.py, when it has any.
+_WORDS = {code: getattr(import_module(f".panel_{code.lower()}", __package__), "CHOICES", {})
+          for code in LANGUAGES if code != "EN"}
+
+
 def label(choice, language):
     """A name as the window writes it: its words in the language shown, else in English, else the name itself."""
-    words = panel_fr.CHOICES.get(choice) if language == "FR" else None
+    words = _WORDS.get(language, {}).get(choice)
     return (words or panel_en.CHOICES.get(choice) or choice).upper()
 
 

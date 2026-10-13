@@ -7,7 +7,7 @@ import sdk_stubs
 
 sdk_stubs.install()
 
-from vehicle_driving import control_config, panel_form, panel_labels, panel_model, settings, view_key
+from vehicle_driving import control_config, panel_form, panel_labels, panel_model, panel_preferences, settings, view_key
 
 
 def chord(key):
@@ -73,7 +73,8 @@ panel_labels.apply = lambda *_: None
 panel_labels.value = lambda *_: None
 mod = Mod()
 model = panel_model.Model(mod)
-names = ["focus", "pages", "notice", "close", "theme", "window_size", "EN", "FR", "restore", "undo", "enabled"]
+names = ["focus", "pages", "notice", "close", "theme", "window_size", *panel_preferences.LANGUAGES, "restore", "undo",
+         "enabled"]
 names += [f"nav:{page}" for page in model.pages]
 names += [f"setting:{key}" for key in model.options]
 names += [f'vehicles:{key}' for key in ('standard', 'promotions', 'shatterland')]

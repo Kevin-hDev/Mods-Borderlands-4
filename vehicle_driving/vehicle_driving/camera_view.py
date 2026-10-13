@@ -3,6 +3,9 @@
 
 The game sets CameraLocationOffset back to 0 each frame and adds its own value to ours (verified in game, trials 2 to
 4): once the mod stops writing, nothing stays.
+
+The camera mods' framing at the wheel (back with the speed) is added to the view, Default included, and this part says
+it writes, so they do not write too (camera_share.py, Kevin 2026-10-06: the chosen view stays, the framing adds to it).
 """
 
 import math
@@ -10,7 +13,7 @@ from typing import Any
 
 from unrealsdk.unreal import WeakPointer
 
-from . import camera_geometry as geometry, settings
+from . import camera_geometry as geometry, camera_share, settings
 
 TOLERANCE = 0.001
 # Far beyond any view: an offset this large means a wrong target, and the part stops rather than throw the camera.
@@ -40,18 +43,28 @@ class CameraView:
 
     def step(self, now_ns: int, vehicle: Any, manager: Any, view: str, custom: tuple) -> list[str]:
         """Writes this frame's offset for the view; returns a summary line when one is due."""
-        if (manager is None or view == settings.DEFAULT_VIEW
-                or (view == settings.CUSTOM_VIEW and _same(custom, geometry.ZERO))):
+        if manager is None:
+            return self.release()
+        camera_share.claim()
+        framing = camera_share.framing()
+        if _same(framing, geometry.ZERO) and (view == settings.DEFAULT_VIEW
+                                               or (view == settings.CUSTOM_VIEW and _same(custom, geometry.ZERO))):
             return self.release()
         offset = manager.CameraModeState.CameraLocationOffset
         # Still ours: the game has not drawn the camera since our last write, so it carries the offset before it.
         if self._written is not None and not _same(_read(offset), self._written):
             self._applied = self._written
         seen = geometry.sighting(vehicle, manager)
-        if view == settings.CUSTOM_VIEW:
+        if view == settings.DEFAULT_VIEW:
+            wanted = geometry.ZERO
+        elif view == settings.CUSTOM_VIEW:
             wanted = tuple(custom)
         elif seen is not None:
             wanted = geometry.zoomed(seen, self._applied, settings.VIEW_SHARES[view])
+        else:
+            wanted = None
+        if wanted is not None:
+            wanted = tuple(value + extra for value, extra in zip(wanted, framing))
         else:
             # The driver unreadable for a frame: keep the last offset; before the first write, write nothing.
             wanted = self._written

@@ -106,11 +106,13 @@ def walk(node):
 assert widgets["options_title:options"].calls["SetRenderTransformAngle"] == (float(theme.TILT_TITLE),)
 assert widgets["options_description:options"].Font.Size == theme.TEXT_MD * theme.PX_TO_POINTS
 assert widgets["group:language"].calls["SetVisibility"] == ("ESlateVisibility.Collapsed",)
+codes = panel_preferences.LANGUAGES
 language_boxes = [node for node in Widget.created
-                  if node.kind == "HorizontalBox" and len(node.children) == 2
-                  and widgets["language:EN"] in walk(node.children[0])
-                  and widgets["language:FR"] in walk(node.children[1])]
-assert len(language_boxes) == 1 and language_boxes[0].slots[0].calls["SetPadding"][0].Right == theme.SPACE_3
+                  if node.kind == "HorizontalBox" and len(node.children) == len(codes)
+                  and all(widgets[f"language:{code}"] in walk(child) for code, child in zip(codes, node.children))]
+assert len(language_boxes) == 1
+gaps = [slot.calls["SetPadding"][0].Right for slot in language_boxes[0].slots]
+assert gaps == [theme.SPACE_3] * (len(codes) - 1) + [0], gaps
 # The sidebar's side padding lies inside its ScrollBox, which cuts whatever leaves it: the slanted page buttons lean
 # past their box, and their corners were cut (Kevin's screenshot, 2026-10-06).
 sidebar_scroll = next(node for node in Widget.created
@@ -118,7 +120,7 @@ sidebar_scroll = next(node for node in Widget.created
 inside = sidebar_scroll.slots[0].calls["SetPadding"][0]
 assert inside.Left >= theme.SPACE_4 and inside.Right >= theme.SPACE_4, "the page buttons' corners stay whole"
 assert sum(node.calls.get("SetMinDesiredWidth") == (float(theme.SWITCH_WIDTH),)
-           for node in walk(language_boxes[0])) == 2
+           for node in walk(language_boxes[0])) == len(codes)
 assert all(widgets[f"options_icon:{index}"].calls["SetBrush"][0].DrawAs == "ESlateBrushDrawType.RoundedBox"
            for index in (4, 5))
 assert all(f"row:{key}" in widgets for key in

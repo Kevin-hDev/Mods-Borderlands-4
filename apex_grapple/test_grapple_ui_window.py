@@ -228,4 +228,34 @@ keyboard.pressed = True
 item.form.poll = lambda: True
 turns(item, 0, 1)
 assert item.closed and "form_escape" not in events  # A click on Close in the same turn closes at once.
-print("OK | manual close, no expiry, cursor, focus, capture, travel, disable, error cleanup and Escape")
+from ui_test_loader import PACKAGE  # noqa: E402
+calls = []
+
+
+class Memory:
+    def __init__(self, model):
+        calls.append(("made", model))
+
+    def restore(self, widgets):
+        calls.append(("restore", widgets))
+
+    def remember(self, widgets):
+        calls.append(("remember", widgets))
+
+
+sys.modules[f"{PACKAGE}.panel_scroll"] = NS(Memory=Memory)
+item, root = session()
+check_form = NS(widgets=item.form.widgets, poll=lambda: False, selecting=lambda: False, escape=lambda: False,
+                model="the model", resolve=lambda: "live widgets")
+item = window.Session(lambda: pc, lambda: root, lambda: NS(SetInputMode_GameOnly=lambda *args: None,
+                      SetInputMode_GameAndUIEx=lambda *args: None, SetInputMode_UIOnlyEx=lambda *args: None),
+                      False, check_form, NS(ready=lambda: True), lambda: character)
+item.hooked = item.commanded = item.input_changed = True
+window._active = item
+item.poll(1)
+item.poll(1 + window.POLL_NS)
+assert calls == [("made", "the model"), ("restore", "live widgets"), ("restore", "live widgets")], calls
+item.close("button")
+item.close("button")
+assert calls[3:] == [("remember", "live widgets")], "Saved once at closing, though close runs again"
+print("OK | manual close, no expiry, cursor, focus, capture, travel, disable, error cleanup, Escape, scroll kept")

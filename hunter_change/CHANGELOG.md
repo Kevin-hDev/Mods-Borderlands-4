@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.6 - 2026-10-13
+
+- New: the mod's window is now also in Simplified Chinese. Choose 中文 at the top of the window.
+
 ## 1.0.5 - 2026-10-08
 
 - APPEARANCE page: you now also take the worn hunter's height. Your view and crosshair stand at their shoulder, as in
