@@ -14,7 +14,7 @@ from sdk_stubs import FakeDefPtr
 
 GESTALT = types.SimpleNamespace(_path_name=lambda: "/Script/GbxGame.GbxActorPartDef_Gestalt")
 COLOUR = "Cosmetics_Colorization_Primary"
-rule = {"refuse": None, "ignore": None, "setter_refused": False, "size_refused": False}
+rule = {"refuse": None, "ignore": None, "setter_refused": False, "size_refused": False, "offset_refused": False}
 
 
 class EGbxActorPartChoiceType(enum.IntEnum):
@@ -71,12 +71,18 @@ class Character:
         self.GbxActorPartOwnerState = types.SimpleNamespace(ReplicatedSelections=selections)
         self.Mesh = types.SimpleNamespace(GestaltMeshParts=[], RelativeLocation=vec(0.0, 0.0, own.mesh_z))
         self.Mesh.K2_SetRelativeLocation = lambda at, _s, _h, _t: setattr(self.Mesh, "RelativeLocation", at)
+        self.BaseTranslationOffset = vec(0.0, 0.0, own.mesh_z)
         self.CapsuleComponent = Capsule(own.half)
         self.CharacterMovement = types.SimpleNamespace(CrouchedHalfHeight=60.5)
         self.CharacterMovement.SetCrouchedHalfHeight = lambda half: setattr(self.CharacterMovement,
                                                                             "CrouchedHalfHeight", half)
         self.BaseEyeHeight, self.CrouchedEyeHeight = own.eye, own.crouched_eye
         self.location = vec(0.0, 0.0, 1000.0)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == "BaseTranslationOffset" and rule["offset_refused"]:
+            raise RuntimeError("no")
+        object.__setattr__(self, name, value)
 
     def K2_GetActorLocation(self) -> Any:
         return self.location
@@ -150,10 +156,26 @@ def own_size(code: str) -> tuple[float, float, float, float]:
     return stature.half, stature.eye, stature.crouched_eye, stature.mesh_z
 
 
+def _resize(character: Character, half: float, moved: float) -> None:
+    """The capsule to `half`, the body and its offset moved by `moved`, as the game does (watched on 2026-10-13)."""
+    character.CapsuleComponent.CapsuleHalfHeight = half
+    character.Mesh.RelativeLocation = vec(0.0, 0.0, character.Mesh.RelativeLocation.Z + moved)
+    character.BaseTranslationOffset = vec(0.0, 0.0, character.BaseTranslationOffset.Z + moved)
+
+
 def stand_up(character: Character) -> None:
-    """What the game does when the character stands up from a crouch or a slide (2026-10-08): its own capsule half
-    height and eye height back, the body left where it was."""
-    character.CapsuleComponent.CapsuleHalfHeight, character.BaseEyeHeight = character.own.half, character.own.eye
+    """What the game does when the character stands up from a crouch, a slide or a Fight For Your Life (2026-10-08,
+    2026-10-13): its own capsule half height and eye height back, the body and its offset moved by the capsule's
+    change (100 to 93 moved both up by 7, 60.5 to 93 down by 32.5)."""
+    _resize(character, character.own.half, character.CapsuleComponent.CapsuleHalfHeight - character.own.half)
+    character.BaseEyeHeight, character.bIsCrouched = character.own.eye, False
+
+
+def crouch(character: Character) -> None:
+    """What the game does when the character crouches (2026-10-13): the crouched capsule, the body and its offset
+    moved up by its own hunter's change, whatever the capsule was (100 to 60.5 moved both by 93 - 60.5)."""
+    _resize(character, 60.5, character.own.half - 60.5)
+    character.bIsCrouched = True
 
 
 def outfit_worn(character: Character) -> str:

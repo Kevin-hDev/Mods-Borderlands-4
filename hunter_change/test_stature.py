@@ -2,7 +2,10 @@
 set before the eye heights; kept: given again in the same frame when the game stands the character up with its own,
 at most once a frame, never while crouched nor on another character nor once forgotten; given up, said once, when the
 game puts its own back more than three times within a second, and taken again by the next wear; a refused step said
-once and told; the own size given back, the character lowered to the ground."""
+once and told; the own size given back, the character lowered to the ground. The body offset given with the body and
+held with it (2026-10-13): no float left by the game standing the character up again and again, the crouched body at
+the crouched capsule's foot with the game's capsule kept, an offset or a body moved alone set back without lifting,
+such moves counted as gives, a refused offset said once with the rest of the size given."""
 
 import sys
 
@@ -38,6 +41,7 @@ check("given whole, lifted by the half height gained, the crouched half height s
       stature.wear(character, amon) and fake_game.size(character) == fake_game.own_size("Paladin")
       and character.CapsuleComponent.CapsuleRadius == 40.0 and movement.CrouchedHalfHeight == 60.5
       and character.location.Z == 1029.0)
+check("the body offset given with the body", character.BaseTranslationOffset.Z == -115.0)
 
 stature.keep(character, 10.0)
 check("nothing while the size holds", character.location.Z == 1029.0)
@@ -65,7 +69,7 @@ for step in range(5):
     stature.keep(character, 20.0 + step * 0.1)
 check("given up, said once, past three gives within a second",
       character.CapsuleComponent.CapsuleHalfHeight == 86.0 and len(state["errors"]) == errors + 1
-      and "keeps putting the character's own size back" in state["errors"][-1])
+      and "keeps putting the character's own size or body back" in state["errors"][-1])
 fake_game.stand_up(character)
 stature.keep(character, 30.0)
 check("still given up afterwards", character.CapsuleComponent.CapsuleHalfHeight == 86.0)
@@ -87,9 +91,54 @@ check("a refused step said once and told", not stature.wear(character, amon) and
 rule["size_refused"] = False
 
 stature.wear(character, amon)
+for step in range(6):
+    fake_game.stand_up(character)
+    stature.keep(character, 40.0 + step * 1.1)
+check("no float left by the game standing the character up again and again",
+      fake_game.size(character) == fake_game.own_size("Paladin") and character.BaseTranslationOffset.Z == -115.0)
+
+fake_game.crouch(character)
+stature.keep(character, 50.0)
+check("crouched, the body and its offset at the crouched capsule's foot, the game's capsule kept",
+      character.Mesh.RelativeLocation.Z == -60.5 and character.BaseTranslationOffset.Z == -60.5
+      and character.CapsuleComponent.CapsuleHalfHeight == 60.5 and character.BaseEyeHeight == 102.0)
+lifted = character.location.Z
+fake_game.stand_up(character)
+stature.keep(character, 51.0)
+check("standing up from it, the worn size whole again, lifted",
+      fake_game.size(character) == fake_game.own_size("Paladin") and character.BaseTranslationOffset.Z == -115.0
+      and character.location.Z == lifted + 29.0)
+
+lifted = character.location.Z
+character.BaseTranslationOffset = fake_game.vec(0.0, 0.0, -108.0)
+stature.keep(character, 52.0)
+check("an offset moved alone set back without lifting",
+      character.BaseTranslationOffset.Z == -115.0 and character.location.Z == lifted)
+character.Mesh.RelativeLocation = fake_game.vec(0.0, 0.0, -100.0)
+stature.keep(character, 53.0)
+check("a body moved alone set back", character.Mesh.RelativeLocation.Z == -115.0)
+
+errors = len(state["errors"])
+for step in range(5):
+    character.BaseTranslationOffset = fake_game.vec(0.0, 0.0, -108.0)
+    stature.keep(character, 60.0 + step * 0.1)
+check("such moves counted as gives: given up past three within a second",
+      character.BaseTranslationOffset.Z == -108.0 and len(state["errors"]) == errors + 1)
+
+report.reset()
+fake_game.stand_up(character)
+rule["offset_refused"] = True
+errors = len(state["errors"])
+check("a refused offset said once, the rest of the size given",
+      not stature.wear(character, amon) and fake_game.size(character) == fake_game.own_size("Paladin")
+      and len(state["errors"]) == errors + 1 and "refused at the offset step" in state["errors"][-1])
+rule["offset_refused"] = False
+
+stature.wear(character, amon)
 lifted = character.location.Z
 check("the own size given back, the character lowered to the ground", stature.wear(character, harlowe)
-      and fake_game.size(character) == fake_game.own_size("Gravitar") and character.location.Z == lifted - 29.0)
+      and fake_game.size(character) == fake_game.own_size("Gravitar") and character.location.Z == lifted - 29.0
+      and character.BaseTranslationOffset.Z == -87.0)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

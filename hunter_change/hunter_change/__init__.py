@@ -7,7 +7,7 @@ from .settings_persistence import AtomicMod
 from . import leave, lifecycle, panel_open, panel_preferences, report, wardrobe
 from .pack import NAME
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __author__ = "kevin-hDev"
 
 

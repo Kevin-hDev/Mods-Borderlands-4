@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7 - 2026-10-13
+
+- Fixed APPEARANCE page: after "Fight For Your Life" or a death, your hunter no longer walks above the ground.
+- Fixed APPEARANCE page: crouched, the worn hunter's body no longer sinks a little into the ground.
+
 ## 1.0.6 - 2026-10-13
 
 - New: the mod's window is now also in Simplified Chinese. Choose 中文 at the top of the window.
