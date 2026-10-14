@@ -1,8 +1,10 @@
 # Apex Grapple
 
-Version **1.0.9** — an Apex Legends inspired grapple for Borderlands 4.
+Version **1.0.10** — an Apex Legends inspired grapple for Borderlands 4.
 
-Aim at a surface and pull toward it while steering in the air. Let go to carry your momentum. The mod uses the game's grapple effects and hand animation with its own pulling movement.
+Aim at a surface and pull toward it while steering in the air. Let go to carry your momentum. The mod has its own pulling movement.
+
+By default the grapple fires from a grapple gun in the left hand, with the mod's own rope and hook, for all six hunters in first and third person; in third person the gun rests in a holster on the hip between shots (none for C4SH, whose coat covers the hip). The classic look keeps the game's grapple effects and hand animation.
 
 The grapple plays the game's launch, connection and pulling sounds. Valid contextual grapple interactions, including carryable objects, retain priority within the game's normal targeting area. Ordinary native grapple points follow the corresponding setting.
 
@@ -14,7 +16,8 @@ Each Apex shot uses the game's existing stamina bar, shared with dash and glide.
 - Purple boss shrines activated with melee retain priority on the game's own melee input. A custom grapple key continues to grapple normally.
 - Press the grapple input again, or press jump, to release. Release behavior and pull duration are configurable.
 - Open **Apex Grapple** in the SDK mods menu to access the custom settings window, in the main menu or during a game. The window also responds while the game is paused.
-- Adjust shooting, pulling and letting go, or restore the defaults. The window remembers your last tab when reopened, including after a game restart.
+- Adjust shooting, pulling, letting go and the look, or restore the defaults. The window remembers your last tab when reopened, including after a game restart.
+- In Look, choose the grapple gun or the classic look, the rope, its thickness, light and colour, its movement, the hook's size and the holster; with the classic look, the colour of the game's rope.
 - English is the default interface language; French and Simplified Chinese are available in the menu.
 - In Controls, capture a keyboard, mouse or controller button directly. Extra mouse buttons are supported when reported by the game. You can also configure two buttons held together; individual buttons retain their normal action when pressed alone.
 - In Controls, you can also grapple by holding the key: one switch for keyboard and one for controller, both off by default, with a hold time of 0.4 s by default. A quick tap on the melee key still punches, and a grapple fired by a hold pulls all the way.
@@ -25,7 +28,8 @@ Each Apex shot uses the game's existing stamina bar, shared with dash and glide.
 1. Install the [Borderlands 4 Python SDK](https://github.com/bl-sdk/oak2-mod-manager/releases/latest).
 2. Build the archive below, or use an Apex Grapple `.sdkmod` supplied by the author.
 3. With the game closed, place `apex_grapple.sdkmod` in `Borderlands 4/sdk_mods/`.
-4. Start the game and select Apex Grapple in the SDK mods menu.
+4. For the grapple gun, place the three files of the Apex Grapple Paks file from the mod's Nexus page (`000_ApexGrapple_999_P.pak`, `.ucas` and `.utoc`) in `Borderlands 4/OakGame/Content/Paks/`. Without them, the grapple keeps the classic look and the Look page says why.
+5. Start the game and select Apex Grapple in the SDK mods menu.
 
 Keep only one installed copy: do not leave both an `apex_grapple` folder and its `.sdkmod` archive in `sdk_mods`. Settings are saved separately by the SDK in `sdk_mods/settings/apex_grapple.json`.
 
@@ -76,6 +80,7 @@ Original code: [Apache License 2.0](../LICENSE), copyright 2026 Kevin-hDev.
 
 - [Borderlands 4 Python SDK](https://github.com/bl-sdk/oak2-mod-manager) by the SDK team.
 - Grapple movement inspired by Apex Legends, by Respawn.
+- The grapple gun's models, rope, hook and gestures are not in this repository, only in the mod's Nexus archive.
 - Anton and Barlow Condensed retain their bundled [Anton license](apex_grapple/assets/OFL-Anton.txt) and [Barlow Condensed license](apex_grapple/assets/OFL-BarlowCondensed.txt), both SIL OFL 1.1.
 
 See [CHANGELOG.md](CHANGELOG.md) for changes.

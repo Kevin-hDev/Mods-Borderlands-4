@@ -1,4 +1,4 @@
-"""The settings window laid out as Kevin's approved mockup v2, with this mod's four pages in the sidebar."""
+"""The settings window laid out as Kevin's approved mockup v2, with this mod's five pages in the sidebar."""
 
 from . import panel_buttons as b, panel_fonts as fonts, panel_header as h, panel_i18n as i18n, panel_pages as p
 from . import panel_modal as modal, panel_window_size as size

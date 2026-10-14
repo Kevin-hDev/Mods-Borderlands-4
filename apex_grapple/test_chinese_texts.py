@@ -40,6 +40,10 @@ same_table("window", {**panel_en.TEXT, **panel_fr.TEXT}, panel_zh.TEXT)
 same_table("options", panel_fr.OPTIONS, panel_zh.OPTIONS)
 check(set(panel_zh.OPTIONS) == {option.identifier for option in settings.ALL}, "every setting has its Chinese row")
 same_table("pages", panel_fr.GROUPS, panel_zh.GROUPS)
+# The names a choice's buttons write, by row: every name of every row has its words in the three languages.
+named = {f"{option.identifier}:{choice}" for option in settings.ALL for choice in getattr(option, "choices", ())}
+check(set(panel_en.CHOICES) == named == set(panel_fr.CHOICES), "every choice has its English and French words")
+same_table("choices", {**panel_en.CHOICES, **panel_fr.CHOICES}, panel_zh.CHOICES)
 
 # The lookups route Chinese once LANGUAGES lists it, which the lead switches on with the font (menu_languages.py).
 offered = panel_i18n.TABLES

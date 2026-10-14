@@ -3,7 +3,7 @@
 from types import SimpleNamespace as NS
 import control_fixture as f
 import unrealsdk
-from apex_grapple import panel_factory, panel_form, panel_model, panel_preferences, panel_theme
+from apex_grapple import menu, panel_choices, panel_factory, panel_form, panel_model, panel_preferences, panel_theme
 
 BUTTON_PARTS = ("", "_label", "_fill", "_frame", "_shadow")
 unrealsdk.find_enum = lambda name: NS(Visible="Visible", Collapsed="Collapsed",
@@ -12,7 +12,7 @@ unrealsdk.find_enum = lambda name: NS(Visible="Visible", Collapsed="Collapsed",
 
 class Widget:
     def __init__(self):
-        self.checked, self.selecting, self.enabled = False, False, True
+        self.checked, self.selecting, self.enabled, self.opacity = False, False, True, 1.0
         self.text, self.value, self.index, self.percent = "", 0.0, 0, None
         self.brush = self.color = None
         self.visibility, self.text_visibility, self.icon_brush = "Visible", "Visible", None
@@ -38,6 +38,9 @@ class Widget:
 
     def SetIsEnabled(self, value):
         self.enabled = value
+
+    def SetRenderOpacity(self, value):
+        self.opacity = value
 
     def SetValue(self, value):
         self.value = value
@@ -71,7 +74,9 @@ class Widget:
 
 
 def names(model):
-    """Every widget name the view registers, derived the way panel_view builds them."""
+    """Every widget name the view registers, derived the way panel_view builds them: a row of a settings page
+    registered whole, a button per choice of a spinner or two arrows and the name's boxes for a row of menu.ARROWS,
+    the sentence and its frame on a page of menu.NOTICES."""
     found = {"focus", "first", "second", "pages", "status", "current", "settings_caption", "meta", "notice",
              "escape_hint", "tag", "two_text"}
     found.update(("icons_label", "pad_summary", "pad_label", "pad_first", "pad_second",
@@ -83,12 +88,20 @@ def names(model):
     buttons += ["icons:PS5", "icons:XSX"]
     for page in panel_theme.PAGES:
         found.update((f"heading:{page}", f"group:{page}"))
+    found.update(f"row:{option.identifier}" for group in model.groups for option in group.children)
     for key, option in model.options.items():
         found.update((f"label:{key}", f"description:{key}"))
         if type(option.default_value) is bool:
             buttons.append(f"setting:{key}")
+        elif panel_choices.is_choice(option) and key in getattr(menu, "ARROWS", ()):
+            found.update((f"setting:{key}", f"choice:{key}", f"value:{key}"))
+            buttons += [f"setting:{key}:{name}" for name, _, _ in panel_choices.ARROWS]
+        elif panel_choices.is_choice(option):
+            found.add(f"setting:{key}")
+            buttons += [f"setting:{key}:{choice}" for choice in option.choices]
         else:
             found.update((f"setting:{key}", f"value:{key}", f"fill:{key}"))
+    found.update(f"{kind}:{page}" for page in menu.NOTICES for kind in ("notice", "notice_frame"))
     found.update(name + part for name in buttons for part in BUTTON_PARTS)
     return found
 

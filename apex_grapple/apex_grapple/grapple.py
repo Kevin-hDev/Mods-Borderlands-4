@@ -102,7 +102,7 @@ class Rope:
         flight_s = shot.distance / max(1.0, float(settings.hook_speed.value))
         self._contact_ns = now_ns + int(flight_s * NS_PER_S)
         report.hook_away(shot.distance, game.pitch_of(facing), flight_s, shot.hit_name)
-        rope_effects.start(character, self.anchor)
+        rope_effects.start(character, self.anchor, now_ns, flight_s)
         return True
 
     def key_up(self, now_ns: int) -> None:
@@ -141,7 +141,7 @@ class Rope:
         self._pull_cap = carried + float(settings.pull_speed_cap.value)
         self._from_spot = self._at_spot = game.location(character)
         self._closest = math.dist(self._from_spot, self.anchor)
-        rope_effects.hold()
+        rope_effects.hold(character, now_ns, self._closest, self._near(), self._pull_cap)
         if game.is_on_ground(movement):
             self._leave_ground(movement)
         # The rope's tilt says what the player really aimed at, which no other line does: a rope
@@ -198,11 +198,15 @@ class Rope:
         )
         game.set_velocity(movement, self._velocity)
         self._top_speed = max(self._top_speed, math.sqrt(sum(part * part for part in self._velocity)))
+        rope_effects.pulled(tuple(a - h for a, h in zip(self.anchor, here)), self._velocity)
         self._check_end(movement, here, stride, now_ns)
 
+    def _near(self) -> float:
+        """How near the anchor this pull lets go."""
+        return release.arrival_for_shot(float(settings.arrival_distance.value), math.dist(self._from_spot, self.anchor))
+
     def _check_end(self, movement: Any, here: tuple[float, float, float], stride: float, now_ns: int) -> None:
-        near = release.arrival_for_shot(float(settings.arrival_distance.value),
-                                        math.dist(self._from_spot, self.anchor))
+        near = self._near()
         gap = math.dist(here, self.anchor)
         self._closest = min(self._closest, gap)
         if release.arrived(gap, near, stride):
@@ -228,4 +232,4 @@ class Rope:
             report.note(f"shot called off: {why}")
         self.state = IDLE
         self._top_speed = 0.0
-        rope_effects.stop()
+        rope_effects.stop(now_ns)

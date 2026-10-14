@@ -2,7 +2,7 @@
 
 import math
 
-from . import control_actions, control_config, settings
+from . import control_actions, control_config, panel_choices, settings
 from .panel_preferences import LANGUAGES, language
 from .panel_preferences import CONTROLLER_ICONS, controller_icons
 from .panel_preferences import PAGES, last_page
@@ -20,7 +20,7 @@ class Model:
     def __init__(self, mod):
         from . import menu
         self.mod = mod
-        self.groups = (menu.shot, menu.pull, menu.release)
+        self.groups = (menu.shot, menu.pull, menu.release, menu.look)
         self.controls = tuple(menu.hold.children)
         self.options = {option.identifier: option for option in settings.ALL}
         self._undo = ()
@@ -87,6 +87,10 @@ class Model:
         if type(option.default_value) is bool:
             if type(value) is not bool:
                 raise ValueError("Invalid switch")
+            return value
+        if panel_choices.is_choice(option):
+            if type(value) is not str or value not in option.choices:
+                raise ValueError("Invalid choice")
             return value
         if type(value) not in (int, float) or not math.isfinite(value):
             raise ValueError("Invalid number")

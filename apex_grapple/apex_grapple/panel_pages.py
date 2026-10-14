@@ -1,9 +1,11 @@
-"""Page contents: one mockup card per settings group, and the key-capture card, each in a scrolling page."""
+"""Page contents: one mockup card per settings group, and the key-capture card, each in a scrolling page. A row is a
+switch, a slider, or a choice among a few names (panel_choices.py); a page may say a sentence under its title
+(panel_notice.py)."""
 
 import unrealsdk
 
 from . import panel_buttons as b, panel_slider as s, panel_text as tx, panel_theme as t, panel_widgets as w
-from . import panel_key_view as keys
+from . import panel_choices, panel_key_view as keys, panel_notice
 
 # Colours by theme name, read when the window is drawn (panel_theme.use).
 _SCROLL_THUMBS = (("NormalThumbImage", "COLOR_GOLD"), ("HoveredThumbImage", "COLOR_GOLD_HI"),
@@ -50,13 +52,16 @@ def heading(rows, widgets, key):
 
 
 def card(body, widgets, key):
-    """Ink rim, hard shadow and orange title plate shared by every settings card."""
+    """Ink rim, hard shadow and orange title plate shared by every settings card; under them, on a page of the mod's
+    menu.NOTICES, the page's sentence."""
     frame, inner = w.framed(body, t.COLOR_CARD, t.STROKE, w.pad(t.SPACE_5, t.SPACE_6, t.SPACE_3))
     layers, _ = w.shadowed(body, frame, t.SHADOW_LG)
     w.column(body, layers, padding=w.pad(0, 0, t.SPACE_5))
     rows = w.new("VerticalBox", inner)
     inner.SetContent(rows)
     heading(rows, widgets, key)
+    if key in panel_notice.pages():
+        panel_notice.notice(rows, widgets, key)
     return rows
 
 
@@ -79,6 +84,8 @@ def setting_rows(rows, options, widgets, template, expose_rows=False):
         if type(option.default_value) is bool:
             line = _row(rows, widgets[f"label:{name}"],
                         b.button(rows, widgets, f"setting:{name}", "switch", template, "off"))
+        elif panel_choices.is_choice(option):
+            line = _row(rows, widgets[f"label:{name}"], *panel_choices.controls(rows, widgets, option, template))
         else:
             line = _row(rows, widgets[f"label:{name}"], s.slider(rows, widgets, option, template),
                         s.value_box(rows, widgets, name))
@@ -91,7 +98,7 @@ def setting_rows(rows, options, widgets, template, expose_rows=False):
 def settings_page(owner, group, key, widgets, template):
     page, body = scrolling_body(owner, template)
     rows = card(body, widgets, key)
-    setting_rows(rows, group.children, widgets, template)
+    setting_rows(rows, group.children, widgets, template, expose_rows=True)
     return page
 
 

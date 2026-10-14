@@ -22,15 +22,15 @@ def check(label: str, condition: bool) -> None:
 
 
 visible = [line for line in menu.MENU if not getattr(line, "is_hidden", False)]
-check("the menu has the three phases, the hold mode, controls and reset", len(visible) == 6)
+check("the menu has the three phases, the look, the hold mode, controls and reset", len(visible) == 7)
 check("named the way a player would say them",
       [line.display_name for line in visible] ==
-      ["The shot", "The pull", "Letting go", "Hold to grapple", "Grapple controls", "Restore defaults"])
+      ["The shot", "The pull", "Letting go", "Look", "Hold to grapple", "Grapple controls", "Restore defaults"])
 check("each line says what it holds", all(line.description for line in visible))
 check("controls opens the window directly, without another submenu",
-      callable(getattr(visible[4], "on_press", None)) and not hasattr(visible[4], "children"))
+      callable(getattr(visible[5], "on_press", None)) and not hasattr(visible[5], "children"))
 
-shown = [option for line in menu.MENU[:4] for option in line.children]
+shown = [option for line in menu.MENU[:5] for option in line.children]
 check("every setting is on a line", len(shown) == len(settings.ALL))
 check("none of them twice", len({option.identifier for option in shown}) == len(shown))
 check("and none of them missing",
@@ -38,8 +38,26 @@ check("and none of them missing",
 
 check("the shot line holds the range, the reserve cost and the punch rule",
       {option.identifier for option in menu.shot.children} ==
-      {"grapple_range", "hook_speed", "stamina_cost", "melee_wins", "punch_range", "keep_game_grapple",
-       "show_rope"})
+      {"grapple_range", "hook_speed", "stamina_cost", "melee_wins", "punch_range", "keep_game_grapple"})
+check("the look line holds the rope's switch, then the look and its rows, in the sketch's order",
+      [option.identifier for option in menu.look.children] ==
+      ["show_rope", "look", "rope_look", "glow_face", "rope_thickness", "rope_light", "rope_colour", "rope_movement",
+       "hook_size", "holster", "game_rope_colour"])
+check("every look row greys while the rope is hidden",
+      set(menu.DEPENDS_ON) == {option.identifier for option in menu.look.children[1:]}
+      and all(rule == (("show_rope",),) for rule in menu.DEPENDS_ON.values()))
+OURS = {"rope_look", "rope_thickness", "rope_light", "rope_colour", "rope_movement", "hook_size", "holster"}
+check("the grapple gun's rows grey with the classic look, the look's own row does not",
+      set(menu.ACTIVE_WHEN) == OURS | {"glow_face", "game_rope_colour"}
+      and all(menu.ACTIVE_WHEN[name]({"look": "GRAPPLE_GUN"}) and not menu.ACTIVE_WHEN[name]({"look": "CLASSIC"})
+              for name in OURS))
+face, game_rope = menu.ACTIVE_WHEN["glow_face"], menu.ACTIVE_WHEN["game_rope_colour"]
+check("the glow's face counts with our look's glow only, the game rope's colour with the classic look only",
+      face({"look": "GRAPPLE_GUN", "rope_look": "C"}) and not face({"look": "GRAPPLE_GUN", "rope_look": "A"})
+      and not face({"look": "CLASSIC", "rope_look": "C"})
+      and game_rope({"look": "CLASSIC"}) and not game_rope({"look": "GRAPPLE_GUN"}))
+check("the colours choose on arrows", menu.ARROWS == {"rope_colour", "game_rope_colour"})
+check("the look page says nothing while the grapple gun's look can play", menu.NOTICES["look"]() is None)
 check("the hold line holds the two switches and the hold time, which the window shows with the keys",
       [option.identifier for option in menu.hold.children] == ["keyboard_hold", "controller_hold", "hold_time"])
 check("the pull line holds the two forces and their caps",

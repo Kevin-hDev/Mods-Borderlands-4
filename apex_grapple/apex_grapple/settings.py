@@ -17,6 +17,8 @@ import math
 
 from mods_base import BoolOption, SliderOption
 
+from . import look_settings
+
 grapple_range = SliderOption(
     "grapple_range", 3000, 500, 10000, step=50, is_integer=True,
     display_name="Range",
@@ -157,7 +159,7 @@ ALL = (grapple_range, hook_speed, pull_strength, pull_speed_cap, steer_strength,
        release_on_key_up, arrival_distance, longest_pull, rope_carry, takeoff_lift, ground_grace,
        release_on_landing,
        block_jump,
-       melee_wins, keep_game_grapple, punch_range, show_rope, stamina_cost, *HOLD)
+       melee_wins, keep_game_grapple, punch_range, show_rope, stamina_cost, *HOLD, *look_settings.ALL)
 
 
 def summary() -> str:
@@ -180,7 +182,11 @@ def keep_in_bounds() -> list[str]:
     warnings: list[str] = []
     for option in ALL:
         value = option.value
-        if type(option.default_value) is bool:
+        if hasattr(option, "choices"):
+            if type(value) is str and value in option.choices:
+                continue
+            kept = option.default_value
+        elif type(option.default_value) is bool:
             if type(value) is bool:
                 continue
             kept = option.default_value

@@ -131,7 +131,7 @@ ORDER = 10000
 # BackgroundBlur strength, which runs from 0 (sharp) to 100.
 BACKDROP_BLUR = 6.0
 SAVE_DELAY_NS = 300_000_000
-PAGES = ("shot", "pull", "release", "controls")
+PAGES = ("shot", "pull", "release", "look", "controls")
 BRAND, AUTHOR = "APEX GRAPPLE", "KEVIN-HDEV"
 # Unreal sizes fonts in points drawn at 96 DPI: a size of 20 is 26.7 pixels. The mockup's pixels times 0.75 give
 # the same letters; without it every text was a third larger than approved (screenshot of 2026-09-21).

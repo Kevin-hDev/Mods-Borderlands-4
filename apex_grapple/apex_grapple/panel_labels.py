@@ -3,7 +3,8 @@
 Selection shows as in the mockup: the chosen page and language become gold plates, never a "> " or "[EN]" mark.
 """
 
-from . import panel_buttons as b, panel_i18n as i18n, panel_slider as s, panel_theme as t, panel_controls
+from . import panel_buttons as b, panel_choices, panel_i18n as i18n, panel_notice, panel_slider as s
+from . import panel_controls, panel_theme as t
 from . import panel_theme_choice
 from . import panel_size_choice
 from .panel_header import language_button
@@ -44,6 +45,8 @@ def apply(form, widgets):
     for group, key in zip(form.model.groups, t.PAGES):
         widgets[f"heading:{key}"].SetText(i18n.text(key, language))
         widgets[f"group:{key}"].SetText(i18n.group_text(group, key, language))
+        if key in panel_notice.pages():
+            panel_notice.write(widgets, key, language)
     widgets["heading:controls"].SetText(i18n.text("controls", language))
     widgets["group:controls"].SetText(i18n.text("controls_intro", language))
     for key, option in form.model.options.items():
@@ -71,5 +74,7 @@ def value(widgets, option, current, language):
     if type(option.default_value) is bool:
         widgets[f"setting:{key}_label"].SetText(i18n.text("on" if current else "off", language))
         b.paint(widgets, f"setting:{key}", "on" if current else "off")
+    elif panel_choices.is_choice(option):
+        panel_choices.paint(widgets, option, current, language)
     else:
         s.show(widgets, option, current)

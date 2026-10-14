@@ -5,7 +5,8 @@ import time
 from .control_form import Form
 from .control_bindings import RESERVED
 from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t, panel_theme_choice
-from . import panel_key_display
+from . import panel_choices, panel_key_display
+from .menu import ACTIVE_WHEN, DEPENDS_ON
 from . import panel_size_choice
 from .panel_preferences import LANGUAGES
 
@@ -31,9 +32,34 @@ class PanelForm(Form):
             widget = widgets[f"setting:{key}"]
             if type(option.default_value) is bool:
                 widget.SetIsChecked(False)
+            elif panel_choices.is_choice(option):
+                panel_choices.release(widgets, option)
             else:
                 widget.SetValue(float(option.value))
+        self.refresh_dependency(widgets)
         self.refresh_labels(widgets)
+
+    def met(self, needs):
+        return all(any(self.shown[switch] is True for switch in switches) for switches in needs)
+
+    def active(self, name):
+        """Whether row `name` changes something with the values the window shows, saved or not: one switch of each
+        of its menu.DEPENDS_ON tuples on, and its menu.ACTIVE_WHEN test passed."""
+        test = ACTIVE_WHEN.get(name)
+        return self.met(DEPENDS_ON.get(name, ())) and (test is None or bool(test(self.shown)))
+
+    def refresh_dependency(self, widgets):
+        """A row that changes nothing greys and stays still (Kevin, 2026-09-26 and -29, Apex Heirloom's sketches;
+        docs/mokup/menu_mods/decisions.md), and wakes at the click that makes it count."""
+        for name in {**DEPENDS_ON, **ACTIVE_WHEN}:
+            self.grey(widgets, f"setting:{name}", (f"row:{name}", f"description:{name}"), self.active(name))
+
+    @staticmethod
+    def grey(widgets, control, faded, active):
+        widgets[control].SetIsEnabled(active)
+        # The whole row fades, label and value included, as the mockup's .row.muted does.
+        for name in faded:
+            widgets[name].SetRenderOpacity(1.0 if active else t.OPACITY_DISABLED)
 
     def refresh_labels(self, widgets):
         labels.apply(self, widgets)
@@ -63,6 +89,10 @@ class PanelForm(Form):
                 if not self.take(widget):
                     continue
                 value = not self.shown[key]
+            elif panel_choices.is_choice(option):
+                value = panel_choices.taken(self.take, widgets, option, self.shown[key])
+                if value is None or value == self.shown[key]:
+                    continue
             else:
                 raw = widget.GetValue()
                 if abs(raw - self.shown[key]) < max(1e-6, option.step * 0.01):
@@ -82,6 +112,7 @@ class PanelForm(Form):
                 self.pending[key] = value
             self.changed_at = now
             labels.value(widgets, option, value, self.model.language)
+        self.refresh_dependency(widgets)
 
     @staticmethod
     def take(widget):

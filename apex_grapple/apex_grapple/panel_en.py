@@ -1,7 +1,7 @@
 """English interface messages; option names/descriptions come from their SDK options."""
 
 TEXT = {
-    "shot": "THE SHOT", "pull": "THE PULL", "release": "LETTING GO", "controls": "CONTROLS",
+    "shot": "THE SHOT", "pull": "THE PULL", "release": "LETTING GO", "look": "LOOK", "controls": "CONTROLS",
     "close": "CLOSE", "restore": "RESTORE DEFAULTS", "undo": "UNDO RESET",
     "enabled": "ENABLED", "disabled": "DISABLED", "on": "ON", "off": "OFF",
     "by": "BY", "version": "VERSION", "settings": "SETTINGS",
@@ -29,4 +29,30 @@ TEXT = {
     "window_size": "WINDOW:", "window_size:LARGE": "LARGE", "window_size:FULL": "FULL SCREEN",
     "window_size:NORMAL": "NORMAL",
     "window_size_later": "Window size saved. It will show the next time you open this menu.",
+    # The LOOK page's sentence when the grapple gun's look gave way to the classic one (look_choice.notice).
+    "look_missing": "The grapple gun cannot show: its files are missing or no longer match this version of the game. "
+                    "Your game is not affected and the grapple keeps the classic look. Install the grapple gun's "
+                    "files, then restart the game.",
+    "look_failed": "The grapple gun stopped after an error. Your game is not affected and the grapple keeps the "
+                   "classic look until the game restarts. The reason is in unrealsdk.log.",
+    "look_unknown_hunter": "This hunter does not have the grapple gun yet: the grapple keeps the classic look.",
+}
+
+# The words a choice's buttons write (panel_choices.label), by "<setting>:<value>": a value is the letter of the drawing
+# Kevin chose it on (look_settings.py), and the same letter means another thing on another row.
+CHOICES = {
+    "look:GRAPPLE_GUN": "Grapple gun", "look:CLASSIC": "Classic",
+    "rope_look:A": "Thread", "rope_look:B": "Core", "rope_look:C": "Glow",
+    "rope_thickness:K": "Thin", "rope_thickness:L": "Medium", "rope_thickness:M": "Thick",
+    "rope_light:1": "Low", "rope_light:2": "Medium", "rope_light:3": "High",
+    "rope_movement:G": "Slight", "rope_movement:H": "Medium", "rope_movement:I": "Strong",
+    "hook_size:A": "Small", "hook_size:B": "Medium", "hook_size:C": "Large",
+    "holster:WITH": "With", "holster:WITHOUT": "Without",
+    "glow_face:D": "Off", "glow_face:E": "Light", "glow_face:F": "Strong",
+    "rope_colour:ORANGE": "Orange", "rope_colour:RED": "Red", "rope_colour:PURPLE": "Purple",
+    "rope_colour:WHITE": "White", "rope_colour:BLUE": "Blue", "rope_colour:TURQUOISE": "Turquoise",
+    "rope_colour:YELLOW": "Yellow", "rope_colour:GOLD": "Gold", "rope_colour:GREEN": "Green",
+    "game_rope_colour:ORANGE": "Orange", "game_rope_colour:RED": "Red", "game_rope_colour:PURPLE": "Purple",
+    "game_rope_colour:WHITE": "White", "game_rope_colour:BLUE": "Blue", "game_rope_colour:TURQUOISE": "Turquoise",
+    "game_rope_colour:YELLOW": "Yellow", "game_rope_colour:GOLD": "Gold", "game_rope_colour:GREEN": "Green",
 }

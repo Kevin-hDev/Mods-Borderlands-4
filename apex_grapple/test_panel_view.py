@@ -48,9 +48,12 @@ check(all(node.slots[0].attributes["SetPadding"][0] == w.pad(t.SPACE_7, t.SPACE_
       "The page padding sits inside the scroll area, as in the mockup")
 check(all(id(widget) in attached for widget in widgets.values()), "A registered widget is not in the tree")
 check(set(widgets) == fixture.pf.names(model), "Registered names differ from the form fixture's")
-check(len(widgets["pages"].children) == 4, "Four pages expected")
+check(len(widgets["pages"].children) == 5 and t.PAGES == ("shot", "pull", "release", "look", "controls"),
+      "Five pages expected, LOOK between LETTING GO and CONTROLS (Kevin, 2026-10-14, sketch A)")
 check(all(f"setting:{key}" in widgets for key in model.options), "Every setting has a control")
-check(len(widgets) < 300, "Widget count stays bounded: all of them are resolved at every poll")
+# 379 since the LOOK page (2026-10-14): its seventeen choice buttons register five names each; 444 since its
+# colours, the same day: two rows of arrows, and the glow's face, three buttons.
+check(len(widgets) < 480, "Widget count stays bounded: all of them are resolved at every poll")
 # Mockup sizes: CSS pixels times 0.75, because Unreal draws font points at 96 DPI.
 check(widgets["label:grapple_range"].Font.Size == t.TEXT_MD * 0.75, "Setting labels are 20 px as in the mockup")
 check(widgets["label:grapple_range"].Font.FontObject is body_font, "Labels use Barlow Condensed")
@@ -139,9 +142,15 @@ check(len(heads) == 1 and "SetSize" in heads[0].slots[1].attributes
 
 # Kevin, 2026-10-06: the hold mode is a key setting, shown on the CONTROLS page under the controller icons.
 pages = widgets["pages"].children
-check(all(inside(pages[3], widgets[f"setting:{name}"]) and not inside(pages[0], widgets[f"setting:{name}"])
+controls = pages[t.PAGES.index("controls")]
+check(all(inside(controls, widgets[f"setting:{name}"]) and not inside(pages[0], widgets[f"setting:{name}"])
           for name in ("keyboard_hold", "controller_hold", "hold_time")),
       "The hold mode's rows are on the CONTROLS page, not THE SHOT")
+# Kevin, 2026-10-14: "Show the rope" leads the LOOK page, above the grapple gun's look.
+look = pages[t.PAGES.index("look")]
+check(inside(look, widgets["setting:show_rope"]) and not inside(pages[0], widgets["setting:show_rope"])
+      and all(inside(look, widgets[f"row:{option.identifier}"]) for option in model.groups[3].children),
+      "The LOOK page holds Show the rope and the look's rows")
 
 for message in failures:
     print("FAILED |", message)

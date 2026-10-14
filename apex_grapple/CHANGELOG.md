@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.10 - 2026-10-15
+
+- New: the grapple gun. When you fire, your hunter shoots the grapple from a pistol in the left hand, with our own rope and hook that fly out, bite and come back. For all six hunters, in first and third person.
+- In third person, the pistol sits in a holster on the hip between shots. C4SH has none: his coat covers the hip.
+- New LOOK page in the window: grapple gun or classic look, three ropes, their thickness, their light and its colour (nine colours), the rope's movement, the hook's size, the holster on or off, and the colour of the game's rope for the classic look.
+- Show the rope moves from THE SHOT to LOOK, and keeps your setting.
+- The grapple gun needs a second file from this page, Apex Grapple Paks, copied into the game's Paks folder. Without it, the grapple keeps the classic look.
+
 ## 1.0.9 - 2026-10-13
 
 - The menu now reopens where you left it: same page and same place in the page, even after restarting the game.

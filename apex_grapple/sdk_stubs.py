@@ -5,7 +5,7 @@ from collections import deque
 from typing import Any
 
 
-from sdk_mods import FakeOption, FakeNested, FakeButton, FakeHook, FakeMod, FakeKeybind
+from sdk_mods import FakeOption, FakeSpinner, FakeNested, FakeButton, FakeHook, FakeMod, FakeKeybind
 from sdk_objects import (vector, event, Mode, mapping, FakeMovement, FakeComponent, FakeCharacter,
                          FakeKismet, FakePoint, FakeSequence, FakeArms, player)
 from sdk_niagara import FakeNiagara
@@ -160,7 +160,7 @@ def install() -> dict:
     mods_base.NestedOption = FakeNested
     mods_base.ButtonOption = FakeButton
     mods_base.KeybindOption = FakeOption
-    mods_base.SpinnerOption = FakeOption
+    mods_base.SpinnerOption = FakeSpinner
     mods_base.get_pc = lambda **kwargs: state["pc"]
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, hook_identifier))
     mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(

@@ -6,7 +6,10 @@ import types
 import sdk_stubs
 
 state = sdk_stubs.install()
-from apex_grapple import animation, beam, game, rope_visuals
+from apex_grapple import animation, beam, game, look_settings, rope_visuals
+
+# The classic look's hands and beam are what these resets release; the grapple gun's look has its own tests.
+look_settings.look.value = look_settings.CLASSIC
 
 fails = []
 
@@ -49,8 +52,8 @@ def setup():
 
 
 player, hands = setup()
-rope_visuals.start(player, (2500, 0, 160))
-rope_visuals.hold()
+rope_visuals.start(player, (2500, 0, 160), 0, 0.5)
+rope_visuals.hold(player, 0, 1800.0, 600.0, 2500.0)
 held = hands.active
 component = beam._component
 rope_visuals.reset()

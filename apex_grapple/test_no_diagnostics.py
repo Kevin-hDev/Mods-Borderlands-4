@@ -10,7 +10,9 @@ import unrealsdk
 
 find_object = unrealsdk.find_object
 unrealsdk.find_object = lambda kind, path: object() if kind == "Function" else find_object(kind, path)
-from apex_grapple import beam, frame, game, keys, mod, settings
+from apex_grapple import beam, frame, game, keys, look_settings, mod, settings
+# The classic look's beam is what these shots watch; the grapple gun's look has its own tests.
+look_settings.look.value = look_settings.CLASSIC
 from unrealsdk.hooks import Block
 
 SECOND = 1_000_000_000

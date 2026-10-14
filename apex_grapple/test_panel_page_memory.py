@@ -35,7 +35,7 @@ stored = json.dumps({option.identifier: option.value for option in menu.MENU if 
 preferences.last_page.value = preferences.last_page.default_value
 preferences.last_page.value = json.loads(stored)[preferences.last_page.identifier]
 w, form = pf.create()
-assert form.page == 3 and not form.selecting()
+assert form.page == t.PAGES.index("controls") and not form.selecting()
 assert form.model.change_language("FR")
 assert form.model.restore() and form.model.undo()
 assert form.model.page == "controls"
@@ -48,8 +48,8 @@ assert form.model.change_page("controls") and pf.f.mod.saved == saved
 pf.f.mod.fail_save = True
 w["nav:release"].checked = True
 form.poll()
-assert form.page == 3 and preferences.last_page.value == "controls"
-assert w["pages"].index == 3 and "Impossible d’enregistrer" in w["notice"].text
+assert form.page == t.PAGES.index("controls") and preferences.last_page.value == "controls"
+assert w["pages"].index == t.PAGES.index("controls") and "Impossible d’enregistrer" in w["notice"].text
 pf.f.mod.fail_save = False
 preferences.last_page.value = "removed_page"
 w, form = pf.create()

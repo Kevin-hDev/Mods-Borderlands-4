@@ -78,12 +78,16 @@ class FakeNiagara:
             component.float_parameters[name] = value
 
         component.SetVariableFloat = put_float
+        component.colours = {}
+        component.SetVariableLinearColor = lambda name, value: component.colours.__setitem__(
+            name, (value.R, value.G, value.B, value.A))
         # Record inputs at activation; this fake makes no assertion about simulated particles.
         component.lit_with = None
 
         def activate(reset):
             component.lit_with = list(self.set)
             component.floats_at_activation = dict(component.float_parameters)
+            component.colours_at_activation = dict(component.colours)
             component.activations += 1
 
         def place(NewLocation, NewRotation, bSweep, SweepHitResult, bTeleport):

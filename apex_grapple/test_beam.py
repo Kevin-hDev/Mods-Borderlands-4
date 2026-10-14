@@ -11,7 +11,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_grapple import beam, game, rope_ends  # noqa: E402
+from apex_grapple import beam, game, look_assets, look_settings, rope_ends  # noqa: E402
 
 # The eleven names the game printed on 2026-09-20.
 _NAMES = ["User.Color Scale", "User.Color", "User.Lifetime", "User.Radius", "User.Width",
@@ -47,6 +47,7 @@ check("it is NS_Grapple_Beam, the effect the game's settings name",
 # component while follow() still writes the moving rope ends.
 check("the shot keeps ownership until it stops", niagara.spawned[0]["bAutoDestroy"] is False)
 check("which way was used is written", any("spawned loose" in line for line in state["misc"]))
+check("in the game's own blue at first, its colours left as they are", beam._component.colours == {})
 # The one field of 173 that differed and was neither identity nor of the mod's own making: the game
 # places its rope facing its anchor, and the mod placed its own facing nothing at all.
 turned = niagara.spawned[0]["Rotation"]
@@ -138,6 +139,16 @@ check("and says so rather than failing", any("spawned attached" in line for line
 check("nothing is written as an error", not state["errors"])
 beam.stop()
 niagara.loose_fails = False
+
+# The colour the player chose, given before the rope is lit (decisions.md, 14 October).
+beam.reset()
+look_settings.game_rope_colour.value = "RED"
+beam.start(player, (100.0, 200.0, 300.0))
+red = (*look_assets.COLOURS["RED"], 1.0)
+check("another colour is given to both the rope's colours before it is lit",
+      beam._component.colours_at_activation == {"User.Color": red, "User.BeamColor": red})
+beam.stop()
+look_settings.game_rope_colour.value = "BLUE"
 
 # The effect missing from the game must cost the rope alone, never the pull.
 beam.reset()

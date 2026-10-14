@@ -51,10 +51,13 @@ class SettingsValidationTests(unittest.TestCase):
 
     def test_valid_values_keep_their_value_and_type_without_rounding(self) -> None:
         for option in settings.ALL:
-            values = (True, False) if option.min_value is None else (
-                option.min_value, option.max_value, option.default_value,
-                (option.min_value + option.max_value) / 2 + 0.123,
-            )
+            if hasattr(option, "choices"):
+                values = tuple(option.choices)
+            else:
+                values = (True, False) if option.min_value is None else (
+                    option.min_value, option.max_value, option.default_value,
+                    (option.min_value + option.max_value) / 2 + 0.123,
+                )
             for value in values:
                 with self.subTest(setting=option.identifier, value=value):
                     self.setUp()
@@ -64,7 +67,7 @@ class SettingsValidationTests(unittest.TestCase):
 
     def test_switches_reject_numeric_and_string_truthiness(self) -> None:
         for option in settings.ALL:
-            if option.min_value is not None:
+            if option.min_value is not None or hasattr(option, "choices"):
                 continue
             for value in (0, 1, 0.0, 1.0, "false", "true", "", None, float("nan")):
                 with self.subTest(setting=option.identifier, value=value):
@@ -72,6 +75,20 @@ class SettingsValidationTests(unittest.TestCase):
                     option.value = value
                     self.assertTrue(settings.keep_in_bounds())
                     self.assertIs(option.value, option.default_value)
+
+    def test_choices_outside_their_list_restore_the_first(self) -> None:
+        # A settings file edited by hand, or written by another version, must not choose a look that does not exist.
+        choosers = [option for option in settings.ALL if hasattr(option, "choices")]
+        self.assertEqual(len(choosers), 10)
+        for option in choosers:
+            for value in ("", "Z", option.choices[0] + " ", 0, 1, None, True, float("nan"), [option.choices[0]]):
+                with self.subTest(setting=option.identifier, value=value):
+                    self.setUp()
+                    option.value = value
+                    warnings = settings.keep_in_bounds()
+                    self.assertIs(option.value, option.default_value)
+                    self.assertEqual(len(warnings), 1)
+                    self.assertEqual(settings.keep_in_bounds(), [])
 
     def test_range_relationship_runs_after_individual_validation(self) -> None:
         # The prior relationship remains 100 cm below range once inputs are safe.

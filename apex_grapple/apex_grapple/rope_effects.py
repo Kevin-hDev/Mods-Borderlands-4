@@ -10,9 +10,9 @@ def reset() -> None:
     rope_visuals.reset()
 
 
-def start(character: Any, anchor: tuple) -> None:
+def start(character: Any, anchor: tuple, now_ns: int, flight_s: float) -> None:
     rope_audio.start(character)
-    rope_visuals.start(character, anchor)
+    rope_visuals.start(character, anchor, now_ns, flight_s)
 
 
 def follow(character: Any, anchor: tuple) -> None:
@@ -22,11 +22,22 @@ def follow(character: Any, anchor: tuple) -> None:
     rope_visuals.follow(character, anchor)
 
 
-def hold() -> None:
+def hold(character: Any, now_ns: int, start_gap: float, near: float, pull_cap: float) -> None:
+    """The hook bites `start_gap` cm away; the pull lets go `near` cm from the anchor and adds up to `pull_cap`."""
     rope_audio.attach()
-    rope_visuals.hold()
+    rope_visuals.hold(character, now_ns, start_gap, near, pull_cap)
 
 
-def stop() -> None:
+def pulled(to_anchor: tuple, velocity: tuple) -> None:
+    """One frame of the pull, as numbers: the way left to the anchor and the velocity written."""
+    rope_visuals.pulled(to_anchor, velocity)
+
+
+def stop(now_ns: int) -> None:
     rope_audio.stop()
-    rope_visuals.stop()
+    rope_visuals.stop(now_ns)
+
+
+def tick(character: Any, now_ns: int) -> None:
+    """Every frame, a shot running or not: the grapple gun's hook keeps coming back after the pull has ended."""
+    rope_visuals.tick(character, now_ns)

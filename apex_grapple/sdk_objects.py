@@ -129,6 +129,7 @@ class FakeArms:
     def __init__(self, character: Any) -> None:
         self.played: list[dict] = []
         self.stopped: list[tuple] = []
+        self.moved: list[tuple] = []
         self.montages: list[Any] = []
         self.active_montage = None
         self.raises = False
@@ -149,6 +150,9 @@ class FakeArms:
         self.stopped.append((blend, montage.slot))
         if self.active_montage is montage:
             self.active_montage = None
+
+    def Montage_SetPosition(self, montage: Any, at: float) -> None:
+        self.moved.append((montage.slot, at))
 
     def StopSlotAnimation(self, blend: float, slot: str) -> None:
         self.stopped.append((blend, slot))

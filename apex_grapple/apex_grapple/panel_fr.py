@@ -1,7 +1,7 @@
 """French labels and explanations for all gameplay and interface controls."""
 
 TEXT = {
-    "shot": "LE TIR", "pull": "LA TRACTION", "release": "DÉCROCHAGE", "controls": "COMMANDES",
+    "shot": "LE TIR", "pull": "LA TRACTION", "release": "DÉCROCHAGE", "look": "APPARENCE", "controls": "COMMANDES",
     "close": "FERMER", "restore": "RÉGLAGES D’ORIGINE", "undo": "ANNULER LE RESET",
     "enabled": "ACTIVÉ", "disabled": "DÉSACTIVÉ", "on": "OUI", "off": "NON",
     "by": "PAR", "version": "VERSION", "settings": "RÉGLAGES",
@@ -30,6 +30,13 @@ TEXT = {
     "window_size": "FENÊTRE :", "window_size:LARGE": "GRANDE", "window_size:FULL": "PLEIN ÉCRAN",
     "window_size:NORMAL": "NORMALE",
     "window_size_later": "Taille de la fenêtre enregistrée. Elle s’affichera à la prochaine ouverture du menu.",
+    "look_missing": "Le pistolet grappin ne peut pas s’afficher : ses fichiers manquent ou ne vont plus avec cette "
+                    "version du jeu. Ta partie n’est pas touchée et le grappin garde l’apparence classique. Installe "
+                    "les fichiers du pistolet grappin, puis relance le jeu.",
+    "look_failed": "Le pistolet grappin s’est arrêté après une erreur. Ta partie n’est pas touchée et le grappin garde "
+                   "l’apparence classique jusqu’au prochain lancement du jeu. La raison est dans unrealsdk.log.",
+    "look_unknown_hunter": "Ce chasseur n’a pas encore le pistolet grappin : le grappin garde l’apparence "
+                           "classique.",
 }
 OPTIONS = {
     "grapple_range": ("Portée", "Distance max. du crochet. 3000 = 30 mètres."),
@@ -54,9 +61,41 @@ OPTIONS = {
     "ground_grace": ("Temps de décollage", "Le sol est ignoré ce temps-là au départ, pour décoller."),
     "release_on_landing": ("Lâcher à l’atterrissage", "Toucher le sol met fin à la traction."),
     "block_jump": ("Garder le saut en se détachant", "Sauter pour lâcher le grappin ne consomme pas de saut."),
+    "look": ("Apparence", "Pistolet grappin : notre pistolet, notre corde et notre crochet. Classique : le geste et la "
+                          "corde du jeu."),
+    "rope_look": ("Corde", "Fil : un fil de lumière enroulé autour. Cœur : la lumière entre les brins. Lueur : un halo "
+                           "autour."),
+    "rope_thickness": ("Épaisseur", "L’épaisseur de la corde."),
+    "glow_face": ("Face de la lueur", "Avec la lueur, à quel point la corde elle-même s’allume."),
+    "rope_light": ("Lumière", "La force de la lumière de la corde."),
+    "rope_colour": ("Couleur de la lumière", "La couleur de la lumière de la corde."),
+    "rope_movement": ("Mouvement de la corde", "Combien la corde pend et ondule quand le crochet part et revient."),
+    "hook_size": ("Taille du crochet", "La taille du crochet planté dans le mur."),
+    "holster": ("Étui en troisième personne", "En troisième personne, le chasseur porte l’étui du pistolet "
+                                             "grappin à la hanche."),
+    "game_rope_colour": ("Couleur de la corde du jeu", "La couleur de la corde du jeu, avec l’apparence "
+                                                       "classique."),
 }
 GROUPS = {
-    "shot": "Portée, vitesse du crochet, corps à corps et effets visuels.",
+    "shot": "Portée, vitesse du crochet et corps à corps.",
     "pull": "Force de la corde, vitesse et contrôle de la trajectoire.",
     "release": "Ce qui termine la traction. La vitesse atteinte est conservée.",
+    "look": "Ce que tu vois quand tu tires : le pistolet, la corde et le crochet.",
+}
+# The words agree with their row: MOYENNE thickness and light, MOYEN movement and size (Kevin, 2026-10-14, sketch A).
+CHOICES = {
+    "look:GRAPPLE_GUN": "Pistolet grappin", "look:CLASSIC": "Classique",
+    "rope_look:A": "Fil", "rope_look:B": "Cœur", "rope_look:C": "Lueur",
+    "rope_thickness:K": "Fine", "rope_thickness:L": "Moyenne", "rope_thickness:M": "Épaisse",
+    "rope_light:1": "Faible", "rope_light:2": "Moyenne", "rope_light:3": "Forte",
+    "rope_movement:G": "Léger", "rope_movement:H": "Moyen", "rope_movement:I": "Fort",
+    "hook_size:A": "Petit", "hook_size:B": "Moyen", "hook_size:C": "Grand",
+    "holster:WITH": "Avec", "holster:WITHOUT": "Sans",
+    "glow_face:D": "Éteinte", "glow_face:E": "Légère", "glow_face:F": "Forte",
+    "rope_colour:ORANGE": "Orange", "rope_colour:RED": "Rouge", "rope_colour:PURPLE": "Violet",
+    "rope_colour:WHITE": "Blanc", "rope_colour:BLUE": "Bleu", "rope_colour:TURQUOISE": "Turquoise",
+    "rope_colour:YELLOW": "Jaune", "rope_colour:GOLD": "Doré", "rope_colour:GREEN": "Vert",
+    "game_rope_colour:ORANGE": "Orange", "game_rope_colour:RED": "Rouge", "game_rope_colour:PURPLE": "Violet",
+    "game_rope_colour:WHITE": "Blanc", "game_rope_colour:BLUE": "Bleu", "game_rope_colour:TURQUOISE": "Turquoise",
+    "game_rope_colour:YELLOW": "Jaune", "game_rope_colour:GOLD": "Doré", "game_rope_colour:GREEN": "Vert",
 }

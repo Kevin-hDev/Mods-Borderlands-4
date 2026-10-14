@@ -20,7 +20,7 @@ TEXT = {
     "theme_later": "主题已保存，下次打开菜单时生效。",
     "window_size": "窗口：", "window_size:LARGE": "大", "window_size:FULL": "全屏", "window_size:NORMAL": "标准",
     "window_size_later": "窗口大小已保存，下次打开菜单时生效。",
-    "shot": "发射", "pull": "牵引", "release": "脱离", "controls": "按键",
+    "shot": "发射", "pull": "牵引", "release": "脱离", "look": "外观", "controls": "按键",
     "controls_intro": "选择一个键位，然后按下键盘、鼠标或手柄上的按键。选择完整后自动保存。",
     "two": "同时按住两个按键", "first": "1. 选择按键", "second": "2. 选择第二个按键",
     "listening": "请按下按键", "reset_controls": "默认按键",
@@ -35,6 +35,10 @@ TEXT = {
     "controller_icons": "手柄图标", "PS5": "PLAYSTATION", "XSX": "XBOX",
     "game_controls_pending": "游戏按键（进入游戏后可用）",
     "reserved_key": "未保存：此按键已保留给控制台或取消操作。之前的按键保持不变。",
+    "look_missing": "抓钩枪无法显示：它的文件缺失，或与当前游戏版本不再匹配。你的存档未受影响，抓钩保持经典外观。"
+                    "请安装抓钩枪的文件，然后重启游戏。",
+    "look_failed": "抓钩枪因出错而停止。你的存档未受影响，抓钩在下次启动游戏前保持经典外观。原因记录在 unrealsdk.log 中。",
+    "look_unknown_hunter": "该秘藏猎人尚未拥有抓钩枪：抓钩保持经典外观。",
 }
 OPTIONS = {
     "grapple_range": ("射程", "钩爪的最远距离。3000 = 30 米。"),
@@ -59,9 +63,36 @@ OPTIONS = {
     "ground_grace": ("离地时间", "出发时在这段时间内忽略地面，以便离地。"),
     "release_on_landing": ("落地时脱离", "接触地面会结束牵引。"),
     "block_jump": ("脱离时保留跳跃", "跳跃脱离抓钩不会消耗跳跃次数。"),
+    "look": ("外观", "抓钩枪：我们的枪、绳索和钩爪。经典：游戏原本的动作和绳索。"),
+    "rope_look": ("绳索", "光丝：一根光丝缠绕在绳索上。光芯：光从绳股之间透出。光晕：绳索周围环绕一圈光晕。"),
+    "rope_thickness": ("粗细", "绳索的粗细。"),
+    "glow_face": ("光晕绳面", "选择光晕时，绳索本身发光的程度。"),
+    "rope_light": ("亮度", "绳索发光的强度。"),
+    "rope_colour": ("发光颜色", "绳索发光的颜色。"),
+    "rope_movement": ("绳索摆动", "钩爪飞出和收回时，绳索下垂和摆动的程度。"),
+    "hook_size": ("钩爪大小", "钩爪钉在墙上时的大小。"),
+    "holster": ("第三人称枪套", "第三人称下，秘藏猎人腰间佩戴抓钩枪的枪套。"),
+    "game_rope_colour": ("游戏绳索颜色", "经典外观下，游戏原本绳索的颜色。"),
 }
 GROUPS = {
-    "shot": "射程、钩爪速度、近战和视觉效果。",
+    "shot": "射程、钩爪速度和近战。",
     "pull": "绳索力度、速度和轨迹控制。",
     "release": "结束牵引的条件。已达到的速度会保留。",
+    "look": "发射时你看到的：枪、绳索和钩爪。",
+}
+CHOICES = {
+    "look:GRAPPLE_GUN": "抓钩枪", "look:CLASSIC": "经典",
+    "rope_look:A": "光丝", "rope_look:B": "光芯", "rope_look:C": "光晕",
+    "rope_thickness:K": "细", "rope_thickness:L": "中等", "rope_thickness:M": "粗",
+    "rope_light:1": "弱", "rope_light:2": "中等", "rope_light:3": "强",
+    "rope_movement:G": "轻微", "rope_movement:H": "中等", "rope_movement:I": "强烈",
+    "hook_size:A": "小", "hook_size:B": "中等", "hook_size:C": "大",
+    "holster:WITH": "佩戴", "holster:WITHOUT": "不佩戴",
+    "glow_face:D": "熄灭", "glow_face:E": "微亮", "glow_face:F": "明亮",
+    "rope_colour:ORANGE": "橙色", "rope_colour:RED": "红色", "rope_colour:PURPLE": "紫色",
+    "rope_colour:WHITE": "白色", "rope_colour:BLUE": "蓝色", "rope_colour:TURQUOISE": "青绿色",
+    "rope_colour:YELLOW": "黄色", "rope_colour:GOLD": "金色", "rope_colour:GREEN": "绿色",
+    "game_rope_colour:ORANGE": "橙色", "game_rope_colour:RED": "红色", "game_rope_colour:PURPLE": "紫色",
+    "game_rope_colour:WHITE": "白色", "game_rope_colour:BLUE": "蓝色", "game_rope_colour:TURQUOISE": "青绿色",
+    "game_rope_colour:YELLOW": "黄色", "game_rope_colour:GOLD": "金色", "game_rope_colour:GREEN": "绿色",
 }

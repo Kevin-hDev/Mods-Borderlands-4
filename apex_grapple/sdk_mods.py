@@ -26,6 +26,14 @@ class FakeOption:
         super().__setattr__(name, value)
 
 
+class FakeSpinner(FakeOption):
+    """mods_base's SpinnerOption: a value among `choices`, no bounds."""
+
+    def __init__(self, identifier: str, value: Any, choices: list, *args: Any, **kwargs: Any) -> None:
+        super().__init__(identifier, value, **kwargs)
+        self.choices = list(choices)
+
+
 class FakeNested:
     def __init__(self, identifier: str, children: list, **kwargs: Any) -> None:
         self.identifier, self.children = identifier, children

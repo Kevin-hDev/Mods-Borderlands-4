@@ -43,7 +43,7 @@ check("steering stays under the pull, as it was measured, though less far under 
       settings.steer_speed_cap.default_value < settings.pull_speed_cap.default_value)
 check("the range is the 30 metres Kevin asked for", settings.grapple_range.default_value == 3000)
 
-check("every setting is in the list the menu draws from", len(settings.ALL) == 22)
+check("every setting is in the list the menu draws from", len(settings.ALL) == 32)
 check("the take-off time is long enough to leave the ground, which 0.06 s was not",
       settings.ground_grace.default_value >= 0.2)
 check("the lift is under the game's own jump of 840: leaving the floor, not jumping",
@@ -55,6 +55,25 @@ check("every setting has a name a player can read",
 # Kevin's rule, 2026-09-20: the game's grapple is off by default and the player turns it back on.
 check("the game's own grapple is off by default", settings.keep_game_grapple.default_value is False)
 check("the rope is shown by default", settings.show_rope.default_value is True)
+
+# The grapple gun's look (Kevin, 2026-10-14): the drawings' letters as values, the looks' first at first.
+look = settings.look_settings
+check("the look's settings choose among the drawings' letters, the grapple gun at first",
+      look.look.choices == ["GRAPPLE_GUN", "CLASSIC"] and look.look.default_value == "GRAPPLE_GUN"
+      and look.rope_look.choices == ["A", "B", "C"] and look.rope_look.default_value == "A"
+      and look.rope_thickness.choices == ["K", "L", "M"] and look.rope_thickness.default_value == "L"
+      and look.rope_light.choices == ["1", "2", "3"] and look.rope_light.default_value == "2"
+      and look.rope_movement.choices == ["G", "H", "I"] and look.rope_movement.default_value == "H"
+      and look.hook_size.choices == ["A", "B", "C"] and look.hook_size.default_value == "B")
+look.rope_look.value = "Z"
+look.hook_size.value = 3
+warnings = settings.keep_in_bounds()
+check("a choice the list does not hold goes back to its first, and is said",
+      look.rope_look.value == "A" and look.hook_size.value == "B" and len(warnings) == 2
+      and "invalid rope look setting; set to A" in warnings)
+look.rope_movement.value = "I"
+check("a choice the list holds is kept", settings.keep_in_bounds() == [] and look.rope_movement.value == "I")
+look.rope_movement.value = look.rope_movement.default_value
 
 check("as they stand, the settings hold together", settings.keep_in_bounds() == [])
 

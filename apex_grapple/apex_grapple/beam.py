@@ -17,7 +17,7 @@ from typing import Any
 
 import unrealsdk
 
-from . import beam_cleanup, game, report, rope_ends, rope_lifetime, rope_light, rope_pose
+from . import beam_cleanup, beam_colour, game, report, rope_ends, rope_lifetime, rope_light, rope_pose
 
 LIBRARY = "NiagaraFunctionLibrary"
 # Where the beam is put, likeliest first. The game puts its own free in the world, so that is
@@ -69,6 +69,7 @@ def start(character: Any, anchor: tuple[float, float, float]) -> None:
             report.error_once("beam:spawn", f"the grapple beam could not be put anywhere. Refusals: {refused}")
             return
         _copy_game(_component)
+        beam_colour.paint(_component)
         rope_lifetime.configure(_component, system)
         follow(hand, anchor)
         if _component is not None:

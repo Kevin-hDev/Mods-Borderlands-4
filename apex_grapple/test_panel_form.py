@@ -31,7 +31,7 @@ assert w["close_label"].text == "FERMER"
 assert w["label:grapple_range"].text == "PORTÉE"
 w["nav:controls"].checked = True
 form.poll()
-assert w["pages"].index == 3
+assert w["pages"].index == panel_theme.PAGES.index("controls")
 w["two"].checked = True
 form.poll()
 assert w["second"].enabled and "deux touches" in w["status"].text

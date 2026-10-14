@@ -10,7 +10,11 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_grapple import game, grapple, settings  # noqa: E402
+from apex_grapple import game, grapple, look_settings, settings  # noqa: E402
+
+# These tests watch the pull and its rope with the classic look; the grapple gun's look has its own
+# (test_look_shots.py, test_rope_visuals.py).
+look_settings.look.value = look_settings.CLASSIC
 
 fails: list[str] = []
 SECOND = 1_000_000_000

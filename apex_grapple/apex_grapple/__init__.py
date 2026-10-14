@@ -15,10 +15,10 @@ docs/candidats/grappin.md holds the numbers and where each came from.
 from mods_base import build_mod
 from .settings_persistence import AtomicMod
 
-from . import control_console_menu, control_menu, frame, menu, report, settings
+from . import control_console_menu, control_menu, frame, menu, report, settings, settings_moved
 
 # Research observers are archived: their synchronous scans caused first-shot stalls.
-__version__ = "1.0.9"
+__version__ = "1.0.10"
 __author__ = "kevin-hDev"
 
 
@@ -44,6 +44,8 @@ mod = build_mod(
     on_enable=_on_enable,
     on_disable=_on_disable,
 )
+# build_mod has loaded the settings file by now (mods_base, mod_list.register_mod, read on 2026-10-14).
+settings_moved.adopt(mod, menu.MOVED)
 control_console_menu.install(mod, control_menu.MENU)
 
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
