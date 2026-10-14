@@ -1,6 +1,6 @@
 # Vehicle Driving
 
-Version **1.0.8**. Open Vehicle Driving in the SDK mods menu for its English, French and Simplified Chinese settings window. It works at the title screen, in a game, at the wheel and while the game is paused. The window remembers the last section you opened.
+Version **1.0.9**. Open Vehicle Driving in the SDK mods menu for its English, French and Simplified Chinese settings window. It works at the title screen, in a game, at the wheel and while the game is paused. The window remembers the last section you opened.
 
 Livelier vehicles for Borderlands 4: a higher top speed, a quicker pick-up, sharper turns, higher jumps, a faster
 reverse, and a grip that keeps the vehicle going where it faces instead of sliding on through turns. The boost lasts
@@ -29,7 +29,7 @@ or a controller button. The chosen view is kept.
 | Boost duration | How long the boost gauge lasts: at 150 %, one and a half times as long | 150 % | 100 to 300 % |
 | Unlimited boost | The boost gauge never empties | off | on or off |
 | Boost in the air | While you boost in a jump or a fall, a flat push toward the vehicle's nose, in percent of the boost's push on the ground, up to about the boost's top speed on the ground | 100 % | 0 to 300 % |
-| Toughness | How much damage the vehicle takes: at 200 %, half | 200 % | 100 to 500 % |
+| Toughness | How much damage the vehicle takes: at 200 %, half | 200 % | 100 to 700 % |
 | Weapon damage | The damage of the vehicle's machine gun and rockets | 300 % | 100 to 500 % |
 
 At 100 %, a setting gives the game's own value, so each effect can be turned off on its own; Boost in the air does

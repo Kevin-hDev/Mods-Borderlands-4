@@ -5,8 +5,9 @@ value is always written as the game's original times its setting, never as the v
 is ever multiplied twice. The vehicle and its driver are held by weak pointers: a vehicle the game destroyed, such as
 one replaced by a vehicle summoned again, is never written again, and its values are forgotten with it.
 Spec section 3.2: what the game rewrites is followed, never fought.
-Each game object is held by its own weak pointer: the vehicle, its driver, and each weapon's firing behavior, which the
-game can destroy with its vehicle while the driver lives on (session 12, 2026-10-03).
+Each game object is held by its own weak pointer: the vehicle and its driver, which the game can destroy apart (session
+12, 2026-10-03). The guns' damage formula belongs to the game itself, alive as long as it runs: it is always put back,
+whatever became of the vehicle, and always written from the game's own value, never from a raise left behind.
 """
 
 from typing import Any
@@ -18,6 +19,11 @@ from . import levers
 # Game floats are 32-bit: a value read back differs from the one written by about one part in ten million. One
 # further off than this share was written by the game.
 TOLERANCE = 1e-5
+
+
+def _game_itself() -> bool:
+    """The owner of what the game holds for every vehicle: alive as long as the game."""
+    return True
 
 
 def same(a: float, b: float) -> bool:
@@ -74,7 +80,7 @@ class Tuning:
             current = getattr(target.holder, target.field)
             entry = self._entries.get(target.key)
             if entry is None:
-                entry = self._entries[target.key] = Entry(target, current)
+                entry = self._entries[target.key] = Entry(target, current if target.game is None else target.game)
             elif not same(current, entry.written):
                 if target.base_key is not None and target.base_key not in rebased:
                     # Recomputed from the mod's base: taken as the original, it would be multiplied a second time.
@@ -121,7 +127,7 @@ class Tuning:
         self._owners = {levers.VEHICLE: self._vehicle}
         for target in self._targets:
             if target.owner not in self._owners:
-                self._owners[target.owner] = WeakPointer(target.source)
+                self._owners[target.owner] = WeakPointer(target.source) if target.source is not None else _game_itself
         return missing
 
     def _look_again(self) -> list[str]:

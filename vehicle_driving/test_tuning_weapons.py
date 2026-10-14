@@ -1,69 +1,75 @@
-"""Weapon damage follows late loading and never writes destroyed behaviors."""
+"""Weapon damage: the guns' damage formula is the game's own, raised while driving and put back, whatever happens to
+the vehicle, never multiplied twice, found once the driver sits, and left to the game when the game refuses it."""
+import importlib
 import sys
 import unittest
 
 import sdk_stubs
 from tuning_fixture import FACTORS
 
-sdk_stubs.install()
-from vehicle_driving import tuning  # noqa: E402
+state = sdk_stubs.install()
+from vehicle_driving import damage_formula, tuning  # noqa: E402
 
 
 class Tests(unittest.TestCase):
     def setUp(self):
+        # A new game: the formula module forgets the game's value and any refusal.
+        importlib.reload(damage_formula)
+        self.library = state["formula"]
+        self.library.typed, self.library.resolves = True, True
+        self.scalar = self.library.definition.Value.Scalar
+        self.scalar.constant = 1.0
         self.driver = sdk_stubs.Driver()
-        self.attributes = self.driver.VehicleDriverComponent.VehicleAttributesState
         self.owner = tuning.Tuning()
 
-    def test_destroyed_behavior_is_never_written_again(self):
+    def test_raised_while_driving_and_put_back_after_the_vehicle_is_destroyed(self):
         car = sdk_stubs.Vehicle('OakVehicle_7', self.driver)
         self.owner.take(car)
         self.owner.update(FACTORS)
-        gone = car.VehicleWeapons[0].behaviors[0]
-        sdk_stubs.destroy(gone)
-        gone.damage.Value = 999.0
-        self.assertEqual(self.owner.update(FACTORS), [])
-        self.assertEqual(gone.damage.Value, 999.0)
-        self.owner.put_back()
-        self.assertEqual(gone.damage.Value, 999.0)
-        self.assertEqual(car.VehicleWeapons[1].behaviors[0].damage.Value, 2.8)
-        self.assertEqual(self.attributes.MaxAccel.BaseValue, 1000.0)
+        self.assertEqual(self.scalar.constant, 3.0)
+        sdk_stubs.destroy(car)
+        self.assertEqual(self.owner.put_back(), [])
+        self.assertEqual(self.scalar.constant, 1.0)
 
-    def test_missing_weapons_are_found_later_and_restored(self):
+    def test_a_raise_left_behind_is_never_multiplied_again(self):
         car = sdk_stubs.Vehicle('OakVehicle_8', self.driver)
-        arsenal = car.VehicleWeapons
-        car.VehicleWeapons = []
-        self.assertEqual(self.owner.take(car), [
-            'driving OakVehicle_8', 'VehicleWeapons not found on OakVehicle_8: left to the game'])
+        self.owner.take(car)
         self.owner.update(FACTORS)
-        car.VehicleWeapons = arsenal
+        # The mod's frame stopped before any put back: the formula is still raised when the next vehicle comes.
+        self.owner = tuning.Tuning()
+        self.owner.take(sdk_stubs.Vehicle('OakVehicle_9', self.driver))
         lines = self.owner.update(FACTORS)
-        self.assertAlmostEqual(arsenal[0].behaviors[0].damage.Value, 8.4)
-        self.assertTrue(any('VehicleWeapons found on OakVehicle_8' in line for line in lines))
-        self.assertEqual(car.OakVehicleMovement.HoverSetup.PowerslideJumpHeight.constant, 330.0)
+        self.assertEqual(self.scalar.constant, 3.0)
+        self.assertIn('calc_vehicle_weapon_damage.Scalar 1.000->3.000', lines[0])
         self.owner.put_back()
-        self.assertEqual(arsenal[0].behaviors[0].damage.Value, 2.8)
+        self.assertEqual(self.scalar.constant, 1.0)
 
-    def test_first_vehicle_delayed_firing_behaviors_are_found_and_restored(self):
-        # Session 13: weapons existed at summon, but their firing behaviors arrived later.
-        car = sdk_stubs.Vehicle('OakVehicle_9', self.driver)
-        firing = [weapon.behaviors for weapon in car.VehicleWeapons]
-        for weapon in car.VehicleWeapons:
-            weapon.behaviors = []
+    def test_found_once_the_driver_sits_and_put_back(self):
+        car = sdk_stubs.Vehicle('OakVehicle_10', self.driver)
+        car.DriverPawn = None
         lines = self.owner.take(car)
-        self.assertEqual(lines[1:], [
-            f'weapon[{index}].damage not found on OakVehicle_9: left to the game'
-            for index in range(4)])
+        self.assertIn('calc_vehicle_weapon_damage not found on OakVehicle_10: left to the game', lines)
         self.owner.update(FACTORS)
-        for weapon, behaviors in zip(car.VehicleWeapons, firing):
-            weapon.behaviors = behaviors
+        self.assertEqual(self.scalar.constant, 1.0)
+        car.DriverPawn = self.driver
         lines = self.owner.update(FACTORS)
-        for index, behaviors in enumerate(firing):
-            self.assertAlmostEqual(behaviors[0].damage.Value, 8.4 if index < 2 else 21.0)
-        message = 'weapon[0].damage, weapon[1].damage, weapon[2].damage, weapon[3].damage found on OakVehicle_9'
-        self.assertTrue(any(message in line for line in lines))
+        self.assertEqual(self.scalar.constant, 3.0)
+        self.assertTrue(any('calc_vehicle_weapon_damage' in line and 'found on OakVehicle_10' in line
+                            for line in lines))
         self.owner.put_back()
-        self.assertEqual([behaviors[0].damage.Value for behaviors in firing], [2.8, 2.8, 7.0, 7.0])
+        self.assertEqual(self.scalar.constant, 1.0)
+
+    def test_a_formula_the_game_refuses_is_left_to_it_and_the_rest_written(self):
+        self.library.resolves = False
+        car = sdk_stubs.Vehicle('OakVehicle_11', self.driver)
+        self.owner.take(car)
+        self.owner.update(FACTORS)
+        self.assertEqual(self.scalar.constant, 1.0)
+        self.assertEqual(car.OakVehicleMovement.HoverSetup.PowerslideJumpHeight.constant, 330.0)
+        calls = len(self.library.calls)
+        self.owner.update(FACTORS)
+        self.assertEqual(len(self.library.calls), calls)
+        self.owner.put_back()
 
 
 if __name__ == '__main__':

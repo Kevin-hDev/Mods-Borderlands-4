@@ -3,8 +3,8 @@
 Installed into sys.modules before importing vehicle_driving. Cut down from Apex Movement's to what this mod calls:
 options, keys, the frame hook, the mod, weak pointers, the log, one trace, the player controller and its camera
 manager. The vehicle and its
-driver carry the values sessions 1 to 9 read on Kevin's vehicle (2026-09-18), and the boost, the damage and the
-weapons sessions 11 and 12 read (2026-10-03).
+driver carry the values sessions 1 to 9 read on Kevin's vehicle (2026-09-18), and the boost and the damage sessions
+11 and 12 read (2026-10-03); the guns' damage formula is sdk_stubs_formula's (2026-10-14).
 """
 
 import sys
@@ -13,6 +13,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
+import sdk_stubs_formula
 from sdk_stubs_camera import CameraManager  # noqa: F401  (the tests reach it as sdk_stubs.CameraManager)
 from sdk_stubs_pointers import WeakPointer, destroy
 from sdk_stubs_options import (FakeOption, FakeNestedOption, FakeHook, FakeKeybind, FakeKeybindOption,
@@ -83,21 +84,6 @@ def pair(value: float, base: float) -> Any:
     return types.SimpleNamespace(Value=value, BaseValue=base)
 
 
-class Behavior:
-    """One of a weapon's behaviors; the firing one carries the damage of a shot, base and value (session 11)."""
-
-    def __init__(self, kind: str, damage: float | None = None) -> None:
-        self.Class = types.SimpleNamespace(Name=f"WeaponBehavior_{kind}")
-        if damage is not None:
-            self.damage = pair(damage, damage)
-
-
-def weapon(damage: float) -> Any:
-    """A vehicle weapon with session 11's four behaviors, the firing one first."""
-    return types.SimpleNamespace(behaviors=[Behavior("FireProjectile", damage), Behavior("DamageModifier"),
-                                            Behavior("OakStatusEffectModifier"), Behavior("Sight")])
-
-
 class Driver:
     """The player's character at the wheel: its driving attributes, base and value with Kevin's Hover Drive."""
 
@@ -116,8 +102,8 @@ class Driver:
 
 
 class Vehicle:
-    """A vehicle: springs and jump on its movement's HoverSetup, the game's boost, a physics body, the damage it takes,
-    its weapons and a driver."""
+    """A vehicle: springs and jump on its movement's HoverSetup, the game's boost, a physics body, the damage it takes
+    and a driver."""
 
     def __init__(self, name: str = "OakVehicle_1", driver: Any = None, yaw: float = 0.0, slide: str = "None") -> None:
         self.Name = name
@@ -132,8 +118,6 @@ class Vehicle:
                                                         PowerslideInput=types.SimpleNamespace(name=slide),
                                                         IsBoosting=lambda: self.boosting)
         self.DamageState = types.SimpleNamespace(DamageTakenMultiplier=pair(1.0, 1.0))
-        # Two machine guns and two rocket launchers (session 11).
-        self.VehicleWeapons = [weapon(2.8), weapon(2.8), weapon(7.0), weapon(7.0)]
         self.DriverPawn = driver if driver is not None else Driver()
 
     def K2_GetActorRotation(self) -> Any:
@@ -146,13 +130,16 @@ class Vehicle:
 def install() -> dict:
     """Registers the fake modules and returns the state the tests read and drive."""
     state: dict = {"misc": [], "warnings": [], "errors": [], "pc": None, "settings_exists": True,
-                   "settings_enabled": False, "mods": [], "keybinds": [], "ground": Ground(), "class_finds": 0}
+                   "settings_enabled": False, "mods": [], "keybinds": [], "ground": Ground(), "class_finds": 0,
+                   "formula": sdk_stubs_formula.Library()}
 
     def find_class(name: str) -> Any:
         if name == "InputSettings":
             # The game's console keys, which the CAMERA page's key card refuses (command_keys.py).
             keys = [types.SimpleNamespace(KeyName="Tilde")]
             return types.SimpleNamespace(ClassDefaultObject=types.SimpleNamespace(ConsoleKeys=keys))
+        if name == sdk_stubs_formula.LIBRARY:
+            return state["formula"].cls
         state["class_finds"] += 1
         if name != "KismetSystemLibrary":
             raise ValueError(f"no class {name}")
@@ -166,6 +153,7 @@ def install() -> dict:
 
     unreal_module = types.ModuleType("unrealsdk.unreal")
     unreal_module.WeakPointer = WeakPointer
+    unreal_module.FGbxDefPtr = sdk_stubs_formula.DefPtr
 
     hooks_module = types.ModuleType("unrealsdk.hooks")
     hooks_module.Type = types.SimpleNamespace(POST="POST", PRE="PRE")
@@ -175,6 +163,7 @@ def install() -> dict:
     unrealsdk_module.hooks = hooks_module
     unrealsdk_module.unreal = unreal_module
     unrealsdk_module.find_class = find_class
+    unrealsdk_module.find_enum = sdk_stubs_formula.enums
     unrealsdk_module.make_struct = lambda name, **fields: types.SimpleNamespace(**fields)
 
     mods_base = types.ModuleType("mods_base")

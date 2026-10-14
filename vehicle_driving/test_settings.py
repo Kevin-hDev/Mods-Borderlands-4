@@ -33,7 +33,7 @@ check("the twelve settings, in the menu's order, with Kevin's defaults and bound
     ("boost_duration", "Boost duration", 150, (100, 300)),
     ("unlimited_boost", "Unlimited boost", False, ()),
     ("air_push", "Boost in the air", 100, (0, 300)),
-    ("toughness", "Toughness", 200, (100, 500)),
+    ("toughness", "Toughness", 200, (100, 700)),
     ("weapon_damage", "Weapon damage", 300, (100, 500)),
 ])
 check("every slider moves by whole percents", all(

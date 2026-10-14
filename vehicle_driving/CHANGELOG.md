@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.9 - 2026-10-14
+
+- Fixed: the Weapon damage setting had no effect. Your vehicle's machine gun and rockets now really hit harder.
+- Toughness now goes up to 700 %.
+
 ## 1.0.8 - 2026-10-13
 
 - With Apex Movement, Omni Sprint or Third Person & FOV, the camera moves back with your speed at the wheel: the view you chose stays the same, and that framing adds to it.

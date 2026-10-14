@@ -33,7 +33,8 @@ class Locked:
         self.__dict__[name] = value
 
 
-sdk_stubs.install()
+state = sdk_stubs.install()
+formula = state["formula"].definition.Value.Scalar
 
 from vehicle_driving import tuning  # noqa: E402
 
@@ -59,20 +60,17 @@ check("a first write says what it set, from the game's own values: the proof in 
       "twice", len(lines) == 1 and lines[0].startswith("set YawSpring_Hovering[0] 3.000->7.500, ")
       and "maxspeed.BaseValue 50.000->62.500" in lines[0]
       and "PowerslideJumpHeight 165.000->330.000, DamageTakenMultiplier.BaseValue 1.000->0.500" in lines[0]
-      and lines[0].endswith("weapon[3].damage.Value 7.000->21.000"))
+      and lines[0].endswith("calc_vehicle_weapon_damage.Scalar 1.000->3.000"))
 check("an update with nothing changed says nothing", owner.update(FACTORS) == [])
 check("an update with nothing changed never multiplies twice",
       hover.PowerslideJumpHeight.constant == 330.0 and attributes.MaxAccel.BaseValue == 2500.0)
 taken = car.DamageState.DamageTakenMultiplier
-weapons = [weapon.behaviors[0].damage for weapon in car.VehicleWeapons]
 check("the reverse speed and the boost's cost, base and value",
       attributes.ReverseSpeed.BaseValue == 50.0 and near(attributes.ReverseSpeed.Value, 52.46)
       and attributes.BoostConsumptionRateScalar.BaseValue == 0.5
       and near(attributes.BoostConsumptionRateScalar.Value, 0.453))
 check("the damage the vehicle takes", taken.BaseValue == 0.5 and taken.Value == 0.5)
-check("every weapon's damage per shot, base and value",
-      all(near(damage.BaseValue, 8.4) and near(damage.Value, 8.4) for damage in weapons[:2])
-      and all(near(damage.BaseValue, 21.0) and near(damage.Value, 21.0) for damage in weapons[2:]))
+check("the guns' damage formula, its Scalar", formula.constant == 3.0)
 owner.update(dict(FACTORS, boost_cost=0.0))
 check("the unlimited boost: the gauge's cost at nothing, base and value",
       attributes.BoostConsumptionRateScalar.BaseValue == 0.0 and attributes.BoostConsumptionRateScalar.Value == 0.0)
@@ -108,9 +106,9 @@ check("put back: the game's values, the ones it rewrote included",
       and hover.YawSpring_Boosting.Springs[0].Stiffness == 1.5 and attributes.MaxAccel.BaseValue == 1000.0
       and attributes.MaxAccel.Value == 1400.0 and attributes.maxspeed.BaseValue == 50.0
       and hover.PowerslideJumpHeight.constant == 165.0)
-check("put back: the reverse speed, the boost's cost, the damage taken and each weapon's damage",
+check("put back: the reverse speed, the boost's cost, the damage taken and the guns' damage formula",
       attributes.ReverseSpeed.BaseValue == 25.0 and attributes.BoostConsumptionRateScalar.Value == 0.906
-      and taken.Value == 1.0 and [damage.Value for damage in weapons] == [2.8, 2.8, 7.0, 7.0])
+      and taken.Value == 1.0 and formula.constant == 1.0)
 check("nothing failed and nothing is held any more", lines == [] and owner.vehicle() is None and not owner.holds())
 
 owner.take(car)

@@ -66,9 +66,10 @@ air_push = SliderOption(
     display_name="Boost in the air",
     description="100% = the boost's ground push, in jumps and falls.",
 )
-# Kevin, 2026-10-03, after session 12's trial at 400: "200% avec réglage jusqu'à 500%".
+# Kevin, 2026-10-03, after session 12's trial at 400: "200% avec réglage jusqu'à 500%". Up to 700 since 2026-10-14:
+# measured, 500% gave 4.2 times less damage instead of 5, and Kevin chose a higher limit over a corrected formula.
 toughness = SliderOption(
-    "toughness", 200, 100, 500, step=1, is_integer=True,
+    "toughness", 200, 100, 700, step=1, is_integer=True,
     display_name="Toughness",
     description="200% = the vehicle takes half the damage.",
 )
