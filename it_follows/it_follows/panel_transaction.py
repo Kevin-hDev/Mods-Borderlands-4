@@ -1,0 +1,133 @@
+# Generated: the window Kevin's mods share, taken from Hunter Change's plain window, under It Follows'
+# names. Its comments may speak of other mods. Never edited by hand: docs/RUN/outils/menu_window.py
+# writes this file.
+"""Advance one ordered settings transaction, for synchronous SDK options."""
+
+import time
+
+from . import panel_transaction_config as config
+from .panel_transaction_recovery import Recovery
+from . import panel_persistence
+
+
+def write_options(model, values):
+    """Validate one write and recheck live ownership immediately before persistence."""
+    if type(values) is not dict or not 0 < len(values) <= len(model.options):
+        return False
+    try:
+        changes = tuple((model.options[key], model.normalize(model.options[key], value))
+                        for key, value in values.items())
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return False
+    return model.save(changes, "write")
+
+
+class Transaction(Recovery):
+    def __init__(self, mod, report, clock=time.perf_counter_ns):
+        self.mod = mod
+        self.report = report
+        self.clock = clock
+        self.changes = ()
+        self.previous = ()
+        self.kind = ""
+        self.index = 0
+        self.rolling_back = False
+        self.retry_after = 0
+        self.rollback_failures = 0
+        self.rollback_deadline = 0
+        self.started = 0
+        self.deadline = 0
+        self.failure_reason = "failed"
+        self.finalize = None
+        self.persist_rollback = True
+        self.restoration_confirmed = False
+
+    @property
+    def pending(self):
+        return bool(self.kind)
+
+    @staticmethod
+    def _ordered(changes):
+        return tuple(changes)
+
+    def start(self, changes, previous, kind, *, finalize=None):
+        if self.pending:
+            return None
+        self.changes = self._ordered(changes)
+        self.previous = tuple(previous)
+        self.kind = kind
+        self.index = 0
+        self.rolling_back = False
+        self.retry_after = 0
+        self.rollback_failures = 0
+        self.rollback_deadline = 0
+        self.started = self.clock()
+        self.deadline = self.started + config.TRANSACTION_TOTAL_TIMEOUT_NS
+        self.failure_reason = "failed"
+        self.finalize = finalize
+        self.persist_rollback = True
+        self.restoration_confirmed = False
+        self.persistence_failed = False
+        # Compare to the original file before deciding whether rollback needs persistence.
+        self.original_fingerprint = panel_persistence.fingerprint(self.mod, self.report)
+        return self._run()
+
+    def advance(self):
+        if not self.pending:
+            return None
+        return self._run()
+
+    def cancel(self):
+        if not self.pending:
+            return None
+        if self._expired():
+            return self._abandon_rollback()
+        if self.rolling_back:
+            return self._run()
+        return self._fail()
+
+    def _run(self):
+        if self._expired() or self.rolling_back and self.clock() >= self.rollback_deadline:
+            return self._abandon_rollback()
+        if self.clock() < self.retry_after:
+            return None
+        while self.index < len(self.changes):
+            option, target = self.changes[self.index]
+            if option.value == target:
+                self.index += 1
+                continue
+            try:
+                option.value = target
+                if option.value != target:
+                    return self._fail()
+            except Exception:
+                return self._fail()
+            self.index += 1
+        try:
+            if self.finalize is not None and self.finalize(self.rolling_back) is not True:
+                return self._fail()
+            if self.rolling_back:
+                self.restoration_confirmed = True
+            if not self.rolling_back or self.persist_rollback:
+                self.mod.save_settings()
+        except Exception:
+            if not self.rolling_back:
+                self.failure_reason = "failed"
+                self.persist_rollback = not panel_persistence.unchanged(
+                    self.mod, self.original_fingerprint, self.report)
+            else:
+                self.persistence_failed = True
+            self.report("panel:persistence", config.SAVE_FAILURE)
+            return self._fail()
+        self.persistence_failed = False
+        return self._finish(not self.rolling_back)
+
+    def _finish(self, success):
+        outcome = self.kind, self.previous, success
+        self.changes = ()
+        self.previous = ()
+        self.kind = ""
+        self.index = 0
+        self.rolling_back = False
+        self.finalize = None
+        return outcome
