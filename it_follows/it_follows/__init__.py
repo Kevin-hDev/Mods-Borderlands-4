@@ -13,7 +13,7 @@ from . import kept, open_key, options, panel_open, panel_preferences, report, se
 from .normal import hardcore, options as normal_options
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __author__ = "kevin-hDev"
 
 

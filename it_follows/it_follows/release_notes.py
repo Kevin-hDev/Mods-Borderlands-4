@@ -3,6 +3,18 @@
 """The update notes the window shows after an update (decision 117), the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.3', {
+        'en': (
+            'Normal mode: at Senior and Predator, the enemies run a little slower than before.',
+            'Normal mode: new "Enemy speed" setting at Senior and Predator. REDUCED makes the enemies 15% slower, when running and in their faster dodges.',
+            "Normal mode's Hardcore: only the enemies your Vault Hunter kills count, not those your companions kill.",
+        ),
+        'fr': (
+            "Mode normal : en Senior et Predator, les ennemis courent un peu moins vite qu'avant.",
+            'Mode normal : nouvelle ligne « Vitesse des ennemis » en Senior et Predator. RÉDUITE rend les ennemis 15 % plus lents, à la course et dans leurs esquives accélérées.',
+            'Hardcore du mode normal : seuls les ennemis tués par ton chasseur comptent, pas ceux tués par tes compagnons.',
+        ),
+    }),
     ('1.0.2', {
         'en': (
             'Normal mode: enemies without a shield get one, 40% of their health, bosses included. At Bandit, an option takes them away. At Predator, a broken shield recharges 10 seconds later.',

@@ -128,6 +128,8 @@ OPTIONS = {
     "normal_allies": ("Ennemis alliés", "Tous les ennemis dans une même équipe : ils ne se battent plus entre eux."),
     "normal_fast_dodges": ("Esquives accélérées",
                            "Les ennemis esquivent plus vite que dans le jeu. Désactivé : la vitesse d'esquive du jeu."),
+    "normal_speed": ("Vitesse des ennemis", "Réduite : les ennemis courent 15 % moins vite, et leurs esquives "
+                                            "accélérées aussi. Pour ceux qui les trouvent trop rapides."),
     "normal_shields": ("Boucliers", "Les ennemis sans bouclier en reçoivent un, de 40 % de leur vie. Une fois cassé, "
                                     "il ne revient pas."),
     "normal_hardcore": ("Hardcore", "Les ennemis se renforcent à mesure que tu tues, lentement, tout au long du jeu."),
@@ -137,4 +139,5 @@ OPTIONS = {
 CHOICES = {"level:25": "Niveau 1", "level:40": "Niveau 2", "level:60": "Niveau 3", "level:80": "Niveau 4",
            "level:100": "Niveau 5", "Normal": "Normale", "+10%": "+10 %", "+20%": "+20 %", "+30%": "+30 %",
            "+40%": "+40 %", "+50%": "+50 %", "Unlimited": "Illimitée", "Small": "Petite", "Medium": "Moyenne",
-           "Large": "Grande", "buff:Normal": "Normal"}
+           "Large": "Grande", "buff:Normal": "Normal", "normal_speed:Increased": "Augmentée",
+           "normal_speed:Reduced": "Réduite"}

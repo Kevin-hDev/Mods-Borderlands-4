@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.3 - 2026-10-16
+
+- Normal mode: at Senior and Predator, the enemies run a little slower than before.
+- Normal mode: new "Enemy speed" setting at Senior and Predator. REDUCED makes the enemies 15% slower, when running and
+  in their faster dodges.
+- Normal mode's Hardcore: only the enemies your Vault Hunter kills count, not those your companions kill.
+
 ## 1.0.2 - 2026-10-16
 
 - Normal mode: enemies without a shield get one, 40% of their health, bosses included. At Bandit, an option takes them

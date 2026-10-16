@@ -91,8 +91,11 @@ try:
           and mode_module.IDENTIFIER != "it_follows:run")
     for now in (11.0, 12.0, 13.0):
         mode.tick(now)
-    check("on, then the reason it waits written once", [(line["event"], line.get("why")) for line in notes()]
+    lines = notes()
+    check("on, then the reason it waits written once", [(line["event"], line.get("why")) for line in lines]
           == [("normal_on", None), ("normal_waiting", "no_character")])
+    check("the start says the level, the allies and whether the speed is reduced",
+          (lines[0]["level"], lines[0]["allies"], lines[0]["reduced"]) == ("Senior", True, False))
     state["pc"] = driving()
     mode.tick(14.0)
     player = hunter()
@@ -118,7 +121,7 @@ try:
           player.DamageState.DamageTakenMultiplier.BaseValue == 1.2
           and gbx_param.read(camp.SpawnerComponent.SpawnerStyleData.InlineDef, "NumTotalActors")[1] == 8
           and gbx_param.read(enemy.AIDodgeState.DodgeBullet, "Chance")[1] == 0.45
-          and enemy.CharacterMovement.MaxGroundSpeedScale.Value == 1.5
+          and enemy.CharacterMovement.MaxGroundSpeedScale.Value == 1.4
           and enemy.zone.settings.CombatTerritory.Radius == 35000.0)
     check("its aim: Senior's spread x0.88, bullets x1.08", enemy.gun.values()["aiaccuracy"] == [6.6, 6.6]
           and enemy.gun.values()["aiprojectilespeed"] == [0.486, 0.486])

@@ -19,11 +19,13 @@ English and French, has four pages. The game is paused while it is open. You sta
 - **NORMAL MODE.** Play your game as usual: the enemies you meet are more numerous, faster and tougher, dodge more often
   and faster, and chase you farther. Enemies without a shield get one, 40% of their health, which recharges at
   Predator once broken; armed enemies shoot straighter and their bullets fly faster. Three levels, Bandit, Senior and
-  Predator. Bosses get the level's health, speed, shield and aim.
+  Predator. Bosses get the level's health, speed, shield and aim. At Senior and Predator, the Enemy speed setting
+  makes them 15% slower for those who find them too fast.
   It is made first for starting or restarting the game from the beginning, a little like three levels of NG+, and
   still works mid-game. It stays on from one game to the next until you press STOP, and STOP gives the enemies back as
   the game made them.
 - **Hardcore**, an option of the normal mode: the enemies grow 1% stronger every 100 enemies you kill, all game long.
+  Only your Vault Hunter's kills count, not your companions'.
   You can pause the progress, and it is kept while the option is off.
 - **HISTORY.** Your last 20 Horde runs.
 - **OPTIONS.** The in-game bar and its size.

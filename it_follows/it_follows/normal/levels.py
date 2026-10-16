@@ -20,7 +20,12 @@ than Senior (trial 27: some 23 dodges a minute against 42), a mistake of figures
 chiffre »); its chance is now the highest, IsMovingSpeed ×100 kept.
 
 Faster after trial 35 (decision 100, Kevin, 15 October 2026: « c'est pas assez je le sent pas du tout en jeu »): speed
-×1.2, ×1.5 and ×1.7 in place of ×1.1, ×1.2 and ×1.4.
+×1.2, ×1.5 and ×1.7 in place of ×1.1, ×1.2 and ×1.4. Senior and Predator brought back to ×1.4 and ×1.5 (decision 121,
+Kevin, 16 October 2026): faster in everything, the game would be « infernal et injouable ».
+
+reducible: whether the window's « Enemy speed » row shows at that level, Senior and Predator only (decision 121); its
+REDUCED choice runs the level's speed and faster dodges times REDUCED (Kevin: « reduis la vitesse de 15% uniquement
+pour les deux niveau senior et predator [...] Pour ceux qui pourrait trouver que c'est trop rapide »).
 
 shields: the shield given to the enemies without one (decisions 111 and 112, Kevin, 16 October 2026: « Bandit : Shield
 optionnel qui ne se recharge pas. Senior : Shield obligatoire qui ne se recharge pas. Predator : Shield oblgatoire qui
@@ -35,7 +40,7 @@ Trial 51 found ×2 dealt some 5 times the damage; if the damage follows a power 
 not measured in one pass. Kevin judges them in play.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 
 @dataclass(frozen=True)
@@ -53,14 +58,18 @@ class Level:
     shield_refill: bool
     spread: float
     bullet_speed: float
+    reducible: bool
 
 
 OPTION, ALWAYS = "option", "always"
 LEVELS = {
-    "Bandit": Level("Bandit", 1.5, 350.0, 1.2, 1.7, 0.35, 1.0, 1.45, 1.1, OPTION, False, 0.88, 1.06),
-    "Senior": Level("Senior", 2.0, 350.0, 1.5, 2.3, 0.45, 1.0, 1.75, 1.2, ALWAYS, False, 0.88, 1.08),
-    "Predator": Level("Predator", 2.0, 600.0, 1.7, 2.8, 0.55, 100.0, 2.3, 1.3, ALWAYS, True, 0.8, 1.12),
+    "Bandit": Level("Bandit", 1.5, 350.0, 1.2, 1.7, 0.35, 1.0, 1.45, 1.1, OPTION, False, 0.88, 1.06, False),
+    "Senior": Level("Senior", 2.0, 350.0, 1.4, 2.3, 0.45, 1.0, 1.75, 1.2, ALWAYS, False, 0.88, 1.08, True),
+    "Predator": Level("Predator", 2.0, 600.0, 1.5, 2.8, 0.55, 100.0, 2.3, 1.3, ALWAYS, True, 0.8, 1.12, True),
 }
+# The faster dodges switched off keep the game's own speed, never reduced (play.py speeds up no dodge then; Kevin: « on
+# ne re reduis pas de 15% »).
+REDUCED = 0.85
 # Every level's shield: SHIELD_SHARE of the health the enemy had (Kevin: « Shield = 40% de la vie », the share of the
 # game's GunToterBadass, trial 46). Predator's, broken, comes back SHIELD_REFILL_AFTER_S later at SHIELD_REFILL_RATE of
 # itself a second, the hunter's own (trial 46: 13 % a second).
@@ -77,3 +86,11 @@ DODGE_REST_DIVIDE = 20.0
 def level(name: object) -> Level:
     """The level of that name, the default one for a value the settings file holds that is no level."""
     return LEVELS.get(str(name), LEVELS[DEFAULT])
+
+
+def reduced(chosen: Level) -> Level:
+    """The level with the « Enemy speed » row on REDUCED: its speed and faster dodges times REDUCED; a level without
+    the row as it is."""
+    if not chosen.reducible:
+        return chosen
+    return replace(chosen, speed=chosen.speed * REDUCED, dodge_speed=chosen.dodge_speed * REDUCED)

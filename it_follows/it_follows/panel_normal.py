@@ -1,9 +1,9 @@
 """The NORMAL MODE page (decision 80, spec-mode-normal.md, section 2): the mode's card, its sentence beside the title,
-its rows (the level, whose help is the chosen level's sentence, the allied enemies, the faster dodges and the shields,
-shown at Bandit only, decision 112) and START across it; while the
-mode is on, above it the mode's card with STOP, saying whether it plays or waits for a game, and the rows locked under
-a line that says to stop the mode to change them; while a Horde run goes on, START replaced by a line that says to stop
-the run first.
+its rows (the level, whose help is the chosen level's sentence, the allied enemies, the faster dodges, the enemies'
+speed, shown at Senior and Predator only, decision 121, and the shields, shown at Bandit only, decision 112) and START
+across it; while the mode is on, above it the mode's card with STOP, saying whether it plays or waits for a game, and
+the rows locked under a line that says to stop the mode to change them; while a Horde run goes on, START replaced by a
+line that says to stop the run first.
 
 START writes the choice to be on in the settings file before the mode starts, and writes it back off when the start is
 refused: the file and the mode agree, and the mode comes back at the next launch only if it was on. In a game the mode
@@ -78,6 +78,7 @@ def paint(form: Any, widgets: dict, language: str) -> None:
     chosen = normal_options.read().level
     for part in ("row", "description"):
         _visible(widgets[f"{part}:{normal_options.shields.identifier}"], chosen.shields == levels.OPTION)
+        _visible(widgets[f"{part}:{normal_options.speed.identifier}"], chosen.reducible)
     chosen = chosen.name
     widgets[f"description:{normal_options.level.identifier}"].SetText(i18n.text(f"normal_level:{chosen}", language))
     widgets[f"heading:{KEY}"].SetText(i18n.text("normal_settings", language))

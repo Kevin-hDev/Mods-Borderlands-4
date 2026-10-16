@@ -229,6 +229,8 @@ try:
     check("at Bandit the shields' row shown, on (decision 112)", shown("row:normal_shields")
           and shown("description:normal_shields") and text("label:normal_shields") == "SHIELDS"
           and text("setting:normal_shields_label") == "ON")
+    check("at Bandit the enemies' speed row hidden (decision 121)", not shown("row:normal_speed")
+          and not shown("description:normal_speed"))
     press("setting:normal_level:Senior")
     form.poll()
     check("another level clicked: written, its sentence shown", form.flush(widgets)
@@ -237,6 +239,20 @@ try:
                                                   "chases. A shield for every enemy without one.")
     check("at Senior the shields' row hidden: always given", not shown("row:normal_shields")
           and not shown("description:normal_shields"))
+    check("at Senior the enemies' speed row shown, its two choices, its help (decision 121)",
+          shown("row:normal_speed") and shown("description:normal_speed")
+          and text("label:normal_speed") == "ENEMY SPEED"
+          and [text(f"setting:normal_speed:{name}_label") for name in ("Increased", "Reduced")]
+          == ["INCREASED", "REDUCED"]
+          and text("description:normal_speed") == "Reduced: the enemies run 15% slower, and so do their faster "
+                                                  "dodges. For those who find them too fast.")
+    press("setting:normal_speed:Reduced")
+    form.poll()
+    check("REDUCED clicked: written, the level read slower", form.flush(widgets)
+          and normal_options.speed.value == "Reduced" and normal_options.read().reduced is True)
+    press("setting:normal_speed:Increased")
+    form.poll()
+    check("INCREASED clicked back: written", form.flush(widgets) and normal_options.speed.value == "Increased")
     check("START without a game: the mode on and written so, the window kept, saying it waits for a game",
           press("normal_start") is False and session.normal_on() and normal_options.on.value is True
           and text("notice") == "The normal mode is on: it starts as soon as you are on foot in a loaded game.")
@@ -337,6 +353,9 @@ try:
                                                   "esquives plus vives, des poursuites plus longues. Un bouclier pour "
                                                   "chaque ennemi qui n'en a pas."
           and text("label:normal_shields") == "BOUCLIERS"
+          and text("label:normal_speed") == "VITESSE DES ENNEMIS"
+          and [text(f"setting:normal_speed:{name}_label") for name in ("Increased", "Reduced")]
+          == ["AUGMENTÉE", "RÉDUITE"]
           and text("notice") == "Prêt : appuie sur START, le menu se ferme et le mode normal commence.")
     check("the Hardcore in French", text("heading:hardcore") == "HARDCORE"
           and text("label:normal_hardcore_progress") == "PROGRESSION"

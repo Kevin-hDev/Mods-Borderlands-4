@@ -32,13 +32,15 @@ try:
     check("the Hardcore off, its progress on", options.hardcore.value is False and options.progress.value is True)
     check("the faster dodges on at first", options.fast_dodges.value is True)
     check("the shields on at first", options.shields.value is True)
-    check("the page's rows: the four the mode locks, the Hardcore's two, then the hidden one",
-          options.LOCKED == [options.level, options.allies, options.fast_dodges, options.shields]
+    check("the enemies' speed increased at first, of two choices (decision 121)", options.speed.value == "Increased"
+          and options.speed.choices == ["Increased", "Reduced"])
+    check("the page's rows: the five the mode locks, the Hardcore's two, then the hidden one",
+          options.LOCKED == [options.level, options.allies, options.fast_dodges, options.speed, options.shields]
           and options.HARDCORE == [options.hardcore, options.progress]
           and options.PAGE == [*options.LOCKED, *options.HARDCORE] and options.ALL == [*options.PAGE, options.on])
     check("the identifiers apart from the Horde's", [option.identifier for option in options.ALL]
-          == ["normal_level", "normal_allies", "normal_fast_dodges", "normal_shields", "normal_hardcore",
-              "normal_hardcore_progress", "normal_on"])
+          == ["normal_level", "normal_allies", "normal_fast_dodges", "normal_speed", "normal_shields",
+              "normal_hardcore", "normal_hardcore_progress", "normal_on"])
     check("the defaults read as they stand", options.read() == options.Settings(levels.LEVELS["Bandit"], False))
     options.level.value, options.allies.value, options.fast_dodges.value = "Predator", True, False
     check("each choice gives its value", options.read() == options.Settings(levels.LEVELS["Predator"], True, False))
@@ -52,6 +54,22 @@ try:
         check(f"at {name}, the shields given whatever the option holds (decision 112)", options.read().shields is True)
     options.level.value, options.shields.value = "Bandit", "no"
     check("a value that is no choice reads as on", options.read().shields is True)
+    options.shields.value = True
+    for name in ("Senior", "Predator"):
+        options.level.value, options.speed.value = name, "Reduced"
+        chosen = options.read()
+        check(f"at {name}, reduced: the level's run and faster dodges x0.85, said so",
+              chosen.level == levels.reduced(levels.LEVELS[name]) and chosen.level.name == name
+              and chosen.reduced is True)
+        options.speed.value = "Increased"
+        check(f"at {name}, increased: the level as it is", options.read().level is levels.LEVELS[name]
+              and options.read().reduced is False)
+    options.level.value, options.speed.value = "Bandit", "Reduced"
+    check("at Bandit, reduced holds nothing: the level as it is", options.read().level is levels.LEVELS["Bandit"]
+          and options.read().reduced is False)
+    options.level.value, options.speed.value = "Predator", "slow"
+    check("a speed that is no choice reads as increased", options.read().level is levels.LEVELS["Predator"]
+          and options.read().reduced is False)
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

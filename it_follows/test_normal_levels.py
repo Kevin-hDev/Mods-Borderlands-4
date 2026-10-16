@@ -2,6 +2,7 @@
 speed, the dodges' speed, chance and IsMovingSpeed, their rest divided by 20 at every level, the normal mode's own
 Buffs; the shields of decision 112; the aim of decision 115; Bandit at first; a name that is no level read as Bandit."""
 
+import dataclasses
 import pathlib
 import sys
 
@@ -33,7 +34,18 @@ try:
     check("camps x1.5, x2, x2", column("camps") == [1.5, 2.0, 2.0])
     check("the chase: 350 m for Bandit and Senior, 600 m for Predator, never the Horde's hunt",
           column("chase_m") == [350.0, 350.0, 600.0])
-    check("speed +20, +50, +70 % (decision 100)", column("speed") == [1.2, 1.5, 1.7])
+    check("speed +20, +40, +50 % (decisions 100 and 121)", column("speed") == [1.2, 1.4, 1.5])
+    check("the enemies' speed reducible at Senior and Predator only (decision 121)",
+          column("reducible") == [False, True, True] and levels.REDUCED == 0.85)
+    slower = levels.reduced(levels.LEVELS["Predator"])
+    check("reduced: the run and the faster dodges x0.85, nothing else",
+          abs(slower.speed - 1.275) < 1e-9 and abs(slower.dodge_speed - 2.38) < 1e-9
+          and slower == dataclasses.replace(levels.LEVELS["Predator"], speed=slower.speed,
+                                            dodge_speed=slower.dodge_speed))
+    senior = levels.reduced(levels.LEVELS["Senior"])
+    check("reduced at Senior: x1.19 and x1.955", abs(senior.speed - 1.19) < 1e-9
+          and abs(senior.dodge_speed - 1.955) < 1e-9)
+    check("Bandit, without the row, as it is", levels.reduced(levels.LEVELS["Bandit"]) is levels.LEVELS["Bandit"])
     check("dodges x1.7, x2.3, x2.8 faster (rebalance)", column("dodge_speed") == [1.7, 2.3, 2.8])
     check("dodge chance 0.35, 0.45, 0.55, Predator the highest (rebalance)",
           column("dodge_chance") == [0.35, 0.45, 0.55])

@@ -28,7 +28,8 @@ class Mode:
 
     def begin(self, now: float) -> str:
         """The mode on: "playing" in a game in play, else "waiting" for one."""
-        report.note("normal_on", level=self.settings.level.name, allies=self.settings.allies)
+        report.note("normal_on", level=self.settings.level.name, allies=self.settings.allies,
+                    reduced=self.settings.reduced)
         self.beat.start()
         self.tick(now)
         return "playing" if self.playing() else "waiting"
