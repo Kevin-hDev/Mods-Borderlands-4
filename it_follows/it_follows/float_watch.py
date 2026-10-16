@@ -13,9 +13,10 @@ from typing import Any, Callable
 
 from . import ground, reads
 
-# Four traces a second: with the 120 enemies the horde holds at most (decision 69), each one looked at every 30 s,
-# once between two status lines.
-PER_SAMPLE = 4
+# Two traces a second: with the 120 enemies the horde holds at most (decision 69), each one looked at every 60 s.
+# Four, each was looked at between two status lines, for a watch that saw no enemy float in all of trial 33's run
+# (audit of 16 October 2026).
+PER_SAMPLE = 2
 # Higher than an enemy's step down a kerb or a slope under its centre.
 ABOVE_M = 1.5
 # The ravine under trial 15's bridge; nothing met down to there is floating all the same.

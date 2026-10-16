@@ -34,6 +34,9 @@ class CampFollow:
         self.followed_at: float | None = None
         # Every camp tried once, moved or not: a static root is not asked again at each recruit.
         self.tried: set[str] = set()
+        # The camps whose last move took: their root, movable then, is not read again at each follow, two reads
+        # for each of about 100 camps every FOLLOW_S with a full horde (audit of 16 October 2026).
+        self.movable: set[str] = set()
 
     def place(self, here: tuple | None, now: float) -> dict:
         """Moves every camp's spawner onto the hunter; says, by camp: moved, not_moved, static, gone, unavailable or
@@ -64,6 +67,7 @@ class CampFollow:
         fewer and fewer new enemies, none in the last 20 s (docs/RUN/enquetes/2026-10-13-reapparition.md)."""
         self.shifts.pop(name, None)
         self.tried.discard(name)
+        self.movable.discard(name)
         self.camp_map.forget(name)
 
     def release_empty(self, drawn: Iterable[str], ours: Callable[[str], bool]) -> dict:
@@ -92,14 +96,20 @@ class CampFollow:
         if spawner is None:
             return "gone"
         try:
-            if not self._movable(spawner, name):
+            if name not in self.movable and not self._movable(spawner, name):
                 return "static"
             shift = self.shifts.get(name)
             if shift is None:
                 shift = self.shifts[name] = Shift(spawner, actor=True)
-            return shift.place(here, lambda: self.announce("K2_SetActorLocation", log=False, camp=name))
+            said = shift.place(here, lambda: self.announce("K2_SetActorLocation", log=False, camp=name))
         except Exception as error:
+            self.movable.discard(name)
             return f"call_failed:{type(error).__name__}"
+        if said == "moved":
+            self.movable.add(name)
+        else:
+            self.movable.discard(name)
+        return said
 
     def _movable(self, spawner: Any, name: str) -> bool:
         """Its root made movable, the call announced first; whether it is."""

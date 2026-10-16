@@ -4,7 +4,8 @@ others still move; they follow him at most every FOLLOW_S once he is farther tha
 the SDK log; at the end each moved spawner is put back where it stood, announced. Trial 8b: a camp let go of is no
 longer followed, put back nor noted, until it is noted again with an enemy drawn anew. A followed camp of the game no
 enemy of the horde comes from any more is put back and let go of, whatever its put back says; a camp still held, or one
-It Follows made, is kept; a thousand camps through a long run leave no more than the horde holds."""
+It Follows made, is kept; a thousand camps through a long run leave no more than the horde holds. A camp whose last
+move took is not read again for its root; one whose move did not take is."""
 
 import pathlib
 import sys
@@ -116,6 +117,23 @@ try:
     broken.fail = False
     check("a spawner that failed to move is still put back", follow.put_back() == {
         "OakSpawner_Broken": "restored", "OakSpawner_Fine": "restored"} and broken.at == at(7000.0))
+    journal.clear()
+    kept = fixture.spawner("OakSpawner_Kept", at(5000.0))
+    follow = CampFollow(camps_of(kept), fixture.announce)
+    read: list[str] = []
+    real_movable = follow._movable
+    follow._movable = lambda spawner, name: read.append(name) or real_movable(spawner, name)
+    follow.place(at(0.0), 100.0)
+    check("audit of 16 October: a camp moved once is not read again for its root at the next follow",
+          read == ["OakSpawner_Kept"] and follow.follow(at(9000.0), 102.0) == {"OakSpawner_Kept": "moved"}
+          and read == ["OakSpawner_Kept"] and kept.at == at(9000.0))
+    kept.RootComponent.Mobility = 0
+    check("one whose move did not take is read again at the next follow, its root made movable again",
+          follow.follow(at(20000.0), 104.0) == {"OakSpawner_Kept": "not_moved"}
+          and follow.follow(at(30000.0), 106.0) == {"OakSpawner_Kept": "moved"} and len(read) == 2
+          and kept.at == at(30000.0) and ("mobility", "OakSpawner_Kept", 2) in journal)
+    follow.release("OakSpawner_Kept")
+    check("a camp let go of is forgotten as movable too", not follow.movable)
     nothing = CampFollow(CampMap(), fixture.announce)
     check("without camps nothing moves", nothing.place(at(0.0), 1.0) == {} and nothing.put_back() == {})
 

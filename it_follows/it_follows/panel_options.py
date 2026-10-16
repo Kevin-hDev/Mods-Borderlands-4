@@ -15,7 +15,7 @@ from . import open_key, options, panel_i18n as i18n, panel_pages as p, panel_tex
 from . import panel_widgets as w, report, texts
 
 # The look's example: a run going well.
-EXAMPLE = (152, 1, 64, 767.0)
+EXAMPLE = (152, 1, 64, 1, 767.0)
 
 
 def page(owner: Any, group: Any, key: str, widgets: dict, template: Any) -> Any:

@@ -10,7 +10,9 @@ and read back, which is the recipe used here (docs/RUN/sondes/run_wake.py).
 
 Only the camps within RANGE_M are written, so that a camp is critical before the hunter comes near enough to wake it
 (80 to 300 m read in trial 6u); a camp already critical is left alone, and not given back. It Follows' own camps are
-left out. The game waits while the camps are read: a pass stops at READ_S, the rest taken at the next pass.
+left out. The game waits while the camps are read: a pass stops at READ_S, the rest taken at the next pass. The
+camps are those of the world in play (reads.search): trial 38 found the same ones as among every object the game
+holds, but for 2 or 3 the game was unloading, some 10 ms sooner (decision 105).
 
 A camp is held by its name, so that it is written once, but a name held is no proof that the camp is the same: the
 game unloads the camps of a place the hunter left and, as trial 14 points to, loads them again when he comes back under
@@ -23,7 +25,6 @@ import time
 from itertools import islice
 from typing import Any, Callable
 
-import unrealsdk
 from unrealsdk.unreal import WeakPointer
 
 from . import reads
@@ -66,16 +67,18 @@ class GameCamps:
     def due(self, now: float) -> bool:
         return now - self.woken_at >= EVERY_S
 
-    def wake(self, here: tuple | None, now: float) -> dict:
-        """The camps within RANGE_M of here made critical; what the pass found."""
+    def wake(self, here: tuple | None, now: float, world: Any = None) -> dict:
+        """The camps within RANGE_M of here made critical; what the pass found, and how the camps were searched.
+        world: an actor of the world in play, the hunter."""
         self.woken_at = now
         counts = dict.fromkeys(("read", "made", "remade", "already", "ours", "far", "not_read_back", "unreadable"),
                                0)
         stopped, began = "complete", time.monotonic()
         if here is None:
-            return {**counts, "stopped": "no_place"}
+            return {**counts, "stopped": "no_place", "search": None}
         self.announce("SpawnDetails critical", game_camps=len(self.held))
-        for spawner in islice(unrealsdk.find_all(SPAWNER_CLASS, exact=False), MAX_CAMPS):
+        spawners, search = reads.search(SPAWNER_CLASS, world)
+        for spawner in islice(spawners, MAX_CAMPS):
             if time.monotonic() - began > READ_S:
                 stopped = "time_limit"
                 break
@@ -111,7 +114,7 @@ class GameCamps:
             counts["made" if done else "not_read_back"] += 1
             if done and again:
                 counts["remade"] += 1
-        return {**counts, "held": len(self.held), "stopped": stopped,
+        return {**counts, "held": len(self.held), "stopped": stopped, "search": search,
                 "took_ms": round((time.monotonic() - began) * 1000.0, 1)}
 
     def _forget_gone(self) -> bool:

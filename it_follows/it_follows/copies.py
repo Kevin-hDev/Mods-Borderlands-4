@@ -74,6 +74,8 @@ class Copies:
         # camp free again before they joined, until unseen gives them. At most a kind a camp.
         self.owed: dict[str, str] = {}
         self.lost: list[str] = []
+        # The camps whose enemy the horde holds alive, given by the run once its horde is made (camps.survey).
+        self.held: Callable[[], frozenset[str | None]] = frozenset
 
     def ask(self, crowd: list, character: Any, pc: Any, here: tuple, most: int) -> tuple[Seen | None, dict]:
         """The zone to lend, as a Seen, and what was made; no zone when the camp could not be made or has none, said,
@@ -124,7 +126,7 @@ class Copies:
         """wanted's first, each handed a camp on the ground behind the hunter, free camps first, as many as the camps'
         room and the ring's ground allow; stops at the first one refused, the refusal said (wave.py writes who). alive:
         the copies alive, their camps holding an enemy or handed one lately, wherever they are."""
-        survey = self.camps.survey()
+        survey = self.camps.survey(held=self.held())
         self._settle(survey)
         alive = survey.busy + survey.pending
         room = self.camps.room(survey)
@@ -173,7 +175,7 @@ class Copies:
         """The kinds of the births whose camp was found free again before they joined the horde, each given once:
         killed before a census drew them, or never born (trial 18: 15 % of a run's births, and its horde ran dry)."""
         if self.owed:
-            self._settle(self.camps.survey(log=False))
+            self._settle(self.camps.survey(log=False, held=self.held()))
         found, self.lost = self.lost, []
         return found
 

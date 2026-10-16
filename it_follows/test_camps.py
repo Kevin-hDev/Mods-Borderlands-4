@@ -65,17 +65,14 @@ try:
     own = camps.Camps(report.announce, 3)
 
     kit = own.kit()
-    check("the kit is the game's definition type, the spawner class and the statics, each lookup written to the log "
-          "before it is made",
-          kit == camp_kit.Kit(def_type, spawner_class, statics)
-          and calls() == [f"find_object({camp_kit.DEF_TYPE})", "find_class(OakSpawner)", "find_class(GameplayStatics)",
-                          "GetEnemiesActorDefStrings"]
+    check("the kit is the game's definition type, the spawner class and the statics, its lookups, the SDK's own "
+          "searches, not written to the log; the enemy list, a call to the game, written before it is made",
+          kit == camp_kit.Kit(def_type, spawner_class, statics) and calls() == ["GetEnemiesActorDefStrings"]
           and fake.announced_first(events))
     check("the kinds of the game's enemy list are known", own.knows("Char_CatYoung") and not own.knows("Char_Odd"))
     events.clear()
     own.kit()
-    check("the enemy list is read once, the kit at each ask", named("GetEnemiesActorDefStrings") == []
-          and len(calls()) == 3)
+    check("the enemy list is read once", named("GetEnemiesActorDefStrings") == [] and calls() == [])
     del state["classes"]["OakSpawner"]
     check("a piece the game does not give says which call raised", own.kit() == "find_class(OakSpawner):KeyError")
     state["classes"]["OakSpawner"] = None
@@ -197,13 +194,13 @@ try:
 
     events.clear()
     moved = own.place(kit, list(survey.free), (900.0, 50.0, 10.0), 0.0, hunter)
-    check("a free camp is taken before any is made: made movable, teleported without sweep, read back, each call "
-          "written to the log before it is made",
+    check("a free camp is taken before any is made: made movable, written to the log before it is made, teleported "
+          "without sweep, the move not written, as those of the camps that follow the hunter, read back",
           moved == first and first[1].at == (900.0, 50.0, 10.0) and named("SetMobility") == [("SetMobility",
                                                                                             first[1].Name, 2)]
           and named("K2_SetActorLocation") == [("K2_SetActorLocation", first[1].Name, False, "HitResult", True)]
-          and len(own.pool) == 2 and calls() == ["SetMobility", "K2_SetActorLocation"]
-          and fake.announced_first(events))
+          and len(own.pool) == 2 and calls() == ["SetMobility"]
+          and fake.announced_first([entry for entry in events if entry[0] != "K2_SetActorLocation"]))
     events.clear()
     own.place(kit, [first], (950.0, 50.0, 10.0), 0.0, hunter)
     check("a camp already movable is not made so again", named("SetMobility") == [])

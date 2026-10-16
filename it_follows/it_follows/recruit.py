@@ -45,14 +45,15 @@ class Recruiter:
         says yes to when given; with what the census read, kept, passed over and why, and took in time; and who it saw
         alive and dead. Why the reasons are said (trial 8e): in trial 8d, 80 enemies handed to It Follows' camps never
         joined the horde, nor were their camps free again. known: the horde's own, read alive and no further
-        (census.seen_around)."""
+        (census.seen_around). Only the characters in the world are read (decision 105)."""
         began = time.monotonic()
-        found, stats, sighting = census.seen_around(player, READ_S, known=known)
+        found, stats, sighting = census.seen_around(player, READ_S, known=known, in_world=True)
         free = [seen for seen in found if seen.name not in taken and seen.at is not None and here is not None
                 and (keep is None or keep(seen))]
         free.sort(key=lambda seen: math.dist(seen.at, here))
         chosen = free[:max(0, room)]
         self.joined += len(chosen)
         said = {"read": stats["read"], "kept": stats["kept"], "skipped": stats["skipped"], "stopped": stats["stopped"],
-                "took_ms": round((time.monotonic() - began) * 1000.0, 1)}
+                "took_ms": round((time.monotonic() - began) * 1000.0, 1), "scan_ms": stats["scan_ms"],
+                "search": stats["search"]}
         return chosen, said, sighting

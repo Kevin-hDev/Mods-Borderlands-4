@@ -20,6 +20,7 @@ from typing import Any, Callable, NamedTuple
 import unrealsdk
 from unrealsdk.unreal import FGbxDefPtr, WeakPointer
 
+from . import reads
 from .camp_kit import Kit, enemy_list, look_up
 
 # PushActorDef's reason, a name the game keeps with the definition pushed.
@@ -56,12 +57,13 @@ class Survey(NamedTuple):
 
 
 class Camp:
-    """A camp It Follows made, held weakly; when it was last handed an enemy, and of which kind."""
+    """A camp It Follows made, held weakly, and its name; when it was last handed an enemy, and of which kind."""
 
-    __slots__ = ("pointer", "handed_at", "kind")
+    __slots__ = ("pointer", "name", "handed_at", "kind")
 
     def __init__(self, spawner: Any) -> None:
         self.pointer, self.handed_at, self.kind = WeakPointer(spawner), None, ""
+        self.name = reads.clean(getattr(spawner, "Name", ""))
 
 
 def _transform(point: tuple, yaw: float) -> Any:
@@ -105,9 +107,9 @@ class Camps:
         # The definitions of the game's enemy list, read once; None until then.
         self.known: set[str] | None = None
 
-    def _called(self, call: str, make: Callable[[], Any], **fields: Any) -> tuple[bool, Any]:
-        """make's answer, announced first; (False, why) when it raised."""
-        self.announce(call, **fields)
+    def _called(self, call: str, make: Callable[[], Any], log: bool = True, **fields: Any) -> tuple[bool, Any]:
+        """make's answer, announced first, written to the log with log; (False, why) when it raised."""
+        self.announce(call, log=log, **fields)
         try:
             return True, make()
         except Exception as error:
@@ -115,7 +117,7 @@ class Camps:
 
     def kit(self) -> Kit | str:
         """The kit, and the game's enemy list read the first time; or why not."""
-        kit = look_up(self._called)
+        kit = look_up(lambda call, make: self._called(call, make, log=False))
         if isinstance(kit, str) or self.known is not None:
             return kit
         known = enemy_list(self._called)
@@ -141,9 +143,11 @@ class Camps:
         spawner = finished[0] if isinstance(finished, tuple) else finished
         return spawner if done else None
 
-    def survey(self, log: bool = True) -> Survey:
+    def survey(self, log: bool = True, held: frozenset[str | None] = frozenset()) -> Survey:
         """The camps free, those stuck taken back among them, busy and pending; the camps the game took are
-        forgotten. log: whether the calls are written down, as at each asking."""
+        forgotten. log: whether the calls are written down, as at each asking. held: the camps whose enemy the horde
+        read alive this second, busy without asking the game: HaveAllDied was asked of about 85 camps at each asking,
+        some 90 calls a second with a full horde (audit of 16 October 2026)."""
         self.pool[:] = [camp for camp in self.pool if camp.pointer() is not None]
         free, busy, pending, stuck, now = [], 0, 0, 0, time.monotonic()
         self.announce("HaveAllDied", log=log, camps=len(self.pool))
@@ -153,6 +157,9 @@ class Camps:
                 continue
             if _pending(camp, now):
                 pending += 1
+                continue
+            if camp.name in held:
+                busy += 1
                 continue
             try:
                 died = _died(spawner)
@@ -196,8 +203,9 @@ class Camps:
             if int(root.Mobility) != MOVABLE:
                 return False
         target = unrealsdk.make_struct("Vector", X=point[0], Y=point[1], Z=point[2])
+        # Not written to the log, as the camps that follow the hunter are not: 918 lines of trial 33's run.
         if not self._called("K2_SetActorLocation", lambda: spawner.K2_SetActorLocation(
-                target, False, unrealsdk.make_struct("HitResult"), True), on=spawner.Name)[0]:
+                target, False, unrealsdk.make_struct("HitResult"), True), log=False, on=spawner.Name)[0]:
             return False
         there = spawner.K2_GetActorLocation()
         return math.dist((float(there.X), float(there.Y), float(there.Z)), point) / 100.0 <= MOVED_M

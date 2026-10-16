@@ -5,7 +5,9 @@ kind, then the zone; an unreadable definition passed over without stopping the c
 name; the horde of every team, nearest the hunter first; the census's limits in characters and time. Asked for the
 bosses (the normal mode, decision 90), a living boss is kept, marked, without its zone even where it has one or the
 game refuses it; a dead one still passed over; the Horde's census never keeps one. Asked who killed (the Hardcore),
-each enemy and boss read dead with what KillerActor and LastHitBy say, never an NPC; not asked, nothing read."""
+each enemy and boss read dead with what KillerActor and LastHitBy say, never an NPC; not asked, nothing read. Asked
+for the world only (the Horde, decision 105), the characters of the world in play, the bodies in the game's reserve
+left out; otherwise every character the game holds; the way said."""
 
 import dataclasses
 import itertools
@@ -240,6 +242,28 @@ try:
         frozen = True
     check("a sighting cannot be changed, nor its names",
           frozen and type(sighting.alive) is frozenset and type(sighting.dead) is frozenset)
+
+    in_reserve = enemy("Char_Cat_70", 320000.0, CAT, None, is_dead=True)
+    in_world = enemy("Char_Cat_71", 300.0, CAT, Zone(300.0, "OakSpawner_N"))
+    asked: list[tuple] = []
+
+    def actors_of(*, WorldContextObject: object, ActorClass: object, OutActors: list) -> tuple:
+        asked.append((WorldContextObject, ActorClass.Name))
+        return ..., [player, in_world]
+
+    state["classes"]["GameplayStatics"] = types.SimpleNamespace(
+        ClassDefaultObject=types.SimpleNamespace(GetAllActorsOfClass=actors_of))
+    state["classes"][census.CHARACTER_CLASS] = types.SimpleNamespace(Name=census.CHARACTER_CLASS)
+    state["all"]["OakCharacter"] = [player, in_world, in_reserve]
+    found, stats, sighting = census.seen_around(player, in_world=True)
+    check("decision 105: asked for the world only, the characters of the hunter's world, a body in the game's "
+          "reserve left out, the way said",
+          names(found) == ["Char_Cat_71"] and sighting.dead == frozenset() and stats["search"] == "actors"
+          and asked == [(player, census.CHARACTER_CLASS)] and stats["read"] == 2)
+    found, stats, sighting = census.seen_around(player)
+    check("otherwise every character the game holds, the body in the reserve read dead: the normal mode's Hardcore "
+          "counts it", names(found) == ["Char_Cat_71"] and sighting.dead == frozenset({"Char_Cat_70"})
+          and stats["search"] == "find_all" and len(asked) == 1)
 
     state["all"]["OakCharacter"] = itertools.repeat(host, 100_000)
     _, stats, _ = census.seen_around(player, 600.0)

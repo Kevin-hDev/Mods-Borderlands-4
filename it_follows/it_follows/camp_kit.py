@@ -1,7 +1,8 @@
 """What the game gives It Follows for making its camps (camps.py): the game's definition type, the spawner class and the
 statics, looked up at each ask, for a change of map may take them; and the game's enemy list, the kinds a camp can
-make. Each lookup goes through called(call, make), which writes the call to the log before it is made and answers
-(True, what make gave) or (False, why it raised): camps.Camps._called.
+make. Each lookup goes through called(call, make), which answers (True, what make gave) or (False, why it raised):
+camps.Camps._called. The kit's three lookups are the SDK's own searches, no call to the game, and are not written to
+the log, 1 494 lines of trial 33's run; the enemy list is a call to the game and is (audit of 16 October 2026).
 """
 
 from itertools import islice

@@ -342,7 +342,7 @@ try:
 
     press("nav:options")
     check("the OPTIONS page: the bar shown, its look at the size chosen, the key F5",
-          text("heading:options") == "OPTIONS" and text("bar_look") == "KILLS 152   DEATHS 1   HORDE 64   12:47"
+          text("heading:options") == "OPTIONS" and text("bar_look") == "KILLS 152   DEATHS 1   HORDE 64   HARDCORE 1%   12:47"
           and widgets["bar_look"].Font.Size == 19.0 and widgets["open_key"].SelectedKey.Key.KeyName == "F5")
     press("setting:bar_size:Large")
     check("a size clicked: the look at that size", widgets["bar_look"].Font.Size == 24.0)

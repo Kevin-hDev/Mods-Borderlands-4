@@ -124,13 +124,18 @@ class CatchUp:
                 self.hunter_m_s = math.dist(self.trail[-1][0], here) / 100.0 / (now - self.walked_at)
             self.trail.append((here, swimming))
             self.walked_at = now
+        self.look(pc)
+        self.given = 0
+        self.traces_left = TRACES_PER_SAMPLE
+        self.vain.clear()
+
+    def look(self, pc: Any) -> None:
+        """Where the hunter looks, read again: a second's pass over the horde is cut into parts, each in an image of
+        its own (sweep.py), and a place out of his sight is chosen from where he looks now."""
         try:
             self.view = float(pc.GetControlRotation().Yaw)
         except Exception:
             self.view = None
-        self.given = 0
-        self.traces_left = TRACES_PER_SAMPLE
-        self.vain.clear()
 
     def queue(self, chasers: list) -> list:
         """The enemies in the order the places of a second go to them: those never brought back first, then the one

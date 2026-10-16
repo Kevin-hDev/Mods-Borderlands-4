@@ -19,6 +19,8 @@ TEXT = {
                 "If there are no enemies near you when the run starts, go and find them: otherwise, nothing "
                 "happens.\n\n"
                 "The more enemies you kill, the more of them there will be.\n\n"
+                "Every 100 enemies killed, they also grow 1% stronger: the HARDCORE percent in the bar, back to 0 "
+                "at each run.\n\n"
                 "The types of enemies that follow you depend on the zone you play in and the ones you cross.\n\n"
                 "To make the enemies vary, travel across the map.",
     "ready_run": "Ready: press START, the menu closes and the run begins.",
@@ -51,7 +53,8 @@ TEXT = {
                      "The Hardcore mode changes that. It changes nothing when you switch it on. Then the enemies grow "
                      "1% stronger every 100 enemies killed, slowly and steadily, all game long. It adds to the level "
                      "chosen.\n\n"
-                     "It only works while the normal mode is on. The percent reached shows at the top of the menu.\n\n"
+                     "This one only works while the normal mode is on: the Horde mode has its own, which starts "
+                     "again at each run. The percent reached shows at the top of the menu.\n\n"
                      "You can pause its progress to keep the difficulty that suits you, or switch the mode off at any "
                      "time: your progress is kept, and you find it again when you switch it back on.",
     "ready_normal": "Ready: press START, the menu closes and the normal mode begins.",

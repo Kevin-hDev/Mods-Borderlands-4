@@ -10,10 +10,12 @@ A second's heavy work may be put off (defer) to the images that follow, one task
 second, the enemies, the census and the game's camps, held one image 77 to 89 ms with 120 enemies (audit of 15 October
 2026). A new image is known when the character whose update gave the last work is updated again, by its address only,
 never holding it; LATER_MOST_S stands in should it be gone. How many times the game called the hook is counted, for
-the status line: each call costs the game whatever the beat does with it, a cost never measured yet.
+the status line, with what a call that has nothing to do takes in the beat (audit of 16 October 2026, A11); what the
+SDK spends handing each call to Python is not in it, and is read by docs/RUN/sondes/run_hook_cost.py.
 """
 
 import time
+from time import perf_counter
 from typing import Any, Callable
 
 from mods_base import hook
@@ -52,6 +54,8 @@ class Beat:
         self.marked_at = 0.0
         self.calls = 0
         self.counted_at = now()
+        # The calls with nothing to do, neither a tick nor a task put off, and the seconds they took in the beat.
+        self.idle_calls, self.idle_s = 0, 0.0
 
     def start(self) -> None:
         """Hooks the animation update; the first tick comes a second later."""
@@ -67,6 +71,7 @@ class Beat:
     def _frame(self, obj: Any = None, *_args: Any) -> None:
         if self.hook is None:
             return
+        began = perf_counter()
         self.calls += 1
         moment = now()
         if moment < self.next:
@@ -74,6 +79,9 @@ class Beat:
                                or (self.marked is not None and _address(obj) == self.marked)):
                 name = next(iter(self.later))
                 self._run(self.later.pop(name), moment, obj)
+                return
+            self.idle_calls += 1
+            self.idle_s += perf_counter() - began
             return
         self.next = moment + EVERY_S
         self._run(self.tick, moment, obj)
@@ -85,12 +93,15 @@ class Beat:
             self.fail(f"error:{type(error).__name__}")
         self.marked, self.marked_at = _address(obj), now()
 
-    def calls_per_s(self) -> float:
-        """The hook's calls a second since the last time asked."""
+    def gauge(self) -> dict:
+        """Since the last time asked: the hook's calls a second, and the µs a call with nothing to do took in the beat
+        (None without one); then counted afresh."""
         moment = now()
-        spent, calls = moment - self.counted_at, self.calls
-        self.calls, self.counted_at = 0, moment
-        return round(calls / spent, 1) if spent > 0.0 else 0.0
+        spent = moment - self.counted_at
+        said = {"hook_calls_s": round(self.calls / spent, 1) if spent > 0.0 else 0.0,
+                "hook_idle_us": round(self.idle_s / self.idle_calls * 1e6, 2) if self.idle_calls else None}
+        self.calls, self.idle_calls, self.idle_s, self.counted_at = 0, 0, 0.0, moment
+        return said
 
     def stop(self) -> str:
         """Unhooks the update, the tasks put off dropped: "removed", "inactive" when never hooked or unhooked already,

@@ -1,5 +1,6 @@
 """Tests It Follows' speed (speed): every enemy drawn has its speed bonus raised to the game's own times the factor the
-player chose, each write announced first and written to the log; once a sample the bonus is read back, left alone
+player chose, each write announced first, the first DETAILED of a run written to the log; once a sample the bonus is
+read back, left alone
 while it holds and written again, announced without a line in the log, once the game changed it; at the let-go the
 game's own bonus is written back once, announced first, even when nothing else may be called on the body; an enemy
 that cannot be read or written says why and is not counted faster; Normal writes nothing, ever; every enemy let go is
@@ -78,6 +79,18 @@ try:
     check("each write announced first and written to the log, nothing else called",
           events[:4] == [("announce", "MaxGroundSpeedScale", "cat_0", False, False, True), ("write", "cat_0", 1.2),
                          ("announce", "MaxGroundSpeedScale", "cat_1", False, False, True), ("write", "cat_1", 1.2)])
+    many = speed.SpeedBoost(announce, 1.2)
+    events.clear()
+    crowd = [enemy(f"bat_{index}") for index in range(speed.DETAILED + 2)]
+    many.start([chaser(f"bat_{index}", mover) for index, mover in enumerate(crowd)])
+    logged = [entry[5] for entry in events if entry[0] == "announce"]
+    check("audit of 16 October: the first DETAILED of a run written to the log, the rest announced without a line, "
+          "all written", logged == [True] * speed.DETAILED + [False] * 2 and [bonus(mover) for mover in crowd]
+          == [1.2] * (speed.DETAILED + 2))
+    events.clear()
+    many.put_back("bat_21", crowd[21])
+    check("given back, a bonus is still written to the log first: the enemy may be dead",
+          events[0] == ("announce", "MaxGroundSpeedScale", "bat_21", False, True, True))
 
     events.clear()
     check("a bonus that held is left alone, nothing written", speedy.keep("cat_0", movers[0]) is None and events == [])

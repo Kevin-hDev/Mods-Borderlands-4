@@ -35,9 +35,9 @@ def check(label: str, condition: bool) -> None:
         fails.append(label)
 
 
-def chaser(enemy: object) -> types.SimpleNamespace:
-    """A chaser as It Follows holds it: its name, and its enemy through a weak pointer."""
-    return types.SimpleNamespace(name=enemy.Name, actor=sdk_stubs.FakeWeak(enemy))
+def chaser(enemy: object, kind: str | None = None) -> types.SimpleNamespace:
+    """A chaser as It Follows holds it: its name, its enemy through a weak pointer, and its kind when given."""
+    return types.SimpleNamespace(name=enemy.Name, actor=sdk_stubs.FakeWeak(enemy), kind=kind)
 
 
 def toughness(factor: float) -> toughness_module.Toughness:
@@ -74,6 +74,27 @@ try:
     game.calls.clear()
     check("an enemy raised already is not raised again", buff.start([chaser(psycho)]) == 0
           and game.of("SetAttributeToFloat") == [])
+
+    learning = toughness(1.2)
+    first, second, other = (game.Enemy(f"Char_Wyrm_{index}", game.Pool(1000.0, bonus=bonus))
+                            for index, bonus in ((1, 1.3), (2, 1.3), (3, 1.5)))
+    game.calls.clear()
+    learning.start([chaser(first, "Char_Wyrm")])
+    writes = len(game.of("SetAttributeToFloat"))
+    learning.start([chaser(second, "Char_Wyrm")])
+    check("audit of 16 October: the bonus a kind showed taken off first for the next of that kind, one write",
+          writes == 2 and len(game.of("SetAttributeToFloat")) == 3 and near(second.pools[0].most, 1560.0)
+          and near(first.pools[0].most, 1560.0)
+          and [round(base) for _, base, _ in learning.tended["Char_Wyrm_2"]] == [1000])
+    learning.start([chaser(other, "Char_Wyrm")])
+    check("one of that kind whose bonus differs gets its second write, its maximum reached, its base right",
+          len(game.of("SetAttributeToFloat")) == 5 and near(other.pools[0].most, 1800.0)
+          and [round(base) for _, base, _ in learning.tended["Char_Wyrm_3"]] == [1000])
+    learning.bonus = {(f"Char_{number}", 0): 1.0 for number in range(toughness_module.BONUS_MOST)}
+    learning.start([chaser(game.Enemy("Char_Late_1", game.Pool(100.0, bonus=1.3)), "Char_Late")])
+    check("the bonuses kept are bounded", len(learning.bonus) == toughness_module.BONUS_MOST
+          and ("Char_Late", 0) not in learning.bonus)
+    game.calls.clear()
 
     buff.harden(1.32)
     announced.clear()

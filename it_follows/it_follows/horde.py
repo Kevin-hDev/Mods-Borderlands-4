@@ -23,6 +23,7 @@ catch-up's distance and the births of the mod's camps not joined yet, so that on
 reach, and not before.
 """
 
+import time
 from typing import Any, Callable
 
 from . import reads, target
@@ -132,13 +133,16 @@ class Horde:
             parts.follow.release(camp)
         self.note("lost", on=chaser.name, reason=reason, copy=ours, respawn=respawn, **given)
 
-    def sample(self, player: Any, pc: Any, here: tuple | None, now: float) -> list[dict]:
-        """Each enemy's part of this second, those brought back longest ago first; how far each stands, and whom it
-        targets within near_m, the one distance the wave counts it at (wave.near): beyond, None, unread. In trials 16 to
-        19, 86 % of the horde stood farther, a call each a second for nothing (audit of 15 October 2026)."""
+    def sample(self, chasers: list, player: Any, pc: Any, here: tuple | None, now: float) -> list[dict]:
+        """These enemies' part of this second, in their order (catch_up.queue: those brought back longest ago first),
+        those let go since left out; how far each stands, and whom it targets within near_m, the one distance the wave
+        counts it at (wave.near): beyond, None, unread. In trials 16 to 19, 86 % of the horde stood farther, a call
+        each a second for nothing (audit of 15 October 2026)."""
         parts = self.parts
         lines = []
-        for chaser in parts.catch.queue(self.drawn()):
+        for chaser in chasers:
+            if chaser.ended is not None:
+                continue
             mover, reason = chaser.check(parts.zone)
             if reason is not None:
                 self.lose(chaser, reason, now)
@@ -177,6 +181,7 @@ class Horde:
         keep = None if parts.manage_far else lambda seen: self._kept(seen, here)
         chosen, said, sighting = parts.recruiter.choose(player, here, drawn | set(self.lost_at), room, known=drawn,
                                                         keep=keep)
+        began = time.perf_counter()
         free = self.free_of(chosen)
         if free:
             self.note_camps([seen for seen, _ in free])
@@ -185,8 +190,10 @@ class Horde:
             boosted = parts.speed.start(joined)
             toughened = parts.toughness.start(joined)
             teams = parts.teams.join(joined)
+            # How long they took to join, apart from the census's search (audit of 16 October 2026, A1).
             self.note("recruit", joined=len(joined), camps_placed=len(camps), boosted=len(boosted),
-                      toughened=toughened, team=teams.get("team"), **said)
+                      toughened=toughened, team=teams.get("team"),
+                      join_ms=round((time.perf_counter() - began) * 1000.0, 1), **said)
         return sighting
 
     def _kept(self, seen: Any, here: tuple | None) -> bool:

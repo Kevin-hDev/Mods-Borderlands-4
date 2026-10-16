@@ -18,6 +18,8 @@ TEXT = {
                 "S'il n'y a pas d'ennemis près de toi au lancement du run, va les chercher : sinon, il ne se passe "
                 "rien.\n\n"
                 "Plus tu tues d'ennemis, plus ils seront nombreux.\n\n"
+                "Tous les 100 ennemis tués, ils se renforcent aussi de 1 % : c'est le pourcentage HARDCORE de la "
+                "barre, remis à 0 à chaque run.\n\n"
                 "Les types d'ennemis qui te suivent dépendent de la zone où tu joues et de celles que tu traverses."
                 "\n\n"
                 "Pour que les ennemis varient, déplace-toi à travers la carte.",
@@ -53,8 +55,8 @@ TEXT = {
                      "Le mode Hardcore change ça. Il ne modifie rien quand tu l'actives. Ensuite, les ennemis se "
                      "renforcent de 1 % tous les 100 ennemis tués, lentement et régulièrement, tout au long du jeu. Ça "
                      "s'ajoute au niveau choisi.\n\n"
-                     "Il agit seulement pendant que le mode normal est lancé. Le pourcentage atteint s'affiche en haut "
-                     "du menu.\n\n"
+                     "Celui-ci agit seulement pendant que le mode normal est lancé : le mode Horde a le sien, qui "
+                     "repart de 0 à chaque run. Le pourcentage atteint s'affiche en haut du menu.\n\n"
                      "Tu peux mettre la progression en pause pour garder la difficulté qui te convient, ou désactiver "
                      "le mode à tout moment : ta progression est gardée, et tu la retrouves en le réactivant.",
     "ready_normal": "Prêt : appuie sur START, le menu se ferme et le mode normal commence.",

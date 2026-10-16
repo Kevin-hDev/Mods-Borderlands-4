@@ -156,6 +156,8 @@ class Game:
             GetTeam=lambda actor: actor.team, SetTeam=set_team))
         classes["GameplayStatics"] = types.SimpleNamespace(ClassDefaultObject=Statics(self))
         classes["OakSpawner"] = types.SimpleNamespace(Name="OakSpawner")
+        for name in ("OakCharacter", "Spawner"):
+            classes[name] = types.SimpleNamespace(Name=name)
         classes["GbxActorDefBlueprintFunctionLibrary"] = types.SimpleNamespace(
             ClassDefaultObject=types.SimpleNamespace(GetEnemiesActorDefStrings=lambda: list(KNOWN_KINDS)))
         self.state["objects"][DEF_TYPE] = types.SimpleNamespace(Name="GbxActorDef")
@@ -279,13 +281,17 @@ class Zone:
 
 
 class Statics:
-    """GameplayStatics: the world's time, and the spawners the mod makes, a zone made with each."""
+    """GameplayStatics: the world's time, the actors of a class as find_all reads them, and the spawners the mod
+    makes, a zone made with each."""
 
     def __init__(self, game: Game) -> None:
         self.game = game
 
     def GetTimeSeconds(self, context: Any) -> float:
         return self.game.world_clock[0]
+
+    def GetAllActorsOfClass(self, *, WorldContextObject: Any, ActorClass: Any, OutActors: list) -> tuple:
+        return ..., list(self.game.state["all"].get(ActorClass.Name, []))
 
     def BeginDeferredActorSpawnFromClass(self, context: Any, cls: Any, where: Any, collision: int, owner: Any,
                                          scale: int) -> tuple:

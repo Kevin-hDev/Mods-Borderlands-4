@@ -14,6 +14,7 @@ import unrealsdk
 
 from . import reads
 from .seen import Seen
+from .target import same
 
 
 class Loan:
@@ -28,9 +29,13 @@ class Loan:
         self.target = target
 
     def held(self, zone: Any) -> str:
-        """Which zone an enemy holds: none, the lent one (target), its own, or another one."""
+        """Which zone an enemy holds: none, the lent one (target), its own, or another one. The lent zone is known by
+        its address first: its path, made anew at each read, was asked of every enemy of the horde each second (audit
+        of 16 October 2026)."""
         if zone is None:
             return "none"
+        if same(zone, self.target()):
+            return "target"
         path = reads.path_of(zone)
         return "target" if path == self.target_path else "own" if path == self.own_path else "other"
 

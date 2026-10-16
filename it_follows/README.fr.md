@@ -14,7 +14,9 @@ anglais et en français, a quatre pages. Le jeu se met en pause tant qu'elle est
   que tu croises en chemin rejoignent la horde, et ceux que tu tues reviennent derrière toi, de plus en plus nombreux.
   Les ennemis sont ceux des zones que tu traverses. Cinq niveaux, un bonus de vitesse des ennemis, BUFF et BUFF+, une
   durée ou aucune, et le plus d'ennemis qui te chassent en même temps, de 30 à 120. Une barre en haut à gauche de
-  l'écran affiche tes tués, tes morts, la taille de la horde et le temps, qui s'arrête quand le jeu est en pause.
+  l'écran affiche tes tués, tes morts, la taille de la horde, le Hardcore et le temps, qui s'arrête quand le jeu est
+  en pause. Le Hardcore est toujours actif dans la Horde : les ennemis se renforcent de 1 % tous les 100 ennemis tués
+  pendant le run, en repartant de 0 % à chaque run.
 - **MODE NORMAL.** Joue ta partie comme d'habitude : les ennemis que tu croises sont plus nombreux, plus rapides et plus
   résistants, esquivent plus souvent et plus vite, et te poursuivent plus loin. Trois niveaux, Bandit, Senior et
   Predator. Les boss reçoivent la vie et la vitesse du niveau. Il est pensé d'abord pour commencer ou recommencer le jeu

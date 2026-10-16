@@ -65,8 +65,9 @@ class FakeCamps:
         events.append(("made", point, yaw))
         return behaviour["host"]
 
-    def survey(self) -> object:
+    def survey(self, log: bool = True, held: frozenset = frozenset()) -> object:
         events.append(("survey",))
+        held_given.append(held)
         return types.SimpleNamespace(free=list(behaviour["free"]), busy=behaviour["busy"],
                                      pending=behaviour["pending"], stuck=behaviour["stuck"])
 
@@ -142,6 +143,10 @@ def reset(water: tuple = (), no_ground: tuple = (), not_world: tuple = (), **fie
     state["all"]["GbxTerritoryComponent"] = [fake.Zone(fake.Spawner(name="OakSpawner_UAID_Game")), own_zone]
     ground = fake.Ground(water, no_ground, not_world)
     return copies.Copies(report.announce, FakeCamps(), ground, FakeBudget(), spread.Spread(FLAT)), ground
+
+
+# What each survey was told the horde holds.
+held_given: list[frozenset] = []
 
 
 def took(name: str) -> list[tuple]:
@@ -256,6 +261,10 @@ try:
           and [entry[2] for entry in took("hand")] == ["Char_CatYoung"])
     check("trial 8a: the killed are asked again behind the hunter, the call written to the log first",
           events[:2] == [("kit",), line(again=3, at=[-40.0, 0.0, 0.0])])
+    run.held = lambda: frozenset({"OakSpawner_Held"})
+    held_given.clear()
+    run.again(killed, hunter, look, here)
+    check("audit of 16 October: the survey is told the camps the horde holds", held_given == [{"OakSpawner_Held"}])
     run, ground = reset(not_world=(1,))
     said = run.again(killed, hunter, look, here)
     check("decision 72: a point whose trace met a character is left out, said",
@@ -376,7 +385,8 @@ try:
           said["free"] == 3 and said["handed"] == 2 and len(own.pool) == 3
           and not took("GetEnemiesActorDefStrings") and len(took("BeginDeferredActorSpawnFromClass")) == 1
           and [entry[1] for entry in took("K2_SetActorLocation")] == [spawner.Name for spawner in taking[:2]]
-          and settings.bDisableSpawnBudget is True and fake.announced_first(events))
+          and settings.bDisableSpawnBudget is True
+          and fake.announced_first([entry for entry in events if entry[0] != "K2_SetActorLocation"]))
     check("a run owes nothing for an earlier run's births: never asked again as that run's kinds",
           set(next_run.owed) == {spawner.Name for spawner in taking[:2]})
     surveyed = len(took("HaveAllDied"))
@@ -393,6 +403,12 @@ try:
     check("the birth handed meanwhile, its camp free again, given in its turn", next_run.unseen() == ["Char_CatYoung"])
     read = len(took("HaveAllDied"))
     check("nothing owed: the camps are not even read", next_run.unseen() == [] and len(took("HaveAllDied")) == read)
+    clock[0] += camps.PENDING_S
+    next_run.held = lambda: frozenset({taking[1].Name})
+    events.clear()
+    next_run.again([("Char_Cat_10", "Char_CatYoung")], hunter, look, here)
+    check("audit of 16 October: a camp whose enemy the horde holds is not asked whether it died, the others are",
+          [entry[1] for entry in took("HaveAllDied")] == [taking[0].Name, taking[2].Name])
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

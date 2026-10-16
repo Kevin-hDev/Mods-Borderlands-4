@@ -6,7 +6,8 @@ forgotten, the camp the mod made for it let go; the recruits drawn with their ca
 copy's distance told to the catch-up, a name lost less than LOST_WATCH_S ago not drawn again, the census run even
 with the horde full; at the stop every enemy still drawn let go, one read dead counted killed with nothing called on
 its body, each way each part was given back counted; whom an enemy targets read only within near_m; a parked enemy's
-team set aside; 10 000 enemies passed through the horde, no table keeps more than the horde."""
+team set aside; an enemy let go since its pass began left out of its part (decision 107); 10 000 enemies passed
+through the horde, no table keeps more than the horde."""
 
 import pathlib
 import sys
@@ -157,7 +158,7 @@ try:
     aimed: list[str] = []
     real_aimed = horde_module.target.aimed
     horde_module.target.aimed = lambda mover, player: (aimed.append(mover.Name), "player")[1]
-    lines = horde.sample("hunter", "pc", (0.0, 0.0, 0.0), 1.0)
+    lines = horde.sample(horde.parts.catch.queue(horde.drawn()), "hunter", "pc", (0.0, 0.0, 0.0), 1.0)
     horde_module.target.aimed = real_aimed
     check("whom an enemy targets read only within near_m, the wave's count; beyond, None, never asked",
           aimed == ["Char_Cat_1"] and [line["target"] for line in lines] == ["player", None])
@@ -171,13 +172,21 @@ try:
     check("the far enemies managed: none let go for its distance", not of("catch.beyond") and not of("release"))
 
     calls.clear()
+    pass_order, kept_chasers = horde.parts.catch.queue(horde.drawn()), list(horde.chasers)
+    taken[0].ended, kept_ended = "let_go_meanwhile", taken[0].ended
+    lines = horde.sample(pass_order, "hunter", "pc", (0.0, 0.0, 0.0), 1.5)
+    taken[0].ended, horde.chasers = kept_ended, kept_chasers
+    check("decision 107: an enemy let go since its pass began is left out of its part, nothing read or called",
+          len(lines) == 1 and [call[1] for call in of("keep")] == ["Char_Cat_2"])
+
+    calls.clear()
     taken[0].mover.CharacterMovement.MovementMode = "<EMovementMode.MOVE_None: 0>"
-    horde.sample("hunter", "pc", (0.0, 0.0, 0.0), 2.0)
+    horde.sample(horde.parts.catch.queue(horde.drawn()), "hunter", "pc", (0.0, 0.0, 0.0), 2.0)
     check("a rider is never brought back", [call[1] for call in of("catch.consider")] == ["Char_Cat_2"])
 
     calls.clear()
     taken[1].loss = horde_module.KILLED
-    horde.sample("hunter", "pc", (0.0, 0.0, 0.0), 3.0)
+    horde.sample(horde.parts.catch.queue(horde.drawn()), "hunter", "pc", (0.0, 0.0, 0.0), 3.0)
     check("a killed one is counted, waits to come back, is let go with nothing called on its body",
           of("stats.killed") == [("stats.killed", "Char_Cat_2")]
           and of("wave.killed") == [("wave.killed", "Char_Cat_2", "Char_CatAdult")]
@@ -200,7 +209,7 @@ try:
     calls.clear()
     taken[0].mover.CharacterMovement.MovementMode = "<EMovementMode.MOVE_NavWalking: 1>"
     taken[0].loss = "zone_changed_by_game"
-    horde.sample("hunter", "pc", (0.0, 0.0, 0.0), 4.0)
+    horde.sample(horde.parts.catch.queue(horde.drawn()), "hunter", "pc", (0.0, 0.0, 0.0), 4.0)
     check("an enemy the game gave another zone is let go, calls allowed on its body, not counted killed",
           of("release") == [("release", "Char_Cat_1", False)] and not of("stats.killed") and not of("wave.killed")
           and not of("follow.release"))
@@ -250,7 +259,7 @@ try:
     horde.draw_all(horde.free_of([seen("Char_Near", 3000.0), seen("Char_Far", 9000.0)]), "hunter", "pc",
                    (0.0, 0.0, 0.0), 0.0)
     calls.clear()
-    lines = horde.sample("hunter", "pc", (0.0, 0.0, 0.0), 1.0)
+    lines = horde.sample(horde.parts.catch.queue(horde.drawn()), "hunter", "pc", (0.0, 0.0, 0.0), 1.0)
     check("decision 97: the far enemies not managed, one the catch-up would bring back let go instead, everything "
           "given back, neither kept nor considered, and never born again (decision 98)",
           of("release") == [("release", "Char_Far", False)]
@@ -282,7 +291,7 @@ try:
                            (0.0, 0.0, 0.0), 0.0)
     taken[1].keep_fails = True
     calls.clear()
-    horde.sample("hunter", "pc", (0.0, 0.0, 0.0), 1.0)
+    horde.sample(horde.parts.catch.queue(horde.drawn()), "hunter", "pc", (0.0, 0.0, 0.0), 1.0)
     check("an enemy whose walk cannot be given again is let go alone, the others kept",
           of("release") == [("release", "Char_B", False)] and [c.name for c in horde.drawn()] == ["Char_A"]
           and notes[-1][1]["reason"] == "walk_again_failed:RuntimeError")
@@ -310,7 +319,7 @@ try:
     [one] = parked.draw_all(parked.free_of([seen("Char_P", 10.0)]), "hunter", "pc", (0.0, 0.0, 0.0), 0.0)
     one.loss = horde_module.PARKED
     calls.clear()
-    parked.sample("hunter", "pc", (0.0, 0.0, 0.0), 1.0)
+    parked.sample(parked.parts.catch.queue(parked.drawn()), "hunter", "pc", (0.0, 0.0, 0.0), 1.0)
     check("a parked enemy: nothing called on its body, its team set aside should it come again",
           of("release") == [("release", "Char_P", True)] and notes[-1][1]["team"] == "set_aside")
     refusing = horde_module.Horde(parts(), note, lambda *a, **k: None)
@@ -329,7 +338,8 @@ try:
                                   "hunter", "pc", (0.0, 0.0, 0.0), float(wave_number))
         for chaser in group:
             chaser.loss = horde_module.KILLED
-        long_run.sample("hunter", "pc", (0.0, 0.0, 0.0), float(wave_number) + 0.5)
+        long_run.sample(long_run.parts.catch.queue(long_run.drawn()), "hunter", "pc", (0.0, 0.0, 0.0),
+                        float(wave_number) + 0.5)
         long_run._forget_lost(float(wave_number) + 0.5)
         calls.clear()
     check("10 000 enemies passed through the horde: it keeps none, its lost names only those of the last seconds",

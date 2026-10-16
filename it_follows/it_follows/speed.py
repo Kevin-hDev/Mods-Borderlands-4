@@ -17,6 +17,9 @@ from typing import Any, Callable
 
 # A float read back equals the one written within this; a factor this near 1 is Normal.
 SAME = 1e-3
+# The bonuses written to the log on joining, for a trial to read, the first of each run; the rest are only written,
+# 1 150 lines of trial 33's run (audit of 16 October 2026). Given back, each is written: the enemy may be dead.
+DETAILED = 20
 
 
 class SpeedBoost:
@@ -26,6 +29,7 @@ class SpeedBoost:
     def __init__(self, announce: Callable[..., None], factor: float) -> None:
         self.announce, self.factor = announce, factor
         self.base: dict[str, float] = {}
+        self.detailed = 0
 
     def start(self, chasers: list) -> list[dict]:
         """Makes every enemy drawn faster; says for each its bonus before and after. Normal writes nothing and says
@@ -39,7 +43,9 @@ class SpeedBoost:
         try:
             scale = mover.CharacterMovement.MaxGroundSpeedScale
             base = float(scale.Value)
-            self.announce("MaxGroundSpeedScale", on=name, value=round(base * self.factor, 3))
+            self.announce("MaxGroundSpeedScale", log=self.detailed < DETAILED, on=name,
+                          value=round(base * self.factor, 3))
+            self.detailed += 1
             scale.Value = base * self.factor
             self.base[name] = base
             line["scale"] = [round(base, 3), round(float(scale.Value), 3)]

@@ -5,7 +5,9 @@ Kevin, 15 October 2026, between enemies that hold more and enemies that take les
 numbers unchanged. Each pool's maximum is raised to the game's own times the factor (health_pools.py): a first write
 of the target shows the game's bonus over the base (MV1: 1.8 on a Spectre, 1.3 on a Wyrm), a second reaches the
 target; the share from before is given back, since a pool keeps what it held. Trial 19: 40 of the game's enemies
-read back 1.2 and 1.4 times their maximum, none failing.
+read back 1.2 and 1.4 times their maximum, none failing. The bonus a kind showed is kept for the next of that kind,
+whose first write then reaches the target; one whose bonus differs gets the second write all the same (audit of 16
+October 2026: some 1 500 writes of trial 33's run, each with its read).
 
 A killed enemy is never called on: the game reuses its body (spec, « Oublier les morts »), and acting on such a body
 has crashed the game; nor is one the game took away alive (the horde's parked, the normal mode's lost from sight). Its
@@ -37,6 +39,8 @@ TENDED_MOST = 240
 DETAILED = 20
 # The bodies left raised that are remembered, the oldest forgotten first: what a long run kills in some minutes.
 LEFT_MOST = 1000
+# The bonuses kept by kind and pool: three pools for each of the game's some 300 kinds of enemies, with room.
+BONUS_MOST = 1024
 # Kept across runs: a body killed in one run may be reused in the next. By name: its pools as tended.
 _left: dict[str, list[tuple[int, float, float]]] = {}
 
@@ -52,6 +56,8 @@ class Toughness:
         # By name: (pool, game's base, maximum raised) for each pool the enemy has.
         self.tended: dict[str, list[tuple[int, float, float]]] = {}
         self.detailed = 0
+        # By (kind, pool): the game's bonus over the base last read, the maximum over the base written.
+        self.bonus: dict[tuple[str, int], float] = {}
 
     def start(self, chasers: list) -> int:
         """Raises the pools of every enemy drawn; how many were raised. Normal writes nothing and says nothing."""
@@ -65,10 +71,10 @@ class Toughness:
             if len(self.tended) >= TENDED_MOST:
                 self.note("health_refused", on=chaser.name, tended=len(self.tended))
                 continue
-            raised += self._raise(chaser.name, actor)
+            raised += self._raise(chaser.name, actor, getattr(chaser, "kind", None))
         return raised
 
-    def _raise(self, name: str, actor: Any) -> int:
+    def _raise(self, name: str, actor: Any, kind: str | None = None) -> int:
         left = _left.pop(name, None)
         if left is not None and self._still_raised(actor, left):
             return self._take_back(name, actor, left)
@@ -81,7 +87,7 @@ class Toughness:
                 if most <= 0.0:
                     continue
                 share = self.pools.share(actor, pool)
-                game_base, raised = self._reach(actor, pool, most, most * self.factor)
+                game_base, raised = self._reach(actor, pool, most, most * self.factor, kind)
                 # Kept before the share is given back: a maximum raised is given back even if that call fails.
                 pools.append((pool, game_base, raised))
                 line[f"pool_{pool + 1}"] = [round(most), round(raised)]
@@ -132,14 +138,20 @@ class Toughness:
             return f"failed:{type(error).__name__}"
         return "reached"
 
-    def _reach(self, actor: Any, pool: int, most: float, target: float) -> tuple[float, float]:
-        """Writes the base so the maximum read is target; the game's own base, and the maximum reached."""
-        got = self.pools.set_base(actor, pool, target)
+    def _reach(self, actor: Any, pool: int, most: float, target: float,
+               kind: str | None = None) -> tuple[float, float]:
+        """Writes the base so the maximum read is target, the bonus the kind showed before taken off first; the
+        game's own base, and the maximum reached."""
+        key = (kind, pool) if kind else None
+        written = target / self.bonus.get(key, 1.0) if key is not None else target
+        got = self.pools.set_base(actor, pool, written)
         if got <= 0.0:
             raise ValueError("maximum not read after a write")
-        game_base = most * target / got
+        game_base = most * written / got
+        if key is not None and (key in self.bonus or len(self.bonus) < BONUS_MOST):
+            self.bonus[key] = got / written
         if abs(got - target) > TOLERANCE * target:
-            got = self.pools.set_base(actor, pool, target * target / got)
+            got = self.pools.set_base(actor, pool, written * target / got)
         return game_base, got
 
     def put_back(self, name: str, actor: Any, body_reused: bool) -> str:

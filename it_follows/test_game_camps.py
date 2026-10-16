@@ -3,10 +3,12 @@ the class defaults left out, a camp already critical left alone and never given 
 given back whole and read back; a camp that cannot be read counted; each camp written once a run, but one the game
 loaded again under a held name written again; a pass held to
 READ_S and to MAX_HELD; EVERY_S between passes; at the stop each camp's own flags written back, those the game freed
-counted; the call written to the log before the camps are written."""
+counted; the call written to the log before the camps are written; given the hunter, the camps of his world only
+(decision 105), the way said."""
 
 import pathlib
 import sys
+import time as time_module
 import types
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -151,6 +153,27 @@ try:
     camps = game_camps.GameCamps(report.announce, ours)
     said = camps.wake(HERE_AT, 0.0)
     check("a pass stops at READ_S, the rest left for the next", said["stopped"] == "time_limit" and said["held"] == 1)
+    game_camps.time = time_module
+    asked: list[tuple] = []
+    loaded, unloading = Camp("OakSpawner_Loaded", 10.0), Camp("OakSpawner_Unloading", 20.0)
+
+    def actors_of(*, WorldContextObject: object, ActorClass: object, OutActors: list) -> tuple:
+        asked.append((WorldContextObject, ActorClass.Name))
+        return ..., [loaded]
+
+    state["classes"]["GameplayStatics"] = types.SimpleNamespace(
+        ClassDefaultObject=types.SimpleNamespace(GetAllActorsOfClass=actors_of))
+    state["classes"][game_camps.SPAWNER_CLASS] = types.SimpleNamespace(Name=game_camps.SPAWNER_CLASS)
+    world(loaded, unloading)
+    hunter = object()
+    said = game_camps.GameCamps(report.announce, ours).wake(HERE_AT, 0.0, hunter)
+    check("decision 105: given the hunter, only the camps of his world, the way said",
+          said["read"] == 1 and said["made"] == 1 and said["search"] == "actors"
+          and asked == [(hunter, game_camps.SPAWNER_CLASS)] and unloading.SpawnerComponent.writes == 0)
+    said = game_camps.GameCamps(report.announce, ours).wake(HERE_AT, 0.0)
+    check("without him, every camp the game holds", said["read"] == 2 and said["search"] == "find_all")
+    check("without a place, nothing searched",
+          game_camps.GameCamps(report.announce, ours).wake(None, 0.0, hunter)["search"] is None and len(asked) == 1)
 except Exception as error:
     check(f"exception {type(error).__name__}: {error}", False)
 

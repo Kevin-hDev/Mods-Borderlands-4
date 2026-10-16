@@ -60,9 +60,12 @@ def chaser(name: str, body: object, kind: str = "Char_BeastBasic", walks: bool =
 moved = {"w2": 990.0}
 
 try:
-    check("four a second, higher than 1.5 m, down to 30 m, five named, falling and flying left alone",
+    check("two a second (audit of 16 October 2026), higher than 1.5 m, down to 30 m, five named, falling and flying "
+          "left alone",
           (float_watch.PER_SAMPLE, float_watch.ABOVE_M, float_watch.DOWN_M, float_watch.SHOWN, float_watch.AIRBORNE)
-          == (4, 1.5, 30.0, 5, ("MOVE_Falling", "MOVE_Flying")))
+          == (2, 1.5, 30.0, 5, ("MOVE_Falling", "MOVE_Flying")))
+    # The turns below were written for four a sample, the number the watch had before.
+    float_watch.PER_SAMPLE = 4
 
     trace = Trace()
     watch = float_watch.FloatWatch(trace, moved.get)

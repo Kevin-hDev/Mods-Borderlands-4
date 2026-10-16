@@ -216,6 +216,13 @@ try:
     check("and so is every enemy when where he looks cannot be read",
           catch.consider("cat_e", cat("cat_e"), behind_him(here, 200.0), here, 200.0, 406.0)
           == {"catch_up": "in_sight"})
+    catch.walk(here, looking(0.0), 13.0)
+    catch.given, catch.traces_left = 1, 5
+    catch.look(looking(90.0))
+    check("decision 107: where he looks read again for a later part of the second, its places and traces kept",
+          catch.view == 90.0 and catch.given == 1 and catch.traces_left == 5)
+    catch.look(object())
+    check("read again where it cannot be: unknown", catch.view is None)
 
     for level, spot in ((LEVEL_80, [-14.0, 0.0, 1.0]), (LEVEL_25, [-24.0, 0.0, 1.0])):
         catch = catch_up(Ground(), level)

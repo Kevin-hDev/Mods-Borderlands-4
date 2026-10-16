@@ -12,7 +12,9 @@ the census; the hunter's death counted, the run going on; the hunter in a vehicl
 down; at Stop everything given back, the run on top of the history, its result waiting for the window; a time limit,
 its result waiting too; the player leaving the game, kept in the history with no result; a run without the bar; a
 zone the game keeps moving away; a run with Buff+, the enemies drawn holding more health and the hunter taking more
-damage, both given back at the stop (decision 79); the mod disabled; the camps kept for the next run."""
+damage, both given back at the stop (decision 79); the Horde's Hardcore, from 0 % at each start, a step at 100 kills
+raising the enemies that join next and the hunter's damage taken on top of the Buff, said in the bar, the status
+line and the stop (decision 109); the mod disabled; the camps kept for the next run."""
 
 import json
 import pathlib
@@ -42,6 +44,9 @@ ticking = types.SimpleNamespace(monotonic=lambda: clock[0])
 frame.time = camps.time = copies.time = census.time = recruit.time = ticking
 brain_walk.process_event = lambda: game.process_event
 camps.FGbxDefPtr = game_fixture.DefPtr
+# The engine's image count, 60 images each second of play.
+drawn_images = [500]
+state["classes"]["KismetSystemLibrary"].ClassDefaultObject.GetFrameCount = lambda: drawn_images[0]
 fails: list[str] = []
 
 
@@ -67,6 +72,7 @@ def second(steps: int = 1, paused: bool = False) -> None:
     second after them."""
     for _ in range(steps):
         clock[0] += 1.0
+        drawn_images[0] += 60
         game.world_clock[0] += 0.0 if paused else 1.0
         at = clock[0]
         for image in range(4):
@@ -154,7 +160,8 @@ try:
     check("the game camps of the enemies made movable and placed on the hunter",
           all((zone.Outer.x, zone.Outer.y) == (0.0, 0.0) for zone in (camp_a, camp_b, camp_c)))
     check("the game's limit of enemies lifted for the copies", game.world_settings.bDisableSpawnBudget is True)
-    check("the bar shown, in French, with the horde drawn", words() == "TUÉS 0   MORTS 0   HORDE 3   00:00")
+    check("the bar shown, in French, with the horde drawn and the Hardcore at 0 %",
+          words() == "TUÉS 0   MORTS 0   HORDE 3   HARDCORE 0 %   00:00")
     woken = last("game_camps")
     check("decision 64: the game's camps near made critical at the start, the mod's own and the far one left alone",
           woken["made"] == 3 and woken["ours"] == 4 and woken["far"] == 1
@@ -167,7 +174,7 @@ try:
           and started.wave.copies.spread is not started.parts.catch.spread)
 
     second()
-    check("each second the bar says the time played", words() == "TUÉS 0   MORTS 0   HORDE 3   00:01")
+    check("each second the bar says the time played", words() == "TUÉS 0   MORTS 0   HORDE 3   HARDCORE 0 %   00:01")
     check("each second the wave told how many enemies follow, for Kevin's rule", started.wave.following == 3)
     second(4)
     joined = last("recruit")
@@ -384,7 +391,58 @@ try:
     check("audit: the status line says the catch-up's traces, the walks' blocks, the hook's calls a second, the "
           "longest second and each task put off",
           "traces" in status["catch_up"] and status["walk_blocks"] >= 1 and status["hook_calls_s"] > 0
-          and set(status["tasks_ms"]) == {"follow", "census", "game_camps"} and "slowest_ms" in status)
+          and set(status["tasks_ms"]) == {"sweep", "follow", "census", "game_camps"} and "slowest_ms" in status)
+    check("decision 107: the second's pass over a horde of 60 made in two parts of 30, none cut short, the longest "
+          "part timed", status["horde"] == 60 and status["sweep"]["parts"] == 2 and status["sweep"]["cut"] == 0
+          and status["sweep"]["part_ms"] >= 0.0)
+    check("decision 102: the status line says the images a second over its span and its lowest second, the engine's "
+          "count announced once before it was first read",
+          status["fps"] == 60.0 and status["fps_low"] == 60.0
+          and [line for line in lines() if line.get("call") == "GetFrameCount"][-1]["run"] == status["run"])
+    check("audit of 16 October: the status line says the walks given, the Execs read for them and their calls' time, "
+          "and the bodies the last census read",
+          set(status["walks"]) == {"walks", "exec_reads", "walk_ms"} and status["walks"]["walks"] >= 1
+          and isinstance(status["bodies"], int) and status["bodies"] >= 1)
+    check("audit of 16 October, A11: the status line says what a hook call with nothing to do took in the beat",
+          isinstance(status["hook_idle_us"], float) and status["hook_idle_us"] > 0.0)
+    held = session._state["run"].wave.copies.held()
+    check("audit of 16 October: the copies are told the camps of the enemies the horde holds",
+          held and held == {session._state["run"].parts.camp_map.of.get(name)
+                            for name in session._state["run"].horde.names()})
+    recruited = last("recruit")
+    check("audit of 16 October: the recruit line says the census's search apart, and how long the recruits took",
+          recruited["scan_ms"] >= 0.0 and recruited["join_ms"] >= 0.0)
+    check("decision 105: the run's census, at the start and for its recruits, reads the characters of the "
+          "hunter's world only",
+          recruited["search"] == "actors"
+          and [line for line in lines() if line["event"] == "started"][-1]["search"] == "actors")
+    this_run = last("status")["run"]
+    camps_said = [line for line in lines() if line["event"] == "game_camps" and line["run"] == this_run]
+    check("decision 105: the game's camps searched in the hunter's world, at the start and at each pass",
+          camps_said and all(line["search"] == "actors" for line in camps_said))
+    statics = state["classes"]["GameplayStatics"].ClassDefaultObject
+    statics.GetAllActorsOfClass = lambda **_fields: (_ for _ in ()).throw(RuntimeError("refused"))
+    second(11)
+    del statics.GetAllActorsOfClass
+    check("a pass whose search of the world fails is written down, searched among every object instead",
+          [line for line in lines() if line["event"] == "game_camps"][-1]["search"] == "find_all:RuntimeError")
+    running = session._state["run"]
+    written = len([line for line in lines() if line["event"] == "status"])
+    running.gauge.next_status = clock[0]
+    clock[0] += 1.0
+    drawn_images[0] += 60
+    game.world_clock[0] += 1.0
+    state["hooks"][frame.IDENTIFIER].fn(None, None, None, None)
+    check("the status line is not written in the second's own image, but put off to one of its own",
+          len([line for line in lines() if line["event"] == "status"]) == written
+          and "status" in running.beat.later)
+    check("decision 107: the second's own image makes the first part of the pass, the next put off first, the "
+          "enemies after the first part waiting for it",
+          next(iter(running.beat.later)) == "sweep" and len(running.sweep.queue) == len(running.horde.drawn()) - 30)
+    second(30)
+    check("the status line takes an image of its own, measured in the next one", "status" in last("status")["tasks_ms"])
+    check("decision 109: no Hardcore step under 100 kills, 0 % said in the status line and at the stop",
+          last("status")["hardcore"] == 0 and stopped["hardcore"] == 0 and last("hardcore_step") == {})
     session.stop()
 
     health_fixture.install(state)
@@ -404,15 +462,36 @@ try:
                                        "value": [0.9, 1.08]})
     second(5)
     check("each second the multiplier holds, nothing written", last("taken_kept") == {} and taken.BaseValue == 1.2)
+    run = session._state["run"]
+    toughness = run.parts.toughness
+    run.stats.kills = 199
+    second()
+    step = last("hardcore_step")
+    check("decision 109: at 199 kills the Hardcore reaches 1 %, the enemies joining next raised 1.4 x 1.01 and the "
+          "hunter's damage taken 1.2 x 1.01, the Buff kept under it",
+          (step.get("percent"), step.get("kills"), step.get("health")) == (1, 199, 1.414)
+          and abs(toughness.factor - 1.414) <= 1e-9 and abs(taken.BaseValue - 1.212) <= 1e-9
+          and abs(taken.Value - 0.9 * 1.212) <= 1e-9)
+    check("the bar says the run's percent", "HARDCORE 1 %" in words())
+    check("an enemy already in the horde keeps its maximum", abs(tough.pools[0].most - 1820.0) <= 18.2)
+    run.stats.kills = 150
+    second()
+    check("no line again within the same step", last("hardcore_step") == step)
+    run.stats.kills = 412
+    second()
+    check("several steps at once: 4 %", last("hardcore_step").get("percent") == 4
+          and abs(taken.BaseValue - 1.2 * 1.04) <= 1e-9 and "HARDCORE 4 %" in words())
     tough.pools[0].left = tough.pools[0].most / 2
     session.stop()
     check("at the stop the enemy still drawn has the game's maximum back with its share, the hunter his multiplier, "
           "both written down",
           abs(tough.pools[0].most - 1300.0) <= 13.0 and abs(tough.pools[0].left - 650.0) <= 6.5
           and last("stopped")["taken"] == "restored" and (taken.BaseValue, round(taken.Value, 3)) == (1.0, 0.9)
-          and last("stopped")["health"]["restored"] == 1)
+          and last("stopped")["health"]["restored"] == 1 and last("stopped")["hardcore"] == 4)
 
-    check("a run again", session.start(settings()) == "started")
+    check("a run again, its Hardcore from 0 %, the enemies raised by nothing more",
+          session.start(settings()) == "started" and session._state["run"].hardcore.percent == 0
+          and session._state["run"].parts.toughness.factor == 1.0 and "HARDCORE 0 %" in words())
     it_follows.mod.on_disable()
     check("the mod disabled stops it", not session.running() and last("stopped")["reason"] == "mod_disabled")
 except Exception as error:

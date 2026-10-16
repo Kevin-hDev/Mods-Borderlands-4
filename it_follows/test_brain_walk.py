@@ -5,8 +5,10 @@ and the function's addresses; the block's Exec tells what the game wrote, and th
 int other than Start (unreadable counts as running). A block whose walk has ended is taken over by the next walk,
 every field written anew before the call, Exec last; a block whose walk may still run, or whose Exec cannot be read,
 never is; a walk whose block was taken over still reads ended, with what the game wrote for it; a new block is made
-only when none has ended, and past KEPT_MAX of those no walk is given and nothing is freed. process_event comes from
-the unrealsdk.dll already loaded, or OSError; a failing call raises, its block kept; the abort is immediate."""
+only when none has ended, and past KEPT_MAX of those no walk is given and nothing is freed. A walk read ended by its
+own chaser offers its block, taken first once read again; else the search goes on from where it stopped. process_event
+comes from the unrealsdk.dll already loaded, or OSError, found once; a failing call raises, its block kept; the gauge
+counts the walks, the Execs read and the calls' time; the abort is immediate."""
 
 import ctypes
 import importlib
@@ -225,6 +227,48 @@ try:
     check("and takes over their ended blocks, the walk given before the reload reading ended",
           after_reload.block is running[0].block and brain_walk.ended(running[0])
           and brain_walk.outcome(running[0]) == "2")
+
+    del brain_walk.kept()[:]
+    holder().latest.clear()
+    holder().free.clear()
+    holder().cursor = 0
+    blocks = [brain_walk.walk(enemy, hunter, pc) for _ in range(4)]
+    for given in blocks:
+        given.block.Exec = 2
+    check("a walk read ended by its own chaser offers its block", brain_walk.ended(blocks[2])
+          and list(holder().free.values()) == [blocks[2].block])
+    brain_walk.gauge()
+    offered = brain_walk.walk(enemy, hunter, pc)
+    check("the next walk takes the block offered, before the ended blocks ahead of it, one Exec read",
+          offered.block is blocks[2].block and brain_walk.gauge()["exec_reads"] == 1 and not holder().free)
+    check("a walk whose block was taken over offers nothing", brain_walk.ended(blocks[2]) and not holder().free)
+    blocks[3].block.Exec = 2
+    brain_walk.ended(blocks[3])
+    blocks[3].block.Exec = brain_walk.START
+    check("an offered block running again is read, then left: the search goes on among the others",
+          brain_walk.walk(enemy, hunter, pc).block is blocks[0].block and not holder().free
+          and brain_walk.gauge()["exec_reads"] == 2)
+    check("the search goes on from where it stopped: the next ended block, the first one not read again",
+          brain_walk.walk(enemy, hunter, pc).block is blocks[1].block and brain_walk.gauge()["exec_reads"] == 1)
+    check("none ended: every block read once, a new one made", brain_walk.walk(enemy, hunter, pc).block
+          is brain_walk.kept()[-1] and len(brain_walk.kept()) == 5 and brain_walk.gauge()["exec_reads"] == 4)
+
+    found: list[int] = []
+    brain_walk.process_event = lambda: found.append(1) or game.process_event
+    brain_walk._held["call"] = None
+    count = len(game.walks)
+    for _ in range(3):
+        brain_walk.walk(enemy, hunter, pc)
+    said = brain_walk.gauge()
+    check("process_event is found once for every walk after it", found == [1] and len(game.walks) == count + 3)
+    check("the gauge counts the walks and the time of their calls, then afresh",
+          said["walks"] == 3 and said["walk_ms"] >= 0.0 and brain_walk.gauge() == {"walks": 0, "exec_reads": 0,
+                                                                                     "walk_ms": 0.0})
+    game.walk_fails = OSError("refused")
+    raised(lambda: brain_walk.walk(enemy, hunter, pc), OSError)
+    game.walk_fails = None
+    check("a failing call is counted too", brain_walk.gauge()["walks"] == 1)
+    brain_walk.process_event = lambda: game.process_event
 
     brain_walk.abort(enemy)
     check("the abort is immediate, on the enemy", game.log[-1] == ("abort", enemy, True))

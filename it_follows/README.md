@@ -14,7 +14,8 @@ English and French, has four pages. The game is paused while it is open. You sta
   on the way join the horde, and the ones you kill come back behind you, more and more of them. The enemies are those
   of the areas you go through. Five levels, an enemy speed bonus, BUFF and BUFF+, a time limit or none, and the most
   enemies hunting you at once, from 30 to 120. A bar at the top left of the screen shows your kills, deaths, the
-  horde's size and the time, which stops while the game is paused.
+  horde's size, the Hardcore and the time, which stops while the game is paused. The Hardcore is always on in the
+  Horde: the enemies grow 1% stronger every 100 enemies killed during the run, from 0% at each run.
 - **NORMAL MODE.** Play your game as usual: the enemies you meet are more numerous, faster and tougher, dodge more often
   and faster, and chase you farther. Three levels, Bandit, Senior and Predator. Bosses get the level's health and speed.
   It is made first for starting or restarting the game from the beginning, a little like three levels of NG+, and

@@ -1,6 +1,9 @@
 """Tests the reads of the game: a text cleaned and cut; a path, or why not; a place, refused when it is not finite or
 cannot be read; a distance in metres; a place for the log; a death said only by a bool; a definition read from the
-actor's own data, among its first fields only; a zone's radius, or ValueError."""
+actor's own data, among its first fields only; a zone's radius, or ValueError; the engine's image count, its
+library looked up once and held weakly, None when unread; a search's objects as they come, with its time; the
+objects of a class, those of the world in play when an actor of it is given, every one the game holds otherwise or
+when the world's search fails, and which way."""
 
 import math
 import pathlib
@@ -94,6 +97,71 @@ try:
         except ValueError:
             refused = True
         check(f"a radius {label} raises ValueError", refused)
+
+    looked: list[str] = []
+    images = [1200]
+    library = types.SimpleNamespace(GetFrameCount=lambda: images[0])
+    import unrealsdk
+    real_find = unrealsdk.find_class
+    unrealsdk.find_class = lambda name, **_k: looked.append(name) or types.SimpleNamespace(ClassDefaultObject=library)
+    first = reads.frame_count()
+    images[0] = 1260
+    check("decision 102: the engine's image count, its library looked up once and kept",
+          first == 1200 and reads.frame_count() == 1260 and looked == ["KismetSystemLibrary"])
+    library.freed = True
+    check("the library freed, looked up again", reads.frame_count() == 1260 and len(looked) == 2)
+    library.freed = False
+    library.GetFrameCount = lambda: (_ for _ in ()).throw(RuntimeError("refused"))
+    check("a count that cannot be read is None", reads.frame_count() is None)
+    unrealsdk.find_class = real_find
+
+    spent = [0.0]
+    called: list[int] = []
+    timed = reads.timed(lambda: called.append(1) or iter(["a", "b", "c"]), spent)
+    check("trial 37: a search is not made before its objects are asked for", called == [] and spent[0] == 0.0)
+    check("a search's objects as they come, every one, its time added up, the call's own too",
+          list(timed) == ["a", "b", "c"] and called == [1] and spent[0] > 0.0)
+    spent = [0.0]
+    clock_now = [10.0]
+    real_time = reads.time
+    reads.time = types.SimpleNamespace(perf_counter=lambda: clock_now[0])
+
+    def slow_search() -> list[str]:
+        clock_now[0] += 0.009
+        return ["x"]
+
+    list(reads.timed(slow_search, spent))
+    reads.time = real_time
+    check("the time the search takes when called is counted", abs(spent[0] - 0.009) < 1e-9)
+
+    calls: list[tuple] = []
+
+    class Statics:
+        """GetAllActorsOfClass by its parameters' names only; the SDK's tuple back: Ellipsis, then the array."""
+
+        refuses = False
+
+        def GetAllActorsOfClass(self, *, WorldContextObject: object, ActorClass: object, OutActors: list) -> tuple:
+            calls.append((WorldContextObject, ActorClass, OutActors))
+            if self.refuses:
+                raise RuntimeError("refused")
+            return ..., ["in_world"]
+
+    statics, spawner_class = Statics(), types.SimpleNamespace(Name="Spawner")
+    state["classes"]["GameplayStatics"] = types.SimpleNamespace(ClassDefaultObject=statics)
+    state["classes"]["Spawner"] = spawner_class
+    state["all"]["Spawner"] = ["Default__Spawner", "in_world", "unloading"]
+    hunter_actor = object()
+    objects, way = reads.search("Spawner", hunter_actor)
+    check("decision 105: given an actor of the world, the actors of the class in that world, by GetAllActorsOfClass",
+          list(objects) == ["in_world"] and way == "actors" and calls == [(hunter_actor, spawner_class, [])])
+    objects, way = reads.search("Spawner")
+    check("without one, every object of the class the game holds, by find_all, the world's search not called",
+          list(objects) == ["Default__Spawner", "in_world", "unloading"] and way == "find_all" and len(calls) == 1)
+    statics.refuses = True
+    objects, way = reads.search("Spawner", hunter_actor)
+    check("a world's search that fails: find_all instead, said with the error's name",
+          list(objects) == ["Default__Spawner", "in_world", "unloading"] and way == "find_all:RuntimeError")
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

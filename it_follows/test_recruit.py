@@ -1,11 +1,12 @@
 """Tests the recruiter on the real census: a census due once every 5 s and not before, counted when made; the enemies
 kept around the hunter not yet taken, nearest first, at most the room left, without any cap on a run, read within
 0.25 s; what the census read, why it passed the others over (trial 8e) and how long it took said, without a list of
-names; who the census saw alive and dead handed on; nobody without a place, or without the hunter's; no game object
-kept between censuses."""
+names, and which way it searched, the hunter's world only (decision 105); who the census saw alive and dead handed
+on; nobody without a place, or without the hunter's; no game object kept between censuses."""
 
 import pathlib
 import sys
+import types
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -21,6 +22,7 @@ from it_follows import census, recruit  # noqa: E402
 ORIGIN = (0.0, 0.0, 0.0)
 fails: list[str] = []
 calls: list = []
+worlds: list[bool] = []
 real_seen_around = census.seen_around
 
 
@@ -30,10 +32,12 @@ def check(label: str, condition: bool) -> None:
         fails.append(label)
 
 
-def seen_around(target: object, seconds: float | None = None, known: frozenset = frozenset()) -> tuple:
+def seen_around(target: object, seconds: float | None = None, known: frozenset = frozenset(),
+                in_world: bool = False) -> tuple:
     """The real census, its arguments written down."""
     calls.append((target, seconds) if not known else (target, seconds, known))
-    return real_seen_around(target, seconds, known=known)
+    worlds.append(in_world)
+    return real_seen_around(target, seconds, known=known, in_world=in_world)
 
 
 def names(seens: list) -> list[str]:
@@ -41,6 +45,9 @@ def names(seens: list) -> list[str]:
 
 
 census.seen_around = seen_around
+state["classes"]["GameplayStatics"] = types.SimpleNamespace(ClassDefaultObject=types.SimpleNamespace(
+    GetAllActorsOfClass=lambda *, WorldContextObject, ActorClass, OutActors: (..., state["all"][ActorClass.Name])))
+state["classes"][census.CHARACTER_CLASS] = types.SimpleNamespace(Name=census.CHARACTER_CLASS)
 try:
     state["all"]["OakCharacter"] = [
         player,
@@ -65,8 +72,11 @@ try:
           and said.get("took_ms", -1.0) >= 0.0)
     check("trial 8e: and why the others were passed over",
           said.get("skipped") == {f"in_reserve:{YOUNG_CAT}": 3, "dead_or_unknown": 1})
-    check("only these few fields are said, never a list of names",
-          set(said) == {"read", "kept", "skipped", "stopped", "took_ms"})
+    check("only these few fields are said, never a list of names; the search's own time apart",
+          set(said) == {"read", "kept", "skipped", "stopped", "took_ms", "scan_ms", "search"}
+          and said["scan_ms"] >= 0.0)
+    check("decision 105: the census reads the characters of the hunter's world only, and says so",
+          worlds == [True] and said["search"] == "actors")
     check("who the census saw alive and dead is handed on",
           sighting.alive == frozenset({"far", "near", "taken", "nowhere", "mid"})
           and sighting.dead == frozenset({"gone"}))

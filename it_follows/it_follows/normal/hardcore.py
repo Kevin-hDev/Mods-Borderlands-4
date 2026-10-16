@@ -19,12 +19,13 @@ to this version counts nothing and keeps it whole for the later one (audit of 15
 
 from mods_base import HiddenOption
 
-from .. import report
+from .. import hardcore_steps as steps, report
 from . import options
 
 VERSION = 1
-# Kevin: « 1% [...] tous les 100 kills ». Trial 31 used 10 for a while, so that a step showed within minutes.
-KILLS_PER_STEP = 100
+# The rule's, shared with the Horde (hardcore_steps.py). Trial 31 used 10 for a while, so that a step showed within
+# minutes.
+KILLS_PER_STEP = steps.KILLS_PER_STEP
 # Ten thousand percent: never reached, the count stops there rather than grow without end.
 MOST_KILLS = 1_000_000
 
@@ -64,7 +65,7 @@ def kills() -> int:
 
 
 def percent() -> int:
-    return _count["kills"] // KILLS_PER_STEP
+    return steps.percent(_count["kills"])
 
 
 def state() -> str:
@@ -76,7 +77,7 @@ def state() -> str:
 
 def factor() -> float:
     """What the enemies' health and the damage the player takes are multiplied by, on top of the level."""
-    return 1.0 if state() == "off" else 1.0 + percent() / 100.0
+    return 1.0 if state() == "off" else steps.factor(percent())
 
 
 def count(dead: int) -> int | None:

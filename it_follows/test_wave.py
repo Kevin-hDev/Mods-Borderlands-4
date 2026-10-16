@@ -467,11 +467,12 @@ try:
     again = [entry[1] for entry in phase if entry[0] == "log" and entry[1]["event"] == "born_again"]
     calls = [entry[0] for entry in phase if entry[0] not in ("log", "HaveAllDied")]
     check("a killed one held back above the band; within it, one comes back on a camp whose enemy died, moved, then "
-          "handed its kind, every call written first",
+          "handed its kind, every call written first but the camp's move, as those of the camps that follow the "
+          "hunter",
           held == "held_back" and back == "waiting" and wave.waiting == [] and len(again) == 1
           and again[0]["handed"] == 1 and again[0]["free"] == 2 and again[0]["of"] == ["Char_CatYoung_2"]
           and calls == ["SetMobility", "K2_SetActorLocation", "SetSpawnerEnabled", "PushActorDef", "ResetSpawner"]
-          and fake.announced_first(phase))
+          and fake.announced_first([entry for entry in phase if entry[0] != "K2_SetActorLocation"]))
     reborn = list(chain.owed)
     clock[0] += camps.PENDING_S
     wave.tick(hunter, look, HERE_AT, 3.0 + wave_module.UNSEEN_EVERY_S)

@@ -1,4 +1,4 @@
-"""The census: the enemies around the hunter that It Follows may draw into its horde, read among every character the
+"""The census: the enemies around the hunter that It Follows may draw into its horde, read among the characters the
 game holds, with how many it passed over and why, and who it saw alive and dead. Read only: nothing in the game is
 written or called to change.
 
@@ -18,9 +18,7 @@ from dataclasses import dataclass
 from itertools import islice
 import math
 import time
-from typing import Any
-
-import unrealsdk
+from typing import Any, Iterable
 
 from . import killers, kinds, reads
 from .seen import Seen
@@ -29,6 +27,7 @@ from .seen import Seen
 # after MAX_SECONDS.
 MAX_SCAN = 1000
 MAX_SECONDS = 3.0
+CHARACTER_CLASS = "OakCharacter"
 # A world event's zone lies in a folder of this name (docs/RUN/enquetes/2026-10-10-recensement.md).
 WORLD_EVENT = "/Events/"
 # Enough reasons, each with its kind, to name what stands around a camp; few enough to keep a log line short.
@@ -107,13 +106,16 @@ def _tally(skipped: dict, why: str) -> None:
 
 
 def seen_around(player: Any, seconds: float | None = None, bosses: bool = False, kills: bool = False,
-                pc: Any = None, known: frozenset[str] | set[str] = frozenset()) -> tuple[list[Seen], dict, Sighting]:
+                pc: Any = None, known: frozenset[str] | set[str] = frozenset(),
+                in_world: bool = False) -> tuple[list[Seen], dict, Sighting]:
     """Every character read, within seconds (MAX_SECONDS by default): the enemies kept, the bosses among them when
     asked, the reading's counts, and who was seen alive and dead; with kills, who killed each enemy read dead (pc: the
     player's controller). The player and the class defaults count as read, and are neither kept nor tallied. A name
     known (the horde's own) read alive is seen alive and read no further: its kind, zone and place are not asked,
     some 27 µs each, about 3 ms of each census with a full horde (trials 16 to 19); it is never kept, the zone it holds
-    being the mod's, which the kinds of the place pass over (zone_kinds.py)."""
+    being the mod's, which the kinds of the place pass over (zone_kinds.py). in_world: only the characters in the
+    world, some 10 ms sooner (reads.search), as the Horde asks; the normal mode reads them all, its Hardcore counting
+    its kills on the bodies, which the game soon puts in its reserve, out of the world (decision 105)."""
     deadline = time.monotonic() + (MAX_SECONDS if seconds is None else seconds)
     found: list[Seen] = []
     alive_known: list[str] = []
@@ -121,7 +123,15 @@ def seen_around(player: Any, seconds: float | None = None, bosses: bool = False,
     killed: list[tuple[str, tuple[str, str]]] = []
     stats = {"read": 0, "stopped": "complete", "skipped": {}}
     here = reads.point(player)
-    for number, actor in enumerate(islice(unrealsdk.find_all("OakCharacter", exact=False), MAX_SCAN + 1)):
+    # The search alone, apart from the reads of each character (audit of 16 October 2026, A2).
+    scan, way = [0.0], ["find_all"]
+
+    def find() -> Iterable[Any]:
+        objects, way[0] = reads.search(CHARACTER_CLASS, player if in_world else None)
+        return objects
+
+    found_all = reads.timed(find, scan)
+    for number, actor in enumerate(islice(found_all, MAX_SCAN + 1)):
         if number >= MAX_SCAN:
             stats["stopped"] = "scan_limit"
             break
@@ -146,6 +156,7 @@ def seen_around(player: Any, seconds: float | None = None, bosses: bool = False,
         else:
             _tally(stats["skipped"], seen)
     stats["kept"] = len(found)
+    stats["scan_ms"], stats["search"] = round(scan[0] * 1000.0, 1), way[0]
     return found, stats, Sighting(frozenset(seen.name for seen in found).union(alive_known), frozenset(dead),
                                   tuple((seen.name, seen.definition, seen.zone_path, seen.at) for seen in found),
                                   tuple(killed))

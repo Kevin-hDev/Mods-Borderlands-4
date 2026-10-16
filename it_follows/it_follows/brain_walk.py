@@ -19,11 +19,17 @@ later walk has taken over reads its own walk as ended, and not the later walk's 
 walked again only once the later walk ends, and only if no other chaser takes the block first: with many chasers kept
 far, more than half of the walks given again were lost and some chasers went without one for most of the run
 (simulated with the trials' walk lengths, not verified in game).
+
+An ended block is looked for first among those a chaser read ended on its own walk, each read again before it is
+taken, then among all the others in turn from where the last search stopped. Searched from the first block each time,
+a walk read up to 71 Execs, most of them still running, and the heaviest second of trial 33 gave 54 walks (audit of
+16 October 2026). Which ended block is taken changes nothing: every block is the same to the game.
 """
 
 import ctypes
 import secrets
 import sys
+import time
 import types
 from typing import Any, Callable
 
@@ -43,6 +49,8 @@ MAX_TEXT = 40
 # write 2 there once the walk was aborted or ended by itself (docs/RUN/enquetes/2026-10-10-marche-reparee.md): Failed,
 # by the game's own table of the enum (docs/RUN/enquetes/2026-10-10-recherche-poursuite.md, P2); 1 is Succeeded.
 START = 0
+_held: dict[str, Any] = {"call": None}
+_counts: dict[str, float] = {"walks": 0, "exec_reads": 0, "walk_ms": 0.0}
 
 
 class Walk:
@@ -69,6 +77,9 @@ def _holder() -> Any:
     holder = sys.modules.setdefault(KEPT_MODULE, types.ModuleType(KEPT_MODULE))
     if not hasattr(holder, "blocks"):
         holder.blocks, holder.latest = [], {}
+    if not hasattr(holder, "free"):
+        # The blocks read ended by their own walk, by id, at most one entry a kept block; where the search goes on.
+        holder.free, holder.cursor = {}, 0
     return holder
 
 
@@ -98,16 +109,32 @@ def latent_info(pc: Any) -> Any:
                                  CallbackTarget=pc)
 
 
-def _ended_block(blocks: list) -> tuple[Any, Any] | None:
-    """The first kept block whose walk the game has ended, and what it wrote there. An Exec that cannot be read
-    counts as running: that block is never taken."""
-    for block in blocks:
-        try:
-            value = block.Exec
-            if int(value) != START:
-                return block, value
-        except Exception:
-            continue
+def _ended_value(block: Any) -> Any:
+    """What the game wrote in the block once its walk has ended, else None. An Exec that cannot be read counts as
+    running: that block is never taken."""
+    _counts["exec_reads"] += 1
+    try:
+        value = block.Exec
+        return value if int(value) != START else None
+    except Exception:
+        return None
+
+
+def _ended_block(holder: Any) -> tuple[Any, Any] | None:
+    """A kept block whose walk the game has ended, and what it wrote there: one offered by its own walk, read again,
+    else the next ended one from where the last search stopped."""
+    while holder.free:
+        _key, block = holder.free.popitem()
+        value = _ended_value(block)
+        if value is not None:
+            return block, value
+    blocks = holder.blocks
+    for step in range(len(blocks)):
+        index = (holder.cursor + step) % len(blocks)
+        value = _ended_value(blocks[index])
+        if value is not None:
+            holder.cursor = (index + 1) % len(blocks)
+            return blocks[index], value
     return None
 
 
@@ -117,7 +144,7 @@ def walk(actor: Any, goal: Any, pc: Any) -> Walk:
     field written anew before the call; a new block is made only when none has ended. A failing call raises, its
     block still kept; past KEPT_MAX blocks, none ended, RuntimeError."""
     holder = _holder()
-    found = _ended_block(holder.blocks)
+    found = _ended_block(holder)
     if found is None and len(holder.blocks) >= KEPT_MAX:
         raise RuntimeError("no walk block left")
     library = brain()
@@ -135,8 +162,28 @@ def walk(actor: Any, goal: Any, pc: Any) -> Walk:
         block.AIActor, block.GoalActor, block.LatentInfo = actor, goal, info
         block.Exec = START
     given = holder.latest[id(block)] = Walk(block)
-    process_event()(library._get_address(), function._get_address(), block._get_address())
+    began = time.perf_counter()
+    try:
+        _sdk_call()(library._get_address(), function._get_address(), block._get_address())
+    finally:
+        _counts["walks"] += 1
+        _counts["walk_ms"] += (time.perf_counter() - began) * 1000.0
     return given
+
+
+def _sdk_call() -> Callable[[int, int, int], None]:
+    """process_event, found once a load of this module: 22 µs a walk to find it again (audit of 16 October 2026)."""
+    if _held["call"] is None:
+        _held["call"] = process_event()
+    return _held["call"]
+
+
+def gauge() -> dict:
+    """Since the last time asked: the walks given, the Execs read to find them a block, the time their calls took;
+    then counted afresh."""
+    said = {"walks": _counts["walks"], "exec_reads": _counts["exec_reads"], "walk_ms": round(_counts["walk_ms"], 1)}
+    _counts.update(walks=0, exec_reads=0, walk_ms=0.0)
+    return said
 
 
 def outcome(given: Any) -> str:
@@ -149,11 +196,15 @@ def outcome(given: Any) -> str:
 
 def ended(given: Any) -> bool:
     """Whether the game wrote another value than Start in the walk's Exec: the walk no longer runs. An unreadable
-    Exec counts as still running, so that a doubt never gives walk after walk; outcome() writes it down."""
+    Exec counts as still running, so that a doubt never gives walk after walk; outcome() writes it down. A walk read
+    ended in its own block offers that block to the next walk."""
     try:
-        return int(given.Exec) != START
+        done = int(given.Exec) != START
     except Exception:
         return False
+    if done and isinstance(given, Walk) and given.handed_on is None:
+        _holder().free[id(given.block)] = given.block
+    return done
 
 
 def abort(actor: Any) -> None:

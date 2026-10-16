@@ -1,7 +1,7 @@
-"""Tests the zone lent to an enemy and given back: which zone it holds by path; the loan announced before its call and
-read back; a lent zone already gone is never passed on; the own zone given back only while the lent one is still held,
-never on a reused body, without the enemy or its zone; a give-back that does not take, or fails, says so; an enemy lent
-the zone it holds (trial 6i), or holding none (trial 6r)."""
+"""Tests the zone lent to an enemy and given back: which zone it holds, the lent one by its address first, the others
+by path; the loan announced before its call and read back; a lent zone already gone is never passed on; the own zone
+given back only while the lent one is still held, never on a reused body, without the enemy or its zone; a give-back
+that does not take, or fails, says so; an enemy lent the zone it holds (trial 6i), or holding none (trial 6r)."""
 
 import pathlib
 import sys
@@ -129,6 +129,31 @@ try:
     enemy.zone = lent
     enemy.refuse = True
     check("a give-back of none that does not take says so", loan.give_back(enemy, False, mark()) == "restore_failed")
+
+    paths: list[str] = []
+
+    class Wrapper:
+        """A wrapper of a zone of the game: a new one at each read, the same address for the same zone."""
+
+        def __init__(self, address: int, path: str) -> None:
+            self.address, self.path = address, path
+
+        def _get_address(self) -> int:
+            return self.address
+
+        def _path_name(self) -> str:
+            paths.append(self.path)
+            return self.path
+
+    loan = zone_loan.Loan(fixture.seen("cat", own, enemy), lambda: Wrapper(7, lent.path), lent.path)
+    check("the lent zone known by its address, its path not made",
+          loan.held(Wrapper(7, lent.path)) == "target" and paths == [])
+    check("another zone by its path, the lent one gone or not",
+          loan.held(Wrapper(8, own.path)) == "own" and loan.held(Wrapper(9, "elsewhere")) == "other"
+          and paths == [own.path, "elsewhere"])
+    loan.target = lambda: None
+    check("a zone at the lent path is still the lent one by its path when the lent zone cannot be read",
+          loan.held(Wrapper(7, lent.path)) == "target" and paths[-1] == lent.path)
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

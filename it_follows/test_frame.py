@@ -3,7 +3,8 @@ at most, the first a second after the start; an error in a tick stops the run wi
 stop, a second stop touching nothing, a removal that fails said; a beat given its own name (the normal mode's) hooked
 under it. Work put off: one task an image, the first once the character that gave the tick is updated again (or after
 LATER_MOST_S), in the order put off, a name never waiting twice, an error stopping the run, nothing run once stopped;
-the hook's calls a second counted."""
+the hook's calls a second counted, with the µs a call with nothing to do took in the beat, ticks and tasks put off
+left out (audit of 16 October 2026, A11)."""
 
 import pathlib
 import sys
@@ -21,6 +22,7 @@ from it_follows import frame  # noqa: E402
 fails: list[str] = []
 clock = [100.0]
 frame.time = types.SimpleNamespace(monotonic=lambda: clock[0])
+real_perf_counter = frame.perf_counter
 
 
 def check(label: str, condition: bool) -> None:
@@ -127,11 +129,28 @@ try:
     counted = frame.Beat(lambda at: None, failures.append)
     clock[0] = 300.0
     counted.start()
+    precise = [0.0]
+
+    def two_us() -> float:
+        precise[0] += 0.000002
+        return precise[0]
+
+    frame.perf_counter = two_us
     for step in range(90):
         call(300.0 + step / 100.0, ENEMY)
     clock[0] = 300.9
-    check("the hook's calls a second counted, then counted again from nothing",
-          counted.calls_per_s() == 100.0 and counted.calls == 0)
+    said = counted.gauge()
+    check("the hook's calls a second counted, and the µs a call with nothing to do took, then counted again from "
+          "nothing", said["hook_calls_s"] == 100.0 and said["hook_idle_us"] == 2.0 and counted.calls == 0
+          and counted.idle_calls == 0 and counted.idle_s == 0.0)
+    clock[0] = 302.0
+    call(302.0, ENEMY)
+    counted.defer("task", lambda at: None)
+    call(302.1, PLAYER)
+    said = counted.gauge()
+    check("a tick and a task put off are not calls with nothing to do",
+          said["hook_idle_us"] is None and said["hook_calls_s"] > 0.0)
+    frame.perf_counter = real_perf_counter
     counted.stop()
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
