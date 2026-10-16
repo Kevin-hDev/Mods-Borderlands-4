@@ -17,7 +17,9 @@ English and French, has four pages. The game is paused while it is open. You sta
   horde's size, the Hardcore and the time, which stops while the game is paused. The Hardcore is always on in the
   Horde: the enemies grow 1% stronger every 100 enemies killed during the run, from 0% at each run.
 - **NORMAL MODE.** Play your game as usual: the enemies you meet are more numerous, faster and tougher, dodge more often
-  and faster, and chase you farther. Three levels, Bandit, Senior and Predator. Bosses get the level's health and speed.
+  and faster, and chase you farther. Enemies without a shield get one, 40% of their health, which recharges at
+  Predator once broken; armed enemies shoot straighter and their bullets fly faster. Three levels, Bandit, Senior and
+  Predator. Bosses get the level's health, speed, shield and aim.
   It is made first for starting or restarting the game from the beginning, a little like three levels of NG+, and
   still works mid-game. It stays on from one game to the next until you press STOP, and STOP gives the enemies back as
   the game made them.

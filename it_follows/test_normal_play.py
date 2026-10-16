@@ -66,6 +66,12 @@ class Camps(Due):
 
 class Enemies(Due):
     met = {"Char_A": None}
+    shields = types.SimpleNamespace(given={"Char_A": None})
+    aim = types.SimpleNamespace(held={"Char_A.Gun": None, "Char_A.Pistol": None})
+    kept: list[dict] = []
+
+    def keep_shields(self, now: float) -> dict:
+        return self.kept.pop(0) if self.kept else {}
 
     def look(self, player: object, now: float) -> dict:
         return self._do(now)
@@ -134,6 +140,11 @@ try:
     game.tick(106.0)
     check("every 5 s the camps and the census, a second apart; nothing said when nothing changed",
           game.camps.done == [100.0, 105.0] and game.enemies.done == [101.0, 106.0] and notes() == [])
+    game.enemies.kept = [{"refilled": 1}]
+    game.tick(106.5)
+    check("each second Predator's shields kept, what happened said", [(line["event"], line.get("refilled"))
+                                                                      for line in notes()]
+          == [("normal_shields", 1)])
 
     def slow_keep(player: object) -> None:
         clock["now"] += 0.6
@@ -145,7 +156,8 @@ try:
     status = [line for line in notes() if line["event"] == "normal_status"]
     check("a status line every 30 s", len(status) == 1 and status[0]["camps_grown"] == 1
           and status[0]["camps_held"] == 2 and status[0]["camps_stopped"] == "time_limit"
-          and status[0]["families"] == 1 and status[0]["zones"] == 0 and status[0]["enemies"] == 1)
+          and status[0]["families"] == 1 and status[0]["zones"] == 0 and status[0]["enemies"] == 1
+          and status[0]["shields"] == 1 and status[0]["aimed"] == 2)
     game.tick(131.0)
     check("the next status 30 s later", [line for line in notes() if line["event"] == "normal_status"] == [])
     check("the Hardcore off: its state in the status line, no factor", status[0]["hardcore"] == "off"

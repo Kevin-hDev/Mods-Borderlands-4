@@ -50,6 +50,8 @@ class Sighting:
     kept: tuple[tuple[str, str, str, tuple | None], ...] = ()
     # When asked: each enemy and boss read dead, by name, with what killers.killed_by says of it.
     killed: tuple[tuple[str, tuple[str, str]], ...] = ()
+    # Among them, those another character killed: by name, the killer's name (killers.killer_name).
+    killed_by_other: tuple[tuple[str, str], ...] = ()
 
 
 def _kept(actor: Any, name: str, here: tuple | None, state: bool | None, bosses: bool = False) -> Seen | str:
@@ -121,6 +123,7 @@ def seen_around(player: Any, seconds: float | None = None, bosses: bool = False,
     alive_known: list[str] = []
     dead: set[str] = set()
     killed: list[tuple[str, tuple[str, str]]] = []
+    by_other: list[tuple[str, str]] = []
     stats = {"read": 0, "stopped": "complete", "skipped": {}}
     here = reads.point(player)
     # The search alone, apart from the reads of each character (audit of 16 October 2026, A2).
@@ -147,6 +150,8 @@ def seen_around(player: Any, seconds: float | None = None, bosses: bool = False,
             dead.add(name)
             if kills and _fighter(actor):
                 killed.append((name, killers.killed_by(actor, player, pc)))
+                if killed[-1][1][0].startswith("other:"):
+                    by_other.append((name, killers.killer_name(actor)))
         if state is False and name in known:
             alive_known.append(name)
             continue
@@ -159,7 +164,7 @@ def seen_around(player: Any, seconds: float | None = None, bosses: bool = False,
     stats["scan_ms"], stats["search"] = round(scan[0] * 1000.0, 1), way[0]
     return found, stats, Sighting(frozenset(seen.name for seen in found).union(alive_known), frozenset(dead),
                                   tuple((seen.name, seen.definition, seen.zone_path, seen.at) for seen in found),
-                                  tuple(killed))
+                                  tuple(killed), tuple(by_other))
 
 
 def everyone(found: list[Seen], here: tuple | None, limit: int, within_m: float | None = None) -> list[Seen]:

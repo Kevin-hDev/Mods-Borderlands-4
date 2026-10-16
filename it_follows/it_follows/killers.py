@@ -13,8 +13,11 @@ says none while LastHitBy says player.
 
 from typing import Any
 
+from . import reads
+
 PLAYER, VEHICLE, NONE, UNREADABLE = "player", "vehicle", "none", "unreadable"
 MAX_CLASS_TEXT = 40
+MAX_NAME_TEXT = 60
 
 
 def _who(target: Any, player: Any, pc: Any) -> str:
@@ -44,6 +47,16 @@ def _read(actor: Any, field: str, player: Any, pc: Any) -> str:
 def killed_by(actor: Any, player: Any, pc: Any) -> tuple[str, str]:
     """What KillerActor and LastHitBy say of a dead character."""
     return _read(actor, "KillerActor", player, pc), _read(actor, "LastHitBy", player, pc)
+
+
+def killer_name(actor: Any) -> str:
+    """The name of what KillerActor holds, a field of the dead character and one of the killer, never a call: which
+    enemy killed another (trial 52: in Predator, 11 enemies killed by another character, with the one team on)."""
+    try:
+        target = actor.KillerActor
+        return NONE if target is None else reads.clean(target.Name)[:MAX_NAME_TEXT]
+    except Exception:
+        return UNREADABLE
 
 
 def by_player(said: tuple[str, str]) -> bool:

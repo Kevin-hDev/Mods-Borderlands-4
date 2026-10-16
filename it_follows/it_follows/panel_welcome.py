@@ -10,7 +10,7 @@ again."""
 from typing import Any
 
 from . import panel_buttons as b, panel_i18n as i18n, panel_overlay as overlay, panel_text as tx
-from . import panel_theme as t, panel_warning as warning, panel_widgets as w, report, welcome
+from . import panel_theme as t, panel_warning as warning, panel_widgets as w, report, updates, welcome
 
 KEY = "welcome"
 # Its pages: each its sentence, then its two boxes, a title and words each.
@@ -90,11 +90,16 @@ def paint(widgets: dict, language: str) -> None:
 
 
 def open_first(form: Any, widgets: dict) -> None:
-    """The welcome shown on its first page, remembered as seen at once."""
+    """The welcome shown on its first page, remembered as seen at once; to a new player, who never saw it, the version
+    installed remembered with it as one whose notes were seen (updates.py)."""
+    from . import __version__
+
     _turn(widgets, 0)
     overlay.show(form, widgets, KEY)
-    saved = form.model.save(((welcome.seen, welcome.EDITION),))
-    report.note("welcome_shown", edition=welcome.EDITION, saved=saved)
+    new = welcome.new()
+    changes = ((welcome.seen, welcome.EDITION), *(((updates.seen, __version__),) if new else ()))
+    saved = form.model.save(changes)
+    report.note("welcome_shown", edition=welcome.EDITION, new=new, saved=saved)
 
 
 def poll(form: Any, widgets: dict) -> bool:

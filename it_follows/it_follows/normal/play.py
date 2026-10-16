@@ -1,7 +1,7 @@
 """One game played at the normal mode's level, from the moment the mode finds a game until the game is left or the
 mode stops (spec-mode-normal.md, section 4): the camps grown before their enemies are born (camps_grown.py), the
-enemies met given the level (enemies.py), their dodges sped up at each image unless the player switched it off
-(dodge_speed.py, options.fast_dodges), and the damage the
+enemies met given the level (enemies.py) and the shields it gives them (shields.py), their dodges sped up at each
+image unless the player switched it off (dodge_speed.py, options.fast_dodges), and the damage the
 player takes raised (damage_taken.py, the Horde's, the normal mode's own BUFF). At its end everything it holds is given
 back, as far as the game still holds it, and the Hardcore's kills are written. They are written with each status
 line too: a game quit to the desktop never ends its play (trial 31), and its kills were lost.
@@ -11,8 +11,9 @@ again each second; when it changes (switched on or off, a step reached), it is g
 to the damage taken, on top of the level's.
 
 Each second (the mode's beat) does what is due: the camps every camps_grown.EVERY_S, the census every enemies.EVERY_S
-but never in the camps' second, the damage taken kept. Both every 5 s, they fell in the same second, which held the
-game 35 to 43 ms in trials 28 to 32, against some 25 ms for the camps alone (audit of 15 October 2026); the census
+but never in the camps' second, Predator's broken shields refilled when their time comes, the damage taken kept.
+Both every 5 s, the camps and the census fell in the same second, which held the game 35 to 43 ms in trials 28 to 32,
+against some 25 ms for the camps alone (audit of 15 October 2026); the census
 waits a second then, and they fall a second apart from then on. The camps go first: they are grown before their
 enemies are born. A second that holds the game longer than SLOW_S is written down, and a status line every
 STATUS_EVERY_S says what the mode holds (spec, section 4, « Les traces »).
@@ -38,7 +39,7 @@ class Play:
         self.player = unrealsdk.unreal.WeakPointer(player)
         self.chase = pursuit.Pursuit(report.announce, level.chase_m)
         self.enemies = enemies.Enemies(level, settings.allies, dodges, self.chase, report.note, report.announce,
-                                       self.hard)
+                                       self.hard, settings.shields)
         self.camps = camps_grown.CampsGrown(report.note, report.announce, level.camps)
         self.taken = damage_taken.DamageTaken(report.announce, level.taken * self.hard)
         self.watch = dodge_speed.DodgeSpeed(report.note, level.dodge_speed, fail)
@@ -77,6 +78,9 @@ class Play:
                 self._count(looked.get("kills", 0))
             self.watch.follow(self.enemies.nearest(here))
         self._harden(player)
+        shields = self.enemies.keep_shields(now)
+        if shields:
+            report.note("normal_shields", **shields)
         kept = self.taken.keep(player)
         if kept is not None and f"taken:{kept['taken']}" not in self.said:
             self.said.add(f"taken:{kept['taken']}")
@@ -93,6 +97,8 @@ class Play:
                         camps_grown=sum(1 for _, owed in self.camps.held.values() if owed),
                         camps_stopped=self.camps_stopped, families=len(self.dodges.files),
                         zones=self.chase.widened(), hardcore=hardcore.state(), percent=hardcore.percent(),
+                        shields=len(self.enemies.shields.given) if self.enemies.shields is not None else None,
+                        aimed=len(self.enemies.aim.held),
                         slowest_ms=round(self.slowest_ms, 1))
             self.slowest_ms = 0.0
 

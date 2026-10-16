@@ -9,6 +9,8 @@ import struct
 import types
 from typing import Any
 
+import aim_fixture
+
 SIZE = 56
 
 
@@ -248,7 +250,10 @@ def copy_of(memory: Memory, data: Built) -> dict:
 
 
 def enemy(memory: Memory, name: str, metres: float, data: Built, dead: bool = False) -> Any:
-    """An enemy whose state keeps its own copy of its family's file, taken when it is made, as at the game's birth."""
+    """An enemy whose state keeps its own copy of its family's file, taken when it is made, as at the game's birth;
+    a gun with one fire behaviour (aim_fixture.py)."""
     state = build(memory, "AIDodgeState", {**copy_of(memory, data), "CurrentDodgeData": data})
+    gun = aim_fixture.Behaviour(f"{name}.Gun.UM0_PC")
     return types.SimpleNamespace(Name=name, AIDodgeState=state, HealthState=types.SimpleNamespace(bCurrentlyDead=dead),
-                                 K2_GetActorLocation=lambda: at(metres), freed=False)
+                                 K2_GetActorLocation=lambda: at(metres), freed=False,
+                                 ActiveWeapons=aim_fixture.weapons([gun]), gun=gun)

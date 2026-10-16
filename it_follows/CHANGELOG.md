@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 - 2026-10-16
+
+- Normal mode: enemies without a shield get one, 40% of their health, bosses included. At Bandit, an option takes them
+  away. At Predator, a broken shield recharges 10 seconds later.
+- Normal mode: armed enemies shoot straighter and their bullets fly faster, a little more at each level.
+
 ## 1.0.1 - 2026-10-16
 
 - Horde mode: the game slows down less when the horde is big. The mod's work is lighter and better spread out.

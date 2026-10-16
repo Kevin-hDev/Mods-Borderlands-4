@@ -42,11 +42,12 @@ TEXT = {
     "normal_locked": "Arrête le mode normal pour changer ces réglages.",
     "normal_blocked": "Un run de la Horde est en cours : arrête-le pour lancer le mode normal.",
     "normal_level:Bandit": "Plus d'ennemis, un peu plus rapides et plus résistants. Ils esquivent plus vite et te "
-                           "poursuivent plus loin.",
+                           "poursuivent plus loin. Un bouclier pour ceux qui n'en ont pas, si tu veux.",
     "normal_level:Senior": "Encore plus d'ennemis, plus rapides et plus résistants. Des esquives plus vives, des "
-                           "poursuites plus longues.",
+                           "poursuites plus longues. Un bouclier pour chaque ennemi qui n'en a pas.",
     "normal_level:Predator": "Encore plus d'ennemis, très rapides et très résistants. Des esquives fulgurantes, et "
-                             "ils te poursuivent bien plus loin.",
+                             "ils te poursuivent bien plus loin. Un bouclier pour chaque ennemi qui n'en a pas, qui "
+                             "revient 10 secondes après avoir été cassé.",
     "hardcore_settings": "HARDCORE", "hardcore_lead": "Une difficulté qui monte lentement, tout au long du jeu.",
     "hardcore_badge": "HARDCORE {percent} %", "hardcore_badge_paused": "HARDCORE {percent} % · EN PAUSE",
     "help_hardcore_title": "LE MODE HARDCORE",
@@ -95,6 +96,9 @@ TEXT = {
     "welcome_zombies_title": "CALL OF DUTY : BLACK OPS ZOMBIES",
     "welcome_zombies": "Une horde qui revient sans fin et grossit avec le niveau. Tu tues, tu cours, tu survis.",
     "welcome_next": "SUIVANT",
+    "updates_title": "MISE À JOUR {version}",
+    "updates_count": "{page} / {pages}",
+    "updates_next": "SUIVANT",
     "welcome_normal_lead": "Le mode normal : joue ta partie comme d'habitude. Les ennemis que tu croises sont plus "
                            "nombreux, plus rapides et plus résistants, esquivent plus vite et te poursuivent plus "
                            "loin. Il est pensé d'abord pour commencer ou recommencer le jeu depuis le début, un peu "
@@ -124,6 +128,8 @@ OPTIONS = {
     "normal_allies": ("Ennemis alliés", "Tous les ennemis dans une même équipe : ils ne se battent plus entre eux."),
     "normal_fast_dodges": ("Esquives accélérées",
                            "Les ennemis esquivent plus vite que dans le jeu. Désactivé : la vitesse d'esquive du jeu."),
+    "normal_shields": ("Boucliers", "Les ennemis sans bouclier en reçoivent un, de 40 % de leur vie. Une fois cassé, "
+                                    "il ne revient pas."),
     "normal_hardcore": ("Hardcore", "Les ennemis se renforcent à mesure que tu tues, lentement, tout au long du jeu."),
     "normal_hardcore_progress": ("Progression", "Désactivée : la difficulté atteinte reste telle quelle, sans monter."),
 }

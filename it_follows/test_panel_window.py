@@ -224,14 +224,19 @@ try:
           and text("notice") == "Ready: press START, the menu closes and the normal mode begins.")
     check("the level's help is the chosen level's sentence, the allied enemies off",
           text("description:normal_level") == "More enemies, a little faster and tougher. They dodge faster and "
-                                              "chase you farther."
+                                              "chase you farther. A shield for those without one, if you want."
           and text("label:normal_allies") == "ALLIED ENEMIES" and text("setting:normal_allies_label") == "OFF")
+    check("at Bandit the shields' row shown, on (decision 112)", shown("row:normal_shields")
+          and shown("description:normal_shields") and text("label:normal_shields") == "SHIELDS"
+          and text("setting:normal_shields_label") == "ON")
     press("setting:normal_level:Senior")
     form.poll()
     check("another level clicked: written, its sentence shown", form.flush(widgets)
           and normal_options.level.value == "Senior"
           and text("description:normal_level") == "Even more enemies, faster and tougher. Quicker dodges, longer "
-                                                  "chases.")
+                                                  "chases. A shield for every enemy without one.")
+    check("at Senior the shields' row hidden: always given", not shown("row:normal_shields")
+          and not shown("description:normal_shields"))
     check("START without a game: the mode on and written so, the window kept, saying it waits for a game",
           press("normal_start") is False and session.normal_on() and normal_options.on.value is True
           and text("notice") == "The normal mode is on: it starts as soon as you are on foot in a loaded game.")
@@ -329,7 +334,9 @@ try:
     check("the normal page in French", text("nav:normal_label") == "MODE NORMAL"
           and text("heading:normal") == "MODE NORMAL" and text("label:normal_allies") == "ENNEMIS ALLIÉS"
           and text("description:normal_level") == "Encore plus d'ennemis, plus rapides et plus résistants. Des "
-                                                  "esquives plus vives, des poursuites plus longues."
+                                                  "esquives plus vives, des poursuites plus longues. Un bouclier pour "
+                                                  "chaque ennemi qui n'en a pas."
+          and text("label:normal_shields") == "BOUCLIERS"
           and text("notice") == "Prêt : appuie sur START, le menu se ferme et le mode normal commence.")
     check("the Hardcore in French", text("heading:hardcore") == "HARDCORE"
           and text("label:normal_hardcore_progress") == "PROGRESSION"

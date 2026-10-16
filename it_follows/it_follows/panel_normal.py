@@ -1,5 +1,6 @@
 """The NORMAL MODE page (decision 80, spec-mode-normal.md, section 2): the mode's card, its sentence beside the title,
-its rows (the level, whose help is the chosen level's sentence, and the allied enemies) and START across it; while the
+its rows (the level, whose help is the chosen level's sentence, the allied enemies, the faster dodges and the shields,
+shown at Bandit only, decision 112) and START across it; while the
 mode is on, above it the mode's card with STOP, saying whether it plays or waits for a game, and the rows locked under
 a line that says to stop the mode to change them; while a Horde run goes on, START replaced by a line that says to stop
 the run first.
@@ -16,7 +17,7 @@ from typing import Any
 
 from . import game_pause, panel_buttons as b, panel_choices, panel_help as help_, panel_i18n as i18n
 from . import panel_pages as p, panel_text as tx, panel_theme as t, panel_widgets as w, report, session
-from .normal import options as normal_options
+from .normal import levels, options as normal_options
 
 KEY = "normal"
 # The Hardcore's card, on the same page.
@@ -74,7 +75,10 @@ def paint(form: Any, widgets: dict, language: str) -> None:
         widgets[f"setting:{name}"].SetIsEnabled(not on)
         for part in ("row", "description"):
             widgets[f"{part}:{name}"].SetRenderOpacity(t.OPACITY_DISABLED if on else 1.0)
-    chosen = normal_options.read().level.name
+    chosen = normal_options.read().level
+    for part in ("row", "description"):
+        _visible(widgets[f"{part}:{normal_options.shields.identifier}"], chosen.shields == levels.OPTION)
+    chosen = chosen.name
     widgets[f"description:{normal_options.level.identifier}"].SetText(i18n.text(f"normal_level:{chosen}", language))
     widgets[f"heading:{KEY}"].SetText(i18n.text("normal_settings", language))
     widgets[f"group:{KEY}"].SetText(i18n.text("normal_lead", language))

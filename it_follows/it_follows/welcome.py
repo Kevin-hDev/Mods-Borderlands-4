@@ -10,6 +10,12 @@ EDITION = 3
 seen = SliderOption("welcome_seen", 0, 0, 100, step=1, is_integer=True, is_hidden=True)
 
 
+def new() -> bool:
+    """Whether the player never saw any edition of the welcome: a new player, not one updating."""
+    value = seen.value
+    return type(value) not in (int, float) or value < 1
+
+
 def due() -> bool:
     """Whether the welcome opens: an edition the player has not seen yet, or a value that is not one."""
     value = seen.value

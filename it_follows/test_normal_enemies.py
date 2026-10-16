@@ -2,16 +2,19 @@
 memory (param_fixture.py), speed, toughness on the health fixture, teams on a fake team library, pursuit on fake zones;
 only the census is set by the test. The enemies read are met nearest first: their family's file opened and their copy
 brought to it, their speed, health and zone raised, one team when the player chose it; a census that changes nothing
-says nothing, a speed the game put back is written again; a dead enemy let go without a call, its speed written back,
-its copy left; one gone and one no longer read alive by a complete census let go, but not by a census cut short; past
-MOST the rest left out; a dodge that fails said once, the enemy still met; the nearest within reach watched; the end
-gives the living everything back. The census asked for the bosses; a boss met gets its health and speed only, no
+says nothing, a speed the game put back is written again; the level's aim on their guns, and on a weapon taken since;
+a dead enemy let go without a call, its speed and its gun's aim written back, its copy left; one gone and one no
+longer read alive by a complete census let go, but not by a census cut short; past MOST the rest left out; its
+weapons and a dodge that fail said once each, the enemy still met; the nearest within reach watched; the end gives
+the living everything back. The census asked for the bosses; a boss met gets its health and speed only, no
 dodge, chase nor team, and is never watched; the Hardcore's factor given to every enemy held alive at once, none
 called on one the game says dead, and to those met next. The Hardcore's kills: the census asked who killed; the dead
 the first census reads not counted; each new body counted once, the player's (his character, his vehicle, his last
-hit) and never the rest's; a body read alive again counted at its next death; the bodies remembered bounded. An
-enemy no longer read alive then met again, twice: its health taken back as raised, never raised again, its own team
-given back with its health at the end (audit of 15 October 2026)."""
+hit) and never the rest's; a body read alive again counted at its next death; the bodies remembered bounded; those
+another character killed named with their killer, and a team the game refused said. An enemy no longer read alive
+then met again, twice: its health taken back as raised, never raised again, its own team given back with its health at the end (audit of 15 October 2026). The shields at Predator: one given to each enemy met
+without, the boss too, before its health is raised, so that it is 40 % of the health shown; none to one with the
+game's; a broken one refilled when due, never on a dead enemy; the end takes them off the living only."""
 
 import pathlib
 import sys
@@ -25,9 +28,11 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 import health_fixture  # noqa: E402
+import aim_fixture  # noqa: E402
 import param_fixture as fx  # noqa: E402
 from it_follows import census, gbx_param  # noqa: E402
 from it_follows.normal import dodge_rate, enemies as enemies_module, levels, pursuit  # noqa: E402
+from it_follows.normal import kills as kills_module  # noqa: E402
 from it_follows.seen import Seen  # noqa: E402
 
 health_fixture.install(state)
@@ -58,6 +63,8 @@ class TeamLibrary:
 
     def SetTeam(self, actor: object, team: object) -> None:
         team_calls.append(("set", actor.Name, str(team)))
+        if getattr(actor, "refuses", False):
+            raise RuntimeError("refused")
         actor.team = team
 
 
@@ -80,8 +87,9 @@ def enemy(name: str, metres: float, family: object, team: Team, area: types.Simp
     return Seen(actor, name, "Char_Enemy", area, area._path_name() if area is not None else "", where, 40.0, where)
 
 
-def census_reads(seens: list[Seen], dead: tuple = (), stopped: str = "complete", killed: tuple = ()) -> None:
-    sighting = census.Sighting(frozenset(seen.name for seen in seens), frozenset(dead), (), killed)
+def census_reads(seens: list[Seen], dead: tuple = (), stopped: str = "complete", killed: tuple = (),
+                 by_other: tuple = ()) -> None:
+    sighting = census.Sighting(frozenset(seen.name for seen in seens), frozenset(dead), (), killed, by_other)
 
     def seen_around(player: object, seconds: float | None = None, bosses: bool = False, kills: bool = False,
                     pc: object = None) -> tuple:
@@ -120,7 +128,10 @@ try:
     check("the census asked for the bosses and who killed", asked == [(True, True)])
     check("three met: health, speed, one team", looked == {"met": 3, "lost": {}, "held": 3, "left_out": 0, "read": 3,
                                                           "stopped": "complete", "health": 3, "boosted": 3,
-                                                          "team": "Team_Bandit"})
+                                                          "team": "Team_Bandit", "aim": {"given": 3}})
+    check("their aim, Bandit's: spread x0.88, bullets x1.06", near.actor.gun.values()["aiaccuracy"] == [6.6, 6.6]
+          and near.actor.gun.values()["aiminaccuracy"] == [0.22, 0.22]
+          and near.actor.gun.values()["aiprojectilespeed"] == [0.477, 0.477])
     check("nearest first: the dodge files opened in that order", list(dodges.files) == ["DodgeData_Human",
                                                                                          "DodgeData_Cat"])
     check("each copy brought to its file, speed x1.2, health x1.45, the zone widened, the cat in the bandits' team",
@@ -131,6 +142,12 @@ try:
     near.actor.CharacterMovement.MaxGroundSpeedScale.Value = 1.0
     check("a census that changes nothing says nothing; a speed the game put back written again",
           met.look(player, 15.0) == {} and scale(near) == 1.2)
+    rifle = aim_fixture.Behaviour("Char_GunToter.Rifle.UM0_PC", accuracy=6.5)
+    near.actor.ActiveWeapons = aim_fixture.weapons([near.actor.gun], [rifle])
+    again = met.look(player, 17.0)
+    check("a weapon taken since: given the aim at the next census, the first left as it was",
+          again["aim_again"] == 1 and again["met"] == 0 and again["lost"] == {}
+          and rifle.values()["aiaccuracy"] == [5.72, 5.72] and near.actor.gun.values()["aiaccuracy"] == [6.6, 6.6])
 
     team_calls.clear()
     mate.actor.HealthState.bCurrentlyDead = True
@@ -139,8 +156,18 @@ try:
     check("a dead enemy let go without a call: its speed written back, its copy left",
           looked["lost"] == {"dead": 1} and scale(mate) == 1.0 and team_calls == [] and chance(mate) == 0.35
           and "Char_Psycho" not in met.met)
+    check("its weapon's aim written back as its speed, a value and no call: the game may give the weapon on",
+          mate.actor.gun.values()["aiaccuracy"] == [7.5, 7.5] and mate.actor.gun.values()["aiprojectilespeed"]
+          == [0.45, 0.45])
     census_reads([near], stopped="time_limit")
     check("a census cut short lets no one go", met.look(player, 25.0) == {} and "Char_CatAdult" in met.met)
+    claws = aim_fixture.Behaviour("Char_CatAdult.Claws.UM0_PC")
+    cat.actor.ActiveWeapons = aim_fixture.weapons([cat.actor.gun], [claws])
+    cat.actor.HealthState.bCurrentlyDead = None
+    census_reads([near], stopped="time_limit")
+    check("one held whose death the game does not say: its weapons not read again",
+          met.look(player, 27.0) == {} and claws.values()["aiaccuracy"] == [7.5, 7.5])
+    cat.actor.HealthState.bCurrentlyDead = False
     cat.actor.freed = True
     stray = enemy("Char_Stray", 20.0, HUMAN, BANDITS, None)
     census_reads([stray])
@@ -161,9 +188,10 @@ try:
     lines.clear()
     looked = met.look(player, 35.0)
     check("past MOST the rest left out", looked["met"] == 1 and looked["left_out"] == 3 and len(met.met) == 2)
-    check("a dodge that fails said once, the enemy still met", "Char_Broken" in met.met
+    check("its weapons and its dodge that fail said once each, the enemy still met", "Char_Broken" in met.met
           and [line for line in lines if line[0] != "health_raised"]
-          == [("normal_enemy_failed", {"what": "dodges", "error": "AttributeError"})])
+          == [("normal_enemy_failed", {"what": "aim", "error": "failed:AttributeError"}),
+              ("normal_enemy_failed", {"what": "dodges", "error": "AttributeError"})])
 
     enemies_module.MOST = 200
     boss = enemy("Char_CatBoss", 12.0, CAT, BEASTS, None)
@@ -175,7 +203,8 @@ try:
     looked = met.look(player, 40.0)
     check("a boss met: its health and speed only, no team asked, said", looked["met"] == 1 and looked["bosses"] == 1
           and looked["health"] == 1 and looked["boosted"] == 1 and "team" not in looked and team_calls == []
-          and boss.actor.pools[0].base == 145.0 and scale(boss) == 1.2)
+          and boss.actor.pools[0].base == 145.0 and scale(boss) == 1.2
+          and looked["aim"] == {"given": 1} and boss.actor.gun.values()["aiaccuracy"] == [6.6, 6.6])
     check("no dodge nor chase for it, and never watched", list(dodges.files) == files
           and met.met["Char_CatBoss"].family is None and chase.widened() == widened
           and "Char_CatBoss" not in met.nearest((0.0, 0.0, 0.0)))
@@ -212,11 +241,33 @@ try:
     census_reads([], dead=("Char_A",), killed=(("Char_A", ("player", "none")),))
     looked = counter.look(player, 40.0)
     check("a body read alive again counted at its next death", looked["kills"] == 1 and looked["lost"] == {"dead": 1})
-    enemies_module.COUNTED_MOST = 3
+    kills_module.COUNTED_MOST = 3
     census_reads([], killed=tuple((f"Char_Many_{number}", ("player", "none")) for number in range(5)))
     check("the bodies remembered bounded, the oldest forgotten first", counter.look(player, 50.0)["kills"] == 5
-          and list(counter.counted) == ["Char_Many_2", "Char_Many_3", "Char_Many_4"])
-    enemies_module.COUNTED_MOST = 2000
+          and list(counter.kills.counted) == ["Char_Many_2", "Char_Many_3", "Char_Many_4"])
+    kills_module.COUNTED_MOST = 2000
+
+    brawl = enemies_module.Enemies(level, True, dodges, pursuit.Pursuit(announce, level.chase_m), note, announce)
+    raider = enemy("Char_Raider", 10.0, HUMAN, BANDITS, None)
+    lynx = enemy("Char_Lynx", 12.0, CAT, BEASTS, None)
+    lynx.actor.refuses = True
+    census_reads([raider, lynx])
+    looked = brawl.look(player, 0.0)
+    check("a team the game refused said, by what was said", looked["team_refused"] == ["call_failed:RuntimeError"])
+    other = ("other:OakCharacter", "none")
+    census_reads([raider], dead=("Char_Lynx",), killed=(("Char_Lynx", other), ("Char_Pup", other), ("Char_Old", other)),
+                 by_other=(("Char_Lynx", "Char_Raider"), ("Char_Pup", "Char_Newborn")))
+    looked = brawl.look(player, 5.0)
+    check("those another character killed named, with who killed them and whether each was met",
+          looked["fights"] == [{"dead": "Char_Lynx", "dead_met": True, "by": "Char_Raider", "by_met": True},
+                               {"dead": "Char_Pup", "dead_met": False, "by": "Char_Newborn", "by_met": False}])
+    kills_module.FIGHTS_MOST = 1
+    census_reads([raider], killed=(("Char_A1", other), ("Char_A2", other)),
+                 by_other=(("Char_A1", "Char_Raider"), ("Char_A2", "Char_Raider")))
+    check("at most FIGHTS_MOST a census", len(brawl.look(player, 10.0)["fights"]) == 1)
+    kills_module.FIGHTS_MOST = 12
+    census_reads([raider], killed=(("Char_A3", ("player", "none")),))
+    check("none written when the player killed them all", "fights" not in brawl.look(player, 15.0))
 
     lost = enemies_module.Enemies(level, True, dodges, pursuit.Pursuit(announce, level.chase_m), note, announce)
     keeper = enemy("Char_Keeper", 10.0, HUMAN, BANDITS, None)
@@ -240,7 +291,50 @@ try:
     check("the end gives the living everything back", ended["enemies"] == 3 and ended["health"] == {"restored": 3}
           and chance(stray) == 0.15 and scale(stray) == 1.0
         and boss.actor.pools[0].base == 100.0 and scale(boss) == 1.0
-        and stray.actor.pools[0].base == 100.0 and met.met == {})
+        and stray.actor.pools[0].base == 100.0 and met.met == {}
+        and ended["aim"] == {"given_back": 3} and stray.actor.gun.values()["aiaccuracy"] == [7.5, 7.5]
+        and boss.actor.gun.values()["aiprojectilespeed"] == [0.45, 0.45])
+
+    predator = levels.LEVELS["Predator"]
+    guarded = enemies_module.Enemies(predator, False, dodges, chase, note, announce, shields=True)
+    soldier = enemy("Char_Soldier", 10.0, HUMAN, BANDITS, None)
+    chief = enemy("Char_ChiefBoss", 15.0, CAT, BEASTS, None)
+    chief = Seen(chief.actor, chief.name, "Char_ChiefBoss", None, "", chief.at, 0.0, chief.at, boss=True)
+    owner = enemy("Char_Grunt", 18.0, HUMAN, BANDITS, None)
+    owner.actor.pools[1] = health_fixture.Pool(30.0)
+    for seen, kinds in ((soldier, ("HealthType_AI_Flesh",)), (chief, ("HealthType_AI_Flesh",)),
+                        (owner, ("HealthType_AI_Flesh", "HealthType_AI_Energy"))):
+        seen.actor.HealthState.HealthTypeStates = []
+        for kind in kinds:
+            health_fixture.give_type(seen.actor, kind)
+    census_reads([soldier, chief, owner])
+    looked = guarded.look(player, 200.0)
+    check("a shield given to each enemy met without one, the boss too; none to one with the game's; said",
+          looked["shields"] == {"given": 2, "had_one": 1} and set(guarded.shields.given) == {"Char_Soldier",
+                                                                                            "Char_ChiefBoss"})
+    health, shield = soldier.actor.pools[0].most, soldier.actor.pools[1].most
+    check("given before the health is raised: raised with it, 40 % of the health shown",
+          abs(health - 230.0) < 1e-6 and abs(shield - 0.4 * health) < 0.01 * shield
+          and abs(chief.actor.pools[1].most - 0.4 * chief.actor.pools[0].most) < 0.01 * chief.actor.pools[1].most)
+    check("the game's shield raised as the rest, never replaced", abs(owner.actor.pools[1].most - 69.0) < 1e-6)
+    late = enemy("Char_Late", 25.0, HUMAN, BANDITS, None)
+    late.actor.HealthState.HealthTypeStates = []
+    health_fixture.give_type(late.actor, "HealthType_AI_Flesh")
+    census_reads([soldier, chief, owner, late])
+    check("each census says only its own shields", guarded.look(player, 205.0)["shields"] == {"given": 1})
+    soldier.actor.pools[1].left = 0.0
+    chief.actor.pools[1].left = 0.0
+    chief.actor.HealthState.bCurrentlyDead = True
+    health_fixture.calls.clear()
+    check("a broken shield said", guarded.keep_shields(201.0) == {"broken": 1})
+    check("not refilled before its time", guarded.keep_shields(210.9) == {})
+    check("refilled when due", guarded.keep_shields(211.0) == {"refilled": 1}
+          and [call[1] for call in health_fixture.of("RefillHealthPercentOvertime")] == ["Char_Soldier"])
+    check("never on a dead enemy", not [call for call in health_fixture.calls if "Char_ChiefBoss" in call])
+    ended = guarded.end()
+    check("the end takes the shields off the living only", ended["shields"] == {"removed": 2, "left": 1, "none": 1}
+          and soldier.actor.pools[1] is None and late.actor.pools[1] is None and chief.actor.pools[1] is not None
+          and owner.actor.pools[1] is not None)
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

@@ -9,11 +9,11 @@ normal mode on stays on from one game launch to the next: the mod turns it on ag
 
 from mods_base import build_mod
 
-from . import kept, open_key, options, panel_open, panel_preferences, report, session, welcome
+from . import kept, open_key, options, panel_open, panel_preferences, report, session, updates, welcome
 from .normal import hardcore, options as normal_options
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __author__ = "kevin-hDev"
 
 
@@ -39,10 +39,10 @@ mod = build_mod(
     cls=AtomicMod,
     name="It Follows",
     # The run's settings and the normal mode's, then the window's own (language, theme, window size, last page), the
-    # welcome edition last seen, the last runs, the Hardcore's kills and the key that opens the window, hidden in the
-    # SDK's menu.
-    options=[*options.ALL, *normal_options.ALL, *panel_preferences.ALL, welcome.seen, kept.option, hardcore.option,
-             open_key.option],
+    # welcome edition last seen, the version whose update notes were seen last, the last runs, the Hardcore's kills and
+    # the key that opens the window, hidden in the SDK's menu.
+    options=[*options.ALL, *normal_options.ALL, *panel_preferences.ALL, welcome.seen, updates.seen, kept.option,
+             hardcore.option, open_key.option],
     keybinds=[open_key.bind],
     on_enable=_on_enable,
     on_disable=_on_disable,

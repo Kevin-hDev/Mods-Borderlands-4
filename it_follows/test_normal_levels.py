@@ -1,6 +1,6 @@
 """Tests the normal mode's three levels (normal/levels.py) against decisions 80 and 85: the camps grown, the chase, the
 speed, the dodges' speed, chance and IsMovingSpeed, their rest divided by 20 at every level, the normal mode's own
-Buffs; Bandit at first; a name that is no level read as Bandit."""
+Buffs; the shields of decision 112; the aim of decision 115; Bandit at first; a name that is no level read as Bandit."""
 
 import pathlib
 import sys
@@ -41,6 +41,13 @@ try:
     check("the rests divided by 20 at every level", levels.DODGE_REST_DIVIDE == 20.0)
     check("BUFF, BUFF+, BUFF++: health +45, +75, +130 %; damage taken +10, +20, +30 % (rebalance)",
           column("health") == [1.45, 1.75, 2.3] and column("taken") == [1.1, 1.2, 1.3])
+    check("shields (decision 112): Bandit's an option, Senior's and Predator's always; only Predator's comes back",
+          column("shields") == [levels.OPTION, levels.ALWAYS, levels.ALWAYS]
+          and column("shield_refill") == [False, False, True])
+    check("40 % of the health; Predator's back 10 s after it breaks, 13 % a second",
+          levels.SHIELD_SHARE == 0.4 and levels.SHIELD_REFILL_AFTER_S == 10.0 and levels.SHIELD_REFILL_RATE == 0.13)
+    check("aim (decision 115): spread 12, 12 and 20 % tighter; bullets x1.06, x1.08, x1.12",
+          column("spread") == [0.88, 0.88, 0.8] and column("bullet_speed") == [1.06, 1.08, 1.12])
     check("Bandit at first", levels.DEFAULT == "Bandit" and levels.level("Bandit") is levels.LEVELS["Bandit"])
     check("a name that is no level reads as Bandit", levels.level("Legend") is levels.LEVELS["Bandit"]
           and levels.level(None) is levels.LEVELS["Bandit"] and levels.level("Predator").name == "Predator")

@@ -19,6 +19,7 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 import census_fixture  # noqa: E402
+import aim_fixture  # noqa: E402
 import param_fixture as fx  # noqa: E402
 from it_follows import gbx_param, report  # noqa: E402
 from it_follows.normal import dodge_speed, levels, mode as mode_module, options  # noqa: E402
@@ -66,7 +67,12 @@ def psycho(memory: fx.Memory, family: fx.Built) -> object:
     pawn.fields["AIDodgeState"] = fx.build(memory, "AIDodgeState",
                                            {**fx.copy_of(memory, family), "CurrentDodgeData": family})
     pawn.CharacterMovement.fields["MaxGroundSpeedScale"] = types.SimpleNamespace(Value=1.0)
+    # A shield of the game's already: the mode gives none (normal/shields.py, tested on its own).
+    pawn.HealthState.HealthTypeStates = [types.SimpleNamespace(
+        HealthType=types.SimpleNamespace(_name="HealthType_AI_Energy"))]
     pawn.zone = zone
+    pawn.gun = aim_fixture.Behaviour("OakWeapon_1.UM0_PC")
+    pawn.fields["ActiveWeapons"] = aim_fixture.weapons([pawn.gun])
     return pawn
 
 
@@ -101,14 +107,21 @@ try:
     check("the character found: it plays at its level, the camps grown at once", mode.playing() and events()
           == ["normal_playing", "normal_taken_raised", "normal_camp_grown", "normal_camps"])
     mode.tick(18.0)
-    check("the census the second after, never in the camps' second", events()
+    looked = notes()
+    check("the census the second after, never in the camps' second", [line["event"] for line in looked
+                                                                      if line["event"] != "call"]
           == ["normal_dodges_opened", "health_raised", "normal_enemies"])
+    check("the level's shields given (Senior: always); the game's own kept", [line.get("shields") for line in looked
+                                                                             if line["event"] == "normal_enemies"]
+          == [{"had_one": 1}])
     check("the damage taken x1.2, the camp x2, the enemy's dodges, speed and zone",
           player.DamageState.DamageTakenMultiplier.BaseValue == 1.2
           and gbx_param.read(camp.SpawnerComponent.SpawnerStyleData.InlineDef, "NumTotalActors")[1] == 8
           and gbx_param.read(enemy.AIDodgeState.DodgeBullet, "Chance")[1] == 0.45
           and enemy.CharacterMovement.MaxGroundSpeedScale.Value == 1.5
           and enemy.zone.settings.CombatTerritory.Radius == 35000.0)
+    check("its aim: Senior's spread x0.88, bullets x1.08", enemy.gun.values()["aiaccuracy"] == [6.6, 6.6]
+          and enemy.gun.values()["aiprojectilespeed"] == [0.486, 0.486])
     check("its dodges looked at each image", dodge_speed.IDENTIFIER in state["hooks"])
     mode.tick(19.0)
     check("a second while playing with nothing due writes nothing", notes() == [])
@@ -117,7 +130,9 @@ try:
     check("the game left: said, given back, it waits again", not mode.playing()
           and events() == ["normal_left", "normal_given_back"] and dodge_speed.IDENTIFIER not in state["hooks"]
           and enemy.CharacterMovement.MaxGroundSpeedScale.Value == 1.0
-          and gbx_param.read(enemy.AIDodgeState.DodgeBullet, "Chance")[1] == 0.15)
+          and gbx_param.read(enemy.AIDodgeState.DodgeBullet, "Chance")[1] == 0.15
+          and enemy.gun.values()["aiaccuracy"] == [7.5, 7.5]
+          and enemy.gun.values()["aiprojectilespeed"] == [0.45, 0.45])
     check("the dodge files kept opened from one game to the next", list(mode.dodges.files) == ["DodgeData_Psycho"]
           and gbx_param.read(family.DodgeBullet, "Chance")[1] == 0.45)
     state["pc"] = types.SimpleNamespace(OakCharacter=hunter())

@@ -31,19 +31,27 @@ try:
     check("the mode off at first, kept hidden", options.on.value is False and options.on.is_hidden)
     check("the Hardcore off, its progress on", options.hardcore.value is False and options.progress.value is True)
     check("the faster dodges on at first", options.fast_dodges.value is True)
-    check("the page's rows: the three the mode locks, the Hardcore's two, then the hidden one",
-          options.LOCKED == [options.level, options.allies, options.fast_dodges]
+    check("the shields on at first", options.shields.value is True)
+    check("the page's rows: the four the mode locks, the Hardcore's two, then the hidden one",
+          options.LOCKED == [options.level, options.allies, options.fast_dodges, options.shields]
           and options.HARDCORE == [options.hardcore, options.progress]
           and options.PAGE == [*options.LOCKED, *options.HARDCORE] and options.ALL == [*options.PAGE, options.on])
     check("the identifiers apart from the Horde's", [option.identifier for option in options.ALL]
-          == ["normal_level", "normal_allies", "normal_fast_dodges", "normal_hardcore", "normal_hardcore_progress",
-              "normal_on"])
+          == ["normal_level", "normal_allies", "normal_fast_dodges", "normal_shields", "normal_hardcore",
+              "normal_hardcore_progress", "normal_on"])
     check("the defaults read as they stand", options.read() == options.Settings(levels.LEVELS["Bandit"], False))
     options.level.value, options.allies.value, options.fast_dodges.value = "Predator", True, False
     check("each choice gives its value", options.read() == options.Settings(levels.LEVELS["Predator"], True, False))
     options.level.value, options.allies.value, options.fast_dodges.value = "Legend", "yes", "no"
     check("a value that is no choice reads as its default",
           options.read() == options.Settings(levels.LEVELS["Bandit"], False))
+    options.level.value, options.shields.value = "Bandit", False
+    check("the shields switched off at Bandit: none given", options.read().shields is False)
+    for name in ("Senior", "Predator"):
+        options.level.value = name
+        check(f"at {name}, the shields given whatever the option holds (decision 112)", options.read().shields is True)
+    options.level.value, options.shields.value = "Bandit", "no"
+    check("a value that is no choice reads as on", options.read().shields is True)
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

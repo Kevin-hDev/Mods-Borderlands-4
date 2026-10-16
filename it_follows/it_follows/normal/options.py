@@ -9,7 +9,11 @@ at first, its progress on at first; normal/hardcore.py reads them.
 
 The faster dodges can be switched off, on at first (Kevin, 15 October 2026: « pour l'accélération des esquives, je
 penses qu'on va l'ajouter dans les options du mode normal pour que le joueur puisse le désactiver, il reste activer
-par défaut »): off, the enemies dodge at the game's own speed, their chance and rest still the level's."""
+par défaut »): off, the enemies dodge at the game's own speed, their chance and rest still the level's.
+
+The shields (decisions 111 and 112) can be switched off at Bandit only, on at first (Kevin: « bandit affiche l'option
+quand on clic dessus mais senior et predator n'ont pas l'option, les shield sont obligatoire pour jouer a ces deux
+modes la »): the page shows the row at Bandit only, and the other levels give the shields whatever it holds."""
 
 from dataclasses import dataclass
 
@@ -27,10 +31,13 @@ progress = BoolOption("normal_hardcore_progress", True, display_name="Progress",
                       description="Off: the difficulty reached stays as it is, without rising.")
 fast_dodges = BoolOption("normal_fast_dodges", True, display_name="Faster dodges",
                          description="The enemies dodge faster than in the game. Off: the game's own dodge speed.")
+shields = BoolOption("normal_shields", True, display_name="Shields",
+                     description="The enemies without a shield get one, 40% of their health. It never comes back "
+                                 "once broken.")
 on = BoolOption("normal_on", False, is_hidden=True)
 
 # The NORMAL MODE page's rows: those the mode on locks, then the Hardcore's, never locked; then the hidden one.
-LOCKED = [level, allies, fast_dodges]
+LOCKED = [level, allies, fast_dodges, shields]
 HARDCORE = [hardcore, progress]
 PAGE = [*LOCKED, *HARDCORE]
 ALL = [*PAGE, on]
@@ -41,8 +48,10 @@ class Settings:
     level: levels.Level
     allies: bool
     fast_dodges: bool = True
+    shields: bool = True
 
 
 def read() -> Settings:
-    return Settings(level=levels.level(level.value), allies=allies.value is True,
-                    fast_dodges=fast_dodges.value is not False)
+    chosen = levels.level(level.value)
+    return Settings(level=chosen, allies=allies.value is True, fast_dodges=fast_dodges.value is not False,
+                    shields=chosen.shields == levels.ALWAYS or shields.value is not False)

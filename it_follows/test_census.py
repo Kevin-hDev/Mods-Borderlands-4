@@ -196,10 +196,16 @@ try:
     fallen.KillerActor, fallen.LastHitBy = None, pc
     extra = enemy("Char_MissionNPC_44", 90.0, NPC, None, is_dead=True)
     extra.KillerActor, extra.LastHitBy = player, None
-    state["all"]["OakCharacter"] = [player, victim, fallen, extra]
+    rival = enemy("Char_Psycho_45", 90.0, PSYCHO, None, is_dead=True)
+    rival.KillerActor, rival.LastHitBy = types.SimpleNamespace(Name="Char_CatAdult_46",
+                                                               Class=types.SimpleNamespace(Name="OakCharacter")), None
+    state["all"]["OakCharacter"] = [player, victim, fallen, extra, rival]
     _, _, sighting = census.seen_around(player, kills=True, pc=pc)
     check("asked who killed: each enemy and boss read dead, never an NPC",
-          sighting.killed == (("Char_Psycho_39", ("player", "none")), ("Char_CatBoss_43", ("none", "player"))))
+          sighting.killed == (("Char_Psycho_39", ("player", "none")), ("Char_CatBoss_43", ("none", "player")),
+                              ("Char_Psycho_45", ("other:OakCharacter", "none"))))
+    check("one another character killed: named with its killer", sighting.killed_by_other
+          == (("Char_Psycho_45", "Char_CatAdult_46"),))
     check("not asked, nothing read", read(victim, fallen, extra)[2].killed == ())
     found, stats, _ = read(*bosses)
     check("the Horde's census never keeps one", names(found) == ["Char_Psycho_38"] and found[0].boss is False

@@ -41,10 +41,12 @@ TEXT = {
     "normal_waiting": "It starts as soon as you are on foot in a loaded game.",
     "normal_locked": "Stop the normal mode to change these settings.",
     "normal_blocked": "A Horde run is going: stop it to turn the normal mode on.",
-    "normal_level:Bandit": "More enemies, a little faster and tougher. They dodge faster and chase you farther.",
-    "normal_level:Senior": "Even more enemies, faster and tougher. Quicker dodges, longer chases.",
+    "normal_level:Bandit": "More enemies, a little faster and tougher. They dodge faster and chase you farther. "
+                           "A shield for those without one, if you want.",
+    "normal_level:Senior": "Even more enemies, faster and tougher. Quicker dodges, longer chases. A shield for "
+                           "every enemy without one.",
     "normal_level:Predator": "Even more enemies, very fast and very tough. Lightning dodges, and they chase you "
-                             "much farther.",
+                             "much farther. A shield for every enemy without one, back 10 seconds after it breaks.",
     "hardcore_settings": "HARDCORE", "hardcore_lead": "A difficulty that rises slowly, all game long.",
     "hardcore_badge": "HARDCORE {percent}%", "hardcore_badge_paused": "HARDCORE {percent}% · PAUSED",
     "help_hardcore_title": "THE HARDCORE MODE",
@@ -92,6 +94,9 @@ TEXT = {
     "welcome_zombies_title": "CALL OF DUTY: BLACK OPS ZOMBIES",
     "welcome_zombies": "A horde that comes back without end and grows with the level. You kill, you run, you survive.",
     "welcome_next": "NEXT",
+    "updates_title": "UPDATE {version}",
+    "updates_count": "{page} / {pages}",
+    "updates_next": "NEXT",
     "welcome_normal_lead": "The normal mode: play your game as usual. The enemies you meet are more numerous, faster "
                            "and tougher, dodge faster and chase you farther. It is made first for starting or "
                            "restarting the game from the beginning, a little like three levels of NG+, and still "

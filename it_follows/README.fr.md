@@ -18,8 +18,10 @@ anglais et en français, a quatre pages. Le jeu se met en pause tant qu'elle est
   en pause. Le Hardcore est toujours actif dans la Horde : les ennemis se renforcent de 1 % tous les 100 ennemis tués
   pendant le run, en repartant de 0 % à chaque run.
 - **MODE NORMAL.** Joue ta partie comme d'habitude : les ennemis que tu croises sont plus nombreux, plus rapides et plus
-  résistants, esquivent plus souvent et plus vite, et te poursuivent plus loin. Trois niveaux, Bandit, Senior et
-  Predator. Les boss reçoivent la vie et la vitesse du niveau. Il est pensé d'abord pour commencer ou recommencer le jeu
+  résistants, esquivent plus souvent et plus vite, et te poursuivent plus loin. Les ennemis sans bouclier en
+  reçoivent un, de 40 % de leur vie, qui se recharge en Predator une fois cassé ; les ennemis armés tirent plus juste
+  et leurs balles vont plus vite. Trois niveaux, Bandit, Senior et Predator. Les boss reçoivent la vie, la vitesse, le
+  bouclier et la précision du niveau. Il est pensé d'abord pour commencer ou recommencer le jeu
   depuis le début, un peu comme trois niveaux de NG+, et reste utilisable en cours de partie. Il reste allumé d'une
   partie à l'autre jusqu'à ce que tu appuies sur STOP, et STOP rend les ennemis tels que le jeu les a faits.
 - **Hardcore**, une option du mode normal : les ennemis se renforcent de 1 % tous les 100 ennemis tués, tout au long

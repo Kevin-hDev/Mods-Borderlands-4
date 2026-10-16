@@ -1,7 +1,7 @@
 """Tests who killed an enemy (killers.py): what KillerActor and LastHitBy hold, said as the player (his character, or
 his controller), the vehicle he drives, none, unreadable, or the class of what they hold; a kill is the player's when
 KillerActor says the player or his vehicle, or says none while LastHitBy says the player; never a spectre's, another
-vehicle's, nor one nothing says."""
+vehicle's, nor one nothing says; the killer's name, for the fights between enemies."""
 
 import pathlib
 import sys
@@ -54,6 +54,10 @@ try:
     check("no controller: only his character is his", killers.killed_by(body(car, None), hunter, None)
           == ("other:OakVehicle_Runner", "none"))
     check("the class cut short", killers.killed_by(body(thing("X" * 90), None), hunter, pc)[0] == "other:" + "X" * 40)
+    named = SimpleNamespace(Name="Char_GunToterSMG_Male\n" + "Y" * 90)
+    check("the killer's name, cleaned and cut short; none; unreadable",
+          killers.killer_name(body(named, None)) == "Char_GunToterSMG_Male" + "Y" * 39
+          and killers.killer_name(body(None, None)) == "none" and killers.killer_name(Refusing()) == "unreadable")
     check("the player's kills", all(killers.by_player(said) for said in (("player", "none"), ("vehicle", "none"),
                                                                        ("none", "player"), ("player", "other:X"))))
     check("never the rest's", not any(killers.by_player(said) for said in (
