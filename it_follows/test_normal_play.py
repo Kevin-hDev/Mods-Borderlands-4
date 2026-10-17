@@ -5,8 +5,9 @@ damage taken kept, each change said once; a second that holds the game said; a s
 nothing done; the end gives everything back in one line, the zones and the rewards with it; the long chase at every
 level, Predator's at 600 m. The Hardcore: the dead counted, a step said, its factor given at once to the enemies and the
 damage taken on top of the level's, once only, again when it is switched off; its state in the status line, its kills
-written at the end, its factor at the start. The pieces it drives are set by the test after it is made;
-test_normal_mode.py runs it whole."""
+written at the end, its factor at the start. Predator: the level's dodge and gesture factors, the armed bandits'
+rest shortened at the census and said, given back at the end. The pieces it drives are set by the test after it is
+made; test_normal_mode.py runs it whole."""
 
 import json
 import pathlib
@@ -21,7 +22,7 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 from it_follows import frame, report  # noqa: E402
-from it_follows.normal import dodge_speed, hardcore, levels, options, play as play_module  # noqa: E402
+from it_follows.normal import enemy_time, hardcore, levels, options, play as play_module  # noqa: E402
 
 fails: list[str] = []
 
@@ -138,7 +139,7 @@ try:
     game.tick(101.0)
     check("the census the second after", [line["event"] for line in notes()] == ["normal_enemies"]
           and game.enemies.done == [101.0])
-    check("the dodges looked at each image, following the census", dodge_speed.IDENTIFIER in state["hooks"]
+    check("the dodges looked at each image, following the census", enemy_time.IDENTIFIER in state["hooks"]
           and list(game.watch.watched) == ["Char_A"])
     game.taken.answers = [{"taken": "again", "game_base": 1.0}, {"taken": "again", "game_base": 1.0}]
     game.tick(102.0)
@@ -228,7 +229,7 @@ try:
           and ended[0]["reason"] == "left_game" and ended[0]["enemies"] == {"enemies": 1}
           and ended[0]["camps"] == {"given": 1} and ended[0]["zones"] == {} and ended[0]["taken"] == "unavailable"
           and ended[0]["rewards"] == "gone"
-          and ended[0]["hook"] == "removed" and dodge_speed.IDENTIFIER not in state["hooks"]
+          and ended[0]["hook"] == "removed" and enemy_time.IDENTIFIER not in state["hooks"]
           and ended[0]["hardcore_saved"] is True and hardcore.option.value == {"version": 1, "kills": 135})
     hunter.freed = False
     check("the long chase at every level, 600 m at Predator", play_module.Play(
@@ -240,10 +241,37 @@ try:
     off.taken = Taken()
     off.rewards = Rewards()
     off.begin(200.0)
-    hooked = dodge_speed.IDENTIFIER in state["hooks"]
+    hooked = enemy_time.IDENTIFIER in state["hooks"]
     off.end("stopped")
-    check("the faster dodges switched off: no dodge looked at, nothing to give back",
-          not hooked and [line for line in notes() if line["event"] == "normal_given_back"][-1]["hook"] == "inactive")
+    check("the faster dodges switched off: the gestures still looked at, at the level's factor, no dodge",
+          hooked and off.watch.factors == {"dodge": None, "gesture": 1.1}
+          and [line for line in notes() if line["event"] == "normal_given_back"][-1]["hook"] == "removed")
+
+    class Melee:
+        def keep(self) -> dict:
+            return {"written": 7}
+
+        def put_back(self) -> dict:
+            return {"given_back": 7}
+
+    chosen = levels.LEVELS["Predator"]
+    predator = play_module.Play(options.Settings(chosen, False), hunter, dodges, failures.append)
+    check("the faster dodges on: the level's dodge and gesture factors, its rest",
+          predator.watch.factors == {"dodge": chosen.dodge_speed, "gesture": chosen.gestures}
+          and predator.melee.rest == chosen.melee_rest)
+    predator.camps = Camps(5.0, {"grown": 0, "refused": 0, "too_many": 0, "stopped": "complete"})
+    predator.enemies = Enemies(5.0, {})
+    predator.taken = Taken()
+    predator.rewards = Rewards()
+    predator.melee = Melee()
+    predator.begin(300.0)
+    notes()
+    predator.tick(301.0)
+    check("the census shortens the armed bandits' rest, said", [line.get("written") for line in notes()
+                                                                if line["event"] == "normal_melee_rest"] == [7])
+    predator.end("stopped")
+    check("the end gives the rest back", [line for line in notes() if line["event"] == "normal_given_back"][-1]
+          ["melee_rest"] == {"given_back": 7})
     check("nothing failed", failures == [])
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")

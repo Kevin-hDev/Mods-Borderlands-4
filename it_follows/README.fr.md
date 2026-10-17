@@ -19,7 +19,8 @@ lances un mode à la fois.
   en pause. Le Hardcore est toujours actif dans la Horde : les ennemis se renforcent de 1 % tous les 100 ennemis tués
   pendant le run, en repartant de 0 % à chaque run.
 - **MODE NORMAL.** Joue ta partie comme d'habitude : les ennemis que tu croises sont plus nombreux, plus rapides et plus
-  résistants, esquivent plus souvent et plus vite, et te poursuivent plus loin. Les ennemis sans bouclier en
+  résistants, esquivent plus souvent et plus vite, frappent plus vite, et te poursuivent plus loin. En Senior et Predator,
+  les bandits armés attendent moins longtemps entre deux coups au corps à corps. Les ennemis sans bouclier en
   reçoivent un, de 40 % de leur vie, qui se recharge en Predator une fois cassé ; les ennemis armés tirent plus juste
   et leurs balles vont plus vite. Tu gagnes plus d'expérience sur les ennemis tués, et plus de munitions et d'argent
   en ramassant ; les distributeurs et les missions ne changent pas. Trois niveaux, Bandit, Senior et Predator. Les

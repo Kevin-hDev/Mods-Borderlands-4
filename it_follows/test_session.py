@@ -190,8 +190,8 @@ try:
     saving, it_follows.mod.save_settings = it_follows.mod.save_settings, lambda: written.append(normal_options.on.value)
     state["info"].clear()
     check("stopped by an error: ended, its choice to be on written off and saved, then said to the player",
-          session.stop_normal("dodge_error:TypeError") == "stopped"
-          and FakeMode.made[-1].ended == ["dodge_error:TypeError"] and normal_options.on.value is False
+          session.stop_normal("time_error:TypeError") == "stopped"
+          and FakeMode.made[-1].ended == ["time_error:TypeError"] and normal_options.on.value is False
           and written == [False] and len(state["info"]) == 2
           and '"event":"normal_off_written"' in state["info"][0] and '"saved":true' in state["info"][0]
           and "stopped after an error" in state["info"][1])

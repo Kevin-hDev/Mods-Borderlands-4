@@ -1,10 +1,11 @@
 """One game played at the normal mode's level, from the moment the mode finds a game until the game is left or the
 mode stops (spec-mode-normal.md, section 4): the camps grown before their enemies are born (camps_grown.py), the
 enemies met given the level (enemies.py) and the shields it gives them (shields.py), their dodges sped up at each
-image unless the player switched it off (dodge_speed.py, options.fast_dodges), and the damage the
-player takes raised (damage_taken.py, the Horde's, the normal mode's own BUFF), and the player's rewards raised
-(rewards.py: experience of the kills, ammo and money picked up). At its end everything it holds is given
-back, as far as the game still holds it, and the Hardcore's kills are written. They are written with each status
+image unless the player switched it off (options.fast_dodges) and their gestures sped up (enemy_time.py), and the damage
+the player takes raised (damage_taken.py, the Horde's, the normal mode's own BUFF), and the player's rewards raised
+(rewards.py: experience of the kills, ammo and money picked up), and the armed bandits' rest between two blows
+shortened at each census (melee_rest.py). At its end everything it holds is given back, as far as the game still
+holds it, and the Hardcore's kills are written. They are written with each status
 line too: a game quit to the desktop never ends its play (trial 31), and its kills were lost.
 
 The Hardcore (decision 89, normal/hardcore.py): the enemies the player killed are counted, and its factor is read
@@ -25,7 +26,7 @@ from typing import Any, Callable
 import unrealsdk
 
 from .. import damage_taken, frame, reads, report
-from . import camps_grown, dodge_speed, enemies, hardcore, pursuit, rewards
+from . import camps_grown, enemies, enemy_time, hardcore, melee_rest, pursuit, rewards
 
 STATUS_EVERY_S = 30.0
 SLOW_S = 0.5
@@ -44,8 +45,9 @@ class Play:
         self.camps = camps_grown.CampsGrown(report.note, report.announce, level.camps)
         self.taken = damage_taken.DamageTaken(report.announce, level.taken * self.hard)
         self.rewards = rewards.Rewards(level, report.announce)
-        self.watch = dodge_speed.DodgeSpeed(report.note, level.dodge_speed, fail)
-        self.fast_dodges = settings.fast_dodges
+        self.melee = melee_rest.MeleeRest(level.melee_rest, report.note, report.announce)
+        self.watch = enemy_time.EnemyTime(report.note, level.dodge_speed if settings.fast_dodges else None,
+                                          level.gestures, fail)
         self.dodges = dodges
         self.camps_stopped = "none"
         self.next_status = 0.0
@@ -57,8 +59,7 @@ class Play:
         if raised:
             report.note("normal_taken_raised", **raised)
         report.note("normal_rewards_raised", **self.rewards.start(self.player()))
-        if self.fast_dodges:
-            self.watch.start()
+        self.watch.start()
         self.next_status = now + STATUS_EVERY_S
         self.tick(now)
 
@@ -80,6 +81,9 @@ class Play:
                 report.note("normal_enemies", **looked)
                 self._count(looked.get("kills", 0))
             self.watch.follow(self.enemies.nearest(here))
+            rested = self.melee.keep()
+            if rested:
+                report.note("normal_melee_rest", **rested)
         self._harden(player)
         shields = self.enemies.keep_shields(now)
         if shields:
@@ -96,7 +100,8 @@ class Play:
             self.next_status = now + STATUS_EVERY_S
             hardcore.save("status")
             report.note("normal_status", enemies=len(self.enemies.met), watched=len(self.watch.watched),
-                        dodges_sped=self.watch.count, camps_held=len(self.camps.held),
+                        dodges_sped=self.watch.counts[enemy_time.DODGE],
+                        gestures_sped=self.watch.counts[enemy_time.GESTURE], camps_held=len(self.camps.held),
                         camps_grown=sum(1 for _, owed in self.camps.held.values() if owed),
                         camps_stopped=self.camps_stopped, families=len(self.dodges.files),
                         zones=self.chase.widened(), hardcore=hardcore.state(), percent=hardcore.percent(),
@@ -124,6 +129,6 @@ class Play:
         sped = self.watch.stop()
         given = {"enemies": self.enemies.end(), "zones": self.chase.narrow(),
                  "camps": self.camps.put_back(), "taken": self.taken.put_back(self.player()),
-                 "rewards": self.rewards.put_back(self.player()),
+                 "rewards": self.rewards.put_back(self.player()), "melee_rest": self.melee.put_back(),
                  "hardcore_saved": hardcore.save("end")}
         report.note("normal_given_back", reason=reason, **sped, **given)

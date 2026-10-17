@@ -39,7 +39,7 @@ EVERY_S = 5.0
 READ_S = 0.25
 # Below the 240 enemies whose health toughness.py tends at once.
 MOST = 200
-# The enemies whose dodges are looked at each image (dodge_speed.py): the nearest, within reach of a fight.
+# The enemies whose dodges and gestures are looked at each image (enemy_time.py): the nearest, within reach of a fight.
 WATCH_M = 60.0
 WATCH_MOST = 48
 

@@ -15,8 +15,10 @@ The shields (decisions 111 and 112) can be switched off at Bandit only, on at fi
 quand on clic dessus mais senior et predator n'ont pas l'option, les shield sont obligatoire pour jouer a ces deux
 modes la »): the page shows the row at Bandit only, and the other levels give the shields whatever it holds.
 
-The enemies' speed (decision 121), INCREASED at first, the level's own; REDUCED, its run and faster dodges slower
-(levels.reduced), for those who find them too fast. The page shows the row at Senior and Predator only, and Bandit
+The enemies' speed (decision 121), INCREASED at first, the level's own; REDUCED, its run, faster dodges and
+gestures slower, never below Bandit's (levels.reduced, decision 125), for those who find them too fast. Its help says
+only what the player sees slow down (Kevin, 17 October 2026: « faut juste dire que la vitesse de ca, ca et ca est
+reduite c'est tout »). The page shows the row at Senior and Predator only, and Bandit
 keeps its speed whatever it holds."""
 
 from dataclasses import dataclass
@@ -40,8 +42,7 @@ shields = BoolOption("normal_shields", True, display_name="Shields",
                                  "once broken.")
 INCREASED, REDUCED = "Increased", "Reduced"
 speed = SpinnerOption("normal_speed", INCREASED, [INCREASED, REDUCED], display_name="Enemy speed",
-                      description="Reduced: the enemies run 15% slower, and so do their faster dodges. For those who "
-                                  "find them too fast.")
+                      description="Reduced: at Senior and Predator, the enemies run, dodge and strike slower.")
 on = BoolOption("normal_on", False, is_hidden=True)
 
 # The NORMAL MODE page's rows: those the mode on locks, then the Hardcore's, never locked; then the hidden one.

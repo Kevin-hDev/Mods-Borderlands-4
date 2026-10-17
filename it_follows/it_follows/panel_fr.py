@@ -128,8 +128,8 @@ OPTIONS = {
     "normal_allies": ("Ennemis alliés", "Tous les ennemis dans une même équipe : ils ne se battent plus entre eux."),
     "normal_fast_dodges": ("Esquives accélérées",
                            "Les ennemis esquivent plus vite que dans le jeu. Désactivé : la vitesse d'esquive du jeu."),
-    "normal_speed": ("Vitesse des ennemis", "Réduite : les ennemis courent 15 % moins vite, et leurs esquives "
-                                            "accélérées aussi. Pour ceux qui les trouvent trop rapides."),
+    "normal_speed": ("Vitesse des ennemis",
+                     "Réduite : en Senior et Predator, les ennemis courent, esquivent et frappent moins vite."),
     "normal_shields": ("Boucliers", "Les ennemis sans bouclier en reçoivent un, de 40 % de leur vie. Une fois cassé, "
                                     "il ne revient pas."),
     "normal_hardcore": ("Hardcore", "Les ennemis se renforcent à mesure que tu tues, lentement, tout au long du jeu."),

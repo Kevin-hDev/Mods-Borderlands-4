@@ -23,7 +23,7 @@ import census_fixture  # noqa: E402
 import aim_fixture  # noqa: E402
 import param_fixture as fx  # noqa: E402
 from it_follows import gbx_param, report  # noqa: E402
-from it_follows.normal import dodge_speed, levels, mode as mode_module, options, rewards  # noqa: E402
+from it_follows.normal import enemy_time, levels, melee_rest, mode as mode_module, options, rewards  # noqa: E402
 
 fails: list[str] = []
 
@@ -89,6 +89,21 @@ rewards.FGbxDefPtr = DefPtr
 adder = types.SimpleNamespace(_find=lambda name: types.SimpleNamespace(Struct="GbxAttributeDef"))
 state["classes"][rewards.LIBRARY] = types.SimpleNamespace(ClassDefaultObject=attributes, _find=lambda name: adder)
 state["enums"].update({rewards.KINDS: types.SimpleNamespace(PostAdd="PostAdd"), rewards.OUTCOMES: ["failure"]})
+state["objects"][melee_rest.TIMER] = types.SimpleNamespace(
+    _find_prop=lambda name: types.SimpleNamespace(ElementSize=56, Offset_Internal=448))
+# The names as the game holds them, which the fake SDK cannot make; no tree is loaded here, so nothing is written.
+melee_rest.brain_trees.tokens = lambda memory, names: {name: index + 1 for index, name in enumerate(names)}
+held_objects = sys.modules["unrealsdk"].find_object
+
+
+def find_object(cls: str, path: str) -> object:
+    """The SDK's answer for an object the game does not hold: ValueError (apex_movement/game.py)."""
+    if path not in state["objects"]:
+        raise ValueError(path)
+    return held_objects(cls, path)
+
+
+sys.modules["unrealsdk"].find_object = find_object
 
 
 def psycho(memory: fx.Memory, family: fx.Built) -> object:
@@ -161,7 +176,7 @@ try:
           and enemy.zone.settings.CombatTerritory.Radius == 35000.0)
     check("its aim: Senior's spread x0.88, bullets x1.08", enemy.gun.values()["aiaccuracy"] == [6.6, 6.6]
           and enemy.gun.values()["aiprojectilespeed"] == [0.486, 0.486])
-    check("its dodges looked at each image", dodge_speed.IDENTIFIER in state["hooks"])
+    check("its dodges and gestures looked at each image", enemy_time.IDENTIFIER in state["hooks"])
     mode.tick(19.0)
     check("a second while playing with nothing due writes nothing", notes() == [])
     player.freed = True
@@ -169,7 +184,7 @@ try:
     left = [line for line in notes() if line["event"] != "call"]
     check("the game left: said, given back, it waits again", not mode.playing()
           and [line["event"] for line in left] == ["normal_left", "normal_given_back"]
-          and left[1]["rewards"] == "gone" and dodge_speed.IDENTIFIER not in state["hooks"]
+          and left[1]["rewards"] == "gone" and enemy_time.IDENTIFIER not in state["hooks"]
           and enemy.CharacterMovement.MaxGroundSpeedScale.Value == 1.0
           and gbx_param.read(enemy.AIDodgeState.DodgeBullet, "Chance")[1] == 0.15
           and enemy.gun.values()["aiaccuracy"] == [7.5, 7.5]

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.5 - 2026-10-17
+
+- Normal mode: in combat, the enemies strike, leap and throw their weapons faster, a little more at each level.
+- Normal mode: at Senior and Predator, armed bandits wait less between two melee blows.
+
 ## 1.0.4 - 2026-10-17
 
 - Normal mode: more experience from the enemies you kill, more ammo and money picked up, depending on the level.

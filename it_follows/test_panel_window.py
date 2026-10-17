@@ -244,8 +244,8 @@ try:
           and text("label:normal_speed") == "ENEMY SPEED"
           and [text(f"setting:normal_speed:{name}_label") for name in ("Increased", "Reduced")]
           == ["INCREASED", "REDUCED"]
-          and text("description:normal_speed") == "Reduced: the enemies run 15% slower, and so do their faster "
-                                                  "dodges. For those who find them too fast.")
+          and text("description:normal_speed")
+          == "Reduced: at Senior and Predator, the enemies run, dodge and strike slower.")
     press("setting:normal_speed:Reduced")
     form.poll()
     check("REDUCED clicked: written, the level read slower", form.flush(widgets)

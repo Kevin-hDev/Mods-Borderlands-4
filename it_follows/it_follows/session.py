@@ -22,8 +22,8 @@ from .run import Run
 # in the world each time. The run in progress, None between two, and when it began, in seconds since 1970. The normal
 # mode while it is on, None while it is off: never on during a run (decision 80).
 _state: dict[str, Any] = {"pool": None, "run": None, "began": 0, "normal": None}
-# The reasons a mode stops for when a second (frame.Beat) or a dodge's image (normal/dodge_speed.py) raised.
-ERRORS = ("error:", "dodge_error:")
+# The reasons a mode stops for when a second (frame.Beat) or an enemy's image (normal/enemy_time.py) raised.
+ERRORS = ("error:", "time_error:")
 
 
 def running() -> bool:

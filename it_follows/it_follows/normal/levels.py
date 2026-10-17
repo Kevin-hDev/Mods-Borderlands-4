@@ -24,8 +24,11 @@ Faster after trial 35 (decision 100, Kevin, 15 October 2026: « c'est pas assez 
 Kevin, 16 October 2026): faster in everything, the game would be « infernal et injouable ».
 
 reducible: whether the window's « Enemy speed » row shows at that level, Senior and Predator only (decision 121); its
-REDUCED choice runs the level's speed and faster dodges times REDUCED (Kevin: « reduis la vitesse de 15% uniquement
-pour les deux niveau senior et predator [...] Pour ceux qui pourrait trouver que c'est trop rapide »).
+REDUCED choice runs the level's speed, faster dodges and gestures times REDUCED (Kevin: « reduis la vitesse de 15%
+uniquement pour les deux niveau senior et predator [...] Pour ceux qui pourrait trouver que c'est trop rapide »),
+never below Bandit's own (decision 125, Kevin, 17 October 2026: « comme ca senior descend comme bandit et predator
+reste quand meme un peu au dessus »): ×0.85 took Senior's run to ×1.19 and its gestures to ×1.02, under Bandit's ×1.2
+and ×1.1.
 
 shields: the shield given to the enemies without one (decisions 111 and 112, Kevin, 16 October 2026: « Bandit : Shield
 optionnel qui ne se recharge pas. Senior : Shield obligatoire qui ne se recharge pas. Predator : Shield oblgatoire qui
@@ -42,6 +45,14 @@ not measured in one pass. Kevin judges them in play.
 xp, ammo and cash: the share added to the game's multipliers of the experience of the enemies killed, of the ammo
 picked up and of the money picked up (decision 119, Kevin, 16 October 2026; rewards.py), never missions, sales or
 vending machines.
+
+gestures: the enemies' own time while they play a blow, a leap or a thrown weapon, never a grenade nor a turret set
+down (decisions 121 and 124, Kevin, 16 October 2026: « les autres mouvement n'ont pas besoin d'aller a la meme vitesse
+que la marche et le sprint »; enemy_time.py).
+
+melee_rest: the armed bandits' rest after a blow, centre and half width in seconds, None for the game's (decision 126,
+Kevin, 17 October 2026: « Senior 3 a 5 et preda 2 a 3 s c'est bon »; melee_rest.py). The game's is 6 / 2, 8 / 2 for
+the pistol (trial 66).
 """
 
 from dataclasses import dataclass, replace
@@ -66,20 +77,23 @@ class Level:
     xp: float
     ammo: float
     cash: float
+    gestures: float
+    melee_rest: tuple[float, float] | None
 
 
 OPTION, ALWAYS = "option", "always"
 LEVELS = {
     "Bandit": Level("Bandit", 1.5, 350.0, 1.2, 1.7, 0.35, 1.0, 1.45, 1.1, OPTION, False, 0.88, 1.06, False,
-                    0.10, 0.10, 0.15),
+                    0.10, 0.10, 0.15, 1.1, None),
     "Senior": Level("Senior", 2.0, 350.0, 1.4, 2.3, 0.45, 1.0, 1.75, 1.2, ALWAYS, False, 0.88, 1.08, True,
-                    0.15, 0.20, 0.15),
+                    0.15, 0.20, 0.15, 1.2, (4.0, 1.0)),
     "Predator": Level("Predator", 2.0, 600.0, 1.5, 2.8, 0.55, 100.0, 2.3, 1.3, ALWAYS, True, 0.8, 1.12, True,
-                      0.20, 0.25, 0.15),
+                      0.20, 0.25, 0.15, 1.3, (2.5, 0.5)),
 }
 # The faster dodges switched off keep the game's own speed, never reduced (play.py speeds up no dodge then; Kevin: « on
 # ne re reduis pas de 15% »).
 REDUCED = 0.85
+FLOOR = "Bandit"
 # Every level's shield: SHIELD_SHARE of the health the enemy had (Kevin: « Shield = 40% de la vie », the share of the
 # game's GunToterBadass, trial 46). Predator's, broken, comes back SHIELD_REFILL_AFTER_S later at SHIELD_REFILL_RATE of
 # itself a second, the hunter's own (trial 46: 13 % a second).
@@ -99,8 +113,11 @@ def level(name: object) -> Level:
 
 
 def reduced(chosen: Level) -> Level:
-    """The level with the « Enemy speed » row on REDUCED: its speed and faster dodges times REDUCED; a level without
-    the row as it is."""
+    """The level with the « Enemy speed » row on REDUCED: its speed, faster dodges and gestures times REDUCED, none
+    below FLOOR's; a level without the row as it is."""
     if not chosen.reducible:
         return chosen
-    return replace(chosen, speed=chosen.speed * REDUCED, dodge_speed=chosen.dodge_speed * REDUCED)
+    floor = LEVELS[FLOOR]
+    return replace(chosen, speed=max(chosen.speed * REDUCED, floor.speed),
+                   dodge_speed=max(chosen.dodge_speed * REDUCED, floor.dodge_speed),
+                   gestures=max(chosen.gestures * REDUCED, floor.gestures))

@@ -3,6 +3,20 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.5', {
+        'en': (
+            'Normal mode: in combat, the enemies strike, leap and throw their weapons faster, a little more at each level.',
+            'Normal mode: at Senior and Predator, armed bandits wait less between two melee blows.',
+        ),
+        'fr': (
+            'Mode normal : en combat, les ennemis donnent leurs coups, font leurs bonds et lancent leurs armes plus vite, un peu plus à chaque niveau.',
+            'Mode normal : en Senior et Predator, les bandits armés attendent moins longtemps entre deux coups au corps à corps.',
+        ),
+        'zh': (
+            '普通模式：战斗中，敌人的攻击、跳扑和投掷武器速度更快，每提高一个等级都会再快一些。',
+            '普通模式：在资深和掠食者等级下，持枪强盗两次近战攻击之间的间隔更短。',
+        ),
+    }),
     ('1.0.4', {
         'en': (
             'Normal mode: more experience from the enemies you kill, more ammo and money picked up, depending on the level.',

@@ -18,7 +18,8 @@ a time.
   horde's size, the Hardcore and the time, which stops while the game is paused. The Hardcore is always on in the
   Horde: the enemies grow 1% stronger every 100 enemies killed during the run, from 0% at each run.
 - **NORMAL MODE.** Play your game as usual: the enemies you meet are more numerous, faster and tougher, dodge more often
-  and faster, and chase you farther. Enemies without a shield get one, 40% of their health, which recharges at
+  and faster, strike faster, and chase you farther. At Senior and Predator, armed bandits wait less between two
+  melee blows. Enemies without a shield get one, 40% of their health, which recharges at
   Predator once broken; armed enemies shoot straighter and their bullets fly faster. You get more experience from the
   enemies you kill, and more ammo and money from what you pick up; vending machines and missions are unchanged. Three
   levels, Bandit, Senior and Predator. Bosses get the level's health, speed, shield and aim. At Senior and Predator,

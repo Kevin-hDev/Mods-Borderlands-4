@@ -38,18 +38,27 @@ try:
     check("the enemies' speed reducible at Senior and Predator only (decision 121)",
           column("reducible") == [False, True, True] and levels.REDUCED == 0.85)
     slower = levels.reduced(levels.LEVELS["Predator"])
-    check("reduced: the run and the faster dodges x0.85, nothing else",
+    check("reduced: the run, the faster dodges and the gestures x0.85, nothing else",
           abs(slower.speed - 1.275) < 1e-9 and abs(slower.dodge_speed - 2.38) < 1e-9
+          and abs(slower.gestures - 1.105) < 1e-9
           and slower == dataclasses.replace(levels.LEVELS["Predator"], speed=slower.speed,
-                                            dodge_speed=slower.dodge_speed))
+                                            dodge_speed=slower.dodge_speed, gestures=slower.gestures))
     senior = levels.reduced(levels.LEVELS["Senior"])
-    check("reduced at Senior: x1.19 and x1.955", abs(senior.speed - 1.19) < 1e-9
-          and abs(senior.dodge_speed - 1.955) < 1e-9)
+    check("reduced at Senior: never below Bandit, run x1.2 and gestures x1.1, dodges x1.955 (decision 125)",
+          senior.speed == 1.2 and senior.gestures == 1.1 and abs(senior.dodge_speed - 1.955) < 1e-9)
+    check("each reduced level at or above Bandit in run, dodges and gestures",
+          all(getattr(levels.reduced(levels.LEVELS[name]), field) >= getattr(levels.LEVELS["Bandit"], field)
+              for name in ("Senior", "Predator") for field in ("speed", "dodge_speed", "gestures")))
     check("Bandit, without the row, as it is", levels.reduced(levels.LEVELS["Bandit"]) is levels.LEVELS["Bandit"])
     check("dodges x1.7, x2.3, x2.8 faster (rebalance)", column("dodge_speed") == [1.7, 2.3, 2.8])
+    check("gestures x1.1, x1.2, x1.3 (decision 121)", column("gestures") == [1.1, 1.2, 1.3])
     check("dodge chance 0.35, 0.45, 0.55, Predator the highest (rebalance)",
           column("dodge_chance") == [0.35, 0.45, 0.55])
     check("IsMovingSpeed x100 for Predator only", column("dodge_moving") == [1.0, 1.0, 100.0])
+    check("the armed bandits' rest (decision 126): the game's at Bandit, 3 to 5 s at Senior, 2 to 3 s at Predator; "
+          "REDUCED leaves it", column("melee_rest") == [None, (4.0, 1.0), (2.5, 0.5)]
+          and all(levels.reduced(levels.LEVELS[name]).melee_rest == levels.LEVELS[name].melee_rest
+                  for name in levels.LEVELS))
     check("the rests divided by 20 at every level", levels.DODGE_REST_DIVIDE == 20.0)
     check("BUFF, BUFF+, BUFF++: health +45, +75, +130 %; damage taken +10, +20, +30 % (rebalance)",
           column("health") == [1.45, 1.75, 2.3] and column("taken") == [1.1, 1.2, 1.3])
