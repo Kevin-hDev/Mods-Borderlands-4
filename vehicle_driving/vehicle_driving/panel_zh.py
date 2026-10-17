@@ -8,6 +8,8 @@ from .panel_common_zh import TEXT as COMMON
 from .panel_controls_text import ZH as CONTROLS
 
 TEXT = {
+    # The update notes' pop-up (panel_updates.py), Apex Movement's words.
+    "updates_title": "更新 {version}", "updates_count": "第 {page} / {pages} 页", "updates_next": "下一页",
     **COMMON, **CONTROLS, "driving": "驾驶", "handling": "操控", "boost": "加速", "combat": "战斗",
     "camera": "镜头", "no_key": "无",
     "command_view": "切换视角",

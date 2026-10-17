@@ -40,7 +40,10 @@ class Entry:
 
 
 class Tuning:
-    def __init__(self) -> None:
+    def __init__(self, with_game: bool = True) -> None:
+        # False for a co-op guest's vehicle: the guns' damage formula is the player's own Tuning's (guests.py).
+        self._with_game = with_game
+        self._with_driver = True
         self._vehicle: Any = None
         # A weak pointer by owner name (levers.Target.owner).
         self._owners: dict[str, Any] = {}
@@ -57,9 +60,11 @@ class Tuning:
         """True from take() to put_back(), even once the game destroyed the vehicle: its driver's values wait."""
         return self._vehicle is not None
 
-    def take(self, vehicle: Any) -> list[str]:
-        """Puts the vehicle held back first, then holds this one; nothing is written before update()."""
+    def take(self, vehicle: Any, with_driver: bool = True) -> list[str]:
+        """Puts the vehicle held back first, then holds this one; nothing is written before update(). Without
+        `with_driver`, the driver's attributes are left alone (levers.targets)."""
         lines = self.put_back()
+        self._with_driver = with_driver
         self._vehicle = WeakPointer(vehicle)
         missing = self._find_levers(vehicle)
         self._waiting = {name for name in missing if levers.comes_late(name)}
@@ -123,7 +128,7 @@ class Tuning:
         return lines
 
     def _find_levers(self, vehicle: Any) -> list[str]:
-        self._targets, missing = levers.targets(vehicle)
+        self._targets, missing = levers.targets(vehicle, self._with_game, self._with_driver)
         self._owners = {levers.VEHICLE: self._vehicle}
         for target in self._targets:
             if target.owner not in self._owners:

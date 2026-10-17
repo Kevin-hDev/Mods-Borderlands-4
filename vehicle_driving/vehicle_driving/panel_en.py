@@ -5,6 +5,8 @@ from .panel_controls_text import EN as CONTROLS
 
 # The CAMERA page's key card says what Apex Heirloom's COMMANDS page says: one way to choose a key in every menu.
 TEXT = {
+    # The update notes' pop-up (panel_updates.py), Apex Movement's words.
+    "updates_title": "UPDATE {version}", "updates_count": "{page} / {pages}", "updates_next": "NEXT",
     **COMMON, **CONTROLS, "driving": "DRIVING", "handling": "HANDLING", "boost": "BOOST", "combat": "COMBAT",
     "camera": "CAMERA", "no_key": "NONE",
     "command_view": "CHANGE VIEW",

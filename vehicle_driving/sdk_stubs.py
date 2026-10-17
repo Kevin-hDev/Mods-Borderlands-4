@@ -119,6 +119,14 @@ class Vehicle:
                                                         IsBoosting=lambda: self.boosting)
         self.DamageState = types.SimpleNamespace(DamageTakenMultiplier=pair(1.0, 1.0))
         self.DriverPawn = driver if driver is not None else Driver()
+        # Solo, or the host's own: this game drives it and has the authority on it.
+        self.local, self.role = True, "ROLE_Authority"
+
+    def IsLocallyControlled(self) -> bool:
+        return self.local
+
+    def GetLocalRole(self) -> str:
+        return self.role
 
     def K2_GetActorRotation(self) -> Any:
         return rotator(self.yaw)
@@ -131,7 +139,9 @@ def install() -> dict:
     """Registers the fake modules and returns the state the tests read and drive."""
     state: dict = {"misc": [], "warnings": [], "errors": [], "pc": None, "settings_exists": True,
                    "settings_enabled": False, "mods": [], "keybinds": [], "ground": Ground(), "class_finds": 0,
-                   "formula": sdk_stubs_formula.Library()}
+                   "formula": sdk_stubs_formula.Library(),
+                   # The game's players, each a player state whose PawnPrivate is a character or a vehicle (guests.py).
+                   "players": []}
 
     def find_class(name: str) -> Any:
         if name == "InputSettings":
@@ -163,7 +173,8 @@ def install() -> dict:
     unrealsdk_module.hooks = hooks_module
     unrealsdk_module.unreal = unreal_module
     unrealsdk_module.find_class = find_class
-    unrealsdk_module.find_enum = sdk_stubs_formula.enums
+    net_role = types.SimpleNamespace(ROLE_Authority="ROLE_Authority", ROLE_SimulatedProxy="ROLE_SimulatedProxy")
+    unrealsdk_module.find_enum = lambda name: net_role if name == "ENetRole" else sdk_stubs_formula.enums(name)
     unrealsdk_module.make_struct = lambda name, **fields: types.SimpleNamespace(**fields)
 
     mods_base = types.ModuleType("mods_base")
@@ -172,9 +183,12 @@ def install() -> dict:
     mods_base.BoolOption = FakeOption
     mods_base.SliderOption = FakeOption
     mods_base.SpinnerOption = FakeSpinnerOption
+    mods_base.HiddenOption = FakeOption
     mods_base.KeybindOption = FakeKeybindOption
     mods_base.NestedOption = FakeNestedOption
     mods_base.get_pc = lambda **kwargs: state["pc"]
+    mods_base.ENGINE = types.SimpleNamespace(GameViewport=types.SimpleNamespace(World=types.SimpleNamespace(
+        GameState=types.SimpleNamespace(PlayerArray=state["players"]))))
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, kind, hook_identifier))
     def keybind(identifier: str, key: str | None = None, callback: Any = None, **kwargs: Any) -> FakeKeybind:
         made = FakeKeybind(identifier, key, callback, **kwargs)

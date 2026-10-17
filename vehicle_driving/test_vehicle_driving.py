@@ -28,7 +28,7 @@ mod = state["mods"][0]
 check("one mod, its settings as top-level keys, the camera ones after the driving ones, then the view key's",
       len(state["mods"]) == 1 and mod.kwargs["name"] == "Vehicle Driving"
       and mod.kwargs["options"] == [*settings.OPTIONS, *settings.CAMERA_OPTIONS, *view_key.OPTIONS,
-                                    *panel_preferences.ALL]
+                                    vehicle_driving.updates.seen, *panel_preferences.ALL]
       and [option for group in menu.MENU for option in group.children] == [*settings.OPTIONS, *settings.CAMERA_OPTIONS])
 check("a fresh install switches it on and says its version",
       mod.is_enabled and f"[Vehicle Driving] enabled, version {vehicle_driving.__version__}" in state["misc"])

@@ -14,7 +14,7 @@ from typing import Any
 from mods_base import get_pc, hook
 from unrealsdk.hooks import Type
 
-from . import air_push, camera_view, grip, report, seat, settings, tuning
+from . import air_push, camera_view, grip, guests, report, seat, settings, tuning
 
 HOOK_PATH = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 MS = 1_000_000
@@ -25,6 +25,7 @@ VALUES = "values"
 GRIP = "grip"
 AIR = "air push"
 CAMERA = "camera"
+GUESTS = "co-op guests"
 
 _tuning = tuning.Tuning()
 _grip = grip.Grip(0)
@@ -41,6 +42,8 @@ _next_check_ns = 0
 _loss = 0.0
 # Set at each check too: a push typed past its top between two checks never reaches the vehicle.
 _push = 0.0
+# The settings' factors, read at each check: a co-op guest's vehicle taken between two checks gets them at once.
+_factors: dict[str, float] = {}
 
 
 def _say(lines: list[str]) -> None:
@@ -69,7 +72,10 @@ def _switch(vehicle: Any, now_ns: int) -> None:
         report.note("left the vehicle, game values back")
         return
     try:
-        _say(_tuning.take(vehicle))
+        guest_game = seat.on_guest_game(vehicle)
+        _say(_tuning.take(vehicle, with_driver=not guest_game))
+        if guest_game:
+            report.note("co-op guest: the driver's speed, acceleration, reverse and boost come from the host")
     except Exception as exc:
         _fail(VALUES, exc)
     _grip = grip.Grip(now_ns)
@@ -78,7 +84,7 @@ def _switch(vehicle: Any, now_ns: int) -> None:
 
 
 def on_frame(now_ns: int) -> None:
-    global _last_ns, _next_check_ns, _loss, _push, _custom, _view
+    global _last_ns, _next_check_ns, _loss, _push, _custom, _view, _factors
     if now_ns - _last_ns < MIN_STEP_NS:
         return
     _last_ns = now_ns
@@ -87,9 +93,9 @@ def on_frame(now_ns: int) -> None:
     # A vehicle destroyed under its driver reads None like no vehicle at all: holds() still sees its driver's values.
     if vehicle != _tuning.vehicle() or (vehicle is None and _tuning.holds()):
         _switch(vehicle, now_ns)
-    if vehicle is None:
-        return
-    if now_ns >= _next_check_ns:
+    # On foot too: a co-op host drives its guests' vehicles whether it drives or not (guests.py).
+    check = now_ns >= _next_check_ns
+    if check:
         _next_check_ns = now_ns + CHECK_NS
         for line in settings.keep_in_bounds():
             report.warning(line)
@@ -97,9 +103,22 @@ def on_frame(now_ns: int) -> None:
         _loss = settings.loss_per_degree()
         _push = settings.push_strength()
         _custom = settings.custom_offset()
+        _factors = settings.factors()
+    if GUESTS not in _failed:
+        try:
+            guests.tick(now_ns, _factors, check, _loss, _push, bool(settings.grip.value))
+        except Exception as exc:
+            # Outside one guest's vehicle, such as the players' lookup: every guest's vehicle goes back to the game.
+            _failed.add(GUESTS)
+            report.error_once(f"{GUESTS}:{type(exc).__name__}",
+                              f"co-op guests' vehicles left to the game after an error: {exc!r}")
+            _errors(guests.stop_all())
+    if vehicle is None:
+        return
+    if check:
         if VALUES not in _failed:
             try:
-                _say(_tuning.update(settings.factors()))
+                _say(_tuning.update(_factors))
             except Exception as exc:
                 _fail(VALUES, exc)
     pushed = False
@@ -130,11 +149,12 @@ def on_frame(now_ns: int) -> None:
 
 
 def stop_all() -> list[str]:
-    """Puts every value back, the camera's offset too; returns one line per value that could not be."""
+    """Puts every value back, the camera's offset and the co-op guests' vehicles too; returns one line per value that
+    could not be."""
     global _last_ns
     _failed.clear()
     _last_ns = 0
-    return _tuning.put_back() + _camera.release()
+    return _tuning.put_back() + _camera.release() + guests.stop_all()
 
 
 # The identifier carries the package's name, as Apex Movement's does on this same function (apex_movement:frame): two

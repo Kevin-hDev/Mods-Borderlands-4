@@ -1,13 +1,13 @@
 # Vehicle Driving
 
-Version **1.0.9**. Open Vehicle Driving in the SDK mods menu for its English, French and Simplified Chinese settings window. It works at the title screen, in a game, at the wheel and while the game is paused. The window remembers the last section you opened.
+Version **1.0.10**. Open Vehicle Driving in the SDK mods menu for its English, French and Simplified Chinese settings window. It works at the title screen, in a game, at the wheel and while the game is paused. The window remembers the last section you opened.
 
 Livelier vehicles for Borderlands 4: a higher top speed, a quicker pick-up, sharper turns, higher jumps, a faster
 reverse, and a grip that keeps the vehicle going where it faces instead of sliding on through turns. The boost lasts
 longer and keeps pushing in the air; the vehicle is tougher and its weapons hit harder. Every effect has its own
 setting in the mod menu.
 
-Created and tested on game versions **1.8.1-4709277** through **1.10.2-4845623**, single player, with a controller,
+Created and tested on game versions **1.8.1-4709277** through **1.10.2-4845623**, in single player and in two-player co-op, with a controller,
 on three different vehicles. It has not been tested on versions older than 1.8.1-4709277 and may not work there.
 
 ## The settings
@@ -96,7 +96,8 @@ Each prints a `RESULTAT:` line and exits non-zero on failure.
 
 ## Known limits
 
-- Never tried in co-op.
+- In co-op, every player needs Vehicle Driving 1.0.10 or later, and everyone drives with the host's settings. The
+  guest's weapon damage was not tried.
 - Tested on three vehicles; other vehicles have their own settings and may react differently. The settings added in
   1.0.3 (reverse, boost, toughness, weapon damage) were tested on one vehicle, on game version 1.10.2-4845623.
 - At a very high Max speed, from about 250 %, the world may not load fast enough on some PCs: textures can stay blurry

@@ -5,6 +5,7 @@ from . import panel_buttons as b, panel_fonts as fonts, panel_header as h
 from . import panel_modal as modal, panel_window_size as size
 from . import panel_commands, panel_vehicles, panel_pages as p
 from . import panel_text as tx, panel_theme as t, panel_widgets as w, report
+from .panel_form_lifecycle import updates_module
 
 
 def _sidebar(owner, widgets, template):
@@ -87,6 +88,9 @@ def build_view(pc, model, _return_to_menu=True):
     try:
         widgets = {}
         avatar = _window(root, pc, model, widgets, template)
+        updates = updates_module()
+        if updates is not None:
+            updates.build(widgets, template)
     finally:
         tx.use({})
     widgets["focus"] = widgets[f"nav:{model.page}"]

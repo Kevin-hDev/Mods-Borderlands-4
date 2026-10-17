@@ -46,9 +46,11 @@ class Target:
     game: float | None = None
 
 
-def targets(vehicle: Any) -> tuple[list[Target], list[str]]:
+def targets(vehicle: Any, with_game: bool = True, with_driver: bool = True) -> tuple[list[Target], list[str]]:
     """Every lever this vehicle has, and the name of each one it lacks: only Kevin's vehicles were measured, and another
-    model may be built otherwise (spec section 3.4)."""
+    model may be built otherwise (spec section 3.4). Without `with_game`, the guns' damage formula, one for every
+    vehicle, is left out: a co-op guest's vehicle never writes it (guests.py). Without `with_driver`, the driver's
+    attributes are: on a co-op guest's game they come from the host's (seat.on_guest_game)."""
     found: list[Target] = []
     missing: list[str] = []
     hover = vehicle.OakVehicleMovement.HoverSetup
@@ -62,7 +64,7 @@ def targets(vehicle: Any) -> tuple[list[Target], list[str]]:
     driver = getattr(vehicle, "DriverPawn", None)
     component = getattr(driver, "VehicleDriverComponent", None)
     attributes = getattr(component, "VehicleAttributesState", None)
-    for setting, name in ATTRIBUTES:
+    for setting, name in ATTRIBUTES if with_driver else ():
         pair = getattr(attributes, name, None)
         if pair is None:
             missing.append(name)
@@ -78,6 +80,8 @@ def targets(vehicle: Any) -> tuple[list[Target], list[str]]:
         missing.append(DAMAGE_TAKEN)
     else:
         _pair(found, DAMAGE_TAKEN, "damage_taken", VEHICLE, vehicle, taken)
+    if not with_game:
+        return found, missing
     scalar = damage_formula.find(driver)
     if scalar is None:
         missing.append(damage_formula.ATTRIBUTE)

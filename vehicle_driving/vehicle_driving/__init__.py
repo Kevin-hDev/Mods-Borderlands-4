@@ -8,10 +8,10 @@ view's, never blocked), and no game value in common (spec section 4, Kevin's req
 from mods_base import build_mod
 from .settings_persistence import AtomicMod
 
-from . import command_keys, frame, panel_open, panel_preferences, report, settings, view_key
+from . import command_keys, frame, panel_open, panel_preferences, report, settings, updates, view_key
 from .vehicle_unlock_runtime import runtime as vehicle_runtime
 
-__version__ = "1.0.9"
+__version__ = "1.0.10"
 __author__ = "kevin-hDev"
 
 
@@ -40,7 +40,7 @@ mod = build_mod(
     name="Vehicle Driving",
     # Every setting stays a top-level key: the six of 1.0 load unchanged, and a 1.0 file leaves the new ones at their
     # defaults (mods_base's load_options_dict skips a key the file lacks).
-    options=[*settings.OPTIONS, *settings.CAMERA_OPTIONS, *view_key.OPTIONS, *panel_preferences.ALL],
+    options=[*settings.OPTIONS, *settings.CAMERA_OPTIONS, *view_key.OPTIONS, updates.seen, *panel_preferences.ALL],
     keybinds=view_key.BINDS,
     hooks=[frame.tick],
     on_enable=_on_enable,
@@ -51,3 +51,4 @@ panel_open.install(mod)
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
 if mod.settings_file is not None and not mod.settings_file.exists():
     mod.enable()
+    updates.new_player(mod, __version__)

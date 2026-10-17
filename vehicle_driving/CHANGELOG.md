@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.10 - 2026-10-17
+
+- Vehicle Driving now works in co-op.
+
 ## 1.0.9 - 2026-10-14
 
 - Fixed: the Weapon damage setting had no effect. Your vehicle's machine gun and rockets now really hit harder.

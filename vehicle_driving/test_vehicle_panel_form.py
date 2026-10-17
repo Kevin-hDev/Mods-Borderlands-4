@@ -71,6 +71,10 @@ class Mod:
 
 panel_labels.apply = lambda *_: None
 panel_labels.value = lambda *_: None
+# A player who saw this version's notes: test_update_notes.py opens them.
+import vehicle_driving  # noqa: E402
+from vehicle_driving import updates  # noqa: E402
+updates.seen.value = vehicle_driving.__version__
 mod = Mod()
 model = panel_model.Model(mod)
 names = ["focus", "pages", "notice", "close", "theme", "window_size", *panel_preferences.LANGUAGES, "restore", "undo",

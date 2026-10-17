@@ -27,6 +27,7 @@ class PanelForm(Lifecycle):
         self.focus = widgets["focus"]
         self.command_form, self.command_catalogue = Form(widgets, model), Catalogue()
         self.sync(self.resolve())
+        self.open_updates(self.resolve())
 
     def sync(self, widgets):
         self.pending.clear()
