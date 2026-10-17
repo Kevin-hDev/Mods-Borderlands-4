@@ -13,6 +13,7 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 | [Hunter Change](hunter_change/) | Become another Vault Hunter in your game, keeping its level, backpack and story, each hunter with their own skill tree; or only wear another hunter's look | 1.0.7 |
 | [Benefix Ohm Attack](benefix_ohm_attack/) | Fire an attack beam from your hand that locks onto enemies, with six elements to choose from, its own energy bar and damage that scales with your level | 1.0.4 |
 | [It Follows](it_follows/) | Two modes to make the game harder: the enemies of your normal game reworked, more numerous, faster and tougher, with a Hardcore option that strengthens them as you kill; and a Horde mode (beta) where every enemy around you follows you without end | 1.0.3 |
+| [Co-op Duel](coop_duel/) | Fight your teammate in co-op, anywhere in the world: endless rounds, a 3 second KO, then back up on the spot; only the host needs the mod | 1.0.0 |
 
 [camera_runtime](camera_runtime/) is not a mod of its own: it is the camera, field of view and loot reach that Apex
 Movement, Omni Sprint and Third Person & FOV carry inside their `.sdkmod`, with the C++ source of its small native
@@ -45,7 +46,7 @@ Run each test script separately. A failing test exits with a non-zero code; opti
 
 The original code in this repository is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Kevin-hDev.
 
-The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Apex Movement, Omni Sprint, Third Person & FOV, Apex Grapple, Vehicle Driving and Hunter Change also bundle a subset of Noto Sans SC for their Chinese window, under the same license (`OFL-NotoSansSC.txt` in their `assets` directory). Game assets and the Borderlands 4 SDK are not relicensed by this repository. Apex Heirloom's models and animations, Benefix Ohm Attack's hand poses and energy bar, and Apex Grapple's grapple gun gestures are built from the game's own files: they are not in this repository, only in each mod's Nexus archive.
+The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Apex Movement, Omni Sprint, Third Person & FOV, Apex Grapple, Vehicle Driving, Hunter Change and Co-op Duel also bundle a subset of Noto Sans SC for their Chinese window, under the same license (`OFL-NotoSansSC.txt` in their `assets` directory). Game assets and the Borderlands 4 SDK are not relicensed by this repository. Apex Heirloom's models and animations, Benefix Ohm Attack's hand poses and energy bar, and Apex Grapple's grapple gun gestures are built from the game's own files: they are not in this repository, only in each mod's Nexus archive.
 
 ## Credits
 
