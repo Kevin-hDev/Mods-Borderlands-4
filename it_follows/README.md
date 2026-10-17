@@ -8,7 +8,8 @@ Tested in single player on game version **1.10.2-4845623**, Steam version, on Wi
 ## What it does
 
 Press **F5** during the game, or open the console with `~`, type `mods` and choose **It Follows**: its window, in
-English and French, has four pages. The game is paused while it is open. You start one mode at a time.
+English, French and Simplified Chinese, has four pages. The game is paused while it is open. You start one mode at
+a time.
 
 - **HORDE MODE [BETA].** Press START: every enemy around you comes for you and follows you everywhere. The ones you meet
   on the way join the horde, and the ones you kill come back behind you, more and more of them. The enemies are those
@@ -18,9 +19,10 @@ English and French, has four pages. The game is paused while it is open. You sta
   Horde: the enemies grow 1% stronger every 100 enemies killed during the run, from 0% at each run.
 - **NORMAL MODE.** Play your game as usual: the enemies you meet are more numerous, faster and tougher, dodge more often
   and faster, and chase you farther. Enemies without a shield get one, 40% of their health, which recharges at
-  Predator once broken; armed enemies shoot straighter and their bullets fly faster. Three levels, Bandit, Senior and
-  Predator. Bosses get the level's health, speed, shield and aim. At Senior and Predator, the Enemy speed setting
-  makes them 15% slower for those who find them too fast.
+  Predator once broken; armed enemies shoot straighter and their bullets fly faster. You get more experience from the
+  enemies you kill, and more ammo and money from what you pick up; vending machines and missions are unchanged. Three
+  levels, Bandit, Senior and Predator. Bosses get the level's health, speed, shield and aim. At Senior and Predator,
+  the Enemy speed setting makes them 15% slower for those who find them too fast.
   It is made first for starting or restarting the game from the beginning, a little like three levels of NG+, and
   still works mid-game. It stays on from one game to the next until you press STOP, and STOP gives the enemies back as
   the game made them.

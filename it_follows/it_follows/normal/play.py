@@ -2,7 +2,8 @@
 mode stops (spec-mode-normal.md, section 4): the camps grown before their enemies are born (camps_grown.py), the
 enemies met given the level (enemies.py) and the shields it gives them (shields.py), their dodges sped up at each
 image unless the player switched it off (dodge_speed.py, options.fast_dodges), and the damage the
-player takes raised (damage_taken.py, the Horde's, the normal mode's own BUFF). At its end everything it holds is given
+player takes raised (damage_taken.py, the Horde's, the normal mode's own BUFF), and the player's rewards raised
+(rewards.py: experience of the kills, ammo and money picked up). At its end everything it holds is given
 back, as far as the game still holds it, and the Hardcore's kills are written. They are written with each status
 line too: a game quit to the desktop never ends its play (trial 31), and its kills were lost.
 
@@ -24,7 +25,7 @@ from typing import Any, Callable
 import unrealsdk
 
 from .. import damage_taken, frame, reads, report
-from . import camps_grown, dodge_speed, enemies, hardcore, pursuit
+from . import camps_grown, dodge_speed, enemies, hardcore, pursuit, rewards
 
 STATUS_EVERY_S = 30.0
 SLOW_S = 0.5
@@ -42,6 +43,7 @@ class Play:
                                        self.hard, settings.shields)
         self.camps = camps_grown.CampsGrown(report.note, report.announce, level.camps)
         self.taken = damage_taken.DamageTaken(report.announce, level.taken * self.hard)
+        self.rewards = rewards.Rewards(level, report.announce)
         self.watch = dodge_speed.DodgeSpeed(report.note, level.dodge_speed, fail)
         self.fast_dodges = settings.fast_dodges
         self.dodges = dodges
@@ -54,6 +56,7 @@ class Play:
         raised = self.taken.start(self.player())
         if raised:
             report.note("normal_taken_raised", **raised)
+        report.note("normal_rewards_raised", **self.rewards.start(self.player()))
         if self.fast_dodges:
             self.watch.start()
         self.next_status = now + STATUS_EVERY_S
@@ -121,5 +124,6 @@ class Play:
         sped = self.watch.stop()
         given = {"enemies": self.enemies.end(), "zones": self.chase.narrow(),
                  "camps": self.camps.put_back(), "taken": self.taken.put_back(self.player()),
+                 "rewards": self.rewards.put_back(self.player()),
                  "hardcore_saved": hardcore.save("end")}
         report.note("normal_given_back", reason=reason, **sped, **given)

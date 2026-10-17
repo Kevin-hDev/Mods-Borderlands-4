@@ -1,12 +1,12 @@
-"""Tests one game played at the level (normal/play.py): at its start the damage taken raised and said, the dodges'
-look hooked, the camps grown at once, the census the second after, never in the camps' second; each second what is
-due only, the camps and the census every 5 s a second apart, the watched enemies following the census; the damage
-taken kept, each change said once; a second that holds the game said; a status line every 30 s; the player gone,
-nothing done; the end gives everything back in one line, the zones with it; the long chase at every level, Predator's
-at 600 m. The Hardcore: the dead counted, a step said, its factor given at once to the enemies and the damage taken
-on top of the level's, once only, again when it is switched off; its state in the status line, its kills written at
-the end, its factor at the start. The pieces it drives are set by the test after it is made; test_normal_mode.py runs
-it whole."""
+"""Tests one game played at the level (normal/play.py): at its start the damage taken and the rewards raised and said,
+the dodges' look hooked, the camps grown at once, the census the second after, never in the camps' second; each second
+what is due only, the camps and the census every 5 s a second apart, the watched enemies following the census; the
+damage taken kept, each change said once; a second that holds the game said; a status line every 30 s; the player gone,
+nothing done; the end gives everything back in one line, the zones and the rewards with it; the long chase at every
+level, Predator's at 600 m. The Hardcore: the dead counted, a step said, its factor given at once to the enemies and the
+damage taken on top of the level's, once only, again when it is switched off; its state in the status line, its kills
+written at the end, its factor at the start. The pieces it drives are set by the test after it is made;
+test_normal_mode.py runs it whole."""
 
 import json
 import pathlib
@@ -106,6 +106,14 @@ class Taken:
         return {"base": [1.0, round(factor, 4)]}
 
 
+class Rewards:
+    def start(self, player: object) -> dict:
+        return {"shares": {"xp": 0.1}}
+
+    def put_back(self, player: object) -> str:
+        return "gone" if player is None else "taken_back"
+
+
 clock = {"now": 100.0}
 frame.now = lambda: clock["now"]
 
@@ -118,10 +126,14 @@ try:
     game.enemies = Enemies(5.0, {"met": 2})
     game.enemies.hardened = []
     game.taken = Taken()
+    game.rewards = Rewards()
     notes()  # the mod's own lines at its import
     game.begin(100.0)
-    check("its start: the damage taken raised and said, the camps grown at once, the census not in their second",
-          [line["event"] for line in notes()] == ["normal_taken_raised", "normal_camps"]
+    started = notes()
+    check("its start: the damage taken and the rewards raised and said, the camps grown at once, the census not in "
+          "their second", [line["event"] for line in started]
+          == ["normal_taken_raised", "normal_rewards_raised", "normal_camps"]
+          and started[1]["shares"] == {"xp": 0.1}
           and game.camps.done == [100.0] and game.enemies.done == [])
     game.tick(101.0)
     check("the census the second after", [line["event"] for line in notes()] == ["normal_enemies"]
@@ -215,6 +227,7 @@ try:
     check("the end gives everything back in one line", [line["event"] for line in ended] == ["normal_given_back"]
           and ended[0]["reason"] == "left_game" and ended[0]["enemies"] == {"enemies": 1}
           and ended[0]["camps"] == {"given": 1} and ended[0]["zones"] == {} and ended[0]["taken"] == "unavailable"
+          and ended[0]["rewards"] == "gone"
           and ended[0]["hook"] == "removed" and dodge_speed.IDENTIFIER not in state["hooks"]
           and ended[0]["hardcore_saved"] is True and hardcore.option.value == {"version": 1, "kills": 135})
     hunter.freed = False
@@ -225,6 +238,7 @@ try:
     off.camps = Camps(5.0, {"grown": 0, "refused": 0, "too_many": 0, "stopped": "complete"})
     off.enemies = Enemies(5.0, {})
     off.taken = Taken()
+    off.rewards = Rewards()
     off.begin(200.0)
     hooked = dodge_speed.IDENTIFIER in state["hooks"]
     off.end("stopped")

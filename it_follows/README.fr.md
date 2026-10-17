@@ -8,7 +8,8 @@ Testé en solo sur la version du jeu **1.10.2-4845623**, version Steam, sous Win
 ## Ce qu'il fait
 
 Appuie sur **F5** pendant le jeu, ou ouvre la console avec `~`, tape `mods` et choisis **It Follows** : sa fenêtre, en
-anglais et en français, a quatre pages. Le jeu se met en pause tant qu'elle est ouverte. Tu lances un mode à la fois.
+anglais, en français et en chinois simplifié, a quatre pages. Le jeu se met en pause tant qu'elle est ouverte. Tu
+lances un mode à la fois.
 
 - **MODE HORDE [BETA].** Appuie sur START : tous les ennemis autour de toi viennent vers toi et te suivent partout. Ceux
   que tu croises en chemin rejoignent la horde, et ceux que tu tues reviennent derrière toi, de plus en plus nombreux.
@@ -20,11 +21,13 @@ anglais et en français, a quatre pages. Le jeu se met en pause tant qu'elle est
 - **MODE NORMAL.** Joue ta partie comme d'habitude : les ennemis que tu croises sont plus nombreux, plus rapides et plus
   résistants, esquivent plus souvent et plus vite, et te poursuivent plus loin. Les ennemis sans bouclier en
   reçoivent un, de 40 % de leur vie, qui se recharge en Predator une fois cassé ; les ennemis armés tirent plus juste
-  et leurs balles vont plus vite. Trois niveaux, Bandit, Senior et Predator. Les boss reçoivent la vie, la vitesse, le
-  bouclier et la précision du niveau. En Senior et Predator, la ligne Vitesse des ennemis les rend 15 % plus lents
-  pour ceux qui les trouvent trop rapides. Il est pensé d'abord pour commencer ou recommencer le jeu
-  depuis le début, un peu comme trois niveaux de NG+, et reste utilisable en cours de partie. Il reste allumé d'une
-  partie à l'autre jusqu'à ce que tu appuies sur STOP, et STOP rend les ennemis tels que le jeu les a faits.
+  et leurs balles vont plus vite. Tu gagnes plus d'expérience sur les ennemis tués, et plus de munitions et d'argent
+  en ramassant ; les distributeurs et les missions ne changent pas. Trois niveaux, Bandit, Senior et Predator. Les
+  boss reçoivent la vie, la vitesse, le bouclier et la précision du niveau. En Senior et Predator, la ligne Vitesse des
+  ennemis les rend 15 % plus lents pour ceux qui les trouvent trop rapides. Il est pensé d'abord pour commencer ou
+  recommencer le jeu depuis le début, un peu comme trois niveaux de NG+, et reste utilisable en cours de partie. Il
+  reste allumé d'une partie à l'autre jusqu'à ce que tu appuies sur STOP, et STOP rend les ennemis tels que le jeu les
+  a faits.
 - **Hardcore**, une option du mode normal : les ennemis se renforcent de 1 % tous les 100 ennemis tués, tout au long
   du jeu. Seuls les tués de ton chasseur comptent, pas ceux de tes compagnons. Tu peux mettre la progression en pause, et elle est gardée quand l'option est désactivée.
 - **HISTORIQUE.** Tes 20 derniers runs de la Horde.

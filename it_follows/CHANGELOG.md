@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.4 - 2026-10-17
+
+- Normal mode: more experience from the enemies you kill, more ammo and money picked up, depending on the level.
+- No change for vending machines and missions.
+- Translation: Simplified Chinese.
+
 ## 1.0.3 - 2026-10-16
 
 - Normal mode: at Senior and Predator, the enemies run a little slower than before.

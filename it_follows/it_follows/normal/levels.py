@@ -38,6 +38,10 @@ times spread, and their bullets' speed times bullet_speed, aimed at 15, 20 and 3
 Trial 51 found ×2 dealt some 5 times the damage; if the damage follows a power of the speed (some 2.3), those hits ask
 ×1.06, ×1.08 and ×1.12, an estimate (non vérifié): two phases of the game's own differ by 60 %, so a rise of 15 % is
 not measured in one pass. Kevin judges them in play.
+
+xp, ammo and cash: the share added to the game's multipliers of the experience of the enemies killed, of the ammo
+picked up and of the money picked up (decision 119, Kevin, 16 October 2026; rewards.py), never missions, sales or
+vending machines.
 """
 
 from dataclasses import dataclass, replace
@@ -59,13 +63,19 @@ class Level:
     spread: float
     bullet_speed: float
     reducible: bool
+    xp: float
+    ammo: float
+    cash: float
 
 
 OPTION, ALWAYS = "option", "always"
 LEVELS = {
-    "Bandit": Level("Bandit", 1.5, 350.0, 1.2, 1.7, 0.35, 1.0, 1.45, 1.1, OPTION, False, 0.88, 1.06, False),
-    "Senior": Level("Senior", 2.0, 350.0, 1.4, 2.3, 0.45, 1.0, 1.75, 1.2, ALWAYS, False, 0.88, 1.08, True),
-    "Predator": Level("Predator", 2.0, 600.0, 1.5, 2.8, 0.55, 100.0, 2.3, 1.3, ALWAYS, True, 0.8, 1.12, True),
+    "Bandit": Level("Bandit", 1.5, 350.0, 1.2, 1.7, 0.35, 1.0, 1.45, 1.1, OPTION, False, 0.88, 1.06, False,
+                    0.10, 0.10, 0.15),
+    "Senior": Level("Senior", 2.0, 350.0, 1.4, 2.3, 0.45, 1.0, 1.75, 1.2, ALWAYS, False, 0.88, 1.08, True,
+                    0.15, 0.20, 0.15),
+    "Predator": Level("Predator", 2.0, 600.0, 1.5, 2.8, 0.55, 100.0, 2.3, 1.3, ALWAYS, True, 0.8, 1.12, True,
+                      0.20, 0.25, 0.15),
 }
 # The faster dodges switched off keep the game's own speed, never reduced (play.py speeds up no dodge then; Kevin: « on
 # ne re reduis pas de 15% »).

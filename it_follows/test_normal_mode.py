@@ -1,10 +1,11 @@
 """Tests the normal mode while it is on (normal/mode.py), with its game played whole (normal/play.py and its pieces):
 turned on without a game it waits, its beat hooked under its own name, the reason written once however many seconds
 pass; from a vehicle and in a game of several players it waits, each reason written when it changes; the character
-found, it plays at the next second at its level: the damage taken raised, the camp near grown, and the second after,
-the enemy the census reads given the level; the game left (the character's weak pointer emptied), it gives back what
-the game still holds and waits again, the dodge files kept opened, then plays in the next game; turned on in a game,
-it plays at once; turned off, its beat unhooked, the game it played in given back, then the dodge files."""
+found, it plays at the next second at its level: the damage taken raised, the rewards raised on the character, the camp
+near grown, and the second after, the enemy the census reads given the level; the game left (the character's weak
+pointer emptied), it gives back what the game still holds, the rewards gone with the character, and waits again, the
+dodge files kept opened, then plays in the next game; turned on in a game, it plays at once; turned off, its beat
+unhooked, the game it played in given back, the rewards taken back by their opposite, then the dodge files."""
 
 import json
 import pathlib
@@ -22,7 +23,7 @@ import census_fixture  # noqa: E402
 import aim_fixture  # noqa: E402
 import param_fixture as fx  # noqa: E402
 from it_follows import gbx_param, report  # noqa: E402
-from it_follows.normal import dodge_speed, levels, mode as mode_module, options  # noqa: E402
+from it_follows.normal import dodge_speed, levels, mode as mode_module, options, rewards  # noqa: E402
 
 fails: list[str] = []
 
@@ -58,6 +59,36 @@ def hunter() -> types.SimpleNamespace:
     return types.SimpleNamespace(freed=False, K2_GetActorLocation=lambda: sdk_stubs.vector(0.0, 0.0),
                                  DamageState=types.SimpleNamespace(DamageTakenMultiplier=types.SimpleNamespace(
                                      BaseValue=1.0, Value=1.0)))
+
+
+class DefPtr:
+    """Stands for unrealsdk.unreal.FGbxDefPtr built with a name and the parameter's definition type."""
+
+    def __init__(self, name: str, kind: object) -> None:
+        self.name, self.kind = name, kind
+
+
+class Attributes:
+    """The game's attribute library: the modifiers added on each character, its multipliers read 1 plus them."""
+
+    def __init__(self) -> None:
+        self.added: list[tuple[object, str, float]] = []
+
+    def AddModifierToGbxAttribute(self, attribute: object, context: object, kind: str, value: float, refresh: bool,
+                                  outcome: str) -> tuple:
+        assert attribute.kind == "GbxAttributeDef" and kind == "PostAdd"
+        self.added.append((context, attribute.name, value))
+        return 1, attribute, outcome
+
+    def GetValueOfAttribute(self, name: str, context: object, default: float) -> float:
+        return 1.0 + sum(value for who, kind, value in self.added if who is context and kind == name)
+
+
+attributes = Attributes()
+rewards.FGbxDefPtr = DefPtr
+adder = types.SimpleNamespace(_find=lambda name: types.SimpleNamespace(Struct="GbxAttributeDef"))
+state["classes"][rewards.LIBRARY] = types.SimpleNamespace(ClassDefaultObject=attributes, _find=lambda name: adder)
+state["enums"].update({rewards.KINDS: types.SimpleNamespace(PostAdd="PostAdd"), rewards.OUTCOMES: ["failure"]})
 
 
 def psycho(memory: fx.Memory, family: fx.Built) -> object:
@@ -107,8 +138,13 @@ try:
           [line["why"] for line in notes()] == ["in_vehicle", "coop"] and not mode.playing())
     players(1)
     mode.tick(17.0)
-    check("the character found: it plays at its level, the camps grown at once", mode.playing() and events()
-          == ["normal_playing", "normal_taken_raised", "normal_camp_grown", "normal_camps"])
+    started = [line for line in notes() if line["event"] != "call"]
+    check("the character found: it plays at its level, the camps grown at once", mode.playing()
+          and [line["event"] for line in started]
+          == ["normal_playing", "normal_taken_raised", "normal_rewards_raised", "normal_camp_grown", "normal_camps"])
+    check("Senior's rewards raised on the character: experience +15 %, ammo +20 %, money +15 %",
+          started[2]["reads"] == {"Att_CombatXP_Multiplier": 1.15, "att_pickupammo_multiplier": 1.2,
+                                  "Att_PickupCash_Multiplier": 1.15})
     mode.tick(18.0)
     looked = notes()
     check("the census the second after, never in the camps' second", [line["event"] for line in looked
@@ -130,8 +166,10 @@ try:
     check("a second while playing with nothing due writes nothing", notes() == [])
     player.freed = True
     mode.tick(20.0)
+    left = [line for line in notes() if line["event"] != "call"]
     check("the game left: said, given back, it waits again", not mode.playing()
-          and events() == ["normal_left", "normal_given_back"] and dodge_speed.IDENTIFIER not in state["hooks"]
+          and [line["event"] for line in left] == ["normal_left", "normal_given_back"]
+          and left[1]["rewards"] == "gone" and dodge_speed.IDENTIFIER not in state["hooks"]
           and enemy.CharacterMovement.MaxGroundSpeedScale.Value == 1.0
           and gbx_param.read(enemy.AIDodgeState.DodgeBullet, "Chance")[1] == 0.15
           and enemy.gun.values()["aiaccuracy"] == [7.5, 7.5]
@@ -142,10 +180,15 @@ try:
     mode.tick(21.0)
     check("the next game: it plays again", mode.playing() and events()[0] == "normal_playing")
     mode.end("stopped")
+    ended = [line for line in notes() if line["event"] != "call"]
     check("turned off: the beat unhooked, the game given back, then the dodge files",
-          mode_module.IDENTIFIER not in state["hooks"] and events() == ["normal_left", "normal_given_back",
-                                                                        "normal_off"]
+          mode_module.IDENTIFIER not in state["hooks"] and [line["event"] for line in ended]
+          == ["normal_left", "normal_given_back", "normal_off"]
           and gbx_param.read(family.DodgeBullet, "Chance")[1] == 0.15 and mode.dodges.files == {})
+    check("turned off: the rewards taken back by their opposite, read back at 1",
+          ended[1]["rewards"] == dict.fromkeys(("Att_CombatXP_Multiplier", "att_pickupammo_multiplier",
+                                                "Att_PickupCash_Multiplier"), 1.0)
+          and [value for _who, _name, value in attributes.added[-3:]] == [-0.15, -0.2, -0.15])
     again = mode_module.Mode(options.Settings(levels.LEVELS["Bandit"], False), failures.append)
     check("turned on in a game: it plays at once", again.begin(30.0) == "playing"
           and events()[:2] == ["normal_on", "normal_playing"])
