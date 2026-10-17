@@ -2,7 +2,7 @@
 
 The SDK log is the one trace a player has, and the one Kevin's trials read: named fields rather than sentences, so that
 a line can be searched. Each call that changes the game is written down before it is made (called), so that the last
-line before a crash names it. Players are named by their character's object name, never by their player name: the
+line before a crash names it. Players are named by their number J1 to J4 (player), never by their player name: the
 score shows the player names on the screen only, and a log is shared far more widely than a screen.
 """
 
@@ -58,9 +58,9 @@ def called(what: str, make: Callable[[], Any]) -> tuple[bool, Any]:
         return False, None
 
 
-def said(text: str) -> None:
-    """A sentence for the player who reads the log."""
-    logging.info(f"{PREFIX} {str(text)[:MAX_TEXT]}")
+def player(number: int) -> str:
+    """A player as every line names him: J and his number (roster.py)."""
+    return f"J{number}"
 
 
 def error_once(key: str, message: str) -> None:

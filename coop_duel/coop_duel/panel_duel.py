@@ -1,4 +1,4 @@
-"""The DUEL page, the window's only one: how a duel goes, then START DUEL; while a duel goes on, its score and STOP DUEL
+"""The DUEL page, the window's first: how a duel goes, then START DUEL; while a duel goes on, its score and STOP DUEL
 instead (Kevin, 17 October 2026: no end, the host stops it in the menu). A refusal to start is said in the footer with
 its real cause and what to do, the game left as it was. START closes the window without the mods list, the players
 going to the fight, as It Follows' START does (its control_window passages, docs/duel/outils/menu_window.py).
@@ -16,7 +16,8 @@ KEY = menu.duel.identifier.removesuffix("_menu")
 LEAVE = "leave"
 
 
-def _visible(widget: Any, shown: bool) -> None:
+def visible(widget: Any, shown: bool) -> None:
+    """Shown, or taken out of the layout; the TEAMS page's rows too."""
     widget.SetVisibility(w.enum("ESlateVisibility", "SelfHitTestInvisible" if shown else "Collapsed"))
 
 
@@ -40,13 +41,13 @@ def paint(form: Any, widgets: dict, language: str) -> None:
     shown = duel.live()
     form.duel_shown = shown
     going = shown is not None
-    _visible(widgets["duel_live"], going)
-    _visible(widgets["duel_start_box"], not going)
+    visible(widgets["duel_live"], going)
+    visible(widgets["duel_start_box"], not going)
     widgets["duel_how"].SetText(i18n.text("duel_how", language))
     widgets["duel_start_label"].SetText(i18n.text("start", language))
     widgets["duel_stop_label"].SetText(i18n.text("stop", language))
     if going:
-        widgets["duel_score"].SetText(f"{shown.host_name}  {shown.host} - {shown.guest}  {shown.guest_name}")
+        widgets["duel_score"].SetText(shown.line)
 
 
 def notice(form: Any, language: str) -> str:

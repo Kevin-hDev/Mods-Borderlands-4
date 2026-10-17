@@ -1,4 +1,4 @@
-"""Co-op Duel's window: built whole in the plain frame under the mod's name, its one page DUEL, no UNDO nor RESTORE;
+"""Co-op Duel's window: built whole in the plain frame under the mod's name, its pages DUEL, TEAMS and OPTIONS, no UNDO nor RESTORE;
 how a duel goes and START DUEL while no duel goes on; START DUEL with the mod off refused in the footer; a refused start
 said with its cause, the window kept, nothing changed; a started duel closing the window without the mods list, the
 score and STOP DUEL shown at the next opening, START hidden; the score followed while the window is open; STOP DUEL
@@ -74,7 +74,7 @@ def click(form, widgets, name: str):
 
 form, widgets = opened()
 check("built whole in the plain frame, under the mod's name", theme.BRAND == "CO-OP DUEL"
-      and tuple(form.model.pages) == ("duel", "options") and len(widgets["pages"].children) == 2)
+      and tuple(form.model.pages) == ("duel", "teams", "options") and len(widgets["pages"].children) == 3)
 check("no UNDO nor RESTORE in the footer", "undo" not in widgets and "restore" not in widgets)
 check("how a duel goes, and START DUEL while no duel goes on", text(widgets, "duel_how") == panel_en.TEXT["duel_how"]
       and text(widgets, "duel_start_label") == "START DUEL" and visible(widgets, "duel_start_box")
@@ -100,7 +100,7 @@ form, widgets = opened()
 check("at the next opening: the score and STOP DUEL, START hidden", visible(widgets, "duel_live")
       and not visible(widgets, "duel_start_box") and text(widgets, "duel_score") == "Kevin  0 - 0  Venus"
       and text(widgets, "duel_stop_label") == "STOP DUEL" and text(widgets, "notice") == panel_en.TEXT["ready_on"])
-duel._live["duel"].score.fell("guest")
+duel._live["duel"].score.won(1)
 form.poll()
 check("the score followed while the window is open", text(widgets, "duel_score") == "Kevin  1 - 0  Venus")
 check("STOP DUEL ends the duel and brings START back", click(form, widgets, "duel_stop") is False
@@ -112,7 +112,10 @@ check("the texts in French", text(widgets, "duel_start_label") == "LANCER LE DUE
       and text(widgets, "heading:duel") == "DUEL" and text(widgets, "notice") == panel_fr.TEXT["ready_duel"])
 
 asked = {"options", "ready_options", "open_key_label", "open_key_hint", "duel_key_label", "duel_key_hint",
-         "press_key", "key_taken", "banner_round", "banner_refused", "duel", "duel_how", "start", "stop", "host", "guest", "banner_start", "banner_over", "ready_duel",
+         "press_key", "key_taken", "banner_round", "banner_refused", "duel", "duel_how", "start", "stop", "host",
+         "banner_start", "banner_over", "banner_draw", "team_name", "player_fallback", "ready_duel",
+         *(f"stop_{why}" for why in duel.SAID), "teams", "teams_each", "teams_vs", "teams_one", "ready_teams",
+         "teams_allies", "teams_alone", "teams_locked", "teams_not_host",
          "ready_on", "start_off", "start_refused", *(f"start_{refusal}" for refusal in duel.REFUSALS)}
 check("every text the window asks for, in both languages", asked <= panel_en.TEXT.keys()
       and asked <= panel_fr.TEXT.keys())

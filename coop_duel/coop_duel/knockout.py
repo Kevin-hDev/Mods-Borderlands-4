@@ -1,7 +1,8 @@
-"""What a KO does to a player knocked down in a duel, host or guest; duel.py decides when.
+"""What a KO does to a player knocked down in a duel, host or guest; fight.py and fighters.py decide when.
 
-Kevin, 16 October 2026: the loser stays KO on the ground 3 s, neither hurting nor hurt, then stands up where he fell
-(docs/duel/README.md, décisions). Without the mod, a player knocked down dies about ten seconds later and comes back at
+Kevin, 16 October 2026: the loser stays KO on the ground 3 s, nobody hurting him, then stands up where he fell
+(docs/duel/README.md, décisions); in teams he stays down until his team loses the round or a teammate stands him up
+(docs/duel/spec-equipes.md). Without the mod, a player knocked down dies about ten seconds later and comes back at
 the zone's station, far away (trial 2).
 
 KO: the game's countdown to death paused (PauseDownStateTimer): without it, after six falls in 43 s the host died 0.14 s
@@ -57,3 +58,10 @@ def stand_up(damage: Any, label: str, pawn: Any, damageable: bool) -> bool:
     _done, down = report.called(f"InDownState({label})", lambda: pawn.InDownState())
     report.note("stood up", character=label, down_after=report.shown(down))
     return down is False
+
+
+def release(label: str, pawn: Any, damageable: bool) -> None:
+    """Stood up by the game during a round, by a teammate or a second wind (Kevin, 17 October 2026): the countdown let
+    go and his damage as before his fall; his health is the game's."""
+    report.called(f"PauseDownStateTimer({label}, False)", lambda: pawn.PauseDownStateTimer(False, PAUSE_REASON))
+    report.called(f"bCanBeDamaged({label}) = {damageable}", lambda: setattr(pawn, "bCanBeDamaged", damageable))

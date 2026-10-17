@@ -13,7 +13,7 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 | [Hunter Change](hunter_change/) | Become another Vault Hunter in your game, keeping its level, backpack and story, each hunter with their own skill tree; or only wear another hunter's look | 1.0.7 |
 | [Benefix Ohm Attack](benefix_ohm_attack/) | Fire an attack beam from your hand that locks onto enemies, with six elements to choose from, its own energy bar and damage that scales with your level | 1.0.4 |
 | [It Follows](it_follows/) | Two modes to make the game harder: the enemies of your normal game reworked, more numerous, faster and tougher, with a Hardcore option that strengthens them as you kill; and a Horde mode (beta) where every enemy around you follows you without end | 1.0.5 |
-| [Co-op Duel](coop_duel/) | Fight your teammate in co-op, anywhere in the world: endless rounds, a 3 second KO, then back up on the spot; only the host needs the mod | 1.0.0 |
+| [Co-op Duel](coop_duel/) | Fight your teammates in co-op, 2 to 4 players, each for themselves or in teams, anywhere in the world: endless rounds, then back up on the spot; only the host needs the mod | 1.0.1 |
 
 [camera_runtime](camera_runtime/) is not a mod of its own: it is the camera, field of view and loot reach that Apex
 Movement, Omni Sprint and Third Person & FOV carry inside their `.sdkmod`, with the C++ source of its small native

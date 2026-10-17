@@ -21,7 +21,7 @@ def check(label: str, condition: bool) -> None:
 
 mod = coop_duel.mod
 check("built under its public name with its version, the frame hook, the window's preferences and its two keys",
-      mod.kwargs["name"] == "Co-op Duel" and coop_duel.__version__ == "1.0.0"
+      mod.kwargs["name"] == "Co-op Duel" and coop_duel.__version__ == "1.0.1"
       and mod.kwargs["hooks"] == [heartbeat.tick]
       and mod.kwargs["options"] == [*panel_preferences.ALL, keys.OPEN.option, keys.DUEL.option]
       and mod.kwargs["keybinds"] == [keys.OPEN.bind, keys.DUEL.bind])

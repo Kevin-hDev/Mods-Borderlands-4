@@ -1,7 +1,8 @@
-"""A fake co-op game for Co-op Duel's tests, installed over sdk_stubs: the world and its player list, each player's
-character (its role, down state, damage switch, countdown pauses), the team library with its attitudes, the health
-library, the screen subsystem the message goes on, and the player's controller. Built from the duel trials' own fakes
-(docs/duel/sondes/test_duel_up.py), each answer shaped as the game gave it in the trials' logs."""
+"""A fake co-op game for Co-op Duel's tests, installed over sdk_stubs: the world and its player list (each player's
+PlayerState, his character or the vehicle he drives, none while he is away), each player's character (its role, down
+state, damage switch, countdown pauses), the team library with its attitudes, the health library, the screen subsystem
+the message goes on, and the player's controller. Built from the duel trials' own fakes (docs/duel/sondes/
+test_duel_up.py), each answer shaped as the game gave it in the trials' logs."""
 
 import sys
 from types import SimpleNamespace
@@ -27,13 +28,27 @@ PLAYER = Handle(TEAM_KIND, "Team_Player")
 REVIVED = SimpleNamespace(name="revived")
 
 
+class State:
+    """A player's PlayerState: who he is for the whole session; the game's list holds it, his character points to
+    it, and it outlives his character's deaths."""
+
+    def __init__(self, name: str, player: str) -> None:
+        self.Name, self.player = name, player
+        self.PawnPrivate = None
+
+    def GetPlayerName(self) -> str:
+        return self.player
+
+
 class Character:
     def __init__(self, name: str, player: str, *, local: bool = False, role: str = AUTHORITY) -> None:
         self.Name, self.local, self.role = name, local, role
         self.Class = SimpleNamespace(Name="OakCharacter")
         self.CharacterMovement = SimpleNamespace(Name="CharMoveComp")
         self.HealthState = SimpleNamespace(HealthTypeStates=[SimpleNamespace(HealthType=kind) for kind in KINDS])
-        self.PlayerState = SimpleNamespace(GetPlayerName=lambda: player)
+        self.PlayerState = State(f"PS_{name}", player)
+        # A player in the game without a character yet (joining, coming back): seat() lists him without one.
+        self.away = False
         self.down, self.asked, self.stops, self.pauses = False, 0, [], []
         self.bCanBeDamaged = True
         self.broken = self.stuck = False
@@ -57,10 +72,16 @@ class Character:
         self.stops.append(reason)
         self.down = self.down and self.stuck
 
+    def renew_state(self) -> None:
+        """A travel: the game gives the player a new PlayerState, under the same player name."""
+        self.PlayerState = State(f"PS_{self.Name}_new", self.PlayerState.player)
+
 
 class Vehicle:
-    def __init__(self, name: str, *, local: bool = False) -> None:
+    def __init__(self, name: str, *, local: bool = False, driver: Any = None) -> None:
         self.Name, self.local = name, local
+        # Driven, the vehicle is its driver's pawn: his PlayerState stays his.
+        self.PlayerState = driver.PlayerState if driver is not None else State(f"PS_{name}", "")
 
     def GetLocalRole(self) -> str:
         return AUTHORITY
@@ -70,8 +91,7 @@ class Vehicle:
 
 
 class Teams:
-    """GbxTeamFunctionLibrary: each actor's team, SetTeam recorded, attitudes hostile across Team_Player and
-    Team_Hostile; refuse names the actors whose SetTeam raises, keep_player those whose team never changes."""
+    """GbxTeamFunctionLibrary: each actor's team, SetTeam recorded, attitudes by team; refuse names the actors whose SetTeam raises, keep_player those whose team never changes."""
 
     def __init__(self) -> None:
         self.ClassDefaultObject = self
@@ -94,7 +114,12 @@ class Teams:
             self.teams[actor.Name] = team
 
     def GetAttitudeTowards(self, one: Any, other: Any) -> int:
-        return 0 if self.GetTeam(one).name == self.GetTeam(other).name == "Team_Player" else 2
+        """As the game's table reads (docs/duel/spec-equipes.md): a team is friendly to its own members, Team_Hostile
+        excepted, and hostile to any other team."""
+        mine, theirs = self.GetTeam(one).name, self.GetTeam(other).name
+        if mine == theirs:
+            return 2 if mine == "Team_Hostile" else 0
+        return 2
 
 
 class Damage:
@@ -133,8 +158,13 @@ class Game:
         self.pc = SimpleNamespace(Name="PC")
 
     def seat(self, *pawns: Any) -> None:
-        self.world.GameState.PlayerArray = [SimpleNamespace(PawnPrivate=pawn, Name=f"PS_{index}")
-                                            for index, pawn in enumerate(pawns)]
+        """The game's player list made of these pawns' PlayerStates, each pointing to its pawn, none for one away."""
+        states = []
+        for pawn in pawns:
+            state = pawn.PlayerState
+            state.PawnPrivate = None if getattr(pawn, "away", False) else pawn
+            states.append(state)
+        self.world.GameState.PlayerArray = states
 
     def travel(self) -> None:
         self.world = World(self.world.GameState.PlayerArray)

@@ -1,6 +1,7 @@
-"""The short message at the top of the host's screen: the score at each round, then nothing until the next one (Kevin,
-17 October 2026: "rien à l'écran le reste du temps"); also why the duel's key could not start a duel. The guest sees
-nothing: only the host's game runs the mod, and a guest without it draws nothing of ours (Kevin's choice).
+"""The short message at the top of the host's screen: the round's outcome and the score's line at each round, then
+nothing until the next one (Kevin, 17 October 2026: "rien à l'écran le reste du temps"); also why the duel's key
+could not start a duel, and why a duel ended on its own. The guest sees nothing: only the host's game runs the mod,
+and a guest without it draws nothing of ours (Kevin's choice).
 
 Its look is HUD Editor's, our mod (Kevin, 17 October 2026, two screenshots of it as the model): a cyan plate on top
 left holding the title in dark capitals, over a dark blue-green panel framed in cyan, the names in white and the score
@@ -19,7 +20,7 @@ from typing import Any
 
 import unrealsdk
 
-from . import panel_fonts, panel_widgets as w, report
+from . import panel_fonts, panel_widgets as w, report, score
 
 # Under our mods' windows (10000), so that a menu covers the message.
 ZORDER = 5000
@@ -45,6 +46,11 @@ TITLE_SPACING = 120
 MAX_INSTANCES = 32
 # Kinds of failure said in the log: a handful in practice; past this, new kinds are dropped.
 MAX_FAILURES = 20
+# Each kind of the score's parts: its size, colour and face, and whether a gap sits on both its sides.
+LOOKS = {score.NAME: (NAME_POINTS, WHITE, "SemiBold", False), score.POINTS: (SCORE_POINTS, ORANGE, "ExtraBold", True),
+         score.SEPARATOR: (NAME_POINTS, CYAN, "SemiBold", True)}
+# Four teams make eleven parts; the bound keeps a broken line from building widgets without end.
+MAX_PARTS = 16
 
 
 def _viewport() -> Any:
@@ -108,9 +114,9 @@ def _centred(slot: Any) -> None:
     slot.SetVerticalAlignment(_enum("EVerticalAlignment", "VAlign_Center"))
 
 
-def build(holder: Any, title: str, score: tuple[str, str, str] | None, sentence: str | None) -> Any:
-    """The message's widgets under holder: the plate and its title, then the framed panel with the score (left name,
-    points, right name) or a sentence. Its root, an Overlay over the whole screen."""
+def build(holder: Any, title: str, line: list[tuple[str, str]] | None, sentence: str | None) -> Any:
+    """The message's widgets under holder: the plate and its title, then the framed panel with the score's line
+    (score.py) or a sentence. Its root, an Overlay over the whole screen."""
     look = _Look(holder)
     layer = unrealsdk.construct_object("Overlay", holder)
     card = unrealsdk.construct_object("VerticalBox", layer)
@@ -121,18 +127,15 @@ def build(holder: Any, title: str, score: tuple[str, str, str] | None, sentence:
     frame = _box(card, CYAN, (FRAME_PX, FRAME_PX))
     body = _box(frame, PANEL, BODY_PADDING_PX, PANEL_ALPHA)
     frame.SetContent(body)
-    if score is not None:
-        line = unrealsdk.construct_object("HorizontalBox", body)
-        left, points, right = score
-        for index, (value, size, colour, face) in enumerate(((left, NAME_POINTS, WHITE, "SemiBold"),
-                                                             (points, SCORE_POINTS, ORANGE, "ExtraBold"),
-                                                             (right, NAME_POINTS, WHITE, "SemiBold"))):
-            slot = line.AddChildToHorizontalBox(look.text(line, value, size, colour, face))
+    if line is not None:
+        row = unrealsdk.construct_object("HorizontalBox", body)
+        for value, kind in islice(line, MAX_PARTS):
+            size, colour, face, gap = LOOKS[kind]
+            slot = row.AddChildToHorizontalBox(look.text(row, value, size, colour, face))
             _centred(slot)
-            if index == 1:
-                slot.SetPadding(unrealsdk.make_struct("Margin", Left=NAME_GAP_PX, Top=0.0, Right=NAME_GAP_PX,
-                                                      Bottom=0.0))
-        body.SetContent(line)
+            if gap:
+                slot.SetPadding(_margin(0.0, NAME_GAP_PX))
+        body.SetContent(row)
     else:
         words = look.text(body, sentence or "", SENTENCE_POINTS, WHITE, "SemiBold")
         words.SetAutoWrapText(True)
@@ -161,7 +164,7 @@ class Banner:
         self.until = 0.0
         self.failures: set[str] = set()
 
-    def show(self, pc: Any, title: str, now: float, score: tuple[str, str, str] | None = None,
+    def show(self, pc: Any, title: str, now: float, line: list[tuple[str, str]] | None = None,
              sentence: str | None = None) -> str:
         """The message built and put on the screen for SHOW_S, the one before taken off: "shown", or what kept it
         off."""
@@ -176,7 +179,7 @@ class Banner:
             holder.bIsFocusable = False
             tree = unrealsdk.construct_object("WidgetTree", holder)
             holder.WidgetTree = tree
-            layer = build(holder, title, score, sentence)
+            layer = build(holder, title, line, sentence)
             tree.RootWidget = layer
             hidden_to_clicks = _enum("ESlateVisibility", "HitTestInvisible")
             layer.SetVisibility(hidden_to_clicks)

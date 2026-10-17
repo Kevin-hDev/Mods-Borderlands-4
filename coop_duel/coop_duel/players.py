@@ -1,5 +1,5 @@
 """The players of the game, as the host sees them: his own character and each guest's, read from the game state's player
-list. Only the host's game decides teams and damage for everyone (trial 6, docs/duel/enquetes/
+list (everyone). Only the host's game decides teams and damage for everyone (trial 6, docs/duel/enquetes/
 2026-10-17-invite-sans-mods.md: a guest without any mod duels as well), so a game whose characters are not under its
 authority is a guest's, and the duel is not started there.
 
@@ -20,11 +20,12 @@ MAX_PLAYERS = 8
 MAX_NAME = 24
 
 
-class Found(NamedTuple):
-    host: Any  # the host's character, None while he has none
-    guests: list[Any]  # each guest's character on foot
-    riding: int  # guests whose pawn is not on foot (a vehicle)
-    host_on_foot: bool
+class Player(NamedTuple):
+    """One player of the game as the host reads him."""
+    state: Any  # his PlayerState: who he is for the whole session, whatever his character does
+    pawn: Any  # his character, the vehicle he drives or rides, None while he has none
+    on_foot: bool
+    host: bool
 
 
 def world() -> Any:
@@ -36,7 +37,8 @@ def world() -> Any:
 
 
 def label(pawn: Any) -> str:
-    """The character's object name: what the log calls a player."""
+    """The character's object name, written beside a player's number J (report.player) to match a line with the
+    game's own."""
     return report.shown(getattr(pawn, "Name", None))
 
 
@@ -45,31 +47,25 @@ def on_foot(pawn: Any) -> bool:
     return bool(getattr(pawn, "CharacterMovement", None))
 
 
-def find(world: Any) -> Found | None:
-    """The host's character and his guests', None when this game is not the host's. Raises when the game state cannot
-    be read: the caller decides what an unreadable game means."""
+def everyone(world: Any) -> list[Player] | None:
+    """Every player of the game, the host first, None when this game is not the host's. Raises when the game state
+    cannot be read: the caller decides what an unreadable game means."""
     authority = unrealsdk.find_enum("ENetRole").ROLE_Authority
-    host, guests, riding, host_on_foot = None, [], 0, False
+    found = []
     for state in islice(world.GameState.PlayerArray, MAX_PLAYERS):
-        pawn = state.PawnPrivate
-        if not pawn:
-            continue
-        if pawn.GetLocalRole() != authority:
+        pawn = state.PawnPrivate or None
+        if pawn is not None and pawn.GetLocalRole() != authority:
             return None
-        if pawn.IsLocallyControlled():
-            host, host_on_foot = pawn, on_foot(pawn)
-        elif on_foot(pawn):
-            guests.append(pawn)
-        else:
-            riding += 1
-    return Found(host, guests, riding, host_on_foot)
+        found.append(Player(state, pawn, pawn is not None and on_foot(pawn),
+                            pawn is not None and bool(pawn.IsLocallyControlled())))
+    return sorted(found, key=lambda player: not player.host)
 
 
-def player_name(pawn: Any, fallback: str) -> str:
-    """The name the game shows for this player, for the score on the screen only; fallback when it cannot be read.
-    APlayerState.GetPlayerName is the engine's own reader: not verified in game in Borderlands 4."""
+def player_name(state: Any, fallback: str) -> str:
+    """The name the game shows for this player, read on his PlayerState, for the window and the screen only; fallback
+    when it cannot be read. APlayerState.GetPlayerName is the engine's own reader (trials 9 and 10, seen in game)."""
     try:
-        name = str(pawn.PlayerState.GetPlayerName()).strip()
+        name = str(state.GetPlayerName()).strip()
     except Exception:
         return fallback
     return name[:MAX_NAME] if name else fallback

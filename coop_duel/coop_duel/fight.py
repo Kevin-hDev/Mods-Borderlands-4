@@ -1,123 +1,162 @@
-"""A duel's rounds, for duel.py, which starts, beats and ends it: each fall scored, the one who fell KO 3 s out of the
-fight then stood up where he fell (knockout.py), the duel paused meanwhile, the guest's team kept, and why the duel must
-end on its own.
+"""A duel's rounds between its players, for duel.py, which starts, beats and ends it (Kevin, 17 October 2026,
+docs/duel/spec-equipes.md).
 
-Kevin's rules (docs/duel/README.md, décisions): a fall ends the round; the one who fell stays KO 3 s, neither hurting
-nor hurt, then stands up in place. While a player is KO the guest gets his own team back, so that nobody hurts anybody
-(trial 5, verified in game); once nobody is KO, the duel's team again.
-"""
+A round: a player the game shows down falls (fighters.py), protected, his duel team kept so that a teammate can stand
+him up; stood up by the game, he is back. Once a single team has players standing it wins the round, once none has the
+round is a draw (rounds.py). Then the pause: each player given his own team back, so that nobody hurts anybody (trial
+5, verified in game), and KO_S later each player down stood up where he fell, every duel team handed again, the next
+round on. A player an enemy around knocks down during the pause is protected too and stood up with the others, no
+point given: unwatched, he would start the next round down, or die once the duel is stopped. In one against one the
+first fall ends the round: the duel of 1.0.0.
 
-from typing import Any, Callable, NamedTuple
+The players are read at each step: one who leaves the game leaves the duel, which goes on while two teams have players;
+one who comes ends it, as he would be the host team's ally without having chosen it (Kevin's choice)."""
+
+from typing import Any, Callable
 
 from unrealsdk.unreal import WeakPointer
 
-from . import knockout, players, report, teams
-from .score import GUEST, HOST, Score
+from . import knockout, players, report, rounds
+from .fighters import Fighter
+from .score import Score
 
-# Kevin, 16 October 2026: 3 s KO on the ground, well within the ten seconds before the game kills him.
+# Kevin, 16 October 2026: 3 s KO on the ground before the next round.
 KO_S = 3.0
 # A player just stood up is not asked again at once: the game may still show him down for a frame or two.
 SETTLE_S = 1.0
-# How often the guest's team is read back while nobody is KO, and how many times it may be handed again in a duel
+# How often the players' teams are read back during a round, and how many times they may be handed again in a duel
 # before the duel gives up: a team the game keeps taking back would otherwise be handed forever.
 TEAM_CHECK_S = 1.0
 MAX_HANDS = 20
-
-
-class Knocked(NamedTuple):
-    pointer: Any
-    until: float
-    damageable: bool
+PLAYING, PAUSED = "playing", "paused"
 
 
 class Fight:
-    """A duel's rounds between its two players; show(fight, now) puts the round's score on the host's screen."""
+    """A duel's rounds; show(fight, now) puts the round's outcome and the score on the host's screen."""
 
-    def __init__(self, world: Any, host: Any, guest: teams.Guest, score: Score, language: str, now: float,
+    def __init__(self, world: Any, fighters: list[Fighter], score: Score, language: str, now: float,
                  show: Callable[[Any, float], None]) -> None:
-        self.world, self.host = WeakPointer(world), WeakPointer(host)
-        self.host_label = players.label(host)
-        self.guest, self.score, self.language = guest, score, language
+        self.world = WeakPointer(world)
+        self.fighters, self.score, self.language, self.show = fighters, score, language, show
         self.damage = knockout.damage_library()
-        self.knocked: dict[str, Knocked] = {}
-        self.settled: dict[str, float] = {}
+        self.phase, self.until = PLAYING, 0.0
         self.last = self.checked = now
         self.hands = self.failed = 0
-        self.show = show
+        # The last round's outcome, a team's number or rounds.DRAW, for the message.
+        self.outcome: int | str | None = None
         # Why the duel must end, set by a step that cannot be undone here (a player not stood up).
         self.broken: str | None = None
+
+    def members(self) -> list[Any]:
+        return [fighter.member for fighter in self.fighters if fighter.member is not None]
 
     def beat(self, now: float) -> str | None:
         """One step of the duel; why it must end, or None."""
         world = players.world()
         if world is None or self.world() is None or not world == self.world():
             return "world_changed"
-        found = players.find(world)
+        found = players.everyone(world)
         if found is None:
             return "not_host"
-        guest = self.guest.pawn()
-        # Gone from the player list, his character may still live a few frames; in a vehicle he is in it as a rider.
-        if guest is None or (not any(pawn == guest for pawn in found.guests) and not found.riding):
-            return "guest_left"
-        if len(found.guests) + found.riding > 1:
-            return "third_player"
-        self.wake(now)
-        if self.broken is not None:
+        joined = [player for player in found if not any(fighter.is_player(player.state) for fighter in self.fighters)]
+        if joined:
+            report.note("player joined", players=len(found), characters=[players.label(one.pawn) for one in joined])
+            return "player_joined"
+        for fighter in [fighter for fighter in self.fighters
+                        if not any(fighter.is_player(player.state) for player in found)]:
+            self.leave(fighter)
+        if len({fighter.team for fighter in self.fighters}) < 2:
+            return "teams_left"
+        self.watch(found, now)
+        if self.phase == PAUSED:
+            self.resume(now)
             return self.broken
-        # A host in a vehicle is not asked: the vehicle has no down state.
-        host = found.host if found.host_on_foot else None
-        for pawn, side, label in ((host, HOST, self.host_label), (guest, GUEST, self.guest.label)):
-            if pawn is None or label in self.knocked or now < self.settled.get(label, 0.0):
-                continue
-            if pawn.InDownState() is True:
-                self.fell(pawn, side, label, now)
-        if not self.knocked and now - self.checked >= TEAM_CHECK_S:
+        decided = rounds.outcome(self.standing())
+        if decided != rounds.GOING:
+            self.end_round(decided, now)
+        elif now - self.checked >= TEAM_CHECK_S:
             self.checked = now
-            return self.keep_team()
+            return self.keep_teams()
         return None
 
-    def fell(self, pawn: Any, side: str, label: str, now: float) -> None:
-        self.score.fell(side)
-        report.note("round", loser=side, character=label, host=self.score.host, guest=self.score.guest)
-        if not self.knocked:
-            self.guest.give_back()
-            report.note("duel paused")
-        self.knocked[label] = Knocked(WeakPointer(pawn), now + KO_S, knockout.protect(label, pawn))
+    def standing(self) -> dict[int, int]:
+        """Each team still in the duel and how many of its players stand."""
+        counts: dict[int, int] = {}
+        for fighter in self.fighters:
+            counts[fighter.team] = counts.get(fighter.team, 0) + (not fighter.down)
+        return counts
+
+    def watch(self, found: list[players.Player], now: float) -> None:
+        """Each player on foot asked whether the game shows him down: a fall, or a player stood up by the game."""
+        changed = False
+        for fighter in self.fighters:
+            player = next((one for one in found if fighter.is_player(one.state)), None)
+            pawn = fighter.pawn()
+            # A vehicle has no down state; a player just stood up by the duel is not asked yet.
+            if player is None or not player.on_foot or pawn is None or now < fighter.settled:
+                continue
+            down = pawn.InDownState() is True
+            if down and not fighter.down:
+                fighter.fall()
+                changed = True
+            elif fighter.down and not down:
+                fighter.let_go()
+                changed = True
+        if changed:
+            report.note("standing", teams=self.standing())
+
+    def end_round(self, decided: int | str, now: float) -> None:
+        if decided == rounds.DRAW:
+            self.score.draw()
+        else:
+            self.score.won(decided)
+        self.outcome = decided
+        report.note("round", round=self.score.rounds, winner=decided, points=self.score.points)
+        for member in self.members():
+            member.give_back()
+        self.phase, self.until = PAUSED, now + KO_S
+        report.note("duel paused")
         self.show(self, now)
 
-    def wake(self, now: float, every: bool = False) -> None:
-        """Stands up each player whose KO is over, or every one still KO; the duel resumes once none is."""
-        woken = False
-        for label, knocked in list(self.knocked.items()):
-            if not every and now < knocked.until:
-                continue
-            del self.knocked[label]
-            self.settled[label] = now + SETTLE_S
-            woken = True
-            pawn = knocked.pointer()
-            if pawn is None:
-                report.note("character gone, nothing to stand up", character=label)
-                continue
-            # Not stood up, he would lie down again with the duel resumed: the duel ends, as a player down is
-            # the game's own business once nobody holds his countdown.
-            if not knockout.stand_up(self.damage, label, pawn, knocked.damageable) and not every:
+    def resume(self, now: float) -> None:
+        """Once the pause is over: each player down stood up, every duel team handed again, the next round on."""
+        if now < self.until:
+            return
+        for fighter in self.fighters:
+            # Not stood up, he would lie down again with the duel resumed: the duel ends, a player down being the
+            # game's own business once nobody holds his countdown.
+            if fighter.down and not fighter.stand_up(self.damage, now, SETTLE_S):
                 self.broken = "stand_up_failed"
-        if woken and not self.knocked and not every and self.broken is None:
-            self.guest.hand()
-            report.note("duel resumed")
-            self.checked = now
+        if self.broken is not None:
+            return
+        for member in self.members():
+            member.hand()
+        self.phase, self.checked = PLAYING, now
+        report.note("duel resumed")
 
-    def keep_team(self) -> str | None:
-        """The guest's team read back; handed again when the game took it from him, as a death may."""
-        if teams.holds_duel_team(self.guest.team()):
-            return None
-        self.hands += 1
-        report.note("team lost, handed again", character=self.guest.label, times=self.hands)
-        if self.hands > MAX_HANDS or not self.guest.hand():
-            return "team_lost"
+    def leave(self, fighter: Fighter) -> None:
+        self.fighters.remove(fighter)
+        self.score.left(fighter.team, fighter.number)
+        report.note("player left", player=fighter.name, team=fighter.team)
+        # His character may live a few frames more: his own team given back while it does.
+        if fighter.member is not None and fighter.member.pawn() is not None:
+            fighter.member.give_back()
+
+    def keep_teams(self) -> str | None:
+        """Each player's team read back; handed again when the game took it from him, as a death may."""
+        for member in self.members():
+            if member.holds_duel_team():
+                continue
+            self.hands += 1
+            report.note("team lost, handed again", player=member.name, times=self.hands)
+            if self.hands > MAX_HANDS or not member.hand():
+                return "team_lost"
         return None
 
-    def end(self, now: float) -> bool:
-        """Every player back to normal: the one still KO stood up, the guest's own team given back; whether it was."""
-        self.wake(now, every=True)
-        return self.guest.give_back()
+    def end(self, now: float) -> list[Any]:
+        """Every player back to normal: each one still down stood up, each one's own team given back; those whose
+        give-back the game refused."""
+        for fighter in self.fighters:
+            if fighter.down:
+                fighter.stand_up(self.damage, now, SETTLE_S)
+        return [member for member in self.members() if not member.give_back()]

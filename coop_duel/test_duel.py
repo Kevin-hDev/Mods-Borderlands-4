@@ -1,14 +1,15 @@
 """The duel over a fake co-op game and a fake clock (duel.py, fight.py, teams.py, knockout.py, score.py, banner.py).
 
-Refused, nothing changed: no game, a guest's game, no guest, three players, a vehicle, a team refused or not taken.
-Started: the guest in Team_Hostile, the score on the screen with the players' names, which never reach the log. Each
-fall: the round to the other player, the duel paused (the guest's own team back), the one who fell KO 3 s with the
-game's countdown paused and no damage taken, then stood up in place, flesh and shield refilled but not the overshield,
-the duel resumed; a player just stood up not asked again for a second; both falling at once. The message taken off
-after 4 s. A team the game took back handed again, a duel given up when it keeps being taken. Ended, every player back
-to normal, the one still KO stood up: by STOP, when the mod is switched off (no message left on the screen), and on its
-own when the guest leaves, a third player comes, the world changes, the game is no longer the host's, or the beat keeps
-failing. A host in a vehicle is not asked. A start refused while a player is down, each refusal written with its
+One against one. Refused, nothing changed: no game, a guest's game, no guest, a player without a character, a
+vehicle, a team refused or not taken. Started: the guest in Team_Hostile, the score on the screen with the players'
+names, which never reach the log. Each fall ends the round in one against one: the point to the other player, the
+round's winner on the plate, the pause (the guest's own team back), the one who fell KO 3 s with the game's countdown
+paused and no damage taken, then stood up in place, flesh and shield refilled but not the overshield, the duel resumed;
+a player just stood up not asked again for a second; both falling at once, a draw. The message taken off after 4 s. A
+team the game took back handed again, a duel given up when it keeps being taken. Ended, every player back to normal,
+the one still KO stood up: by STOP, when the mod is switched off (no message left on the screen), and on its own when
+the guest leaves (one team left), a player comes, the world changes, the game is no longer the host's, or the beat
+keeps failing. A host in a vehicle is not asked. A start refused while a player is down, each refusal written with its
 cause; a player the game does not stand up ending the duel; a refused give-back tried again; a guest left in the
 duel's team by an earlier duel given the players' team; the last message taken off when the mod is switched off."""
 
@@ -75,11 +76,13 @@ game.seat(Host("OakCharacter_9", "Them", role=game_fixture.PROXY))
 check("refused in a guest's game", duel.start("EN") == "not_host")
 game.seat(host)
 check("refused without a guest", duel.start("EN") == "no_guest")
-game.seat(host, guest, Guest("OakCharacter_3", "Third"))
-check("refused with three players: two only for now", duel.start("EN") == "too_many")
-game.seat(host, game_fixture.Vehicle("Vehicle_2"))
+guest.away = True
+game.seat(host, guest)
+check("refused while a player has no character", duel.start("EN") == "player_away")
+guest.away = False
+game.seat(host, game_fixture.Vehicle("Vehicle_2", driver=guest))
 check("refused with the guest in a vehicle", duel.start("EN") == "in_vehicle")
-game.seat(game_fixture.Vehicle("Vehicle_1", local=True), guest)
+game.seat(game_fixture.Vehicle("Vehicle_1", local=True, driver=host), guest)
 check("refused with the host in a vehicle", duel.start("EN") == "in_vehicle")
 game.seat(host, guest)
 game.teams.refuse = {guest.Name}
@@ -96,22 +99,23 @@ check("started", duel.start("EN") == "started")
 check("the guest in Team_Hostile, the host left in his team", team(guest) == "Team_Hostile"
       and team(host) == "Team_Player")
 check("the score on the screen with the players' names", message() == "DUEL | Kevin | 0 - 0 | Venus")
-check("the window sees the duel", duel.live() == duel.View("Kevin", "Venus", 0, 0))
+check("the window sees the duel", duel.live() == duel.View("Kevin  0 - 0  Venus"))
 check("a second start refused", duel.start("EN") == "already_on")
-check("the attitudes said, hostile both ways", lines("attitudes")[-1]["host_to_guest"] == "2"
-      and lines("attitudes")[-1]["guest_to_host"] == "2")
+said = lines("attitudes")[-1]
+check("the attitudes said, hostile both ways", (said["a"], said["b"], said["a_to_b"], said["b_to_a"]) == (
+    "J1", "J2", "2", "2"))
 
 asked_at_start = guest.asked
 at(100.05)
 check("nobody asked before a step", guest.asked == asked_at_start)
 guest.down = True
 at(100.2)
-check("a fall: the round to the other player", duel.live() == duel.View("Kevin", "Venus", 1, 0)
-      and lines("round")[-1]["loser"] == "guest")
+check("a fall: the round to the other player", duel.live() == duel.View("Kevin  1 - 0  Venus")
+      and lines("round")[-1]["winner"] == 1)
 check("the duel paused: the guest's own team back", team(guest) == "Team_Player")
 check("KO: the game's countdown paused, no damage taken", guest.pauses == [(True, knockout.PAUSE_REASON)]
       and guest.bCanBeDamaged is False)
-check("the new score on the screen", message() == "ROUND 1 | Kevin | 1 - 0 | Venus")
+check("the round's winner on the plate, the new score under it", message() == "ROUND 1 · KEVIN | Kevin | 1 - 0 | Venus")
 at(103.1)
 check("still KO before 3 s", guest.stops == [] and guest.down)
 at(103.3)
@@ -123,13 +127,13 @@ check("damage as before, the duel resumed in Team_Hostile", guest.bCanBeDamaged 
       and team(guest) == "Team_Hostile" and lines("duel resumed"))
 guest.down = True
 at(103.5)
-check("a player just stood up not asked again for a second", duel.live().host == 1)
+check("a player just stood up not asked again for a second", duel.live() == duel.View("Kevin  1 - 0  Venus"))
 at(104.4)
-check("asked again after a second", duel.live().host == 2)
+check("asked again after a second", duel.live() == duel.View("Kevin  2 - 0  Venus"))
 at(107.5)
 host.down = True
 at(108.6)
-check("the host falls: the round to the guest, the duel paused", duel.live().guest == 1
+check("the host falls: the round to the guest, the duel paused", duel.live() == duel.View("Kevin  2 - 1  Venus")
       and team(guest) == "Team_Player" and host.bCanBeDamaged is False)
 at(111.7)
 check("the host stood up in place, the duel resumed", not host.down and host.stops and team(guest) == "Team_Hostile")
@@ -138,7 +142,8 @@ check("the message taken off after 4 s", message() == "")
 
 host.down = guest.down = True
 at(117.0)
-check("both falling at once: a round each", duel.live() == duel.View("Kevin", "Venus", 3, 2))
+check("both falling at once: a draw, no point", duel.live() == duel.View("Kevin  2 - 1  Venus")
+      and lines("round")[-1]["winner"] == "draw" and message() == "ROUND 4 · DRAW | Kevin | 2 - 1 | Venus")
 at(120.1)
 check("both stood up, the duel resumed once", not host.down and not guest.down and team(guest) == "Team_Hostile"
       and len(lines("duel resumed")) == 4)
@@ -150,10 +155,10 @@ check("a team the game took back handed again", team(guest) == "Team_Hostile"
 
 guest.down = True
 at(122.0)
-check("STOP while a player is KO: stopped", duel.stop("stopped") == "stopped" and duel.live() is None)
+check("STOP during the pause: stopped", duel.stop("stopped") == "stopped" and duel.live() is None)
 check("the one still KO stood up, the guest's own team given back", not guest.down and guest.bCanBeDamaged is True
       and team(guest) == "Team_Player")
-check("the final score on the screen", message() == "DUEL OVER | Kevin | 4 - 2 | Venus")
+check("the final score on the screen", message() == "DUEL OVER | Kevin | 3 - 1 | Venus")
 check("a second stop: not running", duel.stop("stopped") == "not_running")
 logged = "\n".join(state["logs"])
 check("the players' names never in the log", "Kevin" not in logged and "Venus" not in logged)
@@ -172,9 +177,9 @@ def ended_by(make, why: str) -> bool:
 
 
 at(200.0)
-check("ended when the guest leaves", ended_by(lambda: game.seat(host), "guest_left"))
-check("ended when a third player comes", ended_by(lambda: game.seat(host, guest, Guest("OakCharacter_3", "C")),
-                                                   "third_player"))
+check("ended when the guest leaves: one team left", ended_by(lambda: game.seat(host), "teams_left"))
+check("ended when a player comes", ended_by(lambda: game.seat(host, guest, Guest("OakCharacter_3", "C")),
+                                            "player_joined"))
 check("ended when the world changes", ended_by(game.travel, "world_changed"))
 check("ended when the game is no longer the host's", ended_by(
     lambda: game.seat(Host("OakCharacter_9", "Them", role=game_fixture.PROXY), guest), "not_host"))
@@ -197,11 +202,11 @@ check("given up when the game keeps taking the team back", duel.live() is None
 check("ended when the beat keeps failing", ended_by(lambda: setattr(guest, "broken", True), "error"))
 guest.broken = False
 
-game.seat(game_fixture.Vehicle("Vehicle_1", local=True), guest)
+game.seat(game_fixture.Vehicle("Vehicle_1", local=True, driver=host), guest)
 game.teams.teams.clear()
 game.seat(host, guest)
 duel.start("EN")
-game.seat(game_fixture.Vehicle("Vehicle_1", local=True), guest)
+game.seat(game_fixture.Vehicle("Vehicle_1", local=True, driver=host), guest)
 at(now[0] + 0.2)
 at(now[0] + 0.2)
 check("a host in a vehicle is not asked, the duel goes on", duel.live() is not None
@@ -238,18 +243,18 @@ check("a give-back the game refuses leaves the guest in the duel's team for now"
 at(now[0] + 0.5)
 game.teams.refuse = set()
 at(now[0] + duel.RETURN_EVERY_S + 0.1)
-check("and is tried again until his own team is back", team(guest) == "Team_Player" and duel._return["guest"] is None)
+check("and is tried again until his own team is back", team(guest) == "Team_Player" and duel._return["members"] == [])
 
 duel.start("EN")
 game.teams.keep_player = {guest.Name}
 duel.stop("stopped")
-check("a give-back the game takes without applying it is tried again", duel._return["guest"] is not None)
+check("a give-back the game takes without applying it is tried again", duel._return["members"] != [])
 for _try in range(duel.MAX_RETURNS - 1):
     at(now[0] + duel.RETURN_EVERY_S + 0.1)
 game.teams.keep_player = set()
 at(now[0] + duel.RETURN_EVERY_S + 0.1)
 check("the last try that works is not said to have failed", team(guest) == "Team_Player"
-      and duel._return["guest"] is None and not lines("team never given back"))
+      and duel._return["members"] == [] and not lines("team never given back"))
 
 game.teams.teams[guest.Name] = game_fixture.Handle(game_fixture.TEAM_KIND, "Team_Hostile")
 duel.start("EN")
