@@ -78,10 +78,20 @@ def update(character: Any, now_ns: int) -> None:
     else:
         speed = speeds.walk
     _set_floor(movement, speed)
+    if speed_order.slide_holds_scale():
+        return
     if stance_speed:
         _set_scale(movement, speed / stance_speed)
     else:
         ownership.restore(speed_order.SCALE_KEY)
+
+
+def for_guest(guest: Any) -> dict[str, Any]:
+    """The floor a co-op host gives a guest: sprint or walk, as the host's copy of the guest has it. The walk key
+    stays the guest's alone, the host never seeing it: a guest walking slowly is computed at the walk speed (known
+    limit, 2026-10-16)."""
+    speeds = speed_order.speeds()
+    return {"MinAnalogWalkSpeed": speeds.sprint if guest.character.CharacterMovement.bIsSprinting else speeds.walk}
 
 
 def stop(character: Any) -> None:

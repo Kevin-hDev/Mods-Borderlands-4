@@ -5,18 +5,21 @@ of different movements together. A slider cannot take another slider as its boun
 """
 
 from dataclasses import dataclass
-from typing import Any
 
-from . import ownership, pack, settings
+from . import pack, settings
 
 # The game's own ground speeds, measured with the bare game (2026-09-15). A file that does not carry the speeds orders
 # its own against these: the sliders of a separate Apex Speed file live in that file's settings, which this one never
 # loads, so reading its own copy of them would compare with a default nobody set (review, 2026-09-18).
 GAME_WALK = 540.0
 GAME_SPRINT = 828.0
-# The character's speed scale, lowered by the ground speed under the walk key and read by the slides: a key both
-# movements name, so it lives here rather than in either.
+# The character's speed scale: the ground speed lowers it under the walk key, and the slides carry their speed through
+# it during a slide (slide_physics.py). Both movements name it, so it lives here rather than in either.
 SCALE_KEY = "movement.MaxGroundSpeedScale.Value"
+
+# True while the slides hold the scale: the ground speed then leaves it alone instead of putting the game's back every
+# frame under the slide's feet.
+_slide_holds_scale = False
 
 
 @dataclass(frozen=True)
@@ -50,11 +53,13 @@ def speeds() -> Speeds:
     )
 
 
-def game_scale(movement: Any) -> float:
-    """The character's speed scale as the game has it, even while the walk key's lower one is written in its place."""
-    if ownership.is_owned(SCALE_KEY):
-        return float(ownership.original(SCALE_KEY))
-    return float(movement.MaxGroundSpeedScale.Value)
+def hold_scale_for_slide(holding: bool) -> None:
+    global _slide_holds_scale
+    _slide_holds_scale = holding
+
+
+def slide_holds_scale() -> bool:
+    return _slide_holds_scale
 
 
 def walk_key_speed() -> float:

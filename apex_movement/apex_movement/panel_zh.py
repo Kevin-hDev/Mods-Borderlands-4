@@ -24,6 +24,8 @@ TEXT = {
     "camera_refused": "镜头未确认此更改，未保存。",
     "camera_timeout": "镜头没有响应，已恢复之前的设置。请稍后再试。",
     "undone_partial": "设置已恢复，镜头除外：另一个模组正在控制镜头。",
+    # The update notes' pop-up (panel_updates.py); its notes stay in English until the Chinese session translates them.
+    "updates_title": "更新 {version}", "updates_count": "第 {page} / {pages} 页", "updates_next": "下一页",
     "camera": "镜头", "camera_desc": "视角、视野和战利品。",
     "change_key": "更改", "press_key": "请按下按键", "no_key": "无", "right": "右", "left": "左",
     "commands": "按键", "keyboard": "键盘 / 鼠标", "controller": "手柄",

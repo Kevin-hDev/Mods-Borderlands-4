@@ -30,7 +30,8 @@ check("the mod is named Apex Movement", mod.kwargs["name"] == "Apex Movement")
 check("a new install: auto sprint off in third person (Kevin, 2026-10-09)",
       settings.auto_sprint_third_person.value is False)
 check("the menu, camera settings and hidden preferences are registered",
-      mod.kwargs["options"] == [*menu.MENU, *camera_settings.ALL, *apex_movement.panel_preferences.ALL])
+      mod.kwargs["options"] == [*menu.MENU, *camera_settings.ALL, apex_movement.updates.seen,
+                                *apex_movement.panel_preferences.ALL])
 check("camera features are off by default",
       camera_settings.third_person.value is False and camera_settings.custom_fov.value is False)
 check("the frame hook is registered", mod.kwargs["hooks"] == [frame.tick])
@@ -61,7 +62,7 @@ movement.bIsSprinting = True
 frame.tick(player.anim, None, None, None)
 check("with the Axle slide on, a frame steers slides", asset.MoveLRRate.constant == 350.0)
 check("a sprint frame runs the slide speed, boosted by the Axle slide",
-      abs(asset.speed.constant * 1.15 * 1.1017 - 1412.5) < 0.01)
+      abs(asset.speed.constant * 1.1017 - 1412.5) < 0.01)
 settings.axle_slide.value = False
 frame.tick(player.anim, None, None, None)
 check("switching the Axle slide off puts the game's slide steering back", asset.MoveLRRate.constant == 55.0)

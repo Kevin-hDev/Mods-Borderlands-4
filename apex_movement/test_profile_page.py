@@ -5,6 +5,10 @@ sdk_fixture.install()
 import apex_movement
 from apex_movement import camera_settings, panel_assets, panel_fonts, panel_model, panel_form, panel_view
 from apex_movement import panel_preferences, panel_profile_window
+import apex_movement.updates as _updates  # noqa: E402
+
+# A player who already saw this version's update notes: they are tested in test_update_notes.py.
+_updates.seen.value = __import__("apex_movement").__version__
 from profile_page_test_fixtures import ProfilePageTests
 
 

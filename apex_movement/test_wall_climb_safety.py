@@ -21,7 +21,7 @@ class KeptPointer(sys.modules["unrealsdk.unreal"].WeakPointer):
 
 sys.modules["unrealsdk.unreal"].WeakPointer = KeptPointer
 
-from apex_movement import game, jump_press, ownership, settings, wall_climb  # noqa: E402
+from apex_movement import climber, game, jump_press, ownership, settings, wall_climb  # noqa: E402
 
 fails: list[str] = []
 
@@ -131,7 +131,7 @@ check("the mod records that the value was left to the game",
       ownership.is_owned(wall_climb.HOLD_KEY) and ownership.unloaded_count() >= 1)
 
 settings.climb_speed.value, settings.climb_lean.value = 370, 60
-from_sliders = wall_climb._limits(player)
+from_sliders = climber.limits(player)
 check("the sliders' values pass untouched", (from_sliders.speed, from_sliders.lean_deg) == (370.0, 60.0))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")

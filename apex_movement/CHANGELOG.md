@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.25 - 2026-10-17
+
+- Co-op: now works in co-op, Apex's movements also work for the players who join a game, not only for the host.
+
 ## 1.2.24 - 2026-10-13
 
 - New: the settings window is now also in Simplified Chinese. Open the Options page with the gear at the top of the window, then choose 中文.

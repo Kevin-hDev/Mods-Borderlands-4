@@ -75,6 +75,16 @@ def update(character: Any, now_ns: int) -> None:
         _hold(movement, key, name, factor)
 
 
+def for_guest(guest: Any) -> dict[str, Any]:
+    factor = float(settings.glide_speed.value) / 100.0
+    wanted = {}
+    for _key, name in FIELDS:
+        if _pair(guest.character.CharacterMovement, name) is not None:
+            base, value = guest.game_value(name)
+            wanted[name] = (base * factor, value * factor)
+    return wanted
+
+
 def stop(character: Any) -> None:
     for key, _name in FIELDS:
         ownership.restore(key)

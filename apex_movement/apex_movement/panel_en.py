@@ -7,6 +7,8 @@ TEXT = {
     "camera_refused": "The camera could not confirm this change. It was not saved.",
     "camera_timeout": "The camera did not respond. Previous settings were restored. Try again in a moment.",
     "undone_partial": "Settings restored, except the camera: another mod controls it.",
+    # The update notes' pop-up (panel_updates.py), in the full pack only.
+    "updates_title": "UPDATE {version}", "updates_count": "{page} / {pages}", "updates_next": "NEXT",
     "options": "OPTIONS", "options_desc_menu": "Menu language.", "languages": "LANGUAGES",
     # The sentence under the Options title on its camera and commands tabs (Kevin, 2026-10-06).
     "camera_tab_desc": "View, orbit camera and loot.",

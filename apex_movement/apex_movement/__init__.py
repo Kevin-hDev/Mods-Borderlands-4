@@ -27,13 +27,17 @@ if pack.is_full():
     camera_keybinds = list(camera_settings.commands.binds)
     frame.set_camera(camera_adapter)
     sprint.set_view(camera_adapter.in_third_person)
+update_options = []
+if pack.is_full():
+    from . import updates
+    update_options = [updates.seen]
 # The slow walk ships in the full pack only (Kevin, 2026-09-26): a separate file holds no key for it.
 walk_keybinds = []
 if pack.is_full():
     from . import slow_walk
     walk_keybinds = [walk_key.bind]
 
-__version__ = "1.2.24"
+__version__ = "1.2.25"
 __author__ = "kevin-hDev"
 
 
@@ -109,7 +113,7 @@ def _on_disable() -> None:
 mod = build_mod(
     cls=family.FamilyMod,
     name=pack.NAME,
-    options=[*menu.MENU, *camera_options, *panel_preferences.ALL],
+    options=[*menu.MENU, *camera_options, *update_options, *panel_preferences.ALL],
     keybinds=[*camera_keybinds, *walk_keybinds],
     hooks=[frame.tick],
     on_enable=_on_enable,
@@ -122,3 +126,5 @@ if pack.is_full():
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
 if mod.settings_file is not None and not mod.settings_file.exists():
     mod.enable()
+    if pack.is_full():
+        updates.new_player(mod, __version__)

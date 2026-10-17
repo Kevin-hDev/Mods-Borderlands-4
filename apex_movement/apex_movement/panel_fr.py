@@ -7,6 +7,8 @@ TEXT = {
     "camera_refused": "La caméra n’a pas confirmé ce changement. Il n’a pas été enregistré.",
     "camera_timeout": "La caméra n’a pas répondu. Les réglages précédents ont été rétablis. Réessaie dans un moment.",
     "undone_partial": "Réglages rétablis, sauf la caméra : un autre mod la contrôle.",
+    # The update notes' pop-up (panel_updates.py), in the full pack only.
+    "updates_title": "MISE À JOUR {version}", "updates_count": "{page} / {pages}", "updates_next": "SUIVANT",
     "options": "OPTIONS", "options_desc_menu": "Langue du menu.", "languages": "LANGUES",
     # The sentence under the Options title on its camera and commands tabs (Kevin, 2026-10-06).
     "camera_tab_desc": "Vue, caméra orbitale et loot.",

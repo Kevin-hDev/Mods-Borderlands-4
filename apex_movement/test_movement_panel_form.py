@@ -12,6 +12,10 @@ movement_ui_fixture.install()
 
 from apex_movement import camera, camera_settings, panel_camera_commands, panel_form, panel_labels, panel_model
 from apex_movement import panel_preferences, panel_theme, panel_widgets, settings
+import apex_movement.updates as _updates  # noqa: E402
+
+# A player who already saw this version's update notes: they are tested in test_update_notes.py.
+_updates.seen.value = __import__("apex_movement").__version__
 
 
 from movement_ui_fixture import Widget

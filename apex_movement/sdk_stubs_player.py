@@ -14,6 +14,7 @@ class FakeMovement:
         self.bWantsToStartSprinting = False
         self.bIsSprinting = False
         self.Velocity = vector(0.0, 0.0)
+        self.acceleration = vector(0.0, 0.0)
         self.MaxGroundSpeedScale = types.SimpleNamespace(Value=1.15)
         self.ControlledMoveReplicationData = types.SimpleNamespace(ControlledMove=None, PackedDirection=vector(0.0, 0.0))
         self.CurrentFloor = types.SimpleNamespace(HitResult=types.SimpleNamespace(ImpactNormal=vector(0.0, 0.0, 1.0)))
@@ -33,6 +34,10 @@ class FakeMovement:
             JumpType=types.SimpleNamespace(TagName="Movement.JumpType.DefaultJump"), JumpGoal=self.goals["DefaultJump"],
         )
 
+    def GetCurrentAcceleration(self) -> Any:
+        # The acceleration the moves carry: on a co-op host, the only trace of a guest's stick (2026-10-17).
+        return self.acceleration
+
     def CanStartPassiveMantle(self) -> bool:
         return self.mantle_allowed
 
@@ -46,7 +51,12 @@ class FakeMovement:
 
 
 class FakeCharacter:
-    def __init__(self) -> None:
+    def __init__(self, name: str | None = None, role: str = "ROLE_Authority", local: bool = True) -> None:
+        # As a solo game has it: the player's own character, under the authority of their own machine. Nameless by
+        # default, as the frame loop's lines expect ("character=?").
+        if name is not None:
+            self.Name = name
+        self.role, self.local = role, local
         self.CharacterMovement = FakeMovement()
         self.anim = object()
         self.Mesh = types.SimpleNamespace(GetAnimInstance=lambda: self.anim)
@@ -74,6 +84,12 @@ class FakeCharacter:
     def AttemptGroundSlam(self) -> bool:
         self.calls.append(("AttemptGroundSlam",))
         return self.slam_result
+
+    def GetLocalRole(self) -> str:
+        return self.role
+
+    def IsLocallyControlled(self) -> bool:
+        return self.local
 
     def GetLastMovementInputVector(self) -> Any:
         return self.input

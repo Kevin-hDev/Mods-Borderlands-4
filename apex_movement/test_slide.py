@@ -39,7 +39,8 @@ def notes(text: str) -> int:
 
 player.ZoomState.bWantsToZoom = True
 slide.update(player, 0)
-check("aiming leaves the slide speed alone", constant() == 720.0 and not ownership.is_owned(slide.SPEED_KEY))
+check("aiming leaves the slide speed alone", constant() == 720.0 and not ownership.is_owned(slide.SPEED_KEY)
+      and asset.bSpeedAffectedByMaxGroundSpeedScale is True)
 player.ZoomState.bWantsToZoom = False
 player.bIsCrouched = True
 slide.update(player, 0)
@@ -51,8 +52,14 @@ check("in the air leaves the slide speed alone", constant() == 720.0)
 movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
 
 slide.update(player, 1 * MS)
-check("standing on the ground sets the constant for a 1130 start", abs(constant() * 1.15 * 1.1017 - 1130.0) < 0.01)
+check("standing on the ground sets the constant for a 1130 start", abs(constant() * 1.1017 - 1130.0) < 0.01)
 check("the game's constant is kept to put back", ownership.original(slide.SPEED_KEY) == 720.0)
+check("the game keeps multiplying the slide by each character's scale, which carries the slide's speed",
+      asset.bSpeedAffectedByMaxGroundSpeedScale is True)
+movement.MaxGroundSpeedScale.Value = 1.42
+slide.update(player, 1 * MS + 1)
+check("a character with another speed bonus gets the same constant", abs(constant() * 1.1017 - 1130.0) < 0.01)
+movement.MaxGroundSpeedScale.Value = 1.15
 check("the new start speed is logged", notes("slide start speed 1130") == 1)
 slide.update(player, 2 * MS)
 check("an unchanged speed is not written or logged again", notes("slide start speed") == 1)
@@ -60,26 +67,20 @@ check("an unchanged speed is not written or logged again", notes("slide start sp
 settings.slide_speed.value = 1200
 slide.update(player, 3 * MS)
 check("the slide slider applies at the next frame standing on the ground",
-      abs(constant() * 1.15 * 1.1017 - 1200.0) < 0.01)
+      abs(constant() * 1.1017 - 1200.0) < 0.01)
 settings.slide_speed.value = 1130
 
 settings.axle_slide.value = True
 slide.update(player, 3500 * 1000)
-check("an Axle slide starts 25 % faster", abs(constant() * 1.15 * 1.1017 - 1412.5) < 0.01)
+check("an Axle slide starts 25 % faster", abs(constant() * 1.1017 - 1412.5) < 0.01)
 settings.axle_slide.value = False
 slide.update(player, 3600 * 1000)
-check("switched off, slides start at the slide speed again", abs(constant() * 1.15 * 1.1017 - 1130.0) < 0.01)
+check("switched off, slides start at the slide speed again", abs(constant() * 1.1017 - 1130.0) < 0.01)
 
-# The speed bonus stays at 1.15: at 1.0 dividing by it or not gives the same constant, and the check proves nothing.
-asset.bSpeedAffectedByMaxGroundSpeedScale = False
-slide.update(player, 4 * MS)
-check("an asset not scaled by the speed bonus divides by the curve only", abs(constant() * 1.1017 - 1130.0) < 0.01)
-asset.bSpeedAffectedByMaxGroundSpeedScale = True
-slide.update(player, 5 * MS)
 
 settings.sprint_speed.value = 1500
 slide.update(player, 6 * MS)
-check("a slide slower than the sprint starts at the sprint speed", abs(constant() * 1.15 * 1.1017 - 1500.0) < 0.01)
+check("a slide slower than the sprint starts at the sprint speed", abs(constant() * 1.1017 - 1500.0) < 0.01)
 settings.sprint_speed.value = 960
 slide.update(player, 7 * MS)
 

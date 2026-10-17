@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.2.24**. Open Apex Movement in the SDK mods menu for its English, French and Simplified Chinese settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.25**. Open Apex Movement in the SDK mods menu for its English, French and Simplified Chinese settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. The custom climbing body animation is also not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -8,7 +8,7 @@ Apex Legends style movement for Borderlands 4. Every move has its own settings i
 except the movement speeds, which are adjusted without one.
 
 Created and tested on game versions **1.8.1-4709277** through **1.10.2-4845623**, in the first area of the game,
-single player, with both a controller and mouse and keyboard. It has not been tested on versions older than
+single player and in co-op with two players, with both a controller and mouse and keyboard. It has not been tested on versions older than
 1.8.1-4709277 and may not work there.
 
 ## The moves
@@ -158,7 +158,7 @@ is still being built. Each prints a `RESULTAT:` line and exits non-zero on failu
 
 ## Known limits
 
-- Never tried in co-op.
+- In co-op, the host and every player who joins need Apex Movement, with the same settings: the host's settings apply to everyone. A joining player's slow walk can still stutter a little: the host does not see that key. Tried with two players and the full pack only.
 - The dash is found by name (`Move_Dash…`): a character added later under another name would keep the game's dash. When two characters' dashes are loaded at once, as co-op might do, the mod knows yours only after your first dash.
 - Tested in the first area of the game only; other places will have surfaces the wall climb reacts to differently.
 - Do not run it alongside another movement mod: both write the character's speed every frame, and whichever writes last wins.

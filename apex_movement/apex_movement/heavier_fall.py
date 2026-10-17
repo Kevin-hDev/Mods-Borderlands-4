@@ -71,6 +71,11 @@ def update(character: Any, now_ns: int) -> None:
         report.note(f"fall weight {scale:.2f} extra jump height {extra:.0f} jumps rewritten={','.join(changed) or '-'}")
 
 
+def for_guest(guest: Any) -> dict[str, Any]:
+    """The jump heights need nothing here: their definitions are shared by every character of the host's game."""
+    return {"GravityScale": float(settings.fall_weight.value)}
+
+
 def stop(character: Any) -> None:
     # Known limit: switched off in mid-air, the jump under way left with its speed x sqrt(scale) and finishes under the
     # game's gravity, so it rises higher once (the review's estimate: up to `scale` times; not measured in game).

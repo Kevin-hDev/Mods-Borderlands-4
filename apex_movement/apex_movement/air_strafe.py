@@ -43,6 +43,10 @@ def update(character: Any, now_ns: int) -> None:
         report.note(f"air strafe acceleration {acceleration:.0f} air control {AIR_CONTROL:.0f}")
 
 
+def for_guest(guest: Any) -> dict[str, Any]:
+    return {"MaxAcceleration": float(settings.air_acceleration.value), "AirControl": AIR_CONTROL}
+
+
 def stop(character: Any) -> None:
     owned = ownership.is_owned(ACCELERATION_KEY) or ownership.is_owned(AIR_CONTROL_KEY)
     failures = ownership.restore_each((ACCELERATION_KEY, AIR_CONTROL_KEY))

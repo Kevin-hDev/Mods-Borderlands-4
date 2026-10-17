@@ -51,6 +51,9 @@ player.input = sdk_stubs.vector(1.0, 0.0)
 player.JumpCurrentCount = 1
 wall_climb.update(player, 20 * MS)
 check("a jump at a wall, stick and camera toward it, starts a climb", notes("wall climb start distance=60 stick_deg=0 view_deg=0") == 1)
+# Apex Grapple, published 1.0.9 included, reads this name to yield its rope while the player climbs.
+check("Apex Grapple still reads the climb under way at wall_climb._rules.start",
+      wall_climb._rules is wall_climb._climber.rules and wall_climb._rules.start is not None)
 check("the start tells the altitude, so chained climbs show whether each one began higher (2026-09-18)",
       notes("wall climb start distance=60 stick_deg=0 view_deg=0 z=100") == 1)
 check("the arms play the climb up as long as the rules let a climb live: 372 rising only 10 every 0.2 s, 7.6 s",
@@ -183,6 +186,9 @@ wall_climb.update(player, 11000 * MS)
 check("with the diagonal set to zero the same stick climbs straight up",
       round(movement.Velocity.Z) == 370 and round(movement.Velocity.Y) == 0)
 settings.climb_lean.value = 60
+
+wall_climb.reset()
+check("after a reset, the name follows the new climber", wall_climb._rules is wall_climb._climber.rules)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

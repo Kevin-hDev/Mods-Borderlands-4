@@ -11,7 +11,7 @@ from typing import Any
 from mods_base import hook
 from unrealsdk.hooks import Type
 
-from . import game, ownership, report, settings, walk_key
+from . import game, guests, ownership, report, settings, walk_key
 
 _movements: list[tuple[str, Any, Any]] = []
 _active: set[str] = set()
@@ -21,6 +21,7 @@ _camera_in_game = False
 # A line each time the player changes, bounded per switch-on: session 6 (2026-09-18) stayed silent a whole game until
 # the mod was switched off and on, and no line said whether the player had been found at all.
 MAX_PLAYER_LINES = 100
+GUESTS = "co-op guests"
 _player_lines = 0
 
 
@@ -29,7 +30,8 @@ def _name(obj: Any) -> str:
 
 
 def register(name: str, movement: Any, *switches: Any) -> None:
-    """A movement module offers update(character, now_ns), stop(character) and reset().
+    """A movement module offers update(character, now_ns), stop(character) and reset(), and for_guest(guest) when a
+    co-op host must put its values on each guest's character too (guests.py).
 
     It runs while every one of its switches is on, and stops at the next frame as soon as one goes off. A module of a
     movement that also has its own option takes both: the movement's switch, so turning the movement off turns it off
@@ -128,6 +130,29 @@ def on_frame(obj: Any, now_ns: int) -> None:
             _failed.add(name)
             report.error_once(name, f"{name} switched off after an error: {exc!r}")
             _stop(name, movement, character)
+    _update_guests(character, now_ns)
+
+
+def _wanted_for_guest(guest: guests.GuestFrame) -> dict[str, Any]:
+    wanted: dict[str, Any] = {}
+    for name, _, movement in _movements:
+        offer = getattr(movement, "for_guest", None)
+        if offer is not None and name in _active and name not in _failed:
+            wanted.update(offer(guest))
+    return wanted
+
+
+def _update_guests(character: Any, now_ns: int) -> None:
+    if GUESTS in _failed:
+        return
+    try:
+        guests.update(character, now_ns, _wanted_for_guest)
+    except Exception as exc:
+        # Off alone like a movement: the player's own movements go on, and the guests get the game's values back.
+        _failed.add(GUESTS)
+        report.error_once(GUESTS, f"co-op guests left to the game's values after an error: {exc!r}")
+        for line in guests.give_back_all():
+            report.warning(line)
 
 
 def stop_all() -> list[str]:
@@ -144,7 +169,7 @@ def stop_all() -> list[str]:
         if name in _active:
             _stop(name, movement, character)
     walk_key.forget()
-    failures = ownership.restore_all()
+    failures = ownership.restore_all() + guests.give_back_all()
     _failed.clear()
     game.forget()
     return failures

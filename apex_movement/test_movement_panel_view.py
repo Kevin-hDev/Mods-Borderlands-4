@@ -14,6 +14,10 @@ import unrealsdk  # noqa: E402
 
 from apex_movement import camera_settings, panel_assets, panel_fonts, panel_form, panel_model, panel_preferences  # noqa: E402
 from apex_movement import panel_theme as theme, panel_view, panel_widgets as w  # noqa: E402
+import apex_movement.updates as _updates  # noqa: E402
+
+# A player who already saw this version's update notes: they are tested in test_update_notes.py.
+_updates.seen.value = __import__("apex_movement").__version__
 
 
 class Struct:

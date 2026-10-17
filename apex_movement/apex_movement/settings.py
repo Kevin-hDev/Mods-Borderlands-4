@@ -78,8 +78,8 @@ sprint_speed = SliderOption(
     description="The game's own value is 828.",
 )
 # 1130 after trying 1080 and 1150 in game (Kevin, 2026-09-17: "on se rapproche plus d'un apex legends"). The floor
-# stays above slide_physics.STOP_SPEED (350): a slide started at or under it was ended on its first frame (review,
-# 2026-09-18). test_speed_order holds that relation, since this file cannot import slide_physics.
+# stays above slide_model.STOP_SPEED (350): a slide started at or under it was ended on its first frame (review,
+# 2026-09-18). test_speed_order holds that relation, since this file cannot import slide_model.
 slide_speed = SliderOption(
     "slide_speed", 1130, 400, 2500, step=1, is_integer=True,
     display_name="Slide speed",

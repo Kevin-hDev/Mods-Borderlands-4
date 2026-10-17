@@ -39,6 +39,7 @@ class PanelForm(Lifecycle):
             self.command_form, self.command_catalogue = Form(widgets, model), Catalogue()
             self.profile_form = ProfileForm(self)
         self.sync(self.resolve())
+        self.open_updates(self.resolve())
 
     def sync(self, widgets):
         self.pending.clear()

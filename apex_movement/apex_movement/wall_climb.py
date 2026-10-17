@@ -25,30 +25,36 @@ from typing import Any
 
 from unrealsdk import unreal
 
-from . import (air_jumps, climb_aim, climb_animation, climb_refusal, climb_rules, game, jump_press,
-               ownership, report, settings, wall_choice, wall_sense)
+from . import (climb_aim, climb_animation, climb_refusal, climb_rules, climber, game, jump_press, ownership, report,
+               wall_sense)
 
-# The measure's lean into the wall, which kept the character touching it all the way up.
-INTO_WALL = 100.0
-NS_PER_S = 1_000_000_000
+NS_PER_S = climber.NS_PER_S
 HOLD_FIELD = "MinPassiveMantleButtonHoldDuration"
 HOLD_KEY = f"controller.{HOLD_FIELD}"
+GUEST_MEMO = "climb"
+# A guest's climber left this long without a frame (the climb switched off and on, a pause) starts over rather than
+# carry a climb begun long ago.
+GUEST_STALE_NS = NS_PER_S
+# One line per start and end of a guest's climb, bounded per switch-on: a guest climbing all game cannot fill the log.
+MAX_GUEST_LINES = 100
 # One line per climb that presses Croix, not one per frame of the window.
 _pressed = False
-# The fullest lean of the climb under way, told at its end: the only way a log shows a diagonal was really climbed.
-_max_lean = 0.0
+_guest_lines = 0
 
-_rules = climb_rules.Rules()
+_climber = climber.Climber(lambda text: report.note(text))
+# Read by Apex Grapple (apex_grapple/coordination.py), published 1.0.9 included: its rope yields while
+# `wall_climb._rules.start` is set. Moved into the climber on 2026-10-17, the name went, and every rope yielded at once
+# (Kevin: « pourquoi apex grapple fonctionne plus ? »). Kept here, the player's climber's own rules.
+_rules = _climber.rules
 
 
 def reset() -> None:
-    global _rules, _max_lean
-    _rules = climb_rules.Rules()
-    _max_lean = 0.0
+    global _climber, _rules
+    _climber = climber.Climber(lambda text: report.note(text))
+    _rules = _climber.rules
     wall_sense.reset()
     climb_refusal.reset()
     climb_animation.reset()
-    air_jumps.reset()
 
 
 def _hold_of(pointer: Any) -> float:
@@ -73,72 +79,53 @@ def _mantle_without_jump_key() -> None:
     report.note("mantle without the jump key on")
 
 
-def _limits(character: Any) -> climb_rules.Limits:
-    distance = 2.0 * game.half_height(character) * float(settings.climb_height.value) / 100.0
-    return climb_rules.Limits(distance=distance, delay_ns=int(float(settings.reclimb_delay.value) * NS_PER_S),
-                              lean_deg=float(settings.climb_lean.value), speed=float(settings.climb_speed.value))
-
-
-def _moment(character: Any, now_ns: int) -> climb_rules.Moment:
-    movement = character.CharacterMovement
-    in_air = game.is_in_air(movement)
-    yaw = game.view_yaw(character)
-    stick_x, stick_y = game.stick_direction(character)
-    # Traces in the air only: on the ground no climb can start or go on.
-    walls = (wall_sense.walls_ahead(character, yaw, game.half_height(character))
-             if in_air and yaw is not None else [])
-    high = [wall for wall, share in zip(walls, wall_sense.hit_heights(walls)) if share >= climb_aim.HIGH_FROM]
-    location = character.K2_GetActorLocation()
-    return climb_rules.Moment(
-        now_ns=now_ns, in_air=in_air, on_ground=game.is_on_ground(movement),
-        game_move=game.in_controlled_move(movement), mantling=game.is_mantling(movement),
-        near_game_climb=game.is_near_game_climb(movement),
-        x=float(location.X), y=float(location.Y), z=float(location.Z),
-        jumps=game.jump_count(character), stick_x=stick_x, stick_y=stick_y, view_yaw=yaw,
-        wall=wall_choice.best_wall(walls), hits=len(walls),
-        high_wall=wall_choice.best_wall(high) is not None,
-    )
-
-
 def update(character: Any, now_ns: int) -> None:
-    global _pressed, _max_lean
+    global _pressed
     _mantle_without_jump_key()
-    moment = _moment(character, now_ns)
-    limits = _limits(character)
-    step = _rules.step(moment, limits)
+    moment, limits, step = _climber.step(character, now_ns, game.stick_direction(character))
     wall = moment.wall
-    speed = limits.speed
     if step.event == "start":
-        _pressed, _max_lean = False, 0.0
+        _pressed = False
         climb_refusal.started()
-        air_jumps.climb_started(character, now_ns)
         report.note(f"wall climb start distance={wall.distance:.0f} "
                     f"stick_deg={climb_aim.angle_to_wall(moment.stick_x, moment.stick_y, wall):.0f} "
                     f"view_deg={climb_aim.view_angle(moment.view_yaw, wall):.0f} z={moment.z:.0f}")
         climb_animation.start(climb_rules.longest_climb_ns(limits) / NS_PER_S, wall)
     elif step.event:
         report.note(f"wall climb end reason={step.event} rise={step.rise:.0f} distance={step.distance:.0f} "
-                    f"ms={step.ms} lean={_max_lean:.0f}")
+                    f"ms={step.ms} lean={_climber.max_lean:.0f}")
         climb_animation.stop()
     if step.climbing:
         # The trace can move to another face on an irregular wall; the body follows the wall used by this frame.
         climb_animation.update_wall(wall)
-        lean = climb_aim.lean_degrees(moment.stick_x, moment.stick_y, wall, limits.lean_deg)
-        _max_lean = max(_max_lean, abs(lean))
-        side_x, side_y, up = climb_aim.climb_direction(lean, wall)
-        # Never slower than the rise already under way: a climb starting on the frame a jump leaves the ground used to
-        # replace 912 with the climb speed, which turned a sprint jump into a hop (Kevin, 2026-09-17).
-        rise = max(up * speed, float(character.CharacterMovement.Velocity.Z))
-        game.set_velocity(character.CharacterMovement, wall.into_x * INTO_WALL + side_x * speed,
-                          wall.into_y * INTO_WALL + side_y * speed, rise)
         _hoist(character.CharacterMovement)
     elif not step.event:
         # Not on the frame a climb ends: the wait it just set would be told as a refusal of the climb that succeeded.
-        climb_refusal.note(_rules.start_refusal(moment, limits), moment, limits)
-    # After the rules read the jump count: a jump given back before them would hide the jump that ends a climb.
-    given = air_jumps.update(character, now_ns)
-    if given is not None:
-        _rules.jumps_given_back(given)
+        climb_refusal.note(_climber.rules.start_refusal(moment, limits), moment, limits)
+    _climber.after_rules(character, now_ns)
+
+
+def for_guest(guest: Any) -> dict[str, Any]:
+    """On a co-op host, climbs each guest as the guest's own game does, from what the host knows of them: their
+    acceleration for the stick, their controller's heading, their jumps (verified readable on the host, 2026-10-17).
+    The speed is written straight into the guest's character every frame of a climb, like the player's: a speed, not
+    a value to give back, so nothing is asked of guests.py. Not played for a guest: the arms' animation, the hoist
+    press, which the guest's own game makes, and the refusal lines."""
+    global _guest_lines
+    held = guest.memo.get(GUEST_MEMO)
+    if held is None or guest.now_ns - held.last_ns > GUEST_STALE_NS:
+        held = guest.memo[GUEST_MEMO] = climber.Climber(lambda text: None)
+    character = guest.character
+    moment, _limits, step = held.step(character, guest.now_ns, climber.remote_stick(character))
+    if step.event and _guest_lines < MAX_GUEST_LINES:
+        _guest_lines += 1
+        name = str(getattr(character, "Name", "?"))
+        detail = (f"z={moment.z:.0f}" if step.event == "start" else
+                  f"rise={step.rise:.0f} distance={step.distance:.0f} ms={step.ms}")
+        what = "start" if step.event == "start" else f"end reason={step.event}"
+        report.note(f"co-op guest {name}: wall climb {what} {detail}")
+    held.after_rules(character, guest.now_ns)
+    return {}
 
 
 def _hoist(movement: Any) -> None:
@@ -159,7 +146,9 @@ def _hoist(movement: Any) -> None:
 
 
 def stop(character: Any) -> None:
-    if _rules.start is not None:
+    global _guest_lines
+    _guest_lines = 0
+    if _climber.rules.start is not None:
         # Without it, a climb switched off halfway has a start line and no end in the log.
         report.note("wall climb end reason=switched_off")
     climb_animation.stop()

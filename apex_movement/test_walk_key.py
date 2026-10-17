@@ -111,11 +111,12 @@ check("standing, the floor and the character's speed scale both give the key's s
 check("the game's own scale is kept to put back", ownership.original(speed_order.SCALE_KEY) == 1.15)
 asset = game.slide_asset()
 curve_start = float(asset.SpeedScaleCurve.EditorCurveData.keys[0].Value)
-slide._set_start_speed(movement, 1130.0)
+slide._set_start_speed(1130.0)
 # Move_Slide is shared by every character of the machine: sized on the key's scale, a co-op guest's slide would
-# start 3.6 times too fast at 150 (audit, 2026-09-25, from "constant 3436" in the game's log).
-check("while the key lowers the scale, the shared slide is sized on the game's scale",
-      abs(float(asset.speed.constant) - 1130.0 / (1.15 * curve_start)) < 0.5)
+# start 3.6 times too fast at 150 (audit, 2026-09-25, from "constant 3436" in the game's log). No character's scale
+# counts since 2026-10-16.
+check("while the key lowers the scale, the shared slide ignores it",
+      abs(float(asset.speed.constant) - 1130.0 / curve_start) < 0.5)
 check("the shared standing stance is left alone, the other players' too", player.ReplicatedStance.stance.speed == 470.0)
 walk_key.speed.value = 200
 ground_speed.update(player, 2)
@@ -133,6 +134,15 @@ check("the key never walks faster than the walk", movement.MinAnalogWalkSpeed ==
       and abs(scale.Value - 400.0 / 470.0) < 1e-9)
 settings.walk_speed.value = 672
 walk_key.speed.value = 300
+
+# During a slide the scale carries the slide's speed (slide_physics.py): the key's scale waits for the slide's end.
+speed_order.hold_scale_for_slide(True)
+scale.Value = 0.7
+ground_speed.update(player, 4)
+check("while the slides hold the scale, the ground speed leaves it alone", scale.Value == 0.7
+      and movement.MinAnalogWalkSpeed == 300.0)
+speed_order.hold_scale_for_slide(False)
+scale.Value = 300.0 / 470.0
 
 player.ReplicatedStance.stance = sdk_stubs.types.SimpleNamespace(_name="Stance_Player_Crouch", speed=275.0)
 ground_speed.update(player, 5)

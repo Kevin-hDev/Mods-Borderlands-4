@@ -7,13 +7,13 @@ game on the ground, but a jump launches from it (about 1.05 times the written sp
 
 from typing import Any
 
-from . import axle_slide, game, ownership, report, speed_order
+from . import axle_slide, game, ownership, report
 
 SPEED_KEY = "Move_Slide.speed.constant"
 # Auto Sprint 1.5.0's window, whose feel Kevin approved: a jump later in the slide launches at the slowed slide speed.
 BOOST_NS = 700_000_000
-# The real divisor is about 1.27 (1.15 x 1.1017): one this small means the speed bonus or the curve reads zero, and
-# dividing by it would write a constant a hundred times too large or more.
+# The real divisor is the curve's start, 1.1017: one this small means the curve reads zero, and dividing by it would
+# write a constant a hundred times too large or more.
 MIN_DIVISOR = 0.01
 # A slide less than this below its target is left alone: a raise that small shows in no jump, and would only add a
 # velocity write every frame.
@@ -53,21 +53,21 @@ def _put_constant(value: float) -> None:
     asset.speed = speed
 
 
-def _set_start_speed(movement: Any, target: float) -> None:
-    """Called on the ground, standing, not aiming, not sliding: the speed bonus is then the one slides start with (1.15).
+def _set_start_speed(target: float) -> None:
+    """Called on the ground, standing, not aiming, not sliding, like the game reading the constant at a slide's start.
 
-    Aiming lowers it to 0.92, which would give the wrong constant. Walking counts too, so a landing slide after a
-    walking jump starts at the set speed even before the first sprint.
+    Walking counts too, so a landing slide after a walking jump starts at the set speed even before the first sprint.
+    The constant is the slide speed at a speed scale of 1, the same for every character of every machine: the game
+    multiplies it by the sliding character's own scale, which slide_physics.py writes every frame of the slide. Divided
+    by the player's scale as it was until 2026-10-16, a co-op host computed a guest whose scale was 1.42 against its own
+    1.18 at 1705 instead of 1412 (docs/coop/2026-10-16-essai-recopie-dans-apex.md, verified in the logs).
     """
     asset = game.slide_asset()
-    # The game's scale, not the walk key's lower one: Move_Slide is shared by every character of the machine.
-    scale = speed_order.game_scale(movement) if asset.bSpeedAffectedByMaxGroundSpeedScale else 1.0
     keys = asset.SpeedScaleCurve.EditorCurveData.keys
-    curve_start = float(keys[0].Value) if len(keys) > 0 else 1.0
-    divisor = scale * curve_start
+    divisor = float(keys[0].Value) if len(keys) > 0 else 1.0
     if divisor < MIN_DIVISOR:
         return
-    # Start speed = constant x speed bonus x curve at time 0 (720 x 1.15 x 1.1017 = 912, verified in game).
+    # Start speed = constant x the character's scale x curve at time 0 (720 x 1.15 x 1.1017 = 912, verified in game).
     wanted = target / divisor
     if abs(float(asset.speed.constant) - wanted) <= ownership.SPEED_TOLERANCE:
         ownership.claim(SPEED_KEY, ownership.ASSET, _speed_constant, _put_constant)
@@ -110,7 +110,7 @@ def update(character: Any, now_ns: int) -> None:
     # slide_physics, so the constant followed it every frame (610 rewrites in three slides, 2026-09-17, 03:11-03:13).
     if (game.is_on_ground(movement) and not character.bIsCrouched and not game.is_aiming(character)
             and not game.is_sliding(movement)):
-        _set_start_speed(movement, target)
+        _set_start_speed(target)
     _track(movement, now_ns, target)
 
 

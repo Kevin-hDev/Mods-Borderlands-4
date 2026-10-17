@@ -11,7 +11,7 @@ import sdk_stubs  # noqa: E402
 
 sdk_stubs.install()
 
-from apex_movement import pack, settings, slide_physics, speed_order  # noqa: E402
+from apex_movement import pack, settings, slide_model, speed_order  # noqa: E402
 
 fails: list[str] = []
 
@@ -38,9 +38,9 @@ check("the order holds through a chain of low values",
 low_top = speed_order.ordered(672.0, 960.0, 2500.0, 550.0, 500.0)
 check("a top slide speed below the start speed is raised to it", low_top.slide_max == 2500.0)
 # A slide started at or under the speed where the mod ends a slide was cancelled on its first frame (review). The
-# slider lives in settings, which cannot import slide_physics, so the relation is held here.
+# slider lives in settings, which cannot import slide_model, so the relation is held here.
 check("the slide speed slider cannot go down to where a slide is ended at once",
-      settings.slide_speed.args[0] > slide_physics.STOP_SPEED)
+      settings.slide_speed.args[0] > slide_model.STOP_SPEED)
 
 settings.walk_speed.value = 700
 check("speeds follow the sliders", speed_order.speeds().walk == 700.0)

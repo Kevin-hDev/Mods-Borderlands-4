@@ -10,7 +10,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import axle_slide, game, ownership, settings, slide_physics  # noqa: E402
+from apex_movement import axle_slide, game, ownership, settings, slide_model, slide_physics, speed_order  # noqa: E402
 
 fails: list[str] = []
 
@@ -31,17 +31,22 @@ def notes(text: str) -> int:
 
 MS = 1_000_000
 P = slide_physics
+M = slide_model
 at = sdk_stubs.vector
 player = sdk_stubs.FakeCharacter()
 movement = player.CharacterMovement
 asset = sdk_stubs.slide_asset(state)
 data = movement.ControlledMoveReplicationData
 keys = asset.SpeedScaleCurve.EditorCurveData.keys
-PER_UNIT = 1130.0 / 1.1017
 
 
 def curve_values() -> list[float]:
     return [key.Value for key in keys]
+
+
+def model() -> float:
+    """The speed the game gives the slide: the constant, times the character's scale, times the flat curve."""
+    return movement.MaxGroundSpeedScale.Value * asset.speed.constant * 1.1017
 
 
 def frames(start_ms: int, end_ms: int, step_ms: int = 50) -> None:
@@ -49,24 +54,24 @@ def frames(start_ms: int, end_ms: int, step_ms: int = 50) -> None:
         P.update(player, now_ms * MS)
 
 
-slowdown = P.friction(1130.0, 1300.0)
+slowdown = M.friction(1130.0, 1300.0)
 check("friction takes the slide speed to the stop speed over the flat distance",
       near(slowdown, (1130.0 ** 2 - 350.0 ** 2) / 2600.0) and near(slowdown, 444.0, 0.01))
-check("a floor falling away ahead reads downhill", near(P.downhill(at(0.2, 0.0, 0.98), at(1000.0, 0.0)), 0.2))
-check("the same floor climbed reads uphill", near(P.downhill(at(0.2, 0.0, 0.98), at(-500.0, 0.0)), -0.2))
-check("a floor sloping sideways reads flat", near(P.downhill(at(0.0, 0.2, 0.98), at(1000.0, 0.0)), 0.0))
-check("no speed, no slope", P.downhill(at(0.2, 0.0, 0.98), at(0.0, 0.0)) == 0.0)
-check("flat ground slows by the friction", near(P.next_speed(1130.0, 0.5, 0.0, 444.0, 2200.0, 2000.0), 908.0))
-check("a slope of about 12 degrees keeps the speed", near(P.next_speed(1130.0, 0.5, 444.0 / 2200.0, 444.0, 2200.0, 2000.0), 1130.0))
-check("a steeper slope speeds up, up to the top speed", P.next_speed(1990.0, 1.0, 0.5, 444.0, 2200.0, 2000.0) == 2000.0)
-check("uphill slows faster", near(P.next_speed(1130.0, 0.5, -0.2, 444.0, 2200.0, 2000.0), 688.0))
-check("speed never goes below zero", P.next_speed(100.0, 1.0, -1.0, 444.0, 2200.0, 2000.0) == 0.0)
+check("a floor falling away ahead reads downhill", near(M.downhill(at(0.2, 0.0, 0.98), at(1000.0, 0.0)), 0.2))
+check("the same floor climbed reads uphill", near(M.downhill(at(0.2, 0.0, 0.98), at(-500.0, 0.0)), -0.2))
+check("a floor sloping sideways reads flat", near(M.downhill(at(0.0, 0.2, 0.98), at(1000.0, 0.0)), 0.0))
+check("no speed, no slope", M.downhill(at(0.2, 0.0, 0.98), at(0.0, 0.0)) == 0.0)
+check("flat ground slows by the friction", near(M.next_speed(1130.0, 0.5, 0.0, 444.0, 2200.0, 2000.0), 908.0))
+check("a slope of about 12 degrees keeps the speed", near(M.next_speed(1130.0, 0.5, 444.0 / 2200.0, 444.0, 2200.0, 2000.0), 1130.0))
+check("a steeper slope speeds up, up to the top speed", M.next_speed(1990.0, 1.0, 0.5, 444.0, 2200.0, 2000.0) == 2000.0)
+check("uphill slows faster", near(M.next_speed(1130.0, 0.5, -0.2, 444.0, 2200.0, 2000.0), 688.0))
+check("speed never goes below zero", M.next_speed(100.0, 1.0, -1.0, 444.0, 2200.0, 2000.0) == 0.0)
 check("a scale makes the same slope slow down or speed up that many times harder",
-      near(P.next_speed(1130.0, 0.5, 0.0, 444.0, 2200.0, 2000.0, 2.0), 686.0)
-      and near(P.next_speed(1130.0, 0.5, 0.5, 444.0, 2200.0, 5000.0, 2.0), 1130.0 + 2.0 * (1100.0 - 444.0) * 0.5))
-check("no boost, no gain", near(P.speed_gain(1130.0, axle_slide.NONE), 1.0))
+      near(M.next_speed(1130.0, 0.5, 0.0, 444.0, 2200.0, 2000.0, 2.0), 686.0)
+      and near(M.next_speed(1130.0, 0.5, 0.5, 444.0, 2200.0, 5000.0, 2.0), 1130.0 + 2.0 * (1100.0 - 444.0) * 0.5))
+check("no boost, no gain", near(M.speed_gain(1130.0, axle_slide.NONE), 1.0))
 check("starting 25 % faster goes further by the ratio of squares above the stop speed",
-      near(P.speed_gain(1130.0, axle_slide.Boost(1.25, 1.0, 1.0)), (1412.5 ** 2 - 350.0 ** 2) / (1130.0 ** 2 - 350.0 ** 2)))
+      near(M.speed_gain(1130.0, axle_slide.Boost(1.25, 1.0, 1.0)), (1412.5 ** 2 - 350.0 ** 2) / (1130.0 ** 2 - 350.0 ** 2)))
 
 P.update(player, 0)
 check("the slide timer is made long", asset.Duration.constant == settings.LONGEST_SLIDE_S)
@@ -86,58 +91,64 @@ check("an idle frame prepares nothing again", notes("slide physics on") == 1)
 data.ControlledMove = asset
 movement.Velocity = at(1130.0, 0.0)
 P.update(player, 1000 * MS)
-check("a slide starts at the slide speed", near(keys[0].Value * PER_UNIT, 1130.0))
+check("a slide starts at the slide speed", near(model(), 1130.0))
 frames(1050, 2000)
-check("on flat ground it slows by the friction", near(keys[2].Value * PER_UNIT, 1130.0 - slowdown, 0.01))
-check("the whole curve stays flat", len(set(curve_values())) == 1)
+check("on flat ground it slows by the friction", near(model(), 1130.0 - slowdown, 0.01))
+check("the shared speed curve is never rewritten during a slide", curve_values() == [1.1017] * 4)
+check("the slides hold the scale meanwhile, so the ground speed leaves it alone", speed_order.slide_holds_scale())
 
 movement.CurrentFloor.HitResult.ImpactNormal = at(0.25, 0.0, 0.968)
-speed = keys[0].Value * PER_UNIT
+speed = model()
 frames(2050, 3000)
 check("a steep slope ahead cancels the friction and speeds the slide up",
-      near(keys[0].Value * PER_UNIT, speed + 2200.0 * 0.25 - slowdown, 0.01))
+      near(model(), speed + 2200.0 * 0.25 - slowdown, 0.01))
 # The top speed is ordered above the slide speed (speed_order.ordered, 2026-09-18): to see it cap a running slide at 700,
 # the slide speed and the speeds it is ordered above come down with it. A running slide keeps the start it was given.
 settings.slide_max_speed.value = 700
 settings.walk_speed.value, settings.sprint_speed.value, settings.slide_speed.value = 400, 400, 400
 P.update(player, 3050 * MS)
-check("the top speed caps it", near(keys[0].Value * PER_UNIT, 700.0))
+check("the top speed caps it", near(model(), 700.0))
 settings.slide_max_speed.value = 2000
 settings.walk_speed.value, settings.sprint_speed.value, settings.slide_speed.value = 672, 960, 1130
 movement.CurrentFloor.HitResult.ImpactNormal = at(0.0, 0.0, 1.0)
 
 movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
 frames(3100, 3500)
-check("in the air, off a ramp, the speed is kept", near(keys[0].Value * PER_UNIT, 700.0))
+check("in the air, off a ramp, the speed is kept", near(model(), 700.0))
 movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
 P.update(player, 4600 * MS)
-check("a long frame counts as a tenth of a second", near(keys[0].Value * PER_UNIT, 700.0 - slowdown * 0.1, 0.01))
+check("a long frame counts as a tenth of a second", near(model(), 700.0 - slowdown * 0.1, 0.01))
 
 frames(4650, 5500)
 check("below the stop speed the mod ends the slide", player.calls.count(("SetWantsToSlide", False)) == 1
-      and keys[0].Value * PER_UNIT <= P.STOP_SPEED)
+      and model() <= M.STOP_SPEED)
 frames(5550, 5600)
 check("and asks only once", player.calls.count(("SetWantsToSlide", False)) == 1)
 
 data.ControlledMove = None
 movement.Velocity = at(300.0, 0.0)
 P.update(player, 5650 * MS)
-check("the slide's end puts the curve back at its start value", curve_values() == [1.1017] * 4)
+check("the slide's end gives the character the game's scale back", movement.MaxGroundSpeedScale.Value == 1.15
+      and not ownership.is_owned(speed_order.SCALE_KEY) and not speed_order.slide_holds_scale())
 check("the end is logged with the model and the game's speed", notes("slide physics end ms=4650 by=mod") == 1
       and notes("game_speed=300") == 1)
 check("the end line says how the game's speed compared with the model", notes("game_to_model=") >= 1)
 
 data.ControlledMove = asset
 P.update(player, 6000 * MS)
+movement.MaxGroundSpeedScale.Value = 0.92
+P.update(player, 6010 * MS)
+check("a scale the game computes again mid-slide is written over", movement.MaxGroundSpeedScale.Value != 0.92)
 data.ControlledMove = None
 P.update(player, 6050 * MS)
+check("and becomes the one given back at the slide's end", movement.MaxGroundSpeedScale.Value == 0.92)
+movement.MaxGroundSpeedScale.Value = 1.15
 check("a slide ended by the game says so", notes("by=game") == 1)
 check("a normal slide's end says it had no Axle boost", notes("axle=1.00/1.00/1.00") == 2)
 
 
 def slide_distance(slope: float, start_ms: int) -> float:
     """One straight slide on ground of this slope until the mod ends it: the distance its model speeds cover."""
-    per_unit = axle_slide.start_speed() / 1.1017
     movement.CurrentFloor.HitResult.ImpactNormal = at(slope, 0.0, (1.0 - slope ** 2) ** 0.5)
     movement.Velocity = at(1000.0, 0.0)
     ends = player.calls.count(("SetWantsToSlide", False))
@@ -145,7 +156,7 @@ def slide_distance(slope: float, start_ms: int) -> float:
     now_ms, covered = start_ms, 0.0
     P.update(player, now_ms * MS)
     while player.calls.count(("SetWantsToSlide", False)) == ends and now_ms < start_ms + 60_000:
-        covered += keys[0].Value * per_unit * 0.01
+        covered += model() * 0.01
         now_ms += 10
         P.update(player, now_ms * MS)
     data.ControlledMove = None
@@ -157,7 +168,6 @@ def slide_distance(slope: float, start_ms: int) -> float:
 flat, uphill, downhill = slide_distance(0.0, 10_000), slide_distance(-0.2, 80_000), slide_distance(0.14, 150_000)
 check("a normal flat slide goes the flat distance", abs(flat - 1300.0) < 15.0)
 settings.axle_slide.value = True
-AXLE_PER_UNIT = 1412.5 / 1.1017
 axle_flat, axle_up, axle_down = slide_distance(0.0, 230_000), slide_distance(-0.2, 300_000), slide_distance(0.14, 370_000)
 check("an Axle slide goes 50 % further on flat ground", abs(axle_flat / flat - 1.5) < 0.02)
 check("25 % further uphill", abs(axle_up / uphill - 1.25) < 0.02)
@@ -167,11 +177,11 @@ check("its end says which boost it had", notes("axle=1.25/1.50/1.25") >= 3)
 movement.CurrentFloor.HitResult.ImpactNormal = at(0.5, 0.0, 0.866)
 data.ControlledMove = asset
 frames(440_000, 450_000)
-check("a steep slope takes an Axle slide up to a top speed 25 % higher", near(keys[0].Value * AXLE_PER_UNIT, 2500.0, 0.01))
+check("a steep slope takes an Axle slide up to a top speed 25 % higher", near(model(), 2500.0, 0.01))
 settings.axle_slide.value = False
 frames(450_050, 450_100)
 check("switched off mid-slide, the slide keeps the boost it started with",
-      near(keys[0].Value * AXLE_PER_UNIT, 2500.0, 0.01))
+      near(model(), 2500.0, 0.01))
 data.ControlledMove = None
 P.update(player, 450_150 * MS)
 movement.CurrentFloor.HitResult.ImpactNormal = at(0.0, 0.0, 1.0)
@@ -223,7 +233,7 @@ check("the slide data is prepared once that slide has ended", asset.Duration.con
 data.ControlledMove = asset
 movement.Velocity = at(1130.0, 0.0)
 frames(7800, 8300)
-check("the next slide gets the model from its start", near(keys[0].Value * PER_UNIT, 1130.0 - slowdown * 0.5, 0.01))
+check("the next slide gets the model from its start", near(model(), 1130.0 - slowdown * 0.5, 0.01))
 data.ControlledMove = None
 P.update(player, 8350 * MS)
 P.stop(player)
@@ -236,7 +246,7 @@ data.ControlledMove = asset
 movement.Velocity = at(1130.0, 0.0)
 frames(8450, 8500)
 check("a top speed set under the slide speed does not cut a slide at its start",
-      near(keys[0].Value * PER_UNIT, 1130.0 - slowdown * 0.05, 0.01))
+      near(model(), 1130.0 - slowdown * 0.05, 0.01))
 data.ControlledMove = None
 P.update(player, 8550 * MS)
 P.stop(player)

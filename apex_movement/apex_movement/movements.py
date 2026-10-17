@@ -26,6 +26,9 @@ UI_SHARED = (
     "panel_preferences", "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_theme_choice",
     "panel_toggle", "panel_view", "panel_widgets", "panel_size_choice", "panel_window_size", "panel_scroll", "panel_dynamic",
     "panel_popup",
+    # Apex Grapple's choice rows and page sentence, which its pages draw in every window (2026-10-14); no menu line
+    # of this mod names a choice or a sentence yet, so they wait unused.
+    "panel_choices", "panel_notice",
     # The header draws the camera profiles' floppy in every file, collapsed where there is no camera (2026-10-12).
     "panel_profile_floppy",
     # The Chinese words the camera mods share are translated here once (2026-10-12); this mod does not offer
@@ -37,7 +40,8 @@ UI_SHARED = (
 # walk_key is read by two movements, the auto sprint and the ground speed, so it is in every file; its key, its menu
 # lines and the slow_walk module that ends the sprint ship in the full pack only (Kevin, 2026-09-26), and a separate
 # file never walks slowly. shortcut_key serves its option and the menu's key capture in every file.
-SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "menu", "movements", "ownership", "pack",
+SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "guests", "menu", "movements", "ownership",
+          "pack",
           "report", "settings", "settings_persistence", "settings_upgrade", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
 # Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
 # its shared native runtime, so these modules belong only to the full pack.
@@ -46,7 +50,9 @@ FULL_ONLY = ("camera", "camera_settings", "panel_ads", "panel_camera_ownership",
              "camera_control_form", "panel_camera_commands", "panel_weapon_sensitivity", "panel_optics",
              "panel_omni_direction", "panel_profile_form", "panel_profile_paint", "panel_profile_text",
              "panel_profile_window", "panel_profile_grey", "panel_profile_list", "panel_profile_page",
-             "slow_walk")
+             "slow_walk",
+             # The update notes' pop-up, in the full pack only (Kevin, 2026-10-17).
+             "updates", "release_notes", "panel_updates")
 
 # Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,
 # which belong to two movements. The speeds every movement reads come from speed_order, not from settings.
@@ -74,7 +80,7 @@ MOVEMENTS = (
              always_on_because="a walking speed has no off state; the game's own values are named in the sliders, so "
                                "a player who wants them back types them in"),
     Movement("Auto sprint", ("sprint",), ("auto_sprint_menu",), "apex_auto_sprint", "Apex Auto Sprint"),
-    Movement("Slides", ("slide", "slide_physics", "slide_direction", "slide_steering", "axle_slide"),
+    Movement("Slides", ("slide", "slide_physics", "slide_model", "slide_direction", "slide_steering", "axle_slide"),
              ("slides_menu", "axle_slide_menu"), "apex_slides", "Apex Slides",
              two_lines_because="the Axle slide is a slide, and the one exception Kevin named to one movement per mod "
                                "(2026-09-18): it keeps its own line because it is off by default and has five "
@@ -91,7 +97,7 @@ MOVEMENTS = (
     # jump_report writes the jumps this movement shapes: under its switch it runs in one installed file, not in each.
     Movement("Heavier fall", ("heavier_fall", "jump_goals", "jump_report"), ("heavier_fall_menu",),
              "apex_heavier_fall", "Apex Heavier Fall"),
-    Movement("Wall climb", ("wall_climb", "wall_sense", "climb_aim", "wall_choice", "climb_rules", "climb_refusal",
+    Movement("Wall climb", ("wall_climb", "climber", "wall_sense", "climb_aim", "wall_choice", "climb_rules", "climb_refusal",
                             "climb_animation", "climb_body", "climb_progress", "jump_press", "air_jumps", "move_watch"),
              ("wall_climb_menu",),
              "apex_wall_climb", "Apex Wall Climb"),

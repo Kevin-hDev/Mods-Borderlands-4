@@ -114,6 +114,9 @@ def install() -> dict:
     unrealsdk_module.find_class = find_class
     unrealsdk_module.find_all = find_all
     unrealsdk_module.make_struct = lambda name, **fields: types.SimpleNamespace(**fields)
+    unrealsdk_module.find_enum = lambda name: types.SimpleNamespace(
+        ROLE_Authority="ROLE_Authority", ROLE_AutonomousProxy="ROLE_AutonomousProxy",
+        ROLE_SimulatedProxy="ROLE_SimulatedProxy")
 
     mods_base = types.ModuleType("mods_base")
     # The camera profiles' folder (profile_store.py) never exists here: no profile is read, and a write fails
@@ -123,8 +126,13 @@ def install() -> dict:
     mods_base.KeybindOption = FakeKeybindOption
     mods_base.SliderOption = FakeOption
     mods_base.SpinnerOption = FakeOption
+    mods_base.HiddenOption = lambda identifier, value=None, **kwargs: FakeOption(identifier, value, **kwargs)
     mods_base.NestedOption = FakeNested
     mods_base.get_pc = lambda **kwargs: state["pc"]
+    # The players of the game, each a player state whose PawnPrivate is a character, for guests.py to look through.
+    state["players"] = []
+    mods_base.ENGINE = types.SimpleNamespace(GameViewport=types.SimpleNamespace(World=types.SimpleNamespace(
+        GameState=types.SimpleNamespace(PlayerArray=state["players"]))))
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, hook_identifier))
 
     def build_mod(cls: type = FakeMod, **kwargs: Any) -> FakeMod:
