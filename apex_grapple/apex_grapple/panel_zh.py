@@ -11,6 +11,8 @@ TEXT = {
     "by": "作者", "version": "版本", "settings": "设置",
     "ready": "更改会自动保存。选择「关闭」返回模组列表。",
     "saved": "已保存。", "failed": "无法保存设置，请重试。",
+    # The update notes' pop-up (panel_updates.py), Apex Movement's words.
+    "updates_title": "更新 {version}", "updates_count": "第 {page} / {pages} 页", "updates_next": "下一页",
     "rollback_abandoned": "更改已取消，但未能确认恢复成功。请重启游戏后再更改设置。",
     "toggle_failed": "无法启用或停用模组，未做任何更改。原因记录在 unrealsdk.log 中。",
     "refused": "无法绑定：此按键已被保留或已被占用。",

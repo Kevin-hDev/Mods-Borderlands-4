@@ -122,6 +122,7 @@ def install() -> dict:
     unrealsdk_module.hooks = hooks_module
     unrealsdk_module.unreal = unreal_module
     unrealsdk_module.find_class = find_class
+    unrealsdk_module.find_enum = lambda name: types.SimpleNamespace(ROLE_Authority="ROLE_Authority")
 
     def find_all(class_name: str, exact: bool = True) -> Any:
         state["find_all_calls"].append(class_name)
@@ -161,7 +162,12 @@ def install() -> dict:
     mods_base.ButtonOption = FakeButton
     mods_base.KeybindOption = FakeOption
     mods_base.SpinnerOption = FakeSpinner
+    mods_base.HiddenOption = FakeOption
     mods_base.get_pc = lambda **kwargs: state["pc"]
+    # The game's players, as co-op reads them (coop_relay.py, remote_ropes.py): none until a test puts some.
+    state["players"] = []
+    mods_base.ENGINE = types.SimpleNamespace(GameViewport=types.SimpleNamespace(World=types.SimpleNamespace(
+        GameState=types.SimpleNamespace(PlayerArray=state["players"]))))
     mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook(fn, path, hook_identifier))
     mods_base.keybind = lambda identifier, key=None, callback=None, **kwargs: FakeKeybind(
         state, identifier, key, callback)

@@ -56,6 +56,7 @@ assert current.pop("menu_last_page") == "shot", "Older settings start on the fir
 assert current.pop("menu_theme") == "EMBER", "Older settings keep the menus' first theme without a migration"
 assert current.pop("menu_window_size") == "LARGE", "Older settings open in the new default size, LARGE"
 assert current.pop("menu_last_scroll") == 0, "Older settings open at the top of the page"
+assert current.pop("updates_seen") == "", "Older settings have seen no update notes: they open at the next opening"
 assert current["shot_menu"].pop("stamina_cost") == 33, "Older settings gain the reserve cost at its default"
 assert current.pop("hold_menu") == {"keyboard_hold": False, "controller_hold": False, "hold_time": 0.4},     "Older settings gain the hold mode, off"
 assert current.pop("look_menu") == {

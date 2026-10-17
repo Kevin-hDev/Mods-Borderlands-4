@@ -9,6 +9,8 @@ TEXT = {
     "saved": "Saved.", "failed": "Settings could not be saved. Please try again.",
     "rollback_abandoned": "The change was cancelled. Recovery could not be confirmed; restart the game before changing settings.",
     "toggle_failed": "The mod could not be switched on or off. Nothing was changed. The reason is in unrealsdk.log.",
+    # The update notes' pop-up (panel_updates.py).
+    "updates_title": "UPDATE {version}", "updates_count": "{page} / {pages}", "updates_next": "NEXT",
     "refused": "Assignment refused. This input is reserved or already used.",
     "restored": "Default settings restored. You can undo this reset.", "undone": "Previous settings restored.",
     "controls_intro": "Choose a slot, then press a keyboard, mouse or controller button. Complete choices save automatically.",

@@ -46,11 +46,15 @@ def shown(view: str, arms_pistol: bool, in_hand: bool, holster: bool) -> set[str
 
 
 class Gun:
-    def __init__(self, character: Any, arms: Any, objects: dict, hunter: str) -> None:
-        """`arms`: the first-person arms' mesh; `hunter`: whose pieces (look_hunter.of)."""
+    def __init__(self, character: Any, arms: Any, objects: dict, hunter: str, roles: tuple | None = None) -> None:
+        """`arms`: the first-person arms' mesh, None when `roles` leaves out the arms' pistol; `hunter`: whose pieces
+        (look_hunter.of); `roles`: those built, all by default. Another player's character, seen from outside, wears
+        the body's pieces only (remote_look.py)."""
         self.pieces: dict[str, Any] = {}
         self.seen: set[str] = set()
         for role, key in keys(hunter).items():
+            if roles is not None and role not in roles:
+                continue
             piece = look_assets.PIECES[key]
             on_arms = piece["on"] == "arms"
             made = look_pieces.new_piece(character, objects[piece["mesh"]], arms if on_arms else None)

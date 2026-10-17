@@ -15,10 +15,11 @@ docs/candidats/grappin.md holds the numbers and where each came from.
 from mods_base import build_mod
 from .settings_persistence import AtomicMod
 
-from . import control_console_menu, control_menu, frame, menu, report, settings, settings_moved
+from . import control_console_menu, control_menu, coop_link, coop_messages, frame, menu, report, settings, settings_moved
+from . import updates
 
 # Research observers are archived: their synchronous scans caused first-shot stalls.
-__version__ = "1.0.10"
+__version__ = "1.0.11"
 __author__ = "kevin-hDev"
 
 
@@ -39,8 +40,8 @@ def _on_disable() -> None:
 mod = build_mod(
     cls=AtomicMod,
     name="Apex Grapple",
-    options=menu.MENU,
-    hooks=[frame.tick],
+    options=[*menu.MENU, updates.seen],
+    hooks=[frame.tick, coop_link.on_send, coop_messages.on_message],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )
@@ -51,3 +52,4 @@ control_console_menu.install(mod, control_menu.MENU)
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
 if mod.settings_file is not None and not mod.settings_file.exists():
     mod.enable()
+    updates.new_player(mod, __version__)

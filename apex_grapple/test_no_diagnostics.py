@@ -10,7 +10,7 @@ import unrealsdk
 
 find_object = unrealsdk.find_object
 unrealsdk.find_object = lambda kind, path: object() if kind == "Function" else find_object(kind, path)
-from apex_grapple import beam, frame, game, keys, look_settings, mod, settings
+from apex_grapple import beam, coop_link, coop_messages, frame, game, keys, look_settings, mod, settings
 # The classic look's beam is what these shots watch; the grapple gun's look has its own tests.
 look_settings.look.value = look_settings.CLASSIC
 from unrealsdk.hooks import Block
@@ -27,7 +27,8 @@ def check(label, passed):
         failures.append(label)
 
 
-check("only the gameplay frame hook is registered", mod.kwargs["hooks"] == [frame.tick])
+check("only the gameplay frame hook and the co-op one are registered",
+      mod.kwargs["hooks"] == [frame.tick, coop_link.on_send, coop_messages.on_message])
 settings.grapple_range.value = 3000
 state["kismet"].hit = (2000.0, "StaticMeshActor")
 for session in range(3):

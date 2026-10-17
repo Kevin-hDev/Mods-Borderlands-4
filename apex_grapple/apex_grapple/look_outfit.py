@@ -25,15 +25,17 @@ MAX_PARTS = 32
 _said: bool | None = None
 
 
-def covers_hip(character: Any) -> bool:
+def covers_hip(character: Any, quiet: bool = False) -> bool:
+    """`quiet` for another player's character: the log follows the player's own outfit only."""
     global _said
     try:
         parts = [str(part.Name) for part in islice(character.Mesh.GestaltMeshParts, MAX_PARTS)]
     except Exception as error:
-        report.error_once("look:outfit", f"the outfit could not be read, the holster stays hidden: {error!r}")
+        if not quiet:
+            report.error_once("look:outfit", f"the outfit could not be read, the holster stays hidden: {error!r}")
         return True
     covered = any(part in COVERING for part in parts)
-    if covered != _said:
+    if not quiet and covered != _said:
         _said = covered
         report.note(f"outfit: {', '.join(parts) or 'no part'}; the holster "
                     + ("stays hidden under it" if covered else "shows on the hip"))

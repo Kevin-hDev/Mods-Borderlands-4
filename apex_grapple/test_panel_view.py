@@ -38,8 +38,10 @@ visit(screen)
 icon_overlays = [node for node in fixture.created if node.kind == "Overlay" and node.children
                 and node.children[0].kind == "InputKeySelector"]
 check(len(icon_overlays) == 2, "One controller icon overlay per native selector")
+# A pop-up's card sits in the middle of the window (panel_popup.py): its slot alone is centred.
+popup_cards = [widgets[name] for name in widgets if name.startswith("popup:") and name.count(":") == 1]
 overlay_slots = [slot for node in fixture.created if node.kind == "Overlay" and node not in icon_overlays
-                 for slot in node.slots]
+                 for slot in (node.slots[:1] if node in popup_cards else node.slots)]
 check(overlay_slots and all(slot.attributes.get("SetHorizontalAlignment") == ("EHorizontalAlignment.HAlign_Fill",)
                             for slot in overlay_slots),
       "Every overlay layer fills its width: sliders, shadows and the header row shrank without it")

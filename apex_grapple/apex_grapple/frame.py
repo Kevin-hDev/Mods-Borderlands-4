@@ -13,8 +13,8 @@ from typing import Any
 from mods_base import hook
 from unrealsdk.hooks import Type
 
-from . import (control_window, game, game_grapple, grapple, input_list, key_hold, keys, report, rope_effects, session,
-               settings)
+from . import (control_window, coop_host, coop_link, coop_relay, game, game_grapple, grapple, input_list, key_hold,
+               keys, remote_ropes, report, rope_effects, session, settings)
 
 KEYS_NS = 1_000_000_000
 
@@ -56,12 +56,33 @@ def on_frame(obj: Any, now_ns: int) -> None:
     except Exception:
         session.reset(rope)
         report.error_once("frame:pull", "the pull stopped after an error")
+        return
+    _others(character, now_ns)
+
+
+def _others(character: Any, now_ns: int) -> None:
+    """Co-op, apart: a failure there costs the other players' grapples, never the player's own rope."""
+    try:
+        coop_host.tick(now_ns)
+    except Exception:
+        coop_host.reset()
+        report.error_once("frame:guests", "the co-op guests' ropes stopped after an error")
+    try:
+        coop_link.tick(character, now_ns)
+        coop_relay.tick(now_ns)
+    except Exception as exc:
+        report.error_once("frame:coop", f"the other players could not be told of this grapple: {exc!r}")
+    try:
+        remote_ropes.tick(now_ns)
+    except Exception as exc:
+        report.error_once("frame:remote", f"the other players' grapples stopped being drawn: {exc!r}")
 
 
 def stop() -> None:
     """Puts everything down at switch-off. Nothing to restore: the mod owns no game value."""
     global _next_keys_ns
-    session.cleanup(control_window.cancel_for_gameplay, keys.unbind, lambda: session.reset(rope), input_list.reset, game.forget)
+    session.cleanup(control_window.cancel_for_gameplay, keys.unbind, lambda: session.reset(rope), input_list.reset, game.forget,
+                    coop_host.reset, coop_link.reset, coop_relay.reset, remote_ropes.reset)
     _next_keys_ns = 0
 
 

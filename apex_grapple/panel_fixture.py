@@ -3,7 +3,9 @@
 from types import SimpleNamespace as NS
 import control_fixture as f
 import unrealsdk
+import apex_grapple
 from apex_grapple import menu, panel_choices, panel_factory, panel_form, panel_model, panel_preferences, panel_theme
+from apex_grapple import updates
 
 BUTTON_PARTS = ("", "_label", "_fill", "_frame", "_shadow")
 unrealsdk.find_enum = lambda name: NS(Visible="Visible", Collapsed="Collapsed",
@@ -76,7 +78,7 @@ class Widget:
 def names(model):
     """Every widget name the view registers, derived the way panel_view builds them: a row of a settings page
     registered whole, a button per choice of a spinner or two arrows and the name's boxes for a row of menu.ARROWS,
-    the sentence and its frame on a page of menu.NOTICES."""
+    the sentence and its frame on a page of menu.NOTICES, and the update notes' pop-up (panel_updates.py)."""
     found = {"focus", "first", "second", "pages", "status", "current", "settings_caption", "meta", "notice",
              "escape_hint", "tag", "two_text"}
     found.update(("icons_label", "pad_summary", "pad_label", "pad_first", "pad_second",
@@ -86,6 +88,9 @@ def names(model):
                "reset"]
     buttons += [f"nav:{page}" for page in panel_theme.PAGES]
     buttons += ["icons:PS5", "icons:XSX"]
+    found.update(("popups", "popup:updates", "popup:updates:beside", "heading:popup_updates", "group:popup_updates",
+                  "updates_points", "updates_next_box"))
+    buttons += ["popup:updates:close", "updates_next"]
     for page in panel_theme.PAGES:
         found.update((f"heading:{page}", f"group:{page}"))
     found.update(f"row:{option.identifier}" for group in model.groups for option in group.children)
@@ -104,6 +109,10 @@ def names(model):
     found.update(f"{kind}:{page}" for page in menu.NOTICES for kind in ("notice", "notice_frame"))
     found.update(name + part for name in buttons for part in BUTTON_PARTS)
     return found
+
+
+# The windows the tests open are a player's who saw this version's notes: test_update_notes.py opens the others'.
+updates.seen.value = apex_grapple.__version__
 
 
 def create():

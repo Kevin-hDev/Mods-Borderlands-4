@@ -8,11 +8,16 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t, pane
 from . import panel_choices, panel_key_display
 from .menu import ACTIVE_WHEN, DEPENDS_ON
 from . import panel_size_choice
+from . import panel_popup, panel_updates
 from .panel_preferences import LANGUAGES
 
 
 class PanelForm(Form):
     keep_when_disabled = True
+    # The open pop-up's key (panel_popup.py), or None; the update notes on show and the page open (panel_updates.py).
+    popup = None
+    update_notes = ()
+    update_page = 0
 
     def __init__(self, widgets, bindings, model):
         super().__init__(widgets, bindings)
@@ -23,6 +28,7 @@ class PanelForm(Form):
         self.focus = widgets["focus"]
         self.key_display = panel_key_display.Display()
         self.sync(self.resolve())
+        panel_updates.open_if_due(self, self.resolve())
 
     def sync(self, widgets):
         self.pending.clear()
@@ -79,7 +85,11 @@ class PanelForm(Form):
         return success
 
     def escape(self):
-        """Escape closes the window as the Close button does, saving what is still pending (control_escape)."""
+        """Escape closes an open pop-up alone; otherwise the window, as the Close button does, saving what is still
+        pending (control_escape)."""
+        if self.popup is not None:
+            panel_popup.hide(self, self.resolve())
+            return False
         return self.flush(self.resolve())
 
     def read_changes(self, widgets, now):
@@ -137,6 +147,9 @@ class PanelForm(Form):
 
     def poll(self):
         widgets, now = self.resolve(), time.perf_counter_ns()
+        # An open pop-up alone takes the clicks: nothing behind it changes meanwhile.
+        if panel_updates.poll(self, widgets):
+            return False
         self.read_changes(widgets, now)
         if self.take(widgets["close"]):
             return self.flush(widgets)

@@ -20,7 +20,7 @@ from . import look_assets, look_hook, look_load, look_rope, look_settings, look_
 PLACES = 2
 
 
-class _Place:
+class Place:
     def __init__(self, character: Any, look: str, thickness: str, count: int, objects: dict, colour: str) -> None:
         self.rope = look_rope.Rope(character, look, thickness, count, objects, colour)
         self.hook = look_hook.Hook(character, objects)
@@ -42,8 +42,8 @@ class _Place:
 
 _owner: Any = None
 _built: tuple | None = None
-_places: list[_Place] = []
-_current: _Place | None = None
+_places: list[Place] = []
+_current: Place | None = None
 _hand: tuple | None = None
 
 
@@ -80,7 +80,7 @@ def prepare(character: Any) -> None:
     objects = look_load.fetch(look_rope.wanted(look, colour) + look_hook.wanted())
     _owner, _built = WeakPointer(character), wanted
     for _ in range(PLACES):
-        _places.append(_Place(character, look, thickness, count, objects, colour))
+        _places.append(Place(character, look, thickness, count, objects, colour))
     report.note(f"grapple gun built: rope {look} at {thickness}, {count} pieces a rope"
                 f"{f' and its glow in {colour}' if len(_places[0].rope.strands) > 1 else ''}, "
                 f"{PLACES} ropes and hooks, "
@@ -152,18 +152,23 @@ def tick(character: Any, hand: tuple, now_ns: int) -> None:
         return
     _hand = tuple(hand)
     for place in _places:
-        if place.shot is None:
-            continue
-        found = look_timing.where(place.shot, _hand, now_ns)
-        if found is None:
+        if place.shot is not None and not draw(place, _hand, now_ns):
             if place is _current:
                 _current = None
-            place.hide()
-            continue
-        base, way, phase, since = found
-        clock = look_timing.clock_s(place.shot, now_ns)
-        place.rope.lay(rope_motion.shape(_hand, base, place.slack, rope_motion.swing(phase, since), clock))
-        place.hook.put(base, way, place.size)
+
+
+def draw(place: Place, hand: tuple, now_ns: int) -> bool:
+    """The place's rope and hook where its shot's timing puts them, from the muzzle `hand`; False once the hook is
+    back in the hand, the place then hidden and free. Another player's ropes are drawn the same way (remote_look.py)."""
+    found = look_timing.where(place.shot, hand, now_ns)
+    if found is None:
+        place.hide()
+        return False
+    base, way, phase, since = found
+    clock = look_timing.clock_s(place.shot, now_ns)
+    place.rope.lay(rope_motion.shape(hand, base, place.slack, rope_motion.swing(phase, since), clock))
+    place.hook.put(base, way, place.size)
+    return True
 
 
 def forget() -> None:

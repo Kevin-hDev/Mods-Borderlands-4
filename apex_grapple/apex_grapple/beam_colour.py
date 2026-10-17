@@ -13,8 +13,9 @@ from . import look_assets, look_settings, report
 NAMES = ("User.Color", "User.BeamColor")
 
 
-def paint(component: Any) -> None:
-    chosen = look_settings.game_rope_colour.value
+def paint(component: Any, chosen: str | None = None) -> None:
+    """In `chosen`, another player's colour, or the player's own when None."""
+    chosen = look_settings.game_rope_colour.value if chosen is None else chosen
     if chosen == look_assets.GAME_COLOUR_AT_FIRST:
         return
     red, green, blue = look_assets.COLOURS[chosen]

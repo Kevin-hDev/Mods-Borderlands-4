@@ -103,62 +103,79 @@ class Track:
             instance.Montage_Stop(fade_s, montage)
 
 
-_tracks = {(ARMS, LEFT): Track(SLOTS[LEFT]), (ARMS, RIGHT): Track(SLOTS[RIGHT]),
-           (BODY, FLIGHT): Track(SLOTS[FLIGHT]), (BODY, LEFT): Track(SLOTS[LEFT]), (BODY, RIGHT): Track(SLOTS[RIGHT])}
+class Gestures:
+    """One character's gestures: the player's on the arms and the body, another player's on the body only
+    (remote_look.py), each in tracks of its own."""
+
+    def __init__(self) -> None:
+        self.tracks = {(ARMS, LEFT): Track(SLOTS[LEFT]), (ARMS, RIGHT): Track(SLOTS[RIGHT]),
+                       (BODY, FLIGHT): Track(SLOTS[FLIGHT]), (BODY, LEFT): Track(SLOTS[LEFT]),
+                       (BODY, RIGHT): Track(SLOTS[RIGHT])}
+
+    def busy(self) -> bool:
+        return any(track.playing() for track in self.tracks.values())
+
+    def frame(self, character: Any, pose: look_moves.Pose, kind: str | None, holding: bool) -> None:
+        """Every gesture where `pose` puts it. `kind`: the right hand's weapon (look_weapon), None with none;
+        `holding`: the body's left hand still holds the pistol, until the shot's hook is back."""
+        found = arms.find(character)
+        if found is None:
+            report.error_once("look:arms", "the first-person arms were not found: the arms' gestures wait for them")
+        else:
+            self._arms(found, pose, kind)
+        self.body(character.Mesh.GetAnimInstance(), pose, kind, holding)
+
+    def _arms(self, instance: Any, pose: look_moves.Pose, kind: str | None) -> None:
+        left, right = self.tracks[(ARMS, LEFT)], self.tracks[(ARMS, RIGHT)]
+        if pose.left[0] == look_moves.GONE:
+            left.stop(FADE_S)
+        else:
+            left.follow(instance, gesture(ARMS, LEFT)["path"], arms_place(pose.left))
+        if kind is not None and pose.right_away:
+            right.follow(instance, ARMS_STOWS[kind], HELD_AT_END)
+        else:
+            right.stop(look_moves.RETURN_S)
+
+    def body(self, instance: Any, pose: look_moves.Pose, kind: str | None, holding: bool) -> None:
+        flying = pose.flight is not None
+        if flying:
+            self.tracks[(BODY, FLIGHT)].follow(instance, FLIGHT_PATH, flight_place(pose.flight))
+        else:
+            self.tracks[(BODY, FLIGHT)].stop(FADE_S)
+        if holding:
+            left = gesture(BODY, LEFT, flying=flying)
+            self.tracks[(BODY, LEFT)].follow(instance, left["path"], fold_place(left, pose.fold))
+        else:
+            self.tracks[(BODY, LEFT)].stop(FADE_S)
+        if kind is not None and pose.right_away:
+            right = gesture(BODY, RIGHT, kind, flying)
+            self.tracks[(BODY, RIGHT)].follow(instance, right["path"], fold_place(right, pose.fold))
+        else:
+            self.tracks[(BODY, RIGHT)].stop(look_moves.RETURN_S)
+
+    def stop(self) -> None:
+        """Every gesture faded out, each tried even when another fails, the first failure raised after."""
+        failed = None
+        for track in self.tracks.values():
+            try:
+                track.stop(FADE_S)
+            except Exception as error:
+                failed = failed or error
+        if failed is not None:
+            raise failed
+
+
+# The player's own: look_play.py plays its shots through the functions below.
+_player = Gestures()
 
 
 def busy() -> bool:
-    return any(track.playing() for track in _tracks.values())
+    return _player.busy()
 
 
 def frame(character: Any, pose: look_moves.Pose, kind: str | None, holding: bool) -> None:
-    """Every gesture where `pose` puts it. `kind`: the right hand's weapon (look_weapon), None with none; `holding`:
-    the body's left hand still holds the pistol, until the shot's hook is back."""
-    found = arms.find(character)
-    if found is None:
-        report.error_once("look:arms", "the first-person arms were not found: the arms' gestures wait for them")
-    else:
-        _arms(found, pose, kind)
-    _body(character.Mesh.GetAnimInstance(), pose, kind, holding)
-
-
-def _arms(instance: Any, pose: look_moves.Pose, kind: str | None) -> None:
-    left, right = _tracks[(ARMS, LEFT)], _tracks[(ARMS, RIGHT)]
-    if pose.left[0] == look_moves.GONE:
-        left.stop(FADE_S)
-    else:
-        left.follow(instance, gesture(ARMS, LEFT)["path"], arms_place(pose.left))
-    if kind is not None and pose.right_away:
-        right.follow(instance, ARMS_STOWS[kind], HELD_AT_END)
-    else:
-        right.stop(look_moves.RETURN_S)
-
-
-def _body(instance: Any, pose: look_moves.Pose, kind: str | None, holding: bool) -> None:
-    flying = pose.flight is not None
-    if flying:
-        _tracks[(BODY, FLIGHT)].follow(instance, FLIGHT_PATH, flight_place(pose.flight))
-    else:
-        _tracks[(BODY, FLIGHT)].stop(FADE_S)
-    if holding:
-        left = gesture(BODY, LEFT, flying=flying)
-        _tracks[(BODY, LEFT)].follow(instance, left["path"], fold_place(left, pose.fold))
-    else:
-        _tracks[(BODY, LEFT)].stop(FADE_S)
-    if kind is not None and pose.right_away:
-        right = gesture(BODY, RIGHT, kind, flying)
-        _tracks[(BODY, RIGHT)].follow(instance, right["path"], fold_place(right, pose.fold))
-    else:
-        _tracks[(BODY, RIGHT)].stop(look_moves.RETURN_S)
+    _player.frame(character, pose, kind, holding)
 
 
 def stop() -> None:
-    """Every gesture faded out, each tried even when another fails, the first failure raised after."""
-    failed = None
-    for track in _tracks.values():
-        try:
-            track.stop(FADE_S)
-        except Exception as error:
-            failed = failed or error
-    if failed is not None:
-        raise failed
+    _player.stop()

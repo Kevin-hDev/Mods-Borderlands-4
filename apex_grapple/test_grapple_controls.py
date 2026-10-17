@@ -3,6 +3,7 @@
 import sys
 
 from grapple_fixture import check, fails, fresh, fly, game, grapple, sdk_stubs, settings, state, SECOND
+from apex_grapple import traction
 
 
 # Landing, and the take-off before it. Eight pulls were cut at 0.06 s in game on 2026-09-20 because
@@ -17,7 +18,7 @@ check("standing at the start of a pull does not end it", rope.holds)
 check("and the pull gives the upward speed needed to leave the floor",
       game.velocity(player.CharacterMovement)[2] >= settings.takeoff_lift.value - 1.0)
 check("and the player is put back in the air, the game having walked him again",
-      player.CharacterMovement.modes == [grapple.MOVE_FALLING, grapple.MOVE_FALLING])
+      player.CharacterMovement.modes == [traction.MOVE_FALLING, traction.MOVE_FALLING])
 player.CharacterMovement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
 rope.update(player, int(0.6 * SECOND))
 check("once the take-off time is past, touching the ground ends the pull", not rope.busy)

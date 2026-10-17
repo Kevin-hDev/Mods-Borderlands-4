@@ -1,6 +1,6 @@
 # Apex Grapple
 
-Version **1.0.10** — an Apex Legends inspired grapple for Borderlands 4.
+Version **1.0.11** — an Apex Legends inspired grapple for Borderlands 4.
 
 Aim at a surface and pull toward it while steering in the air. Let go to carry your momentum. The mod has its own pulling movement.
 
@@ -70,7 +70,7 @@ Without that variable, those two tests explicitly skip. An invalid configured di
 
 ## Compatibility and reporting
 
-The mod includes integration with Apex Movement and lifecycle handling for vehicles, death and session changes. Avoid combining it with another mod that replaces the grapple. Multiplayer behavior is not established by the offline tests.
+The mod includes integration with Apex Movement and lifecycle handling for vehicles, death and session changes. Avoid combining it with another mod that replaces the grapple. In co-op it was tried with two players; every player needs Apex Grapple 1.0.11 or later.
 
 When reporting a problem, include your mod and game versions, other active mods, the input used, and steps to reproduce it. Mention whether it happened after loading a character, changing sessions, entering a vehicle or opening the settings window.
 

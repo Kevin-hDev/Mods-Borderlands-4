@@ -2,6 +2,7 @@
 
 from . import panel_buttons as b, panel_fonts as fonts, panel_header as h, panel_i18n as i18n, panel_pages as p
 from . import panel_modal as modal, panel_window_size as size
+from . import panel_updates
 from . import panel_text as tx, panel_theme as t, panel_widgets as w, report
 
 
@@ -37,8 +38,14 @@ def _window(root, world, model, widgets, template):
     frame.SetCursor(w.enum("EMouseCursor", "Default"))
     layers, _ = w.shadowed(root, frame, size.SHADOW)
     root.SetContent(w.sized(root, layers, size.WIDTH + size.SHADOW, size.HEIGHT + size.SHADOW))
-    stack = w.new("VerticalBox", body)
-    body.SetContent(stack)
+    # Pop-ups (panel_popup.py) lie in a layer over the whole window: a page or its scrolling never cuts one.
+    over = w.new("Overlay", body)
+    body.SetContent(over)
+    stack = w.new("VerticalBox", over)
+    w.layer(over, stack)
+    widgets["popups"] = w.new("Overlay", over)
+    widgets["popups"].SetVisibility(w.enum("ESlateVisibility", "SelfHitTestInvisible"))
+    w.layer(over, widgets["popups"])
     w.column(stack, h.hazard(stack))
     head, avatar = h.header(stack, world, widgets, template)
     w.column(stack, head)
@@ -71,6 +78,7 @@ def build_view(pc, model, _return_to_menu=True):
         widgets = {name: p.selector(root, i18n.text("listening", model.language), template)
                    for name in ("first", "second")}
         avatar = _window(root, pc, model, widgets, template)
+        panel_updates.build(widgets, template)
     finally:
         tx.use({})
     widgets["focus"] = widgets[f"nav:{model.page}"]

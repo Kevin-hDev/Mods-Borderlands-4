@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.11 - 2026-10-17
+
+- Apex Grapple now works in co-op.
+
 ## 1.0.10 - 2026-10-15
 
 - New: the grapple gun. When you fire, your hunter shoots the grapple from a pistol in the left hand, with our own rope and hook that fly out, bite and come back. For all six hunters, in first and third person.

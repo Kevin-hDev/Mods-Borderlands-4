@@ -14,7 +14,7 @@ state = sdk_stubs.install()
 state["settings_exists"] = False
 
 import apex_grapple  # noqa: E402
-from apex_grapple import frame, keys, menu  # noqa: E402
+from apex_grapple import coop_link, coop_messages, frame, keys, menu  # noqa: E402
 
 fails: list[str] = []
 
@@ -28,8 +28,9 @@ def check(label: str, condition: bool) -> None:
 mod = apex_grapple.mod
 check("the mod is built and registered", state["mods"] == [mod])
 check("it carries the name players see", mod.name == "Apex Grapple")
-check("it shows the menu", mod.kwargs["options"] is menu.MENU)
-check("it holds the frame hook, and only that one", mod.kwargs["hooks"] == [frame.tick])
+check("it shows the menu, and keeps the update notes seen",
+      mod.kwargs["options"] == [*menu.MENU, apex_grapple.updates.seen])
+check("it holds the frame hook and the co-op one, and only those", mod.kwargs["hooks"] == [frame.tick, coop_link.on_send, coop_messages.on_message])
 check("a fresh install switches itself on", mod.is_enabled)
 check("its hook is live", frame.tick.enabled)
 check("and it says which version is running", any(f"enabled, version {apex_grapple.__version__}" in line

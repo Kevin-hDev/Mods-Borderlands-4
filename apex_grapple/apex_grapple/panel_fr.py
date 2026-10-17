@@ -9,6 +9,8 @@ TEXT = {
     "saved": "Enregistré.", "failed": "Impossible d’enregistrer les réglages. Réessaie.",
     "rollback_abandoned": "Changement annulé. Le rétablissement n’a pas été confirmé ; relance le jeu avant de changer les réglages.",
     "toggle_failed": "Impossible d’activer ou de désactiver le mod. Rien n’a changé. La raison est dans unrealsdk.log.",
+    # The update notes' pop-up (panel_updates.py).
+    "updates_title": "MISE À JOUR {version}", "updates_count": "{page} / {pages}", "updates_next": "SUIVANT",
     "refused": "Attribution refusée. Cette touche est réservée ou déjà utilisée.",
     "restored": "Réglages d’origine restaurés. Tu peux annuler cette restauration.",
     "undone": "Réglages précédents rétablis.",

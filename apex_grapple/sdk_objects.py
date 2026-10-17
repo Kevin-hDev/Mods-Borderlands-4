@@ -34,6 +34,12 @@ class FakeMovement:
         # The game's own gravity, measured on 2026-09-20. Negative, as Unreal answers it.
         self.gravity_z = -980.0
         self.modes: list[int] = []
+        # What a co-op host reads of a guest's stick (coop_host.remote_stick).
+        self.MaxAcceleration = 24000.0
+        self.acceleration = vector(0.0, 0.0, 0.0)
+
+    def GetCurrentAcceleration(self) -> Any:
+        return self.acceleration
 
     def GetGravityZ(self) -> float:
         return self.gravity_z * self.GravityScale
@@ -66,7 +72,9 @@ class FakeComponent:
 
 
 class FakeCharacter:
-    def __init__(self) -> None:
+    def __init__(self, role: str = "ROLE_Authority") -> None:
+        # Solo, and the host's own character: the authority. A co-op guest's own character is not.
+        self.role = role
         self.RootComponent = None
         self.CharacterMovement = FakeMovement()
         self.anim = object()
@@ -82,6 +90,9 @@ class FakeCharacter:
 
     def GetLastMovementInputVector(self) -> Any:
         return self.input
+
+    def GetLocalRole(self) -> str:
+        return self.role
 
 
 class FakeKismet:
