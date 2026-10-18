@@ -111,6 +111,32 @@ check("without the slide asset nothing reads as a slide", not game.is_sliding(mo
 state["objects"][("OakControlledMove", sdk_stubs.SLIDE_PATH)] = asset
 movement.ControlledMoveReplicationData.ControlledMove = None
 
+# A co-op guest's own game: the copy names the slide some 50 ms after the slide began, and as long after it ended.
+movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
+movement.performing = True
+second.bIsCrouched = True
+check("a controlled move performed crouched on the ground, the copy still empty, is the slide beginning",
+      game.is_sliding(movement))
+movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
+check("the same in the air is not a slide", not game.is_sliding(movement))
+movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
+second.bIsCrouched = False
+check("the same standing is not a slide", not game.is_sliding(movement))
+second.bIsCrouched = True
+movement.ControlledMoveReplicationData.ControlledMove = dash_asset
+check("a move the copy names as another is not a slide, crouched or not", not game.is_sliding(movement))
+movement.ControlledMoveReplicationData.ControlledMove = asset
+movement.performing = False
+check("a slide the copy still names after the game ended it is over", not game.is_sliding(movement))
+movement.performing = True
+movement.CharacterOwner = None
+movement.ControlledMoveReplicationData.ControlledMove = None
+check("a movement without its character reads no slide rather than failing", not game.is_sliding(movement))
+movement.CharacterOwner = second
+second.bIsCrouched = False
+movement.performing = None
+movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
+
 check("the key list comes from the player controller", game.input_mappings() == state["mappings"])
 sdk_stubs.use_character(state, None)
 check("without a player controller the key list is empty", game.input_mappings() == [])
@@ -133,6 +159,10 @@ second.location = sdk_stubs.vector(1.0, 2.0, 345.0)
 check("the altitude is the character's centre height", game.altitude(second) == 345.0)
 second.JumpCurrentCount = 2
 check("the jump count is read", game.jump_count(second) == 2)
+second.CharacterMovement.JumpedCount = 2
+game.set_jump_count(second, 1)
+check("a jump count is written in both of the game's counters",
+      (second.JumpCurrentCount, second.CharacterMovement.JumpedCount) == (1, 1))
 check("the half height comes from the collision capsule", game.half_height(second) == 93.0)
 check("no mantle by default", not game.is_mantling(movement))
 movement.ReplicatedMantleState.ActionIndex = 0

@@ -19,14 +19,21 @@ class FakeMovement:
         self.ControlledMoveReplicationData = types.SimpleNamespace(ControlledMove=None, PackedDirection=vector(0.0, 0.0))
         self.CurrentFloor = types.SimpleNamespace(HitResult=types.SimpleNamespace(ImpactNormal=vector(0.0, 0.0, 1.0)))
         self.GravityScale, self.MaxAcceleration, self.AirControl = 1.0, 2048.0, 0.6
+        # The engine's switches by which a host takes a guest's place instead of correcting it.
+        self.bIgnoreClientMovementErrorChecksAndCorrection = False
+        self.bServerAcceptClientAuthoritativePosition = False
         # Glide attributes, with the game's values read on 2026-09-20: a pair whose Value the game computes from
         # its BaseValue, as the vehicle attributes do.
         self.GlidingSpeed = types.SimpleNamespace(BaseValue=1200.0, Value=1200.0)
         self.GlidingAcceleration = types.SimpleNamespace(BaseValue=400.0, Value=400.0)
         self.ReplicatedMantleState = types.SimpleNamespace(ActionIndex=-1)
+        # Borderlands' own count of the jumps used, beside the engine's JumpCurrentCount on the character.
+        self.JumpedCount = 0
         self.mantle_allowed = False
         # What the game answers when asked whether it performs a controlled move; the copy above can say otherwise.
-        self.performing = False
+        # Left at None, the move the copy names, as on the machine with authority over the character.
+        self.performing: bool | None = None
+        self.CharacterOwner: Any = None
         self.LadderState = types.SimpleNamespace(OverlappingClimbables=[])
         self.goals = jump_goals()
         self.type_sets: list[str] = []
@@ -42,6 +49,8 @@ class FakeMovement:
         return self.mantle_allowed
 
     def IsPerformingControlledMove(self) -> bool:
+        if self.performing is None:
+            return self.ControlledMoveReplicationData.ControlledMove is not None
         return self.performing
 
     def SetCurrentJumpType(self, tag: Any) -> None:
@@ -58,6 +67,7 @@ class FakeCharacter:
             self.Name = name
         self.role, self.local = role, local
         self.CharacterMovement = FakeMovement()
+        self.CharacterMovement.CharacterOwner = self
         self.anim = object()
         self.Mesh = types.SimpleNamespace(GetAnimInstance=lambda: self.anim)
         self.ZoomState = types.SimpleNamespace(bWantsToZoom=False, State=types.SimpleNamespace(name="NotZoomed"))

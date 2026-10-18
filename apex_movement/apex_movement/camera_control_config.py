@@ -28,3 +28,5 @@ SLOTS = tuple((command.name, device) for command in COMMANDS
               for device in (KEYBOARD, CONTROLLER))
 FRAMING_OPTIONS = camera_settings.framing
 MEMORY_OPTIONS = (camera_settings.zoom.option, camera_settings.distance.option, *FRAMING_OPTIONS.options)
+# The key that opens the window in game (open_key.py), or None for a mod without one (Omni Sprint).
+OPEN_KEY = camera_settings.open_key

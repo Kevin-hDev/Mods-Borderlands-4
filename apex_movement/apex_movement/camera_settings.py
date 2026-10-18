@@ -2,6 +2,7 @@
 
 import math
 from . import report
+from .open_key import OpenKey
 
 from mods_base import BoolOption, SliderOption
 
@@ -128,6 +129,7 @@ commands = CameraCommands(third_person=_toggle_third_person, shoulder=_toggle_sh
                           zoom_in=lambda: _zoom(-1), zoom_out=lambda: _zoom(1), camera_distance=_cycle_distance)
 free_look = FreeLookOptions(commands)
 optics = WeaponOpticOptions(commands)
+open_key = OpenKey("F10", "Apex Movement", commands)  # Kevin, 2026-10-18: « avec F10 »
 (third_person_bind, third_person_controller_bind, shoulder_bind, shoulder_controller_bind,
  orbit_bind, orbit_controller_bind) = commands.binds[:6]
 (third_person_key, third_person_controller, shoulder_key, shoulder_controller,
@@ -153,7 +155,7 @@ DYNAMIC = (*speed_fov.options, *dynamic.options)
 ALL = [third_person, third_person_ads, third_person_key, third_person_controller,
        shoulder_left, *shoulder_transition.options, shoulder_key, shoulder_controller,
        orbit, orbit_key, orbit_controller, *commands.options[6:], *distance.options, *free_look.options, custom_fov, fov, *loot.options, *speed_fov.options, *dynamic.options, *omni.options, *sensitivity.options, *optics.options, native_fov, applied_fov,
-           zoom.option, distance.option, *framing.options]
+           zoom.option, distance.option, *framing.options, open_key.option]
 
 
 def third_person_enabled() -> bool:

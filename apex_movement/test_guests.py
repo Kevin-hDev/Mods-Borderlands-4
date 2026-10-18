@@ -102,6 +102,13 @@ guests.update(host, 2 * S + 2, wanted({"GravityScale": 2.0, "MaxGroundSpeedScale
 check("one float of a struct is written alone", moved.MaxGroundSpeedScale.Value == 0.8)
 guests.update(host, 2 * S + 2, wanted({"GravityScale": 2.0}))
 check("and given back when no longer wanted", moved.MaxGroundSpeedScale.Value == 1.15)
+guests.update(host, 2 * S + 2, wanted({"GravityScale": 2.0, "bServerAcceptClientAuthoritativePosition": True}))
+check("a switch is turned on", moved.bServerAcceptClientAuthoritativePosition is True)
+guests.update(host, 2 * S + 2, wanted({"GravityScale": 2.0, "bServerAcceptClientAuthoritativePosition": True}))
+check("a switch already on is not written or said again",
+      sum("bServerAcceptClientAuthoritativePosition True" in line for line in lines()) == 1)
+guests.update(host, 2 * S + 2, wanted({"GravityScale": 2.0}))
+check("and given back off, as a switch", moved.bServerAcceptClientAuthoritativePosition is False)
 
 # 3. A field no movement wants any more gets the game's value back.
 guests.update(host, 2 * S + 3, wanted({"GravityScale": 2.0}))

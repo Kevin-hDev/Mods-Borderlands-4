@@ -50,13 +50,14 @@ check("released: the climb puts the count back to one jump used", budget.update(
       and player.JumpCurrentCount == 1 and notes("wall climb: both jumps are back: jump count 2 -> 1") == 1)
 
 # The jump from the wall.
-player.JumpCurrentCount, player.bPressedJump = 2, True
+player.JumpCurrentCount, movement.JumpedCount, player.bPressedJump = 2, 2, True
 budget.update(player, 200 * MS)
 check("the jump from the wall is written down", notes("air jump count=2 type=DoubleJump croix=held") == 1)
 check("and nothing is given back while Croix is held", player.JumpCurrentCount == 2)
 player.bPressedJump = False
 check("released, the next jump is given back", budget.update(player, 300 * MS) == 1 and player.JumpCurrentCount == 1
       and notes("jump from the climb: the next jump is back: jump count 2 -> 1") == 1)
+check("in Borderlands' own count too, which a guest's game allows a jump from", movement.JumpedCount == 1)
 
 # The double jump that follows: the climb owes nothing more.
 player.JumpCurrentCount = 2

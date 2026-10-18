@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.2.25**. Open Apex Movement in the SDK mods menu for its English, French and Simplified Chinese settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.26**. Press F10 in game, or open Apex Movement in the SDK mods menu, for its English, French and Simplified Chinese settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. The custom climbing body animation is also not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -80,7 +80,9 @@ The full pack also carries an optional camera, on the Options page:
 The **Commands** page sets each camera key twice, once for keyboard and mouse and once for controller: third person
 (P by default), switch shoulder (6), orbit camera (7), orbit camera zoom in and out (no key by default), Free
 Look (the key right of Tab, L3) and camera distance (8). Free Look is the only camera action with a controller button by default. The page shows PlayStation or Xbox icons, and DEFAULT KEYS puts the camera keys
-back. The left mouse button is refused: it fires and clicks through menus.
+back. The left mouse button is refused: it fires and clicks through menus. The first card of the page, MENU SHORTCUT,
+holds the key that opens the window in game and closes it: F10 by default, changed or removed there, and no camera
+command can share it. The separate one-move files do not have this key.
 
 The camera is the shared [camera runtime](../camera_runtime/), which Omni Sprint and Third Person & FOV carry too.
 When Apex Movement is installed with one of them, its camera settings are the ones used. The separate one-move files
@@ -101,7 +103,7 @@ and sprint.
 
 ## Settings
 
-Console `~`, command `mods`, Apex Movement: its settings window opens, with one page per move holding that move's switch and its settings. Every setting gives the game's own value where there is one.
+Console `~`, command `mods`, Apex Movement, or F10 in game with the full pack: its settings window opens, with one page per move holding that move's switch and its settings. Every setting gives the game's own value where there is one.
 
 Settings are stored in `...\Borderlands 4\sdk_mods\settings\apex_movement.json`, and each separate file in its own,
 named after it: `apex_dash.json`, `apex_wall_climb.json`, and so on.
@@ -113,13 +115,13 @@ named after it: `apex_dash.json`, `apex_wall_climb.json`, and so on.
 - `pack.py` says which moves a file carries; `family.py` keeps one move from running in two installed files at once.
 - `ground_speed.py` holds the walk and sprint speeds, apart from `sprint.py`, which only asks the game to sprint. The speed floor it writes can only raise the game's speed, so the slow walk also lowers the character's own speed scale while standing, and puts the game's back as soon as it ends.
 - `walk_key.py` holds the slow walk key, its switch, its hold or toggle mode and its speed; the ground speed applies that speed. `slow_walk.py` makes the slow walk win over every sprint, the game's own included, by ending the sprint through the auto sprint, the one writer of the sprint request. `shortcut_key.py` gives every file, the separate ones included, the key option of the camera runtime.
-- `game.py` finds the player and the move assets, and answers what several moves ask: on the ground, in the air, sliding, whether one of the game's own moves is running. It asks the game that last one (`IsPerformingControlledMove`) rather than reading the move's network copy, which keeps a ground slam after landing until the next slide. A field only one move touches is read in that move's module.
+- `game.py` finds the player and the move assets, and answers what several moves ask: on the ground, in the air, sliding, whether one of the game's own moves is running. It asks the game that last one (`IsPerformingControlledMove`) rather than reading the move's network copy, which keeps a ground slam after landing until the next slide. A jump given back in the air is written in both of the game's jump counters: a co-op guest's own game allows a jump from Borderlands' own counter, the host's from the engine's. A field only one move touches is read in that move's module.
 - `dash_lookup.py` finds the dash of the character being played: the first four share `Move_Dash`, while C4SH and Loveless each have their own. No field of the character points at it, so it is found by name. `dash.py` puts the extra speed in the dash's speed curve rather than in its speed, since Loveless's dash reads the first and not the second.
 - `ownership.py` remembers every game value a move overwrites, and puts it back when the move stops. Nothing is written to the save file.
 - `settings.py` holds every setting with its default and its bounds, and carries the reason each default was chosen.
 - `speed_order.py` keeps walk, sprint, slide and top slide speeds in order whatever the sliders say; a file without the movement speeds orders against the game's own.
 - The wall climb is split by responsibility: `wall_sense` measures the wall, `wall_choice` picks the surface among what the rays met, `climb_aim` does the geometry, `climb_rules` decides whether a climb starts and keeps going, `wall_climb` moves the character, `climb_refusal` writes why a climb was refused, `climb_animation` plays the game's own climbing animation on the first-person arms `arms` finds.
-- `camera.py` and `camera_settings.py` connect the full pack to the shared camera runtime; `panel_options.py` draws the Options page, `panel_camera_commands.py` the Commands page, and `panel_shortcut.py` the key field beside the Slow walk switch.
+- `camera.py` and `camera_settings.py` connect the full pack to the shared camera runtime; `panel_options.py` draws the Options page, `panel_camera_commands.py` the Commands page, `panel_open_key.py` its MENU SHORTCUT card, and `panel_shortcut.py` the key field beside the Slow walk switch.
 - `jump_report.py` and `move_watch.py` write every jump and every change of the game's own moves to the SDK log, a few hundred lines at most: on a game version not tested here, those lines show what changed.
 
 ## Camera framing

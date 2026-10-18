@@ -24,7 +24,7 @@ ids += ("free_look_key", "free_look_controller")
 ids += ("camera_distance_key", "camera_distance_controller")
 ids += ("sniper_zoom_key", "sniper_zoom_controller")
 assert tuple(option.identifier for option in camera_settings.commands.options) == ids
-assert tuple(apex_movement.camera_keybinds) == camera_settings.commands.binds
+assert tuple(apex_movement.camera_keybinds) == (*camera_settings.commands.binds, camera_settings.open_key.bind)
 assert camera_settings.commands.defaults()["shoulder_key"] == SIX
 assert camera_settings.commands.defaults()["orbit_key"] == SEVEN
 

@@ -7,7 +7,7 @@ game on the ground, but a jump launches from it (about 1.05 times the written sp
 
 from typing import Any
 
-from . import axle_slide, game, ownership, report
+from . import axle_slide, game, guest_trust, ownership, report
 
 SPEED_KEY = "Move_Slide.speed.constant"
 # Auto Sprint 1.5.0's window, whose feel Kevin approved: a jump later in the slide launches at the slowed slide speed.
@@ -20,6 +20,9 @@ MIN_DIVISOR = 0.01
 TARGET_MARGIN = 1.0
 # Every module of the slides needs Move_Slide, so one line, under one key, says it is missing for all of them.
 MISSING_ASSET = "Move_Slide not found yet; slides stay the game's own meanwhile"
+# A co-op guest's slide as the host follows it: absent until a frame without a slide, then None, then the slide's start.
+GUEST_MEMO = "slide boost"
+TRUST_MEMO = "slide trust"
 
 _started_ns: int | None = None
 _target = 0.0
@@ -112,6 +115,33 @@ def update(character: Any, now_ns: int) -> None:
             and not game.is_sliding(movement)):
         _set_start_speed(target)
     _track(movement, now_ns, target)
+
+
+def for_guest(guest: Any) -> dict[str, Any]:
+    """On a co-op host, the slide jump for each guest: the host computes the guest's jump itself, and launched it from
+    the slowed slide while the guest's own game launched it from the start speed, 90 to 200 faster, then pulled the
+    guest back to its own speed (docs/coop/2026-10-17-saccades-restantes.md, trial 2, verified in both copies). The
+    speed is written straight into the guest's character, like the player's. The host sees a slide some 40 ms after the
+    guest: a few frames off a 700 ms window. From the slide to the landing after it, the host takes the guest's place
+    (guest_trust)."""
+    movement = guest.character.CharacterMovement
+    if game.slide_asset() is None:
+        return {}
+    sliding = game.is_sliding(movement)
+    trust = guest_trust.until_landing(guest, TRUST_MEMO, sliding)
+    if not sliding:
+        guest.memo[GUEST_MEMO] = None
+        return trust
+    if GUEST_MEMO not in guest.memo:
+        # Begun before the host followed this guest: raised now, the slowed slide would jump back to its start speed.
+        return trust
+    started = guest.memo[GUEST_MEMO]
+    if started is None:
+        started = guest.memo[GUEST_MEMO] = guest.now_ns
+    target = axle_slide.start_speed()
+    if guest.now_ns - started <= BOOST_NS and game.horizontal_speed(movement) < target - TARGET_MARGIN:
+        game.set_horizontal_speed(movement, target)
+    return trust
 
 
 def stop(character: Any) -> None:

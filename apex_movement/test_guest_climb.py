@@ -1,5 +1,6 @@
 """Tests the wall climb a co-op host plays for each guest: the stick read from the guest's acceleration, the climb
-pushing the guest up the wall like the player's own, its end, its jumps given back, one climber per guest started
+pushing the guest up the wall like the player's own, the host trusting the guest's place during it, its end, its
+jumps given back, one climber per guest started
 over when stale, the bounded lines, and the frame loop handing every guest to it."""
 
 import pathlib
@@ -13,7 +14,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import camera_settings, climber, frame, guests, settings, wall_climb  # noqa: E402
+from apex_movement import camera_settings, climber, frame, guest_trust, guests, settings, wall_climb  # noqa: E402
 
 # Movement isolation: native loot lifecycle has its own tests.
 camera_settings.loot.enabled.value = False
@@ -62,14 +63,15 @@ moved.MovementMode = sdk_stubs.Mode("MOVE_Falling")
 kismet.hit = (120.0, sdk_stubs.vector(-1.0, 0.0, 0.0))
 moved.acceleration = sdk_stubs.vector(24000.0, 0.0)
 guest.JumpCurrentCount = 2
-check("for_guest asks guests.py for nothing", wall_climb.for_guest(frame_of(20 * MS)) == {})
+check("climbing, the host takes the guest's place", wall_climb.for_guest(frame_of(20 * MS)) == guest_trust.SWITCHES)
 check("the guest climbs: up and into the wall, like the player",
       (moved.Velocity.X, moved.Velocity.Y, moved.Velocity.Z) == (100.0, 0.0, 370.0))
 check("though the input the player's climb reads stays empty on the host", guest.input.X == 0.0 and guest.input.Y == 0.0)
 check("the start is said with the guest's name", notes("co-op guest Guest: wall climb start z=100") == 1)
 check("the host's own character is left alone", host.CharacterMovement.Velocity.Z == 0.0)
 wall_climb.for_guest(frame_of(30 * MS))
-check("the climb gives the guest's jumps back, as a landing", guest.JumpCurrentCount == 1)
+check("the climb gives the guest's jumps back, as a landing",
+      guest.JumpCurrentCount == 1 and moved.JumpedCount == 1)
 moved.Velocity = sdk_stubs.vector(0.0, 0.0, 0.0)
 wall_climb.for_guest(frame_of(40 * MS))
 check("the push is written every frame of the climb", moved.Velocity.Z == 370.0)
@@ -79,6 +81,8 @@ moved.acceleration = sdk_stubs.vector(0.0, 0.0)
 wall_climb.for_guest(frame_of(50 * MS))
 wall_climb.for_guest(frame_of(800 * MS))
 check("the stick let go past its grace ends the guest's climb", notes("co-op guest Guest: wall climb end reason=stick") == 1)
+check("after its end, the guest still in the air, the host still takes its place",
+      wall_climb.for_guest(frame_of(805 * MS)) == guest_trust.SWITCHES)
 moved.Velocity = sdk_stubs.vector(0.0, 0.0, -100.0)
 moved.acceleration = sdk_stubs.vector(24000.0, 0.0)
 wall_climb.for_guest(frame_of(810 * MS))
@@ -110,10 +114,14 @@ moved.acceleration = sdk_stubs.vector(24000.0, 0.0)
 frame.on_frame(host.anim, 10 * S)
 frame.on_frame(host.anim, 10 * S + 10 * MS)
 check("the frame loop hands the guest to the climb", moved.Velocity.Z == 370.0)
+check("and the host trusts the climbing guest's place",
+      moved.bIgnoreClientMovementErrorChecksAndCorrection is True and moved.bServerAcceptClientAuthoritativePosition is True)
 settings.wall_climb.value = False
 moved.Velocity = sdk_stubs.vector(0.0, 0.0, 0.0)
 frame.on_frame(host.anim, 10 * S + 20 * MS)
 check("with the climb switched off on the host, the guest is not pushed", moved.Velocity.Z == 0.0)
+check("and the host corrects the guest again, the switches given back as switches",
+      moved.bIgnoreClientMovementErrorChecksAndCorrection is False and moved.bServerAcceptClientAuthoritativePosition is False)
 frame.stop_all()
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")

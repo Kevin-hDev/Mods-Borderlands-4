@@ -24,7 +24,7 @@ if pack.is_full():
     from . import camera as camera_adapter
     from . import camera_settings
     camera_options = camera_settings.ALL
-    camera_keybinds = list(camera_settings.commands.binds)
+    camera_keybinds = [*camera_settings.commands.binds, camera_settings.open_key.bind]
     frame.set_camera(camera_adapter)
     sprint.set_view(camera_adapter.in_third_person)
 update_options = []
@@ -37,7 +37,7 @@ if pack.is_full():
     from . import slow_walk
     walk_keybinds = [walk_key.bind]
 
-__version__ = "1.2.25"
+__version__ = "1.2.26"
 __author__ = "kevin-hDev"
 
 
@@ -83,6 +83,7 @@ def _on_enable() -> None:
         report.warning(line)
     if camera_adapter is not None:
         camera_settings.commands.align()
+        camera_settings.open_key.align()
         camera_adapter.start()
     if pack.is_full():
         report.note(walk_key.state_line())

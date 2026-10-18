@@ -79,6 +79,10 @@ TEXT = {
                              "GLISSADE : une glissade, comme en sprint vers l'avant.\n\n"
                              "Vers l'avant, s'accroupir lance toujours une glissade.",
     "command_tools": "OPTIONS DES COMMANDES", "command_tools_desc": "Icônes de manette et touches caméra d'origine.",
+    "command_open_window": "RACCOURCI DU MENU",
+    "command_open_window_desc": "Ouvre cette fenêtre en jeu, et la ferme.",
+    "open_key_command": "Cette touche sert déjà à une commande de caméra : choisis-en une autre.",
+    "key_opens_window": "Cette touche ouvre cette fenêtre (RACCOURCI DU MENU) : choisis-en une autre.",
     "commands_reset": "TOUCHES D'ORIGINE", "controller_icons": "ICÔNES DE MANETTE",
     "camera_draft_discarded": "Mod caméra changé : les réglages caméra non enregistrés ont été annulés.",
     "camera_elsewhere": "Un autre mod contrôle la caméra. Règle-la dans son menu.",

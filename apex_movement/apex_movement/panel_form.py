@@ -33,10 +33,12 @@ class PanelForm(Lifecycle):
         self.focus = widgets["focus"]
         self.command_form = self.command_catalogue = None
         if model.command_actions is not None:
+            from .camera_control_config import OPEN_KEY
             from .camera_control_form import Form
             from .panel_glyphs import Catalogue
             from .panel_profile_form import ProfileForm
-            self.command_form, self.command_catalogue = Form(widgets, model), Catalogue()
+            self.open_key = OPEN_KEY
+            self.command_form, self.command_catalogue = Form(widgets, model, OPEN_KEY), Catalogue()
             self.profile_form = ProfileForm(self)
         self.sync(self.resolve())
         self.open_updates(self.resolve())
@@ -176,6 +178,8 @@ class PanelForm(Lifecycle):
         if "omni_body" in self.model.options:
             from . import panel_omni_direction
             panel_omni_direction.refresh(self, widgets)
+        if self.open_key_closes(widgets):
+            return self.flush(widgets)
         outcome = self.model.advance()
         if outcome is not None:
             self.notice = self.failure_notice() if outcome == "failed" else outcome
@@ -231,6 +235,8 @@ class PanelForm(Lifecycle):
                 return False
         if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
             self.flush(widgets)
+        if self.poll_open_key(widgets):
+            return False
         if (not self.model.camera_elsewhere and self.command_form is not None and not self.model.transaction.pending
                 and self.model.pages[self.page] == "commands"):
             self.command_form.poll()
@@ -244,4 +250,5 @@ class PanelForm(Lifecycle):
                                  for key, option in self.model.options.items())
         commands_selecting = (self.command_form is not None and self.model.pages[self.page] == "commands"
                               and self.command_form.selecting())
-        return settings_selecting or commands_selecting or bool(self.profile_form and self.profile_form.selecting())
+        return (settings_selecting or commands_selecting or self.selecting_open_key(widgets)
+                or bool(self.profile_form and self.profile_form.selecting()))

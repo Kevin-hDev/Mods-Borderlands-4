@@ -40,7 +40,8 @@ UI_SHARED = (
 # walk_key is read by two movements, the auto sprint and the ground speed, so it is in every file; its key, its menu
 # lines and the slow_walk module that ends the sprint ship in the full pack only (Kevin, 2026-09-26), and a separate
 # file never walks slowly. shortcut_key serves its option and the menu's key capture in every file.
-SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "guests", "menu", "movements", "ownership",
+SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "guest_trust", "guests", "menu", "movements",
+          "ownership",
           "pack",
           "report", "settings", "settings_persistence", "settings_upgrade", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
 # Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
@@ -51,6 +52,8 @@ FULL_ONLY = ("camera", "camera_settings", "panel_ads", "panel_camera_ownership",
              "panel_omni_direction", "panel_profile_form", "panel_profile_paint", "panel_profile_text",
              "panel_profile_window", "panel_profile_grey", "panel_profile_list", "panel_profile_page",
              "slow_walk",
+             # The key that opens the window, with the camera's COMMANDS page (Kevin, 2026-10-18).
+             "open_key", "panel_open_key",
              # The update notes' pop-up, in the full pack only (Kevin, 2026-10-17).
              "updates", "release_notes", "panel_updates")
 

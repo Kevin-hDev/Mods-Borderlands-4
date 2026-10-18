@@ -3,12 +3,29 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.2.26', {
+        'en': (
+            "New: F10 opens the mod's window in game, and closes it. Change the key at the top of the COMMANDS page.",
+            'Co-op: smoother movements for the players who join a game: no more jolts in slides, slide jumps and wall climbs, and jumping and double jumping off a wall now work.',
+        ),
+        'fr': (
+            'Nouveau : F10 ouvre la fenêtre du mod en jeu, et la referme. La touche se change en haut de la page COMMANDES.',
+            "Coop : déplacements plus fluides pour les joueurs qui rejoignent une partie : plus d'à-coups en glissade, en saut de glissade et en grimpe, et le saut et le double saut depuis un mur marchent.",
+        ),
+        'zh': (
+            '新增：F10 可在游戏中打开此模组的窗口，再按一次即可关闭。可在“按键”页面顶部更改按键。',
+            '合作模式：加入游戏的玩家移动更流畅：滑铲、滑铲跳和爬墙不再卡顿，也可以从墙上跳跃和二段跳了。',
+        ),
+    }),
     ('1.2.25', {
         'en': (
             "Co-op: now works in co-op, Apex's movements also work for the players who join a game, not only for the host.",
         ),
         'fr': (
             "Coop : fonctionne désormais en coop, les mouvements d'Apex marchent aussi pour les joueurs qui rejoignent une partie, plus seulement pour l'hôte.",
+        ),
+        'zh': (
+            '合作模式：现在可在合作模式中使用，Apex 的动作也适用于加入游戏的玩家，不再只限于主办者。',
         ),
     }),
 )

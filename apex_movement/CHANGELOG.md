@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.26 - 2026-10-18
+
+- New: F10 opens the mod's window in game, and closes it. Change the key at the top of the COMMANDS page.
+
+- Co-op: smoother movements for the players who join a game: no more jolts in slides, slide jumps and wall climbs, and jumping and double jumping off a wall now work.
+
 ## 1.2.25 - 2026-10-17
 
 - Co-op: now works in co-op, Apex's movements also work for the players who join a game, not only for the host.

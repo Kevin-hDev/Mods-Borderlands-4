@@ -68,6 +68,10 @@ for action in ("third_person", "shoulder", "orbit", "zoom_in", "zoom_out", "free
         base = f"{action}:{device}"
         names += [f"device:{base}", f"command:{base}", f"clear:{base}", f"clear:{base}_label",
                   f"value:{base}", f"value:{base}:icon"]
+# The MENU SHORTCUT card, F10 that opens the window (panel_open_key.py, Kevin 2026-10-18).
+names += ["heading:command_open_window", "group:command_open_window"]
+names += [f"{part}:open_window:keyboard{end}" for part, end in (("device", ""), ("command", ""), ("clear", ""),
+          ("clear", "_label"), ("value", ""), ("value", ":icon"))]
 names += ["heading:command_tools", "group:command_tools", "commands_reset", "commands_reset_label",
           "commands_status", "icons_label", "icons:PS5", "icons:PS5_label", "icons:XSX", "icons:XSX_label"]
 # The weapon-type rows' fold (panel_weapon_sensitivity.py).

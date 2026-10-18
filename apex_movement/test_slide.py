@@ -12,7 +12,8 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import game, ownership, settings, slide, slide_direction, slide_physics, slide_steering  # noqa: E402
+from apex_movement import (game, guest_trust, guests, ownership, settings, slide, slide_direction,  # noqa: E402
+                           slide_physics, slide_steering)
 
 fails: list[str] = []
 
@@ -168,6 +169,59 @@ slide.update(player, 1350 * MS)
 check("the next slide is raised again", movement.Velocity.X == 1130.0)
 movement.ControlledMoveReplicationData.ControlledMove = None
 slide.update(player, 1400 * MS)
+
+# A co-op host gives each guest the slide jump's speed, as the guest's own game does.
+guest = sdk_stubs.FakeCharacter("OakCharacter_guest", local=False)
+guest_movement = guest.CharacterMovement
+memo: dict = {}
+
+
+def guest_frame(now_ns: int) -> dict:
+    return slide.for_guest(guests.GuestFrame(guest, now_ns, lambda field: None, memo))
+
+
+guest_movement.ControlledMoveReplicationData.ControlledMove = asset
+guest_movement.Velocity = sdk_stubs.vector(900.0, 0.0)
+check("during a guest's slide the host takes the guest's place", guest_frame(2000 * MS) == guest_trust.SWITCHES)
+check("a slide begun before the host followed the guest keeps the game's speed", guest_movement.Velocity.X == 900.0)
+guest_movement.ControlledMoveReplicationData.ControlledMove = None
+check("a slide over on the ground gives the guest back to the host's corrections", guest_frame(2010 * MS) == {})
+check("off a slide the guest's speed is left alone", guest_movement.Velocity.X == 900.0)
+guest_movement.ControlledMoveReplicationData.ControlledMove = asset
+guest_movement.Velocity = sdk_stubs.vector(600.0, 600.0, 50.0)
+guest_frame(2020 * MS)
+guest_speed = math.hypot(guest_movement.Velocity.X, guest_movement.Velocity.Y)
+check("early in a guest's slide its speed is raised to the slide speed", abs(guest_speed - 1130.0) < 0.01)
+check("the guest keeps its direction and vertical speed",
+      abs(guest_movement.Velocity.X - guest_movement.Velocity.Y) < 1e-9 and guest_movement.Velocity.Z == 50.0)
+check("the player's own speed is not touched by the guest's slide", movement.Velocity.X != guest_movement.Velocity.X)
+guest_movement.Velocity = sdk_stubs.vector(1200.0, 0.0)
+guest_frame(2100 * MS)
+check("a guest's slide already faster is left alone", guest_movement.Velocity.X == 1200.0)
+guest_movement.Velocity = sdk_stubs.vector(900.0, 0.0)
+guest_frame(2720 * MS)
+check("a guest's slide is still raised at 700 ms from when the host saw it", guest_movement.Velocity.X == 1130.0)
+guest_movement.Velocity = sdk_stubs.vector(900.0, 0.0)
+guest_frame(2721 * MS)
+check("past 700 ms the guest's slide keeps the game's speed", guest_movement.Velocity.X == 900.0)
+settings.axle_slide.value = True
+guest_movement.ControlledMoveReplicationData.ControlledMove = None
+guest_frame(2800 * MS)
+guest_movement.ControlledMoveReplicationData.ControlledMove = asset
+guest_frame(2810 * MS)
+check("the next guest slide is raised again, to the host's Axle speed", abs(guest_movement.Velocity.X - 1412.5) < 0.01)
+settings.axle_slide.value = False
+guest_movement.ControlledMoveReplicationData.ControlledMove = None
+guest_movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
+check("a slide left by a jump keeps the host on the guest's place in the air",
+      guest_frame(2850 * MS) == guest_trust.SWITCHES)
+guest_movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
+check("until the guest lands", guest_frame(2860 * MS) == {})
+guest_movement.ControlledMoveReplicationData.ControlledMove = types.SimpleNamespace(name="Move_Dash")
+guest_movement.Velocity = sdk_stubs.vector(500.0, 0.0)
+guest_frame(2900 * MS)
+check("a guest's dash is not boosted", guest_movement.Velocity.X == 500.0)
+guest_movement.ControlledMoveReplicationData.ControlledMove = None
 
 slide.stop(player)
 check("stop puts the game's slide speed back", constant() == 720.0 and not ownership.is_owned(slide.SPEED_KEY))

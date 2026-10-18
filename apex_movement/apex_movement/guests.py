@@ -74,6 +74,9 @@ def _read(movement: Any, field: str) -> Any:
         struct, member = field.split(".", 1)
         return float(getattr(getattr(movement, struct), member))
     value = getattr(movement, field)
+    if isinstance(value, bool):
+        # A switch, such as the host's trust in a climbing guest's place: kept and given back as a switch.
+        return value
     if hasattr(value, "BaseValue"):
         # Gearbox's attribute pairs: the game reads Value and refills it from BaseValue, so both travel together.
         return float(value.BaseValue), float(value.Value)

@@ -25,8 +25,8 @@ from typing import Any
 
 from unrealsdk import unreal
 
-from . import (climb_aim, climb_animation, climb_refusal, climb_rules, climber, game, jump_press, ownership, report,
-               wall_sense)
+from . import (climb_aim, climb_animation, climb_refusal, climb_rules, climber, game, guest_trust, jump_press,
+               ownership, report, wall_sense)
 
 NS_PER_S = climber.NS_PER_S
 HOLD_FIELD = "MinPassiveMantleButtonHoldDuration"
@@ -37,6 +37,7 @@ GUEST_MEMO = "climb"
 GUEST_STALE_NS = NS_PER_S
 # One line per start and end of a guest's climb, bounded per switch-on: a guest climbing all game cannot fill the log.
 MAX_GUEST_LINES = 100
+GUEST_TRUST_MEMO = "climb trust"
 # One line per climb that presses Croix, not one per frame of the window.
 _pressed = False
 _guest_lines = 0
@@ -109,8 +110,10 @@ def for_guest(guest: Any) -> dict[str, Any]:
     """On a co-op host, climbs each guest as the guest's own game does, from what the host knows of them: their
     acceleration for the stick, their controller's heading, their jumps (verified readable on the host, 2026-10-17).
     The speed is written straight into the guest's character every frame of a climb, like the player's: a speed, not
-    a value to give back, so nothing is asked of guests.py. Not played for a guest: the arms' animation, the hoist
-    press, which the guest's own game makes, and the refusal lines."""
+    a value to give back. From the climb to the landing after it, the host takes the guest's place (guest_trust):
+    it starts a guest's climb late and ends it on its own judgement, and corrected the guest all along
+    (docs/coop/2026-10-17-saccades-restantes.md, trials 5 and 6). Not played for a guest: the arms' animation, the
+    hoist press, which the guest's own game makes, and the refusal lines."""
     global _guest_lines
     held = guest.memo.get(GUEST_MEMO)
     if held is None or guest.now_ns - held.last_ns > GUEST_STALE_NS:
@@ -125,7 +128,7 @@ def for_guest(guest: Any) -> dict[str, Any]:
         what = "start" if step.event == "start" else f"end reason={step.event}"
         report.note(f"co-op guest {name}: wall climb {what} {detail}")
     held.after_rules(character, guest.now_ns)
-    return {}
+    return guest_trust.until_landing(guest, GUEST_TRUST_MEMO, step.climbing)
 
 
 def _hoist(movement: Any) -> None:

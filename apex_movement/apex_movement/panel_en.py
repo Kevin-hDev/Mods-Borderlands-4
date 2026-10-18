@@ -76,6 +76,11 @@ TEXT = {
                              "SLIDE: a slide, as when sprinting forward.\n\n"
                              "Forward, crouching always slides.",
     "command_tools": "COMMAND OPTIONS", "command_tools_desc": "Controller icons and camera command defaults.",
+    # The key that opens this window in game (panel_open_key.py).
+    "command_open_window": "MENU SHORTCUT",
+    "command_open_window_desc": "Opens this window in game, and closes it.",
+    "open_key_command": "This key is already a camera command's: choose another one.",
+    "key_opens_window": "This key opens this window (MENU SHORTCUT): choose another one.",
     "commands_reset": "DEFAULT KEYS", "controller_icons": "CONTROLLER ICONS",
     "camera_draft_discarded": "Camera mod changed: unsaved camera settings were discarded.",
     "camera_elsewhere": "Another camera mod controls the camera. Use its menu to adjust it.",

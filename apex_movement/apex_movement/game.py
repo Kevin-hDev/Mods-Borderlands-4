@@ -143,9 +143,21 @@ def is_in_air(movement: Any) -> bool:
 
 
 def is_sliding(movement: Any) -> bool:
-    move = movement.ControlledMoveReplicationData.ControlledMove
+    """A slide under way as the game moving the character knows it, not as its network copy says.
+
+    A co-op guest's game gets the copy back from the host 41 to 62 ms after its slide began, and keeps it as long after
+    the slide ended. Read from the copy, the guest's first frames slid at the game's raw 2013 instead of 1412 and its
+    slowdown ran late: the guest outran the host's copy of it and was pulled back, after a jump onto the ground
+    (docs/coop/2026-10-17-saccades-restantes.md, trial 5, verified in both copies). Meanwhile its game already performs
+    the slide, crouched on the ground, the copy still empty; the guest's dashes logged so far began in the air."""
     asset = slide_asset()
-    return move is not None and asset is not None and move == asset
+    if asset is None or not movement.IsPerformingControlledMove():
+        return False
+    move = movement.ControlledMoveReplicationData.ControlledMove
+    if move is not None:
+        return move == asset
+    owner = movement.CharacterOwner
+    return owner is not None and bool(owner.bIsCrouched) and is_on_ground(movement)
 
 
 def input_mappings() -> list[Any]:
@@ -206,7 +218,13 @@ def jump_count(character: Any) -> int:
 
 
 def set_jump_count(character: Any, count: int) -> None:
+    """Writes the jumps used in both of the game's counters, the engine's and Borderlands' own on the movement.
+
+    The host's game allowed a jump as soon as JumpCurrentCount was given back, with JumpedCount left at 6. A co-op
+    guest's own game refused every jump the mod gave back while JumpedCount stayed at 2, which only a landing puts
+    back (trial 8, docs/coop/2026-10-17-saccades-restantes.md, verified in both copies)."""
     character.JumpCurrentCount = count
+    character.CharacterMovement.JumpedCount = count
 
 
 def half_height(character: Any) -> float:
