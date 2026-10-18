@@ -1,12 +1,14 @@
 """The update notes (updates.py): at the first opening of the window after an update, one page for each version
 missed that has a note, the newest first, its title the version and « 1 / 3 », then its points. NEXT turns the page,
 on every page but the last; CLOSE, a click beside it or Escape close it on any page, never the window (It Follows'
-pop-up, decision 117 of docs/RUN/README.md, which Kevin asked for in Apex Movement and in Apex Grapple on 2026-10-17).
+pop-up, decision 117 of docs/RUN/README.md, which Kevin asked for in Apex Movement, Apex Grapple and Vehicle Driving
+on 2026-10-17).
 
 The version installed is remembered as seen as soon as it shows: a game that crashes later must not show it again. The
 notes are in the window's language, English where they have none.
 
-Grapple's copy is the source; sync_menu_ui gives it to Apex Movement only, the one other window that shows notes."""
+Grapple's copy is the source; sync_menu_ui gives it to Apex Movement and Vehicle Driving only, the other windows
+that show notes."""
 
 from typing import Any
 

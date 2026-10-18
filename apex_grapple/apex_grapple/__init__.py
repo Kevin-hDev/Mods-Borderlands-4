@@ -19,7 +19,7 @@ from . import control_console_menu, control_menu, coop_link, coop_messages, fram
 from . import updates
 
 # Research observers are archived: their synchronous scans caused first-shot stalls.
-__version__ = "1.0.11"
+__version__ = "1.0.12"
 __author__ = "kevin-hDev"
 
 

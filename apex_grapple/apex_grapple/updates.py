@@ -1,7 +1,7 @@
 """Which update notes open at the window's first opening after an update: those of the versions newer than the last
 one whose notes the player saw and not newer than the one installed, the newest first, one page each
 (panel_updates.py). Kevin, 2026-10-17: the pop-up It Follows has, in Apex Movement's full pack (« on va gérer apex
-movement complet et c'est tout »: its separate files ship none of this) and in Apex Grapple.
+movement complet et c'est tout »: its separate files ship none of this), in Apex Grapple and in Vehicle Driving.
 
 The version seen is kept in the settings file. None kept, or one that is no version (the settings file written by
 hand), reads as none seen: every note up to the one installed, once. These mods have no welcome to tell a new player
@@ -9,7 +9,7 @@ from one updating, so the settings file does: a player who had none when the mod
 version installed as seen at once, the notes speaking of changes they never lived (Kevin, 2026-10-17); one updating
 has a file and no version seen, and sees the notes.
 
-Grapple's copy is the source; sync_menu_ui gives it to Apex Movement only.
+Grapple's copy is the source; sync_menu_ui gives it to Apex Movement and Vehicle Driving only.
 """
 
 from typing import Any

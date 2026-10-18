@@ -7,7 +7,7 @@ import math
 import types
 
 from grapple_fixture import SECOND, check, fails, fresh, game, sdk_stubs, settings, state
-from apex_grapple import coop_code, coop_host, coop_link, frame, remote_ropes
+from apex_grapple import coop_code, coop_host, coop_link, coop_trust, frame, remote_ropes
 
 import sys
 
@@ -31,6 +31,13 @@ def wire(pc) -> None:
 
 def lines(text: str) -> int:
     return sum(text in line for line in state["misc"])
+
+
+def trusted(character) -> bool:
+    """Whether the host takes this guest's place from its own game, both switches agreeing."""
+    found = {bool(getattr(character.CharacterMovement, name)) for name in coop_trust.SWITCHES}
+    assert len(found) == 1, found
+    return found.pop()
 
 
 settings.arrival_distance.value = 150
@@ -113,6 +120,9 @@ coop_host.tick(0)
 check("the anchor is looked for from the guest's character, the way it told",
       state["kismet"].calls and state["kismet"].calls[-1][0].X == 0.0 and state["kismet"].calls[-1][1].X > 1000.0)
 check("the hook is said with the guest's name", lines("co-op guest PC_Guest: hook away, 1000 away") == 1)
+check("from the rope told, the guest's own game keeps its place, said once",
+      trusted(guest) and lines("co-op guest PC_Guest: its own game keeps its place: on") == 1)
+check("the host's own character stays corrected as before", not trusted(host))
 check("and the host draws the guest's rope", remote_ropes._remotes[42].waiting is not None
       and abs(remote_ropes._remotes[42].waiting[0][0] - 1000.0) < 1.0)
 coop_host.tick(int(0.1 * SECOND))
@@ -135,6 +145,7 @@ kept = game.velocity(guest.CharacterMovement)
 check("the guest letting go ends its pull on the host", lines("co-op guest PC_Guest: let go: released by the guest") == 1)
 coop_host.tick(int(0.24 * SECOND))
 check("its speed is left as it was", game.velocity(guest.CharacterMovement) == kept)
+check("let go in the air, the guest's own game still keeps its place", trusted(guest))
 
 # The host's copy of a guest moves only when the guest's moves arrive: standing still for a frame is no wall, nor is
 # the ground, the anchor or its passing. Only the longest pull ends a rope whose release was lost.
@@ -151,6 +162,8 @@ check("a guest standing still for a frame, at the anchor, on the ground: still p
 coop_host.tick(int((1.2 + float(settings.longest_pull.value) + 0.1) * SECOND))
 check("the longest pull ends a rope whose release was lost",
       lines("co-op guest PC_Guest: let go: too long") == 1 and coop_host._ropes[0].state is None)
+check("on the ground with no rope, the host corrects the guest again, said once",
+      not trusted(guest) and lines("co-op guest PC_Guest: its own game keeps its place: off") == 1)
 settings.longest_pull.value = 0.0
 coop_link.on_send(guest_pc, types.SimpleNamespace(GrappleableObject=None, GrappleTargetHash=code), None, None)
 coop_host.tick(int(20 * SECOND))
@@ -177,6 +190,7 @@ coop_host.tick(int(4 * SECOND))
 guest_pc.Pawn = types.SimpleNamespace(Name="Vehicle")
 coop_host.tick(int(4.1 * SECOND))
 check("a guest in a vehicle has its rope ended", lines("shot called off: guest gone") == 1)
+check("and its character, left on foot, is corrected again", not trusted(guest))
 guest_pc.Pawn = guest
 
 # Bounded.
@@ -184,8 +198,10 @@ for index in range(coop_host.MAX_GUESTS + 3):
     other = types.SimpleNamespace(Name=f"PC_{index}", Pawn=guest)
     coop_host.heard(other, code, 0)
 check("the guests followed are bounded", len(coop_host._ropes) == coop_host.MAX_GUESTS)
+coop_host.tick(int(4.5 * SECOND))
+check("a rope under way: trusted", trusted(guest))
 coop_host.reset()
-check("switching off forgets every guest", coop_host._ropes == [])
+check("switching off forgets every guest, and the host corrects them again", coop_host._ropes == [] and not trusted(guest))
 
 # Through the frame loop, and apart from the player's rope.
 coop_host.heard(guest_pc, code, 0)

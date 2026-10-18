@@ -3,6 +3,17 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.12', {
+        'en': (
+            'Co-op: smoother grapple paths for the players who join a game: no more elastic pull, and no more trembling body during a grapple.',
+        ),
+        'fr': (
+            "Coop : trajectoires du grappin plus fluides pour les joueurs qui rejoignent une partie : plus d'effet élastique, ni de corps qui tremble pendant le grappin.",
+        ),
+        'zh': (
+            '合作模式：加入游戏的玩家的抓钩轨迹更流畅：不再有弹性拉扯，抓钩时身体也不再抖动。',
+        ),
+    }),
     ('1.0.11', {
         'en': (
             'Apex Grapple now works in co-op.',

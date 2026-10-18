@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.12 - 2026-10-18
+
+- Co-op: smoother grapple paths for the players who join a game: no more elastic pull, and no more trembling body during a grapple.
+
 ## 1.0.11 - 2026-10-17
 
 - Apex Grapple now works in co-op.

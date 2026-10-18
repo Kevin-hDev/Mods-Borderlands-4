@@ -11,6 +11,9 @@ The guest's own game decides when its rope lets go and says so: it sees the gues
 that have arrived, and the host judging the end itself let go of a rope still pulling on the guest, which then jerked
 back (verified in game, trial 4 of docs/coop/2026-10-17-grappin-invite.md). The host keeps the longest pull, so that a
 lost message cannot keep a guest pulled; a guest gone, or in a vehicle, ends its rope.
+
+From a rope told to the landing after it, the host takes the guest's place from the guest's own game instead of
+correcting it (coop_trust.py): its replay of the rope, a little off, pulled the guest back like an elastic.
 """
 
 import math
@@ -18,7 +21,7 @@ from typing import Any
 
 from unrealsdk.unreal import WeakPointer
 
-from . import aim, coop_code, coop_relay, game, report, settings, traction
+from . import aim, coop_code, coop_relay, coop_trust, game, report, settings, traction
 
 FLYING = "flying"
 ATTACHED = "attached"
@@ -71,6 +74,7 @@ class GuestRope:
         self.anchor = (0.0, 0.0, 0.0)
         self.contact_ns = 0
         self.pull: traction.Traction | None = None
+        self.trust = coop_trust.Trust()
 
     def character(self) -> Any:
         controller = self.pointer()
@@ -122,6 +126,12 @@ class GuestRope:
         self.pull = None
         coop_relay.guest_rope_end(self.pointer(), now_ns)
 
+    def trusted(self, character: Any, told: bool, now_ns: int) -> None:
+        """The guest's own game keeps its place while a rope is told or under way, and up to its landing after."""
+        changed = self.trust.step(character, told or self.state is not None, now_ns)
+        if changed:
+            _say(f"co-op guest {self.name}: its own game keeps its place: {changed}")
+
 
 def _rope_of(controller: Any) -> GuestRope | None:
     for rope in _ropes:
@@ -147,6 +157,7 @@ def tick(now_ns: int) -> None:
         character = rope.character()
         if character is None:
             rope.end("guest gone", now_ns)
+            rope.trust.give_back()
             if rope.pointer() is None:
                 _ropes.remove(rope)
             continue
@@ -157,10 +168,17 @@ def tick(now_ns: int) -> None:
             else:
                 rope.start(character, code, now_ns)
         rope.update(character, now_ns)
+        rope.trusted(character, any(code != coop_code.RELEASE for code in pending), now_ns)
 
 
 def reset() -> None:
-    """At switch-off: every guest's rope ends where it is, its speed untouched, as the player's does."""
+    """At switch-off, or after an error: every guest's rope ends where it is, its speed untouched, as the player's
+    does, and the host corrects every guest again. One failure to give back is said, and the others still go back."""
     global _lines
+    for rope in _ropes:
+        try:
+            rope.trust.give_back()
+        except Exception as exc:
+            report.error_once("coop_trust", f"a co-op guest's place could not be given back to the host: {exc!r}")
     _ropes.clear()
     _lines = 0

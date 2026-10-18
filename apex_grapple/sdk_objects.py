@@ -37,6 +37,9 @@ class FakeMovement:
         # What a co-op host reads of a guest's stick (coop_host.remote_stick).
         self.MaxAcceleration = 24000.0
         self.acceleration = vector(0.0, 0.0, 0.0)
+        # The engine's switches by which a co-op host takes a guest's place instead of correcting it (coop_trust.py).
+        self.bIgnoreClientMovementErrorChecksAndCorrection = False
+        self.bServerAcceptClientAuthoritativePosition = False
 
     def GetCurrentAcceleration(self) -> Any:
         return self.acceleration

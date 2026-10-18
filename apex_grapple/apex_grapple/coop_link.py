@@ -42,7 +42,7 @@ def reset() -> None:
     _game_point, _game_code, _sending, _told, _look_sent, _next_look_ns = None, 0, False, None, None, 0
 
 
-def _is_guest(character: Any) -> bool:
+def is_guest(character: Any) -> bool:
     return character.GetLocalRole() != unrealsdk.find_enum("ENetRole").ROLE_Authority
 
 
@@ -50,7 +50,7 @@ def tell_start(character: Any, anchor: tuple[float, float, float], flight_s: flo
     """A rope of the player's has gone. A failure costs the others' copy of it, never the rope."""
     global _told
     try:
-        if _is_guest(character):
+        if is_guest(character):
             here = game.location(character)
             _send(coop_code.encode_rope(tuple(a - h for a, h in zip(anchor, here))))
             _told = HOST
@@ -79,7 +79,7 @@ def tell_end() -> None:
 def tick(character: Any, now_ns: int) -> None:
     """Every frame: a guest's look told to the host when it changes and every LOOK_EVERY_S."""
     global _look_sent, _next_look_ns
-    if not _is_guest(character):
+    if not is_guest(character):
         return
     number = look_code.mine()
     if number == _look_sent and now_ns < _next_look_ns:
