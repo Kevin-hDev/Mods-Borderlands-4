@@ -1,6 +1,6 @@
 # Third Person & FOV
 
-Version **1.2.8**.
+Version **1.2.9**.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -47,7 +47,8 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
   goes straight until you brake. Aiming ends it. Hold or press-to-toggle and the hold time (0.20 s) are set on the Camera page.
 
 Its settings window, in English, French and Simplified Chinese, has a **Camera** page, split into CAMERA VIEW and SHOULDER
-VIEW by two buttons at its top, and a **Commands** page. The Commands page sets
+VIEW by two buttons at its top, and a **Commands** page. F7 opens the window in game and closes it; the key is changed,
+or removed, at the top of the Commands page, and no camera command or profile can share it. The Commands page sets
 every camera key, for keyboard and mouse and for controller, with PlayStation or Xbox icons: third person (P by
 default), switch shoulder (6), orbit camera (7), orbit camera zoom in and out (no key by default), Free Look
 (the key right of Tab, L3) and camera distance (8). Free Look is the only camera action with a controller button by default.
@@ -59,7 +60,7 @@ settings are the ones used.
 
 1. Install the [Borderlands 4 Python SDK](https://github.com/bl-sdk/oak2-mod-manager/releases/latest).
 2. Put `third_person_fov.sdkmod` in the game's `sdk_mods` folder.
-3. Launch the game, open the console with `~`, type `mods`, and open **Third Person & FOV**.
+3. Launch the game and press F7, or open the console with `~`, type `mods`, and open **Third Person & FOV**.
 
 ## How it is put together
 
@@ -104,6 +105,7 @@ python test_camera.py
 python test_camera_command_bindings.py
 python test_frame.py
 python test_mod.py
+python test_open_key.py
 python test_panel_model.py
 python test_panel_ownership.py
 python test_panel_view.py

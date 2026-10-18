@@ -41,6 +41,9 @@ def page(owner, model, widgets, template, frame=None):
     external.SetVisibility(w.enum("ESlateVisibility", "Collapsed" if model.command_actions else "Visible"))
     if model.command_actions is None:
         return page
+    # Third Person & FOV's key that opens the window (outils/sync_menu_third_person_open_key.py)
+    from . import panel_open_key as open_keys
+    _device_row(p.card(body, widgets, open_keys.CARD), widgets, template, open_keys.ACTION, open_keys.DEVICE)
     settings = w.new("VerticalBox", body)
     widgets["commands:settings"] = settings
     w.column(body, settings)
@@ -70,6 +73,10 @@ def refresh(form, widgets, catalogue):
             widgets[f"command:{name}"].SetNoKeySpecifiedText(i18n.text("change_key", language))
             widgets[f"command:{name}"].SetKeySelectionText(i18n.text("press_key", language))
             _show_value(widgets, name, option.value, family, language, catalogue)
+    # Third Person & FOV's key that opens the window (outils/sync_menu_third_person_open_key.py)
+    from . import panel_open_key as open_keys
+    open_keys.refresh(widgets, language,
+                      lambda name, key: _show_value(widgets, name, key, family, language, catalogue))
     widgets["heading:command_tools"].SetText(i18n.text("command_tools", language))
     widgets["group:command_tools"].SetText(i18n.text("command_tools_desc", language))
     widgets["commands_reset_label"].SetText(i18n.text("commands_reset", language))

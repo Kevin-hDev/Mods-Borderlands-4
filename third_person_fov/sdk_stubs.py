@@ -157,7 +157,7 @@ def install() -> dict:
     # instead of reaching the game's settings.
     mods_base.SETTINGS_DIR = str(Path(__file__).resolve().parent / "no_settings_folder")
     mods_base.BoolOption = mods_base.SliderOption = FakeOption
-    mods_base.SpinnerOption = FakeOption
+    mods_base.SpinnerOption = mods_base.HiddenOption = FakeOption
     mods_base.NestedOption = FakeNestedOption
     mods_base.KeybindOption = FakeKeybindOption
     mods_base.EInputEvent = types.SimpleNamespace(IE_Pressed="IE_Pressed")

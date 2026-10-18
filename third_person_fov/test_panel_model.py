@@ -26,7 +26,8 @@ def check(label, condition):
 model = Model(mod)
 check("SDK entry opens the custom window", getattr(mod, panel_open.MARKER, False))
 # OMNI DIRECTION right after CAMERA, the mod's main page (Kevin, 2026-10-09).
-check("only camera settings, over the camera pages (Kevin, 2026-10-06), and eight separate command pairs are exposed",
+check("only camera settings, over the camera pages (Kevin, 2026-10-06), and eight separate command pairs are exposed, "
+      "with the key that opens the window",
       model.pages == ("camera", "omni_direction", "aiming", "orbit_camera", "loot", "dynamic_camera", "sensitivity",
                       "commands", "shoulder", "profiles")
       and model.page == "camera"
@@ -48,7 +49,7 @@ check("only camera settings, over the camera pages (Kevin, 2026-10-06), and eigh
                                   "sensitivity_weapon_sniper_x4", "sensitivity_weapon_sniper_x6",
                                   "sensitivity_weapon_sniper_x8"]
       and set(model.camera_options) == set(model.options)
-      and len(model.command_options) == 16)
+      and len(model.command_options) == 17 and model.command_options["open_key"].value == "F7")
 check("preferences belong to the mod's existing save file",
       all(option in mod.kwargs["options"] and option.mod is mod for option in prefs.ALL))
 check("reopening restores the selected page, language and icon family",

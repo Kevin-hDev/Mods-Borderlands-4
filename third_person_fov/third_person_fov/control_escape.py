@@ -34,8 +34,8 @@ def user32():
 class EscapeWatch:
     """Built when the window opens: an Escape pressed before it must not close it."""
 
-    def __init__(self, api=None):
-        self.api = api
+    def __init__(self, api=None, key=VK_ESCAPE):
+        self.api, self.key = api, key
         self.seen_down = self.closing = self.muted = self.busy = self.failed = False
         self._read()
 
@@ -46,7 +46,7 @@ class EscapeWatch:
         try:
             if self.api is None:
                 self.api = user32()
-            return self.api.GetAsyncKeyState(VK_ESCAPE)
+            return self.api.GetAsyncKeyState(self.key)
         except Exception as error:
             if not self.failed:
                 self.failed = True

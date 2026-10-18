@@ -3,9 +3,9 @@
 from mods_base import build_mod
 from .settings_persistence import AtomicMod
 
-from . import camera, frame, panel_open, panel_preferences, report, settings
+from . import camera, frame, open_key, panel_open, panel_preferences, report, settings
 
-__version__ = "1.2.8"
+__version__ = "1.2.9"
 __author__ = "kevin-hDev"
 
 
@@ -13,6 +13,7 @@ def _on_enable() -> None:
     report.reset()
     frame.reset()
     settings.commands.align()
+    open_key.align()
     camera.start()
     report.note(f"enabled, version {__version__}")
 
@@ -30,8 +31,8 @@ mod = build_mod(
     cls=AtomicMod,
     name="Third Person & FOV",
     hooks=[frame.tick],
-    keybinds=settings.commands.binds,
-    options=[*settings.OPTIONS, *panel_preferences.ALL],
+    keybinds=[*settings.commands.binds, open_key.bind],
+    options=[*settings.OPTIONS, open_key.option, *panel_preferences.ALL],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )

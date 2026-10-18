@@ -402,8 +402,8 @@ ZH = {'camera_refused': '镜头未确认此更改，未保存。',
                      '\n'
                      'x2 及以上：武器以越肩方式按该倍率瞄准。\n'
                      '\n'
-                     '勾选了多个倍率：瞄准时，倍率键切换到下一个，从小到大，然后回到第一个。该武器类型下次瞄准时，从上次使用的倍率开始。',
- 'optics_help_key': '倍率键',
+                     '勾选了多个倍率：瞄准时，瞄具倍率键切换到下一个，从小到大，然后回到第一个。该武器类型下次瞄准时，从上次使用的倍率开始。',
+ 'optics_help_key': '瞄具倍率键',
  'optics_help_commands': '可在「按键」页面更改。',
  'camera_draft_discarded': '镜头模组已更改：未保存的镜头设置已被放弃。',
  'camera_outdated': '加载了不同版本的镜头模组。请更新 Apex Movement、Omni Sprint 和 Third Person & FOV，然后重启游戏。',
@@ -439,15 +439,15 @@ ZH = {'camera_refused': '镜头未确认此更改，未保存。',
  'omni_dash': '冲刺',
  'omni_slide': '滑铲',
  'popup_omni_body': '身体朝向',
- 'popup_omni_body_desc': '猎人转向奔跑的方向。',
- 'omni_body_help_text': '第三人称下，猎人会转向奔跑的方向，而不是一直背对镜头。\n'
+ 'popup_omni_body_desc': '秘藏猎人转向奔跑的方向。',
+ 'omni_body_help_text': '第三人称下，秘藏猎人会转向奔跑的方向，而不是一直背对镜头。\n'
                         '\n'
                         '当你射击、投掷手雷、近战攻击或使用技能时，猎人会转回准星方向，并在你最后一个动作一秒后重新转向奔跑方向。\n'
                         '\n'
                         '瞄准时，猎人面向准星。滑铲时，身体保持朝向滑铲的方向。',
  'popup_omni_angle': '角度',
  'popup_omni_angle_desc': '身体可以转动的范围。',
- 'omni_angle_help_text': '360°：猎人在任何方向都会转向奔跑方向。向后时，猎人面朝镜头奔跑。\n'
+ 'omni_angle_help_text': '360°：秘藏猎人在任何方向都会转向奔跑方向。向后时，猎人面朝镜头奔跑。\n'
                          '\n'
                          '180°：猎人只在两侧和前方转向。向后时，猎人背对镜头后退，和游戏原本一样。',
  'popup_omni_crouch': '侧向和后方',
@@ -470,14 +470,14 @@ ZH = {'camera_refused': '镜头未确认此更改，未保存。',
  'ads_wrong_thread': '瞄准显示不可用：仍使用第一人称瞄准。请附上日志报告此问题。',
  'ads_mode_unavailable': '瞄准视角未确认：仍使用第一人称瞄准。请松开后重新瞄准。',
  'ads_cleanup_pending': '正在恢复游戏视角。请稍等，再更换镜头模组。',
- 'ads_install_failed': '无法启用越肩瞄准。请重启游戏；如果问题仍然存在，请附上日志报告。'}
+ 'ads_install_failed': '无法开启越肩瞄准。请重启游戏；如果问题仍然存在，请附上日志报告。'}
 ZH_OPTIONS = {'third_person': ('第三人称', '步行时镜头保持在角色身后。'),
  'third_person_ads': ('瞄准视角', '在下方为每种武器类型选择瞄具。'),
  'pistol_optics': ('手枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'smg_optics': ('冲锋枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'shotgun_optics': ('霰弹枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'assault_optics': ('突击步枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
- 'sniper_optics': ('狙击步枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
+ 'sniper_optics': ('狙击枪瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'heavy_optics': ('重武器瞄具', 'BDL4 恢复游戏的第一人称瞄准；选择倍率则以越肩方式瞄准。'),
  'shoulder_left': ('切换肩膀', '将镜头放在角色的左侧或右侧。'),
  'shoulder_auto': ('自动切换肩膀', '墙壁挡住视线时，镜头切到另一侧肩膀，然后再切回来。'),
@@ -493,7 +493,7 @@ ZH_OPTIONS = {'third_person': ('第三人称', '步行时镜头保持在角色�
  'sensitivity_weapon_smg': ('冲锋枪', '使用冲锋枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
  'sensitivity_weapon_shotgun': ('霰弹枪', '使用霰弹枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
  'sensitivity_weapon_assault': ('突击步枪', '使用突击步枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
- 'sensitivity_weapon_sniper': ('狙击步枪', '使用狙击步枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
+ 'sensitivity_weapon_sniper': ('狙击枪', '使用狙击枪时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
  'sensitivity_weapon_heavy': ('重武器', '使用重武器时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
  'sensitivity_weapon_sniper_optics': ('按瞄具倍率', '每个倍率使用下方各自的数值，适用于所有武器。'),
  'sensitivity_weapon_sniper_x2': ('瞄具 x2', '使用 x2 倍率时的瞄准速度，以游戏自身灵敏度的百分比表示。'),
@@ -521,7 +521,7 @@ ZH_OPTIONS = {'third_person': ('第三人称', '步行时镜头保持在角色�
  'free_look_keyboard_hold': ('自由视角：键盘按住模式', '开：按住按键期间保持自由视角。关：按一次开启，再按一次关闭。'),
  'free_look_controller_hold': ('自由视角：手柄按住模式', '开：按住按钮期间保持自由视角。关：按一次开启，再按一次关闭。'),
  'free_look_hold_time': ('自由视角：按住时长', '自由视角启动前需要按住的时间，单位为秒。'),
- 'omni_body': ('身体朝向', '猎人转向奔跑的方向。'),
+ 'omni_body': ('身体朝向', '秘藏猎人转向奔跑的方向。'),
  'omni_angle': ('角度', '360°：所有方向。180°：向后时，像游戏原本一样后退。'),
  'omni_direction_sprint': ('全方向疾跑', '也可以向两侧和后方疾跑。'),
  'omni_crouch': ('侧向和后方', '向侧面或后方疾跑时，蹲下会触发冲刺或滑铲。')}

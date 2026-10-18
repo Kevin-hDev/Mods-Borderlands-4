@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.9 - 2026-10-18
+
+- New: F7 opens the mod's window in game, and closes it. Change the key at the top of the COMMANDS page.
+
+- Clearer Chinese texts, with the game's official Chinese names, such as 秘藏猎人 for the Vault Hunter.
+
 ## 1.2.8 - 2026-10-12
 
 - Fixed: with OMNI DIRECTION, walking diagonally forward-left in third person no longer crosses the hunter's legs or twists the ankle.

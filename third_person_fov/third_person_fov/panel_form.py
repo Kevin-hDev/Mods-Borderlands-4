@@ -9,6 +9,8 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, 
 from . import panel_theme_choice
 from . import panel_size_choice
 from .panel_form_lifecycle import Lifecycle
+# Third Person & FOV's key that opens the window (outils/sync_menu_third_person_open_key.py)
+from . import panel_open_key
 from .panel_preferences import LANGUAGES
 
 # A setting that changes nothing while its switch is off; this mod's FOV has no switch of its own, so it is
@@ -39,6 +41,7 @@ class PanelForm(Lifecycle):
             self.profile_form = ProfileForm(self)
         self.sync(self.resolve())
         panel_ownership.refresh(self, self.resolve())
+        self.open_updates(self.resolve())
 
     def sync(self, widgets):
         self.pending.clear()
@@ -169,6 +172,8 @@ class PanelForm(Lifecycle):
 
     def poll(self):
         widgets, now = self.resolve(), time.perf_counter_ns()
+        if panel_open_key.closing(self, widgets):
+            return self.flush(widgets)
         panel_ownership.update(self, widgets)
         self.refresh_aim(widgets)
         if "sensitivity_weapons" in self.model.options:
@@ -231,6 +236,8 @@ class PanelForm(Lifecycle):
                 return False
         if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
             self.flush(widgets)
+        if self.model.pages[self.page] == "commands" and panel_open_key.poll(self, widgets):
+            return False
         if (not self.model.camera_elsewhere and self.command_form is not None and not self.model.transaction.pending
                 and self.model.pages[self.page] == "commands"):
             self.command_form.poll()
@@ -244,4 +251,5 @@ class PanelForm(Lifecycle):
                                  for key, option in self.model.options.items())
         commands_selecting = (self.command_form is not None and self.model.pages[self.page] == "commands"
                               and self.command_form.selecting())
-        return settings_selecting or commands_selecting or bool(self.profile_form and self.profile_form.selecting())
+        return (settings_selecting or commands_selecting or panel_open_key.selecting(widgets)
+                or bool(self.profile_form and self.profile_form.selecting()))
