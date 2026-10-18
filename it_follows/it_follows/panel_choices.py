@@ -75,7 +75,7 @@ def buttons(owner, widgets, option, template):
     line = w.new("HorizontalBox", owner)
     for index, choice in enumerate(option.choices):
         w.row(line, b.button(line, widgets, _name(option, choice), "switch", template, "off"),
-              padding=w.pad(0, 0, 0, t.SPACE_3 if index else 0), valign="Center")
+              padding=w.pad(0, 0, 0, t.SPACE_2 if index else 0), valign="Center")
     widgets[f"setting:{option.identifier}"] = line
     return line
 

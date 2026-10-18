@@ -13,14 +13,14 @@ from pathlib import Path
 
 import unrealsdk
 
-from . import panel_widgets as w, report
+from . import panel_widgets as w, report, start_places_data
 
 # Noto Sans SC cut to the Chinese a mod's texts use (outils/chinese_font.py), shipped by the mods offering Chinese.
 CHINESE_FONTS = ("NotoSansSC-Black.ttf", "NotoSansSC-Medium.ttf", "NotoSansSC-ExtraBold.ttf")
 FONTS = ("Anton-Regular.ttf", "BarlowCondensed-Medium.ttf", "BarlowCondensed-SemiBold.ttf",
          "BarlowCondensed-ExtraBold.ttf", *CHINESE_FONTS)
 AVATAR = "avatar.png"
-NAMES = (*FONTS, AVATAR)
+NAMES = (*FONTS, AVATAR, *start_places_data.PICTURES)
 FOLDER = "it_follows_ui"
 # The largest shipped file is a Chinese face, 1.1 MB with the everyday characters; anything larger is refused.
 MAX_BYTES = 2_000_000
@@ -63,9 +63,10 @@ def path(name):
     return _copied[name]
 
 
-def texture(world):
-    """The avatar as a texture, or None: Unreal's own importer reads the PNG from the copied file."""
-    file = path(AVATAR)
+def texture(world, name=AVATAR):
+    """A picture as a texture, the avatar unless `name` is another of NAMES, or None: Unreal's own
+    importer reads the PNG from the copied file."""
+    file = path(name)
     if file is None:
         return None
     loaded = []
@@ -74,5 +75,5 @@ def texture(world):
         library = unrealsdk.find_class("KismetRenderingLibrary").ClassDefaultObject
         loaded.append(library.ImportFileAsTexture2D(world, file))
 
-    w.cosmetic("avatar", load)
+    w.cosmetic(name.removesuffix(".png"), load)
     return loaded[0] if loaded and loaded[0] is not None else None

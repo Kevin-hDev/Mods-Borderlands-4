@@ -86,7 +86,7 @@ started: list = []
 real_start = session.start
 
 
-def start(settings: object) -> str:
+def start(settings: object, on_failed: object = None) -> str:
     started.append(settings)
     session._state["run"], session._state["began"] = FakeRun(settings), int(time.time()) - 60
     return "started"
@@ -231,6 +231,8 @@ try:
           and text("setting:normal_shields_label") == "ON")
     check("at Bandit the enemies' speed row hidden (decision 121)", not shown("row:normal_speed")
           and not shown("description:normal_speed"))
+    check("at Bandit the staggers' row hidden (decision 135)", not shown("row:normal_no_staggers")
+          and not shown("description:normal_no_staggers"))
     press("setting:normal_level:Senior")
     form.poll()
     check("another level clicked: written, its sentence shown", form.flush(widgets)
@@ -253,6 +255,23 @@ try:
     press("setting:normal_speed:Increased")
     form.poll()
     check("INCREASED clicked back: written", form.flush(widgets) and normal_options.speed.value == "Increased")
+    check("at Senior the staggers' row hidden", not shown("row:normal_no_staggers"))
+    press("setting:normal_level:Predator")
+    form.poll()
+    check("at Predator the staggers' row shown, off, its help (decision 135)", form.flush(widgets)
+          and shown("row:normal_no_staggers") and shown("description:normal_no_staggers")
+          and text("label:normal_no_staggers") == "NO STAGGERS" and text("setting:normal_no_staggers_label") == "OFF"
+          and text("description:normal_no_staggers")
+          == "At Predator: the enemies never stagger nor fall under your shots.")
+    press("setting:normal_no_staggers")
+    form.poll()
+    check("NO STAGGERS clicked: written, Predator read without staggers", form.flush(widgets)
+          and normal_options.no_staggers.value is True and normal_options.read().level.staggers == 0.0)
+    press("setting:normal_no_staggers")
+    press("setting:normal_level:Senior")
+    form.poll()
+    check("clicked back off, Senior again", form.flush(widgets) and normal_options.no_staggers.value is False
+          and normal_options.level.value == "Senior")
     check("START without a game: the mode on and written so, the window kept, saying it waits for a game",
           press("normal_start") is False and session.normal_on() and normal_options.on.value is True
           and text("notice") == "The normal mode is on: it starts as soon as you are on foot in a loaded game.")

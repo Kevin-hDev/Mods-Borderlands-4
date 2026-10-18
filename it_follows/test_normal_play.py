@@ -298,24 +298,38 @@ try:
         def put_back(self) -> dict:
             return {"given_back": 7}
 
+    class Staggers:
+        def keep(self) -> dict:
+            return {"written": ["HitReactionSettings"]}
+
+        def put_back(self) -> dict:
+            return {"HitReactionSettings": "given_back"}
+
     chosen = levels.LEVELS["Predator"]
     predator = play_module.Play(options.Settings(chosen, False), hunter, dodges, failures.append)
     check("the faster dodges on: the level's dodge and gesture factors, its rest",
           predator.watch.factors == {"dodge": chosen.dodge_speed, "gesture": chosen.gestures}
-          and predator.melee.rest == chosen.melee_rest)
+          and predator.melee.rest == chosen.melee_rest and predator.staggers.factor == chosen.staggers)
     predator.camps = Camps(5.0, {"grown": 0, "refused": 0, "too_many": 0, "stopped": "complete"})
     predator.enemies = Enemies(5.0, {})
     predator.taken = Taken()
     predator.rewards = Rewards()
     predator.melee = Melee()
+    predator.staggers = Staggers()
     predator.begin(300.0)
-    notes()
+    check("its start makes the staggers rarer, said", [line["event"] for line in notes()].count("normal_staggers")
+          == 1)
     predator.tick(301.0)
-    check("the census shortens the armed bandits' rest, said", [line.get("written") for line in notes()
+    said = notes()
+    check("the census shortens the armed bandits' rest, said", [line.get("written") for line in said
                                                                 if line["event"] == "normal_melee_rest"] == [7])
+    check("the census keeps the staggers rarer, said", [line.get("written") for line in said
+                                                        if line["event"] == "normal_staggers"]
+          == [["HitReactionSettings"]])
     predator.end("stopped")
-    check("the end gives the rest back", [line for line in notes() if line["event"] == "normal_given_back"][-1]
-          ["melee_rest"] == {"given_back": 7})
+    ended = [line for line in notes() if line["event"] == "normal_given_back"][-1]
+    check("the end gives the rest and the staggers back", ended["melee_rest"] == {"given_back": 7}
+          and ended["staggers"] == {"HitReactionSettings": "given_back"})
     check("nothing failed", failures == [])
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")

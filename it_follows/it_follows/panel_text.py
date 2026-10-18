@@ -39,11 +39,14 @@ ROLES = {
     "warning": ("body", t.WEIGHT_BOLD, t.TEXT_MD, "COLOR_SPARK_TEXT", 0, False),
     "mark": ("title", None, t.TEXT_SM, "COLOR_INK", 0, False),
     "look": ("body", t.WEIGHT_BOLD, t.TEXT_MD, "COLOR_TEXT", t.TRACKING_LG, False),
+    # The Horde's places' tabs, each name on two lines (decision 140), beside the title.
+    "place_tab": ("body", t.WEIGHT_BOLD, t.TEXT_2XS, "COLOR_INK", 0, False),
 }
 # The line heights the mockup's CSS gives Anton; Barlow keeps its own, as in the browser.
 LEADING = {"logo": t.LEADING_NONE, "hero": t.LEADING_TIGHT, "plate": t.LEADING_SNUG,
            "nav": t.LEADING_SNUG, "value": t.LEADING_SNUG,
-           "launch": t.LEADING_NONE, "figure": t.LEADING_NONE, "subtitle": t.LEADING_SNUG, "mark": t.LEADING_NONE}
+           "launch": t.LEADING_NONE, "figure": t.LEADING_NONE, "subtitle": t.LEADING_SNUG, "mark": t.LEADING_NONE,
+           "place_tab": t.LEADING_TIGHT}
 _loaded = {}  # family -> font object, only while one window is being built
 
 

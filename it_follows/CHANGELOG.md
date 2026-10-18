@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7 - 2026-10-19
+
+- Horde mode: new Starting point option, to start your run from one of seven places on the map.
+- Normal mode: enemies stagger less, and at Predator a new No staggers option takes their staggers away.
+
 ## 1.0.6 - 2026-10-18
 
 - Normal mode now works in co-op.

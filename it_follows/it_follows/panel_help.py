@@ -5,7 +5,9 @@ beside it, its CLOSE button or Escape close alone, never the window. Its look is
 It Follows keeps its own code (decision 45).
 
 A second help, the Hardcore's (decision 89, spec-hardcore.md, section 5), opens from the « ? » of its row on the
-NORMAL MODE page: what the game's levels do, what the Hardcore does, and that it can be paused or switched off."""
+NORMAL MODE page: what the game's levels do, what the Hardcore does, and that it can be paused or switched off. A
+third, the starting point's (decision 140), from the « ? » of its row on the HORDE MODE page: choosing where the run
+starts (Kevin: « une pastille point d'interogation qui ouvre un pop up d'explication »)."""
 
 from typing import Any
 
@@ -13,8 +15,9 @@ from . import panel_buttons as b, panel_i18n as i18n, panel_popup, panel_text as
 from . import panel_widgets as w, report
 
 # Each help's pop-up, by its key, and the « ? » that open it: the run's beside START and beside STOP while a run goes
-# on, the Hardcore's on its row. Its title and sentences are the texts <key>_title and <key>.
-HELPS = {"help_run": ("run_help", "live_help"), "help_hardcore": ("hardcore_help",)}
+# on, the Hardcore's on its row, the starting point's on its own. Its title and sentences are the texts <key>_title and
+# <key>.
+HELPS = {"help_run": ("run_help", "live_help"), "help_hardcore": ("hardcore_help",), "help_start": ("start_help",)}
 
 
 def button(owner: Any, widgets: dict, name: str, template: Any) -> Any:

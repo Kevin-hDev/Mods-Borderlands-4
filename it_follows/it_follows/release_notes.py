@@ -3,6 +3,20 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.7', {
+        'en': (
+            'Horde mode: new Starting point option, to start your run from one of seven places on the map.',
+            'Normal mode: enemies stagger less, and at Predator a new No staggers option takes their staggers away.',
+        ),
+        'fr': (
+            'Mode Horde : nouvelle option Point de départ, pour lancer ton run depuis un des sept lieux de la carte.',
+            'Mode normal : les ennemis sursautent moins, et en Predator une nouvelle option Sans sursaut les supprime.',
+        ),
+        'zh': (
+            '敌群模式：新增「起点」选项，可从地图上选择的地点开始本局。',
+            '普通模式：敌人的硬直更少；掠食者等级下，新的「无硬直」选项可让敌人不再踉跄。',
+        ),
+    }),
     ('1.0.6', {
         'en': (
             'Normal mode now works in co-op.',

@@ -53,6 +53,11 @@ que la marche et le sprint »; enemy_time.py).
 melee_rest: the armed bandits' rest after a blow, centre and half width in seconds, None for the game's (decision 126,
 Kevin, 17 October 2026: « Senior 3 a 5 et preda 2 a 3 s c'est bon »; melee_rest.py). The game's is 6 / 2, 8 / 2 for
 the pistol (trial 66).
+
+staggers: the game's chances of a stagger and a launch times this (decision 135, Kevin, 18 October 2026: 15, 25 and
+50 % fewer; staggers.py). staggers_off: whether the window's « No staggers » row shows at that level, Predator only
+(Kevin: « un bouton qui apparait uniquement pour ce niveau et qui desactive completement les sursauts »); on, the
+level's staggers are zero.
 """
 
 from dataclasses import dataclass, replace
@@ -79,16 +84,18 @@ class Level:
     cash: float
     gestures: float
     melee_rest: tuple[float, float] | None
+    staggers: float
+    staggers_off: bool
 
 
 OPTION, ALWAYS = "option", "always"
 LEVELS = {
     "Bandit": Level("Bandit", 1.5, 350.0, 1.2, 1.7, 0.35, 1.0, 1.45, 1.1, OPTION, False, 0.88, 1.06, False,
-                    0.10, 0.10, 0.15, 1.1, None),
+                    0.10, 0.10, 0.15, 1.1, None, 0.85, False),
     "Senior": Level("Senior", 2.0, 350.0, 1.4, 2.3, 0.45, 1.0, 1.75, 1.2, ALWAYS, False, 0.88, 1.08, True,
-                    0.15, 0.20, 0.15, 1.2, (4.0, 1.0)),
+                    0.15, 0.20, 0.15, 1.2, (4.0, 1.0), 0.75, False),
     "Predator": Level("Predator", 2.0, 600.0, 1.5, 2.8, 0.55, 100.0, 2.3, 1.3, ALWAYS, True, 0.8, 1.12, True,
-                      0.20, 0.25, 0.15, 1.3, (2.5, 0.5)),
+                      0.20, 0.25, 0.15, 1.3, (2.5, 0.5), 0.5, True),
 }
 # The faster dodges switched off keep the game's own speed, never reduced (play.py speeds up no dodge then; Kevin: « on
 # ne re reduis pas de 15% »).

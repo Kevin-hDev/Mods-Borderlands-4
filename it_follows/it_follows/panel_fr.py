@@ -71,6 +71,29 @@ TEXT = {
     "start_failed": "Le run n'a pas pu démarrer. La raison est dans unrealsdk.log. Si des ennemis se comportent "
                     "bizarrement, quitte vers le menu principal et recharge ta partie.",
     "start_refused": "Le run n'a pas pu démarrer ici. Ta partie n'est pas modifiée. La raison est dans unrealsdk.log.",
+    "start_place_caption": "LE LIEU", "start_map_caption": "SUR LA CARTE",
+    "start_choose": "CHOISIR", "start_chosen": "CHOISI", "start_back": "RETOUR",
+    "help_start_title": "POINT DE DÉPART",
+    "help_start": "Choisis où commence ton run de la Horde.\n\n"
+                  "Allume Point de départ, puis ouvre l'onglet d'un lieu à côté de RÉGLAGES DU RUN : sa photo, et où "
+                  "il se trouve sur la carte. Appuie sur CHOISIR.\n\n"
+                  "Au START, l'écran devient noir le temps du voyage et du chargement du lieu, puis le run commence "
+                  "dès que l'image revient.\n\n"
+                  "Éteint, le run commence là où tu te tiens, comme avant. Ton dernier choix est gardé.",
+    "locked_trip": "En route vers le point de départ : le run commence à l'arrivée.",
+    "start_not_open_world": "Pas de point de départ d'ici : retourne dans le monde ouvert, puis appuie sur START.",
+    "start_trip_going": "Tu es déjà en route vers le point de départ.",
+    "start_move_failed": "Le jeu a refusé le voyage : tu n'as pas bougé, et le run n'a pas commencé. Appuie de "
+                         "nouveau sur START.",
+    "start_no_floor": "Le point de départ n'a pas chargé à temps : tu as été ramené là où tu étais, et le run n'a "
+                      "pas commencé. Appuie de nouveau sur START.",
+    "start_character_gone": "Le voyage s'est arrêté en route (un changement de carte) : le run n'a pas commencé.",
+    "start_hold_failed": "Le voyage s'est arrêté sur une erreur : tu as été ramené là où tu étais, et le run n'a "
+                         "pas commencé. La raison est dans unrealsdk.log.",
+    "start_arrival_coop": "Quelqu'un a rejoint ta partie pendant le voyage : la Horde ne marche qu'en partie solo pour "
+                          "l'instant, et le run n'a pas commencé. Tu restes au point de départ.",
+    "start_arrival_refused": "Tu es au point de départ, mais le run n'a pas pu y commencer. Appuie de nouveau sur "
+                             "START ; la raison est dans unrealsdk.log.",
     "history_title": "20 DERNIERS RUNS", "history_empty": "Aucun run pour l'instant : tes runs s'afficheront ici.",
     "col_when": "QUAND", "col_level": "NIVEAU", "col_limit": "DURÉE", "col_held": "TENU", "col_kills": "TUÉS",
     "col_deaths": "MORTS", "col_end": "FIN",
@@ -113,6 +136,8 @@ TEXT = {
 GROUPS = {"run": "", "normal": "", "history": "", "options": ""}
 
 OPTIONS = {
+    "start_point": ("Point de départ", "Lance le run depuis un lieu de la carte choisi dans les onglets en haut, "
+                                       "au lieu de là où tu te tiens."),
     "level": ("Niveau", "Plus le niveau est haut, plus il y a d'ennemis autour de toi."),
     "speed": ("Vitesse des ennemis", "La vitesse de course des ennemis qui te chassent."),
     "buff": ("Buff", "BUFF : les ennemis ont plus de vie et tu reçois plus de dégâts. BUFF+ : encore plus."),
@@ -132,6 +157,8 @@ OPTIONS = {
                      "Réduite : en Senior et Predator, les ennemis courent, esquivent et frappent moins vite."),
     "normal_shields": ("Boucliers", "Les ennemis sans bouclier en reçoivent un, de 40 % de leur vie. Une fois cassé, "
                                     "il ne revient pas."),
+    "normal_no_staggers": ("Sans sursaut", "En Predator : les ennemis ne sursautent plus et ne tombent plus sous tes "
+                                           "tirs."),
     "normal_hardcore": ("Hardcore", "Les ennemis se renforcent à mesure que tu tues, lentement, tout au long du jeu."),
     "normal_hardcore_progress": ("Progression", "Désactivée : la difficulté atteinte reste telle quelle, sans monter."),
 }

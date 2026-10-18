@@ -9,11 +9,11 @@ normal mode on stays on from one game launch to the next: the mod turns it on ag
 
 from mods_base import build_mod
 
-from . import kept, open_key, options, panel_open, panel_preferences, report, session, updates, welcome
+from . import kept, open_key, options, panel_open, panel_preferences, report, session, start_point, updates, welcome
 from .normal import hardcore, options as normal_options
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __author__ = "kevin-hDev"
 
 
@@ -29,6 +29,7 @@ def _on_enable() -> None:
 
 
 def _on_disable() -> None:
+    start_point.cancel("mod_disabled")
     session.stop("mod_disabled")
     # The choice to be on stays in the settings file: the mode comes back when the mod is enabled again.
     session.stop_normal("mod_disabled")

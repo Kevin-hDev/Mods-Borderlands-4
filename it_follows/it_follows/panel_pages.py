@@ -45,7 +45,7 @@ def scrolling_body(owner, template, top=t.SPACE_7):
 def heading(rows, widgets, key):
     """A card's orange title plate, its sentence on its right: Kevin found the room right of the plate empty and
     the sentence a line of its own under it (2026-10-06). A long sentence wraps there, still right of the plate."""
-    line = w.new("HorizontalBox", rows)
+    widgets[f"heading_line:{key}"] = line = w.new("HorizontalBox", rows)
     plate, fill = w.framed(line, t.COLOR_SPARK, t.STROKE, w.pad(tx.inset(t.SPACE_1, "plate"), t.SPACE_4))
     widgets[f"heading:{key}"] = tx.text(fill, "", "plate")
     fill.SetContent(widgets[f"heading:{key}"])

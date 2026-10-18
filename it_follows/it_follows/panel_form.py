@@ -25,6 +25,7 @@ class PanelForm(Lifecycle):
         self.focus = widgets["focus"]
         panel_follows.start(self)
         self.sync(self.resolve())
+        self.open_updates(self.resolve())
 
     def sync(self, widgets):
         self.pending.clear()

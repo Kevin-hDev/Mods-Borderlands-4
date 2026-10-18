@@ -13,7 +13,7 @@ def build(owner: Any, widgets: dict, prefix: str) -> Any:
     """The three counts side by side, registered as <prefix>:<name> and <prefix>:<name>_caption, the limit as
     <prefix>:limit."""
     line = w.new("HorizontalBox", owner)
-    for name in NAMES:
+    for name, width in zip(NAMES, t.FIGURE_WIDTHS):
         column = w.new("VerticalBox", line)
         widgets[f"{prefix}:{name}_caption"] = tx.text(column, "", "caption")
         w.column(column, widgets[f"{prefix}:{name}_caption"])
@@ -24,7 +24,7 @@ def build(owner: Any, widgets: dict, prefix: str) -> Any:
             widgets[f"{prefix}:limit"] = tx.text(figures, "", "out")
             w.row(figures, widgets[f"{prefix}:limit"], padding=w.pad(0, 0, t.SPACE_1, t.SPACE_3), valign="Bottom")
         w.column(column, figures)
-        w.row(line, w.sized(line, column, width=t.FIGURE_WIDTH), valign="Center")
+        w.row(line, w.sized(line, column, width=width), valign="Center")
     return line
 
 

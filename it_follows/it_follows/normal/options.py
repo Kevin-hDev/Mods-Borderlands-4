@@ -19,9 +19,14 @@ The enemies' speed (decision 121), INCREASED at first, the level's own; REDUCED,
 gestures slower, never below Bandit's (levels.reduced, decision 125), for those who find them too fast. Its help says
 only what the player sees slow down (Kevin, 17 October 2026: « faut juste dire que la vitesse de ca, ca et ca est
 reduite c'est tout »). The page shows the row at Senior and Predator only, and Bandit
-keeps its speed whatever it holds."""
+keeps its speed whatever it holds.
 
-from dataclasses import dataclass
+The staggers can be switched off completely at Predator only, the row off at first (decision 135, Kevin, 18 October
+2026: « un bouton qui apparait uniquement pour ce niveau et qui desactive completement les sursauts »): on, its
+enemies never stagger nor fall under the player's shots. The page shows the row at Predator only; the other levels
+keep theirs whatever it holds."""
+
+from dataclasses import dataclass, replace
 
 from mods_base import BoolOption, SpinnerOption
 
@@ -43,10 +48,12 @@ shields = BoolOption("normal_shields", True, display_name="Shields",
 INCREASED, REDUCED = "Increased", "Reduced"
 speed = SpinnerOption("normal_speed", INCREASED, [INCREASED, REDUCED], display_name="Enemy speed",
                       description="Reduced: at Senior and Predator, the enemies run, dodge and strike slower.")
+no_staggers = BoolOption("normal_no_staggers", False, display_name="No staggers",
+                          description="At Predator: the enemies never stagger nor fall under your shots.")
 on = BoolOption("normal_on", False, is_hidden=True)
 
 # The NORMAL MODE page's rows: those the mode on locks, then the Hardcore's, never locked; then the hidden one.
-LOCKED = [level, allies, fast_dodges, speed, shields]
+LOCKED = [level, allies, fast_dodges, speed, shields, no_staggers]
 HARDCORE = [hardcore, progress]
 PAGE = [*LOCKED, *HARDCORE]
 ALL = [*PAGE, on]
@@ -64,6 +71,8 @@ class Settings:
 def read() -> Settings:
     chosen = levels.level(level.value)
     reduced = chosen.reducible and speed.value == REDUCED
+    if chosen.staggers_off and no_staggers.value is True:
+        chosen = replace(chosen, staggers=0.0)
     return Settings(level=levels.reduced(chosen) if reduced else chosen, allies=allies.value is True,
                     fast_dodges=fast_dodges.value is not False,
                     shields=chosen.shields == levels.ALWAYS or shields.value is not False, reduced=reduced)

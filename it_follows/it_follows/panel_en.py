@@ -70,6 +70,29 @@ TEXT = {
     "start_failed": "The run could not start. The reason is in unrealsdk.log. If enemies act strangely, quit to the "
                     "main menu and load your game again.",
     "start_refused": "The run could not start here. Your game is not changed. The reason is in unrealsdk.log.",
+    "start_place_caption": "THE PLACE", "start_map_caption": "ON THE MAP",
+    "start_choose": "CHOOSE", "start_chosen": "CHOSEN", "start_back": "BACK",
+    "help_start_title": "STARTING POINT",
+    "help_start": "Choose where your Horde run starts.\n\n"
+                  "Switch Starting point on, then open a place's tab beside RUN SETTINGS: its picture, and where it "
+                  "lies on the map. Press CHOOSE.\n\n"
+                  "At START, the screen goes black while you travel there and the place loads, then the run begins as "
+                  "soon as the image comes back.\n\n"
+                  "Switched off, the run starts where you stand, as before. Your last choice is kept.",
+    "locked_trip": "On your way to the starting point: the run starts on arrival.",
+    "start_not_open_world": "No starting point from here: go back to the open world, then press START.",
+    "start_trip_going": "You are already on your way to the starting point.",
+    "start_move_failed": "The game refused the trip: you were not moved, and the run did not start. Press START "
+                         "again.",
+    "start_no_floor": "The starting point did not load in time: you were sent back where you were, and the run did "
+                      "not start. Press START again.",
+    "start_character_gone": "The trip stopped on the way (a change of map): the run did not start.",
+    "start_hold_failed": "The trip stopped on an error: you were sent back where you were, and the run did not "
+                         "start. The reason is in unrealsdk.log.",
+    "start_arrival_coop": "Someone joined your game on the way: the Horde only works in solo games for now, so the run "
+                          "did not start. You stay at the starting point.",
+    "start_arrival_refused": "You are at the starting point, but the run could not start there. Press START again; "
+                             "the reason is in unrealsdk.log.",
     "history_title": "LAST 20 RUNS", "history_empty": "No run yet: your runs will be listed here.",
     "col_when": "WHEN", "col_level": "LEVEL", "col_limit": "TIME LIMIT", "col_held": "HELD", "col_kills": "KILLS",
     "col_deaths": "DEATHS", "col_end": "END",

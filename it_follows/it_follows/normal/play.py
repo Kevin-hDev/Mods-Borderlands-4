@@ -4,7 +4,8 @@ enemies met given the level (enemies.py) and the shields it gives them (shields.
 image unless the player switched it off (options.fast_dodges) and their gestures sped up (enemy_time.py), and the damage
 the player takes raised (damage_taken.py, the Horde's, the normal mode's own BUFF), and the player's rewards raised
 (rewards.py: experience of the kills, ammo and money picked up), and the armed bandits' rest between two blows
-shortened at each census (melee_rest.py). In co-op the host's game does the same for each guest (coop_guests.py,
+shortened at each census (melee_rest.py), and the enemies' staggers made rarer, written again at each census
+(staggers.py). In co-op the host's game does the same for each guest (coop_guests.py,
 decision 131): the damage taken and the gains raised on the guest's character, the camps grown and the gestures watched
 around each player, the dodges near a guest left to the game (decision 132), each guest told its kills and its
 Hardcore's percent heard (coop_messages.py, decision 133). At its end everything it holds is given
@@ -30,6 +31,7 @@ import unrealsdk
 
 from .. import damage_taken, frame, reads, report
 from . import camps_grown, coop_guests, coop_messages, enemies, enemy_time, hardcore, melee_rest, pursuit, rewards
+from . import staggers
 
 STATUS_EVERY_S = 30.0
 SLOW_S = 0.5
@@ -49,6 +51,7 @@ class Play:
         self.taken = damage_taken.DamageTaken(report.announce, level.taken * self.hard)
         self.rewards = rewards.Rewards(level, report.announce)
         self.melee = melee_rest.MeleeRest(level.melee_rest, report.note, report.announce)
+        self.staggers = staggers.Staggers(level.staggers, report.announce)
         self.guests = coop_guests.CoopGuests(level, report.announce)
         self.link = coop_messages.Link(host=True)
         self.watch = enemy_time.EnemyTime(report.note, level.dodge_speed if settings.fast_dodges else None,
@@ -64,6 +67,9 @@ class Play:
         if raised:
             report.note("normal_taken_raised", **raised)
         report.note("normal_rewards_raised", **self.rewards.start(self.player()))
+        rarer = self.staggers.keep()
+        if rarer:
+            report.note("normal_staggers", **rarer)
         self.watch.start()
         self.link.start()
         self.next_status = now + STATUS_EVERY_S
@@ -102,6 +108,9 @@ class Play:
             rested = self.melee.keep()
             if rested:
                 report.note("normal_melee_rest", **rested)
+            rarer = self.staggers.keep()
+            if rarer:
+                report.note("normal_staggers", **rarer)
         self._harden(player)
         shields = self.enemies.keep_shields(now)
         if shields:
@@ -153,6 +162,7 @@ class Play:
         given = {"enemies": self.enemies.end(), "zones": self.chase.narrow(),
                  "camps": self.camps.put_back(), "taken": self.taken.put_back(self.player()),
                  "rewards": self.rewards.put_back(self.player()), "melee_rest": self.melee.put_back(),
+                 "staggers": self.staggers.put_back(),
                  "guests": self.guests.end(), "link": self.link.stop(),
                  "hardcore_saved": hardcore.save("end")}
         report.note("normal_given_back", reason=reason, **sped, **given)

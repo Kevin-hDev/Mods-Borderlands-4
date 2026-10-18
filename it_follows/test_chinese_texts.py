@@ -122,14 +122,15 @@ for key, (name, description) in panel_zh.OPTIONS.items():
         sentence_rules(f"option {key} name", option.display_name, name)
         sentence_rules(f"option {key}", option.description, description)
 
-# A sentence naming a button names it as the button shows it; a row it names, as the row shows it.
-buttons = {panel_zh.TEXT["start"], panel_zh.TEXT["stop"]}
-rows_shown = {name for name, _description in panel_zh.OPTIONS.values()}
+# A sentence naming a button names it as the button shows it; a row or a card's title it names, as it shows. The
+# starting point's help names its CHOOSE and the card its tabs sit beside (decision 140).
+buttons = {panel_zh.TEXT[key] for key in ("start", "stop", "start_choose", "start_back")}
+rows_shown = {name for name, _description in panel_zh.OPTIONS.values()} | {panel_zh.TEXT["run_settings"]}
 sentences = {**own, **{f"option {key}": text for key, (_name, text) in panel_zh.OPTIONS.items()}}
 english = {**panel_en.TEXT, **{f"option {key}": rows[key].description for key in panel_zh.OPTIONS if key in rows}}
 for key, text in sentences.items():
     for quoted in QUOTED.findall(text):
-        check(quoted in buttons | rows_shown, f"{key}: 「{quoted}」 is no button or row of the window")
+        check(quoted in buttons | rows_shown, f"{key}: 「{quoted}」 is no button, row or title of the window")
     for button in ("start", "stop"):
         word = panel_en.TEXT[button]
         if re.search(rf"\b{word}\b", english.get(key, "")) and english.get(key) != word:

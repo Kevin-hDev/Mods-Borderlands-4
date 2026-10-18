@@ -76,6 +76,22 @@ TEXT = {
     "normal_stop_unsaved": "普通模式已停止，但这一更改未能保存：下次启动游戏时，它可能会重新开启。",
     "start_failed": "本局未能开始。原因记录在 unrealsdk.log 中。如果敌人行为异常，请退出至主菜单，然后重新加载你的存档。",
     "start_refused": "本局无法在此处开始。你的游戏未做任何更改。原因记录在 unrealsdk.log 中。",
+    "start_place_caption": "地点", "start_map_caption": "地图上的位置",
+    "start_choose": "选择", "start_chosen": "已选择", "start_back": "返回",
+    "help_start_title": "起点",
+    "help_start": "选择你的敌群模式一局从哪里开始。\n\n"
+                  "开启「起点」，然后打开「单局设置」旁边某个地点的标签页：它的图片，以及它在地图上的位置。按「选择」。\n\n"
+                  "按下「开始」后，你前往该地点、地点加载期间屏幕会变黑，画面恢复后本局立即开始。\n\n"
+                  "关闭时，本局像以前一样从你所站的位置开始。你上次的选择会被保留。",
+    "locked_trip": "正在前往起点：到达后本局开始。",
+    "start_not_open_world": "这里无法使用起点：请回到开放世界，然后按「开始」。",
+    "start_trip_going": "你已经在前往起点的路上了。",
+    "start_move_failed": "游戏拒绝了这次传送：你没有被移动，本局没有开始。请再按一次「开始」。",
+    "start_no_floor": "起点没有及时加载：你被送回了原来的位置，本局没有开始。请再按一次「开始」。",
+    "start_character_gone": "传送在途中停止（地图切换）：本局没有开始。",
+    "start_hold_failed": "传送因错误而停止：你被送回了原来的位置，本局没有开始。原因记录在 unrealsdk.log 中。",
+    "start_arrival_coop": "传送途中有人加入了游戏：敌群模式目前只能在单人游戏中使用，本局没有开始。你留在起点。",
+    "start_arrival_refused": "你已到达起点，但本局无法在这里开始。请再按一次「开始」；原因记录在 unrealsdk.log 中。",
     "history_title": "最近 20 局", "history_empty": "还没有任何一局记录：你的每一局都会列在这里。",
     "col_when": "开始时间", "col_level": "等级", "col_limit": "时间限制", "col_held": "坚持时长", "col_kills": "击杀",
     "col_deaths": "死亡", "col_end": "结束方式",
@@ -114,6 +130,7 @@ TEXT = {
 GROUPS = {"run": "", "normal": "", "history": "", "options": ""}
 
 OPTIONS = {
+    "start_point": ("起点", "从标签页中选择的地图地点开始本局，而不是从你所站的位置开始。"),
     "level": ("等级", "等级越高，你周围的敌人越多。"),
     "speed": ("敌人速度", "追杀你的敌人的奔跑速度。"),
     "buff": ("增益", "增益：敌人的生命值更高，你受到的伤害更多。增益+：更多。"),
@@ -127,6 +144,7 @@ OPTIONS = {
     "normal_fast_dodges": ("加速闪避", "敌人的闪避比游戏原本更快。关：游戏原本的闪避速度。"),
     "normal_speed": ("敌人速度", "降低：在资深和掠食者等级下，敌人的奔跑、闪避和攻击速度更慢。"),
     "normal_shields": ("护盾", "没有护盾的敌人会获得一个护盾，相当于其生命值的 40%。护盾一旦耗尽就不会恢复。"),
+    "normal_no_staggers": ("无硬直", "掠食者等级下：敌人被你击中时不再踉跄，也不会被击倒。"),
     "normal_hardcore": ("硬核", "随着你不断击杀，敌人会在整个游戏过程中缓慢变强。"),
     "normal_hardcore_progress": ("进度", "关：已达到的难度保持不变，不再上升。"),
 }

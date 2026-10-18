@@ -6,15 +6,18 @@ A start is refused with a run already going, without a character (from a vehicle
 game of several players. A start that raises gives back what it took and says so: the run is never left half made,
 where the next Start would only answer that a run is going (trial 10's notes). A run that stops goes into the
 history, and its result waits for the window (ending.py).
+
+With a starting point (decision 138), START sends the player there first and the run starts on arrival
+(start_point.py). Neither mode starts while a trip is under way.
 """
 
 import time
 
-from typing import Any, NamedTuple
+from typing import Any, Callable, NamedTuple
 
 import mods_base
 
-from . import camps, ending, frame, horde, presence, report
+from . import camps, ending, frame, horde, presence, report, start_point, start_trip
 from .normal import mode as normal_mode, options as normal_options
 from .run import Run
 
@@ -50,10 +53,13 @@ def live() -> Live | None:
                 counts.kills if counts is not None else 0, counts.deaths if counts is not None else 0)
 
 
-def start(settings: Any) -> str:
-    """Starts a run with these settings (options.Settings): "started", or why not."""
+def start(settings: Any, on_failed: Callable[[], None] | None = None) -> str:
+    """Starts a run with these settings (options.Settings): "started", "travelling" on the way to the starting place
+    they name, or why not. on_failed, the window's: called when that trip, or the run at its end, does not start."""
     if running():
         return "already_running"
+    if start_trip.travelling():
+        return start_trip.TRIP_GOING
     if normal_on():
         return "normal_on"
     pc = mods_base.get_pc()
@@ -68,6 +74,24 @@ def start(settings: Any) -> str:
     if players is not None and players > 1:
         report.said("The Horde only works in solo games for now. Your game is not changed.")
         return "coop"
+    if getattr(settings, "start_place", None) is not None:
+        return start_point.go(settings, pc, player, on_failed, _begin, _busy)
+    return _begin(settings, pc, player, players)
+
+
+def _busy() -> str:
+    """Why a run cannot start now, "" when it can: at the end of a trip, the window having been open meanwhile, or a
+    friend having joined on the way (It Follows' audit, 2026-10-19: START's own check alone let a co-op run begin)."""
+    if running():
+        return "already_running"
+    if normal_on():
+        return "normal_on"
+    players = presence.players()
+    return "coop" if players is not None and players > 1 else ""
+
+
+def _begin(settings: Any, pc: Any, player: Any, players: int | None) -> str:
+    """The run made and begun where the player stands: "started", or why not."""
     report.begin_run()
     if players is None:
         report.note("players_unknown")
@@ -128,7 +152,7 @@ def start_normal(settings: Any) -> str:
     """Turns the normal mode on (normal.options.Settings): "playing", "waiting" for a game, or why not: a Horde run
     going, the mode already on. A co-op guest plays the guest's part (normal/guest.py). From a vehicle or without a
     game it waits rather than refuse: on, it starts by itself in the next game anyway. A start that raises ends the mode and says so."""
-    if running():
+    if running() or start_trip.travelling():
         return "horde_running"
     if normal_on():
         return "already_on"

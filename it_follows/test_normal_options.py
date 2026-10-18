@@ -34,13 +34,15 @@ try:
     check("the shields on at first", options.shields.value is True)
     check("the enemies' speed increased at first, of two choices (decision 121)", options.speed.value == "Increased"
           and options.speed.choices == ["Increased", "Reduced"])
-    check("the page's rows: the five the mode locks, the Hardcore's two, then the hidden one",
-          options.LOCKED == [options.level, options.allies, options.fast_dodges, options.speed, options.shields]
+    check("the staggers' switch off at first (decision 135)", options.no_staggers.value is False)
+    check("the page's rows: the six the mode locks, the Hardcore's two, then the hidden one",
+          options.LOCKED == [options.level, options.allies, options.fast_dodges, options.speed, options.shields,
+                             options.no_staggers]
           and options.HARDCORE == [options.hardcore, options.progress]
           and options.PAGE == [*options.LOCKED, *options.HARDCORE] and options.ALL == [*options.PAGE, options.on])
     check("the identifiers apart from the Horde's", [option.identifier for option in options.ALL]
           == ["normal_level", "normal_allies", "normal_fast_dodges", "normal_speed", "normal_shields",
-              "normal_hardcore", "normal_hardcore_progress", "normal_on"])
+              "normal_no_staggers", "normal_hardcore", "normal_hardcore_progress", "normal_on"])
     check("the defaults read as they stand", options.read() == options.Settings(levels.LEVELS["Bandit"], False))
     options.level.value, options.allies.value, options.fast_dodges.value = "Predator", True, False
     check("each choice gives its value", options.read() == options.Settings(levels.LEVELS["Predator"], True, False))
@@ -70,6 +72,22 @@ try:
     options.level.value, options.speed.value = "Predator", "slow"
     check("a speed that is no choice reads as increased", options.read().level is levels.LEVELS["Predator"]
           and options.read().reduced is False)
+    options.speed.value = "Increased"
+    for name, staggers in (("Bandit", 0.85), ("Senior", 0.75), ("Predator", 0.5)):
+        options.level.value = name
+        check(f"at {name}, the staggers x{staggers}", options.read().level.staggers == staggers)
+    options.no_staggers.value = True
+    for name in ("Bandit", "Senior"):
+        options.level.value = name
+        check(f"at {name}, no staggers switched on holds nothing", options.read().level is levels.LEVELS[name])
+    options.level.value = "Predator"
+    check("at Predator, no staggers switched on: zero, the rest of the level as it is",
+          options.read().level.staggers == 0.0 and options.read().level.speed == levels.LEVELS["Predator"].speed)
+    options.speed.value = "Reduced"
+    check("at Predator, reduced and no staggers: both", options.read().level.staggers == 0.0
+          and options.read().reduced is True and options.read().level.speed < levels.LEVELS["Predator"].speed)
+    options.no_staggers.value, options.speed.value = "yes", "Increased"
+    check("a value that is no choice reads as off", options.read().level is levels.LEVELS["Predator"])
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

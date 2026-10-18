@@ -1,5 +1,7 @@
 """Tests a run's settings: Kevin's choices and their defaults, Buff and Buff+ with their two factors and a help without
 figures; no row for the killed coming back, who always come back; the RUN page's rows and the OPTIONS page's; the
+starting point off at first, the place chosen kept with no row, read only when the row is on, a place not kept read as
+Kevin's first; the
 settings read as they stand, each choice with its value, the bar in the window's language; a value that is no choice
 read as its default; a language the mod does not have read as English; a time limit's choice found again from its
 seconds."""
@@ -42,10 +44,27 @@ try:
           not hasattr(options, "respawn"))
     check("the bar shown at first, in three sizes, medium at first", options.bar.value is True
           and options.bar_size.choices == ["Small", "Medium", "Large"] and options.bar_size.value == "Medium")
-    check("the RUN page's rows, then the OPTIONS page's; no button, no language of its own (decision 62)",
-          options.RUN == [options.level, options.speed, options.buff, options.duration, options.crowd, options.far]
-          and options.DISPLAY == [options.bar, options.bar_size] and options.ALL == options.RUN + options.DISPLAY
+    check("the RUN page's rows, Starting point first (decision 138), then the OPTIONS page's; no button, no language "
+          "of its own (decision 62)",
+          options.RUN == [options.start_point, options.level, options.speed, options.buff, options.duration,
+                          options.crowd, options.far]
+          and options.DISPLAY == [options.bar, options.bar_size]
+          and options.ALL == [*options.RUN, options.start_place, *options.DISPLAY]
           and not hasattr(options, "language") and not hasattr(options, "start_button"))
+    check("Starting point off at first, Kevin's first place chosen, kept with no row of its own",
+          options.start_point.value is False and options.start_place.value == "3" and options.start_place.is_hidden
+          and options.read().start_place is None)
+    options.start_point.value = True
+    check("on, the run starts from the place chosen", options.read().start_place == 3)
+    options.start_place.value = "11"
+    check("another place chosen", options.read().start_place == 11)
+    options.start_place.value = "10"
+    check("a place Kevin did not keep reads as his first", options.read().start_place == 3)
+    options.start_point.value = "yes"
+    check("on only when the file says so as a switch", options.read().start_place is None)
+    options.start_point.value, options.start_place.value = False, "11"
+    check("off, the place chosen kept", options.read().start_place is None and options.start_place.value == "11")
+    options.start_place.value = "3"
     check("decision 96: the most enemies from 30 to 120 by 10, 120 at first", options.crowd.choices
           == ["30", "40", "50", "60", "70", "80", "90", "100", "110", "120"] and options.crowd.value == "120"
           and options.read().crowd_max == 120)

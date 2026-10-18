@@ -9,6 +9,10 @@ The killed always come back: decision 80 took away decision 44's row, the Horde 
 the other. The bar speaks the window's language (decision 62). A value the settings file holds that is no choice reads
 as the default: a file edited by hand never keeps a run from starting.
 
+The first row, Starting point (decision 138, spec-points-de-depart.md), off at first: on, the run starts from the place
+chosen in the page's tabs. The place chosen has no row: kept while the row is off, shown again when it is on (Kevin:
+« le mod mémorise le dernier choix »), the first of Kevin's places at first.
+
 Two rows for the player's computer, as games offer (Kevin, 15 October 2026: « proposer des reglages
 activable/desactivable »), each at first as the Horde was: the most enemies hunting at once, 30 to 120 by 10, 120 at
 first (decision 96), and the far enemies managed, on at first (decision 97). The second is greyed and always on
@@ -17,9 +21,9 @@ first (decision 96), and the far enemies managed, on at first (decision 97). The
 
 from dataclasses import dataclass
 
-from mods_base import BoolOption, SpinnerOption
+from mods_base import BoolOption, HiddenOption, SpinnerOption
 
-from . import horde, levels, texts
+from . import horde, levels, start_places, texts
 
 SPEEDS = {"Normal": 1.0, "+10%": 1.1, "+20%": 1.2, "+30%": 1.3, "+40%": 1.4, "+50%": 1.5}
 DURATIONS = {"10 min": 600.0, "20 min": 1200.0, "30 min": 1800.0, "45 min": 2700.0, "60 min": 3600.0,
@@ -36,6 +40,10 @@ DEFAULT_BAR_SIZE = "Medium"
 # Decision 96, Kevin, 15 October 2026: « une plage qui irait de 30 a 120 et par tranche de 10 ».
 CROWDS = [str(most) for most in range(30, horde.CROWD_MAX + 1, 10)]
 
+start_point = BoolOption("start_point", False, display_name="Starting point",
+                         description="Start the run from a place of the map chosen in the tabs above, instead of where "
+                                     "you stand.")
+start_place = HiddenOption("start_place", start_places.DEFAULT)
 level = SpinnerOption("level", str(levels.DEFAULT), [str(key) for key in levels.LEVELS], display_name="Level",
                       description="The higher the level, the more enemies around you.")
 speed = SpinnerOption("speed", DEFAULT_SPEED, list(SPEEDS), display_name="Enemy speed",
@@ -55,12 +63,12 @@ bar_size = SpinnerOption("bar_size", DEFAULT_BAR_SIZE, list(BAR_SIZES), display_
                          description="Its size on the screen.")
 
 # The RUN page's rows, which a run in progress locks, then the OPTIONS page's.
-RUN = [level, speed, buff, duration, crowd, far]
+RUN = [start_point, level, speed, buff, duration, crowd, far]
 DISPLAY = [bar, bar_size]
 # Decision 99: rows shown greyed and held at their default. Off, the horde stayed at 0 to 22 enemies at levels 2 and 5,
 # and rose to 51 within 30 s once on again (trial 33).
 SHELVED = (far,)
-ALL = [*RUN, *DISPLAY]
+ALL = [*RUN, start_place, *DISPLAY]
 
 
 @dataclass(frozen=True)
@@ -76,6 +84,8 @@ class Settings:
     taken: float = 1.0
     crowd_max: int = horde.CROWD_MAX
     manage_far: bool = True
+    # The starting place's number, None to start where the player stands.
+    start_place: int | None = None
 
 
 def _number(value: object) -> int:
@@ -99,7 +109,8 @@ def read(language: str = texts.ENGLISH) -> Settings:
                     bar_points=BAR_SIZES.get(bar_size.value, BAR_SIZES[DEFAULT_BAR_SIZE]),
                     health=health, taken=taken,
                     crowd_max=int(crowd.value) if crowd.value in CROWDS else horde.CROWD_MAX,
-                    manage_far=True)
+                    manage_far=True,
+                    start_place=start_places.find(start_place.value).number if start_point.value is True else None)
 
 
 def shelve() -> None:

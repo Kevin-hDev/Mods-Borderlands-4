@@ -8,7 +8,9 @@ time (decision 80): the normal mode refused during a Horde run and in a game of 
 while the normal mode is on; the normal mode made with its settings and the session's stop, shown to the window with
 its level and whether it plays, refused a second time, turned off with its reason, stopped by an error written off;
 a start of it that raises ends it; the mod enabled turns it on again when its settings say so, the mod disabled turns
-it off and keeps that choice."""
+it off and keeps that choice. A starting point (decision 138): START asks the trip with its settings, the run made on
+arrival unless one is going then; without one the run starts where the player stands; a trip under way refuses both
+modes; the mod disabled cancels it."""
 
 import pathlib
 import sys
@@ -114,6 +116,9 @@ try:
     players(2)
     check("two players: refused, said, nothing made", session.start("settings") == "coop"
           and said().endswith("only works in solo games for now. Your game is not changed.") and FakeRun.made == [])
+    check("at the end of a trip, a friend joined on the way: no run there", session._busy() == "coop")
+    players(1)
+    check("at the end of a trip, alone: the run may start", session._busy() == "")
     players(None)
     check("players that cannot be counted: the run starts, written down",
           session.start("settings") == "started" and session.running() and "players_unknown" in state["info"][-1])
@@ -228,6 +233,30 @@ try:
           "after on_enable, not tried again at the next launch",
           not session.normal_on() and '"outcome":"start_failed"' in state["info"][-1]
           and normal_options.on.value is False)
+
+    # A starting point (decision 138): START sends the player there first (start_point.py, start_trip.py).
+    asked: list = []
+    real_go, session.start_point.go = session.start_point.go, lambda *given: asked.append(given) or "travelling"
+    from_point = types.SimpleNamespace(start_place=11)
+    check("with a starting point: the trip asked with START's settings, the window's call, what makes the run",
+          session.start(from_point, "window") == "travelling" and not session.running()
+          and asked[-1][:4] == (from_point, pc, hunter, "window") and asked[-1][4] == session._begin)
+    check("without one: the run where the player stands, as before",
+          session.start(types.SimpleNamespace(start_place=None)) == "started" and session.running())
+    check("on arrival, a run going is a reason not to start", asked[-1][5]() == "already_running")
+    session.stop()
+    check("on arrival, nothing going: the run may start", asked[-1][5]() == "")
+    session.start_point.go = real_go
+    real_travelling, session.start_trip.travelling = session.start_trip.travelling, lambda: True
+    check("a trip under way: START refused, the normal mode refused, nothing made",
+          session.start("settings") == "trip_going" and session.start_normal(normal) == "horde_running"
+          and not session.running() and not session.normal_on())
+    session.start_trip.travelling = real_travelling
+    cancelled: list = []
+    real_cancel, it_follows.start_point.cancel = it_follows.start_point.cancel, cancelled.append
+    it_follows._on_disable()
+    it_follows.start_point.cancel = real_cancel
+    check("the mod disabled cancels a trip under way", cancelled == ["mod_disabled"])
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

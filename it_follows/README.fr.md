@@ -15,13 +15,16 @@ lances un mode à la fois.
 - **MODE HORDE [BETA].** Appuie sur START : tous les ennemis autour de toi viennent vers toi et te suivent partout. Ceux
   que tu croises en chemin rejoignent la horde, et ceux que tu tues reviennent derrière toi, de plus en plus nombreux.
   Les ennemis sont ceux des zones que tu traverses. Cinq niveaux, un bonus de vitesse des ennemis, BUFF et BUFF+, une
-  durée ou aucune, et le plus d'ennemis qui te chassent en même temps, de 30 à 120. Une barre en haut à gauche de
+  durée ou aucune, et le plus d'ennemis qui te chassent en même temps, de 30 à 120. Un point de départ en option :
+  un des sept lieux de la carte, où START t'emmène derrière un écran noir avant que le run commence. Une barre en haut à gauche de
   l'écran affiche tes tués, tes morts, la taille de la horde, le Hardcore et le temps, qui s'arrête quand le jeu est
   en pause. Le Hardcore est toujours actif dans la Horde : les ennemis se renforcent de 1 % tous les 100 ennemis tués
   pendant le run, en repartant de 0 % à chaque run.
 - **MODE NORMAL.** Joue ta partie comme d'habitude : les ennemis que tu croises sont plus nombreux, plus rapides et plus
   résistants, esquivent plus souvent et plus vite, frappent plus vite, et te poursuivent plus loin. En Senior et Predator,
-  les bandits armés attendent moins longtemps entre deux coups au corps à corps. Les ennemis sans bouclier en
+  les bandits armés attendent moins longtemps entre deux coups au corps à corps. Ils sursautent et tombent moins
+  souvent sous tes tirs, 15 % de moins en Bandit, 25 % en Senior et 50 % en Predator, où la ligne Sans sursaut les
+  supprime. Les ennemis sans bouclier en
   reçoivent un, de 40 % de leur vie, qui se recharge en Predator une fois cassé ; les ennemis armés tirent plus juste
   et leurs balles vont plus vite. Tu gagnes plus d'expérience sur les ennemis tués, et plus de munitions et d'argent
   en ramassant ; les distributeurs et les missions ne changent pas. Trois niveaux, Bandit, Senior et Predator. Les
@@ -57,6 +60,7 @@ nul en cas d'échec.
 - Le mode Horde demande beaucoup à ton PC. Si le jeu ralentit, baisse « Ennemis maximum », choisis un niveau plus bas
   ou baisse les graphismes du jeu.
 - « Gérer les ennemis éloignés » est toujours activé pour l'instant : ce réglage sera revu dans une prochaine version.
-- Le mode Horde ne se lance pas en coopération ni en véhicule.
+- Le mode Horde ne se lance pas en coopération ni en véhicule ; son point de départ ne marche que depuis le monde
+  ouvert.
 - En coopération, chaque joueur doit avoir le mod pour que le mode normal marche pleinement.
 - Un autre mod qui change les ennemis, leur nombre ou leur vie peut entrer en conflit avec celui-ci.

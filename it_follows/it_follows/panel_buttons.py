@@ -40,6 +40,9 @@ KINDS = {
     "tab": ("button", t.STROKE, t.SHADOW_SM, (t.SPACE_1, t.SPACE_5), True, None),
     # It Follows' START and STOP.
     "launch": ("launch", t.STROKE, t.SHADOW_MD, (t.SPACE_3, t.SPACE_3), True, None),
+    # It Follows' places' tabs: seven on the title's line of the smallest window,
+    # tight enough since trial 98.
+    "place_tab": ("place_tab", t.STROKE_THIN, t.SHADOW_SM, (t.SPACE_1, t.SPACE_1), True, None),
 }
 _STATES = (("UncheckedImage", None), ("UncheckedHoveredImage", t.HOVER_OVERLAY),
            ("UncheckedPressedImage", t.PRESS_OVERLAY), ("CheckedImage", None),

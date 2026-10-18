@@ -95,7 +95,7 @@ WINDOW_HEIGHT = 830
 HEADER_HEIGHT = 96
 AVATAR_SIZE = 72
 SIDEBAR_WIDTH = 340
-ROW_LABEL_WIDTH = 260
+ROW_LABEL_WIDTH = 180
 ROW_VALUE_WIDTH = 120
 DESC_MAX_WIDTH = 720
 SCROLLBAR_WIDTH = 14
@@ -106,12 +106,15 @@ SLIDER_HEIGHT = 34
 SLIDER_TRACK = 16
 SLIDER_THUMB_WIDTH = 18
 SLIDER_THUMB_HEIGHT = 34
-# It Follows' START and STOP letters, its counts' figures, each count's column,
-# STOP beside them; the history's columns (when, level, time limit, held, kills,
-# deaths: the end fills the rest); the welcome's and the result's cards.
+# It Follows' START and STOP letters, its counts' figures, the columns of kills,
+# deaths and time, the time's wider for its limit (STOP beside them fills the
+# rest: at 460 wide it hid the time in the smallest window, trial 98); the normal
+# mode's STOP beside its sentence, which wraps; the history's columns (when, level,
+# time limit, held, kills, deaths: the end fills the rest); the welcome's and the
+# result's cards.
 LAUNCH_TEXT = 36
 FIGURE_TEXT = 52
-FIGURE_WIDTH = 230
+FIGURE_WIDTHS = (150, 150, 230)
 STOP_WIDTH = 460
 HISTORY_COLUMNS = (240, 130, 140, 100, 100, 90)
 WELCOME_WIDTH = 980

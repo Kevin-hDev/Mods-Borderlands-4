@@ -10,8 +10,9 @@ The game stands still while the window is open (game_pause.py), except while STA
 from typing import Any
 
 from . import game_pause, open_key, panel_buttons as b, panel_history, panel_i18n as i18n, panel_options
-from . import panel_hardcore, panel_help, panel_normal, panel_result, panel_run, panel_updates
-from . import panel_text as tx, panel_theme as t, panel_welcome, panel_widgets as w, report, session, updates, welcome
+from . import panel_hardcore, panel_help, panel_normal, panel_result, panel_run, panel_starts, panel_updates
+from . import panel_text as tx, panel_theme as t, panel_welcome, panel_widgets as w, report, session, start_point
+from . import updates, welcome
 
 # What poll answers when the window must close without the mods list (a mode that starts), and when it closes as its
 # CLOSE button does (panel_form.py, control_window.py).
@@ -55,9 +56,14 @@ def start(form: Any) -> None:
 
     form.run_shown = form.result = None
     form.update_notes, form.update_page = [], 0
+    panel_starts.reset(form)
     open_key.align()
     form.closer = open_key.closer()
     widgets = form.resolve()
+    trip = start_point.take_outcome()
+    if trip is not None:
+        # Opened again by a trip that did not end in a run (panel_run._reopen): the Horde's page says why.
+        form.notice, form.page = panel_starts.notice(trip), form.model.pages.index(RUN)
     if welcome.due():
         panel_welcome.open_first(form, widgets)
         return
@@ -121,6 +127,8 @@ def poll(form: Any, widgets: dict) -> str | bool:
     if form.take(widgets["normal_stop"]):
         panel_normal.stop(form)
         form.refresh_labels(widgets)
+        return True
+    if panel_starts.poll(form, widgets):
         return True
     if panel_help.poll(form, widgets):
         return True

@@ -379,6 +379,11 @@ def install(character: Any | None = None) -> dict:
     hooks_module = types.ModuleType("unrealsdk.hooks")
     hooks_module.Type = types.SimpleNamespace(POST="POST", PRE="PRE")
     hooks_module.Block = type("Block", (), {})
+    # unrealsdk's own hooks, as the starting points' cover sets them (start_cover.py), kept by identifier as
+    # mods_base's are above.
+    hooks_module.add_hook = lambda path, kind, identifier, fn: FakeHook(fn, state, identifier).enable()
+    hooks_module.has_hook = lambda path, kind, identifier: identifier in state["hooks"]
+    hooks_module.remove_hook = lambda path, kind, identifier: state["hooks"].pop(identifier, None)
 
     unreal_module = types.ModuleType("unrealsdk.unreal")
     unreal_module.UObject = UObject
