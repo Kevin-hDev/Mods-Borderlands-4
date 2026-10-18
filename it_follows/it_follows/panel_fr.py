@@ -31,7 +31,7 @@ TEXT = {
     "start_off": "It Follows est désactivé : active-le, puis appuie sur START.",
     "start_in_vehicle": "Pas de run en véhicule : descends-en, puis appuie sur START.",
     "start_no_character": "Pas de run ici : charge d'abord une partie.",
-    "start_coop": "It Follows ne marche qu'en partie solo pour l'instant. Ta partie n'est pas modifiée.",
+    "start_coop": "La Horde ne marche qu'en partie solo pour l'instant. Ta partie n'est pas modifiée.",
     "start_already_running": "Un run est déjà en cours.",
     "start_normal_on": "Arrête d'abord le mode normal, puis appuie sur START.",
     "run_blocked": "Le mode normal est en cours : arrête-le sur sa page pour lancer un run.",

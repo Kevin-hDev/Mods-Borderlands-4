@@ -66,7 +66,7 @@ def start(settings: Any) -> str:
         return "no_character"
     players = presence.players()
     if players is not None and players > 1:
-        report.said("It Follows only works in solo games for now. Your game is not changed.")
+        report.said("The Horde only works in solo games for now. Your game is not changed.")
         return "coop"
     report.begin_run()
     if players is None:
@@ -126,15 +126,12 @@ def normal_live() -> NormalLive | None:
 
 def start_normal(settings: Any) -> str:
     """Turns the normal mode on (normal.options.Settings): "playing", "waiting" for a game, or why not: a Horde run
-    going, the mode already on, a game of several players. From a vehicle or without a game it waits rather than
-    refuse: on, it starts by itself in the next game anyway. A start that raises ends the mode and says so."""
+    going, the mode already on. A co-op guest plays the guest's part (normal/guest.py). From a vehicle or without a
+    game it waits rather than refuse: on, it starts by itself in the next game anyway. A start that raises ends the mode and says so."""
     if running():
         return "horde_running"
     if normal_on():
         return "already_on"
-    if presence.look().why == "coop":
-        report.said("It Follows only works in solo games for now. Your game is not changed.")
-        return "coop"
     mode = normal_mode.Mode(settings, stop_normal)
     _state["normal"] = mode
     try:

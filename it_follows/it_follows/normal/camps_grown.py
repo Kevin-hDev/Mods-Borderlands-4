@@ -85,12 +85,13 @@ class CampsGrown:
         self.carry = wanted - made
         return made
 
-    def grow(self, here: tuple | None, now: float) -> dict:
-        """The camps within RANGE_M not held yet read, the enemies' camps not born grown and reset; what it did."""
+    def grow(self, places: list[tuple], now: float) -> dict:
+        """The camps within RANGE_M of any of the places (each player's, coop_guests.py) not held yet read, the
+        enemies' camps not born grown and reset; what it did."""
         self.read_at = now
         counts = dict.fromkeys(("grown", "same", "born", "not_enemies", "too_many", "empty", "refused", "far"), 0)
         stopped, began = "complete", time.monotonic()
-        if here is None:
+        if not places:
             return {**counts, "stopped": "no_place"}
         for spawner in islice(unrealsdk.find_all("Spawner", exact=False), MAX_CAMPS):
             if time.monotonic() - began > READ_S:
@@ -99,7 +100,8 @@ class CampsGrown:
             name = reads.clean(getattr(spawner, "Name", ""))
             if name.startswith("Default__") or (name in self.held and self.held[name][0]() is not None):
                 continue
-            metres = reads.metres(reads.point(spawner), here)
+            at = reads.point(spawner)
+            metres = min((reads.metres(at, here) for here in places if at is not None), default=None)
             if metres is None or metres > RANGE_M:
                 counts["far"] += 1
                 continue

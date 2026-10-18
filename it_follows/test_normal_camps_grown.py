@@ -60,7 +60,7 @@ try:
     grown = camps_grown.CampsGrown(lambda event, **f: lines.append((event, f)),
                                    lambda call, log=True, **f: announced.append((call, f)), 1.5)
     check("due at once", grown.due(0.0))
-    done = grown.grow(HERE_CM, 10.0)
+    done = grown.grow([HERE_CM], 10.0)
     check("what the pass did", {key: done[key] for key in ("grown", "same", "born", "not_enemies", "too_many",
                                                            "empty", "far", "stopped")}
           == {"grown": 3, "same": 1, "born": 1, "not_enemies": 2, "too_many": 1, "empty": 1, "far": 1,
@@ -85,12 +85,12 @@ try:
     check("a far camp not held", "OakSpawner_Far" not in grown.held)
 
     before = len(calls)
-    again = grown.grow(HERE_CM, 20.0)
+    again = grown.grow([HERE_CM], 20.0)
     check("a camp held is not read again", len(calls) == before and again["grown"] == 0 and again["far"] == 1)
     bandits.freed = True
     reloaded = fx.camp("OakSpawner_Bandits", 50.0, fx.camp_style(memory, 4), calls)
     state["all"]["Spawner"] = [reloaded, born, lone_too, ranged]
-    check("a camp the game loaded again is taken again", grown.grow(HERE_CM, 30.0)["grown"] == 1
+    check("a camp the game loaded again is taken again", grown.grow([HERE_CM], 30.0)["grown"] == 1
           and number(reloaded, "NumTotalActors") == 6)
 
     lone_too.SpawnerComponent.GetNumSpawnedActors.answer = 1
@@ -103,24 +103,29 @@ try:
           resets("OakSpawner_Bandits") == [(False,)] * 3 and len(resets("OakSpawner_LoneToo")) == 1
           and grown.held == {})
 
-    check("without a place, nothing", grown.grow(None, 40.0)["stopped"] == "no_place")
+    check("without a place, nothing", grown.grow([], 40.0)["stopped"] == "no_place")
+    state["all"]["Spawner"] = [far]
+    apart = camps_grown.CampsGrown(lambda event, **f: None, lambda call, log=True, **f: None, 1.5)
+    check("a camp far from the hunter taken near another player", apart.grow([HERE_CM, (150000.0, 0.0, 0.0)],
+                                                                             40.5)["far"] == 0
+          and "OakSpawner_Far" in apart.held)
     first, second = (fx.camp(f"OakSpawner_Cap{number}", 50.0, fx.camp_style(memory, 4), calls) for number in (1, 2))
     state["all"]["Spawner"] = [first, second]
     camps_grown.MAX_HELD = 1
-    capped = grown.grow(HERE_CM, 41.0)
+    capped = grown.grow([HERE_CM], 41.0)
     check("no more than MAX_HELD camps held at once", capped["stopped"] == "held_limit"
           and list(grown.held) == ["OakSpawner_Cap1"])
     first.freed = True
     state["all"]["Spawner"] = [second]
     written, reset = number(first, "NumTotalActors"), len(resets("OakSpawner_Cap1"))
-    freed = grown.grow(HERE_CM, 42.0)
+    freed = grown.grow([HERE_CM], 42.0)
     check("a camp the game freed, no longer listed, is forgotten, its room given to a new one, nothing written on it",
           freed["stopped"] == "complete" and list(grown.held) == ["OakSpawner_Cap2"]
           and number(first, "NumTotalActors") == written and len(resets("OakSpawner_Cap1")) == reset)
     camps_grown.MAX_HELD = 2000
     grown.held = {}
     camps_grown.READ_S = -1.0
-    check("the pass stops at its time", grown.grow(HERE_CM, 50.0)["stopped"] == "time_limit")
+    check("the pass stops at its time", grown.grow([HERE_CM], 50.0)["stopped"] == "time_limit")
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

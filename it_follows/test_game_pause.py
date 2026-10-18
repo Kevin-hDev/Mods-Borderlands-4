@@ -1,4 +1,5 @@
-"""Tests the pause the window holds (game_pause.py): nothing paused out of a game; a game already paused left as it is;
+"""Tests the pause the window holds (game_pause.py): nothing paused out of a game, nor in a game of several players;
+a game already paused left as it is;
 the game paused and read back, held with its world; held once; given back and read back; a world gone leaves nothing to
 give back; a game that keeps its pause is tried again; a game that refuses the pause, or a call that raises, leaves
 the window open over the running game, said; nothing held, nothing to give back; the watch: a game found running
@@ -73,6 +74,10 @@ try:
     check("a game already paused: left as it is, never resumed here", game_pause.hold() is False
           and said() == "paused_already" and game_pause.release() is True and statics.paused)
     statics.paused = False
+    mods_base.ENGINE.GameViewport.World = SimpleNamespace(GameState=SimpleNamespace(PlayerArray=[object(), object()]))
+    check("a game of two players: never paused, said", game_pause.hold() is False and not statics.paused
+          and not game_pause.holding() and said() == "coop")
+    mods_base.ENGINE.GameViewport.World = world
     check("the game paused, read back, held", game_pause.hold() is True and statics.paused and game_pause.holding()
           and said() == "held")
     check("held once", game_pause.hold() is True)

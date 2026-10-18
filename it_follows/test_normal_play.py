@@ -22,7 +22,7 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 from it_follows import frame, report  # noqa: E402
-from it_follows.normal import enemy_time, hardcore, levels, options, play as play_module  # noqa: E402
+from it_follows.normal import coop_guests, enemy_time, hardcore, levels, options, play as play_module  # noqa: E402
 
 fails: list[str] = []
 
@@ -58,7 +58,8 @@ class Due:
 class Camps(Due):
     held = {"OakSpawner_A": (None, {"NumTotalActors": ("04", "06")}), "OakSpawner_B": (None, None)}
 
-    def grow(self, here: tuple | None, now: float) -> dict:
+    def grow(self, places: list, now: float) -> dict:
+        self.places = places
         return self._do(now)
 
     def put_back(self) -> dict:
@@ -77,7 +78,9 @@ class Enemies(Due):
     def look(self, player: object, now: float) -> dict:
         return self._do(now)
 
-    def nearest(self, here: tuple | None) -> dict:
+    def nearest(self, places: list, within_m: float = 60.0, most: int = 48) -> dict:
+        self.__dict__.setdefault("calls", []).append((places, within_m))
+        self.places = places
         return {"Char_A": lambda: None}
 
     def harden(self, hard: float) -> dict:
@@ -107,6 +110,32 @@ class Taken:
         return {"base": [1.0, round(factor, 4)]}
 
 
+class Guests:
+    """One guest, found at the start, 5 m from the hunter."""
+    held = {"Guest": None}
+
+    def due(self, now: float) -> bool:
+        return now == 100.0
+
+    def look(self, player: object, now: float) -> dict:
+        return {"raised": {"Guest": {"taken": {}}}, "gone": {}, "held": 1}
+
+    def places(self) -> list:
+        return [(500.0, 0.0, 0.0)]
+
+    def keep(self) -> dict:
+        return {}
+
+    def heard(self, percents: list) -> dict:
+        return {"Guest": {"percent": percents[0][1]}} if percents else {}
+
+    def kills(self, by_others: dict) -> dict:
+        return dict(by_others)
+
+    def end(self) -> dict:
+        return {"Guest": {"taken": "restored", "gains": "taken_back"}}
+
+
 class Rewards:
     def start(self, player: object) -> dict:
         return {"shares": {"xp": 0.1}}
@@ -124,21 +153,35 @@ try:
     dodges = types.SimpleNamespace(files={"DodgeData_Human": None})
     game = play_module.Play(options.Settings(levels.LEVELS["Bandit"], False), hunter, dodges, failures.append)
     game.camps = Camps(5.0, {"grown": 1, "refused": 0, "too_many": 0, "stopped": "complete"})
-    game.enemies = Enemies(5.0, {"met": 2})
+    game.enemies = Enemies(5.0, {"met": 2, "by_others": {"Guest": 2}})
     game.enemies.hardened = []
+    game.enemies.calls = []
     game.taken = Taken()
     game.rewards = Rewards()
+    game.guests = Guests()
     notes()  # the mod's own lines at its import
     game.begin(100.0)
     started = notes()
     check("its start: the damage taken and the rewards raised and said, the camps grown at once, the census not in "
           "their second", [line["event"] for line in started]
-          == ["normal_taken_raised", "normal_rewards_raised", "normal_camps"]
+          == ["normal_taken_raised", "normal_rewards_raised", "normal_guests", "normal_camps"]
           and started[1]["shares"] == {"xp": 0.1}
           and game.camps.done == [100.0] and game.enemies.done == [])
     game.tick(101.0)
-    check("the census the second after", [line["event"] for line in notes()] == ["normal_enemies"]
+    check("the census the second after, each guest told its kills", [(line["event"], line.get("told"))
+                                                                          for line in notes()]
+          == [("normal_enemies", None), ("normal_guest_kills", {"Guest": 2})]
           and game.enemies.done == [101.0])
+    check("co-op: the camps grown and the gestures watched around each player, the guest's place after the hunter's",
+          len(game.camps.places) == len(game.enemies.places) == 2 and game.camps.places[1] == (500.0, 0.0, 0.0)
+          and game.enemies.places[1] == (500.0, 0.0, 0.0))
+    game.link.pending = [(lambda: "GuestPC", 4)]
+    game.tick(101.5)
+    check("co-op: each guest's percent heard, given and said", [(line["event"], line.get("Guest"))
+                                                                for line in notes()]
+          == [("normal_guest_hardcore", {"percent": 4})] and game.link.pending == [])
+    check("co-op: the enemies near a guest have their dodges left to the game",
+          ([(500.0, 0.0, 0.0)], coop_guests.PLAIN_M) in game.enemies.calls and game.watch.plain == {"Char_A"})
     check("the dodges looked at each image, following the census", enemy_time.IDENTIFIER in state["hooks"]
           and list(game.watch.watched) == ["Char_A"])
     game.taken.answers = [{"taken": "again", "game_base": 1.0}, {"taken": "again", "game_base": 1.0}]
@@ -228,7 +271,8 @@ try:
     check("the end gives everything back in one line", [line["event"] for line in ended] == ["normal_given_back"]
           and ended[0]["reason"] == "left_game" and ended[0]["enemies"] == {"enemies": 1}
           and ended[0]["camps"] == {"given": 1} and ended[0]["zones"] == {} and ended[0]["taken"] == "unavailable"
-          and ended[0]["rewards"] == "gone"
+          and ended[0]["rewards"] == "gone" and ended[0]["guests"]["Guest"]["taken"] == "restored"
+          and ended[0]["link"] == "removed"
           and ended[0]["hook"] == "removed" and enemy_time.IDENTIFIER not in state["hooks"]
           and ended[0]["hardcore_saved"] is True and hardcore.option.value == {"version": 1, "kills": 135})
     hunter.freed = False

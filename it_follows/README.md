@@ -3,7 +3,8 @@
 Two modes to make Borderlands 4 harder: an overhaul of the enemies in your normal game, more numerous, faster and
 tougher, and a Horde mode where an endless horde follows you everywhere.
 
-Tested in single player on game version **1.10.2-4845623**, Steam version, on Windows.
+Tested on game version **1.10.2-4845623** on Windows: in single player on Steam, and the normal mode in two-player
+co-op, the host on Steam and the guest on Epic Games.
 
 ## What it does
 
@@ -54,6 +55,6 @@ failure.
 - The Horde mode asks a lot of your PC. If the game slows down, lower Max enemies, choose a lower level or lower the
   game's graphics.
 - Manage far enemies is always on for now: it will be reworked in a later version.
-- The Horde mode does not start in co-op or in a vehicle. The mod has not been tested in co-op, nor on the Epic Games
-  version.
+- The Horde mode does not start in co-op or in a vehicle.
+- In co-op, every player needs the mod for the normal mode to work fully.
 - Another mod that changes the enemies, their number or their health may conflict with this one.

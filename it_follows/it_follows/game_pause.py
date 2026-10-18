@@ -13,7 +13,11 @@ Trial 17: the pause read back held at every opening, yet Kevin saw the game go o
 So the window looks once a second whether the game still stands still (watch), pauses it again when it does not, and
 the release says what the world's clocks did while the window was open: its time (stopped by a pause), its unpaused
 time and the real time. The run's clock reads the world's time (clock.py), which stood still under the window at every
-release of trials 18 to 32 while the other two ran on."""
+release of trials 18 to 32 while the other two ran on.
+
+A game of several players is never paused: the host's pause froze its guest, unable to move or draw a weapon, while
+the window was open (trial 70, Kevin, 17 October 2026: « l'inviter se retrouve bloquer pendant un moemnt »). The
+window then opens over the running game, as the game's own menus do in co-op."""
 
 import math
 import time
@@ -23,7 +27,7 @@ import mods_base
 import unrealsdk
 from unrealsdk.unreal import WeakPointer
 
-from . import report
+from . import presence, report
 
 STATICS = "GameplayStatics"
 # The world's clocks, read at the hold and at the release: what each did under the window is said in the log.
@@ -74,6 +78,10 @@ def hold() -> bool:
         pc = mods_base.get_pc()
         if pc is None or getattr(pc, "OakCharacter", None) is None:
             report.note("pause", outcome="not_in_game")
+            return False
+        players = presence.players()
+        if players is not None and players > 1:
+            report.note("pause", outcome="coop", players=players)
             return False
         statics = unrealsdk.find_class(STATICS).ClassDefaultObject
         if _paused(statics, pc):

@@ -144,14 +144,12 @@ try:
           (lines[0]["level"], lines[0]["allies"], lines[0]["reduced"]) == ("Senior", True, False))
     state["pc"] = driving()
     mode.tick(14.0)
+    mode.tick(15.0)
+    check("from a vehicle: the reason written once", [line.get("why") for line in notes()
+                                                      if line["event"] == "normal_waiting"] == ["in_vehicle"]
+          and not mode.playing())
     player = hunter()
     state["pc"] = types.SimpleNamespace(OakCharacter=player)
-    players(2)
-    mode.tick(15.0)
-    mode.tick(16.0)
-    check("from a vehicle, then in a game of two players: each reason written as it changes",
-          [line["why"] for line in notes()] == ["in_vehicle", "coop"] and not mode.playing())
-    players(1)
     mode.tick(17.0)
     started = [line for line in notes() if line["event"] != "call"]
     check("the character found: it plays at its level, the camps grown at once", mode.playing()

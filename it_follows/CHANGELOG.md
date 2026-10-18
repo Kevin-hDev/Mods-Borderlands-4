@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.6 - 2026-10-18
+
+- Normal mode now works in co-op.
+
 ## 1.0.5 - 2026-10-17
 
 - Normal mode: in combat, the enemies strike, leap and throw their weapons faster, a little more at each level.

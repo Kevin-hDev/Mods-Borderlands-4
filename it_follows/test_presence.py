@@ -46,8 +46,16 @@ try:
           and presence.in_vehicle(state["pc"]) is False)
     state["pc"] = types.SimpleNamespace(OakCharacter=hunter)
     players(2)
-    check("a character in a game of two players: coop, the character said", presence.look().why == "coop"
-          and presence.look().player is hunter and presence.players() == 2)
+    check("a character in a game of two players, its role unread: a guest, the character said",
+          presence.look().why == "guest" and presence.look().player is hunter and presence.players() == 2)
+    state["enums"]["ENetRole"] = types.SimpleNamespace(ROLE_Authority="Authority", ROLE_AutonomousProxy="Proxy")
+    host = types.SimpleNamespace(GetLocalRole=lambda: "Authority")
+    state["pc"] = types.SimpleNamespace(OakCharacter=host)
+    check("the host of a game of two players: a game to play in", presence.look() == presence.Seat(state["pc"], host,
+                                                                                                    None))
+    state["pc"] = types.SimpleNamespace(OakCharacter=types.SimpleNamespace(GetLocalRole=lambda: "Proxy"))
+    check("a guest: it waits", presence.look().why == "guest")
+    state["pc"] = types.SimpleNamespace(OakCharacter=hunter)
     players(1)
     check("a character alone: a game to play in", presence.look() == presence.Seat(state["pc"], hunter, None))
     players(None)

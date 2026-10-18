@@ -3,7 +3,8 @@
 Deux modes pour durcir Borderlands 4 : une refonte des ennemis de ta partie normale, plus nombreux, plus rapides et
 plus résistants, et un mode Horde où une horde sans fin te suit partout.
 
-Testé en solo sur la version du jeu **1.10.2-4845623**, version Steam, sous Windows.
+Testé sur la version du jeu **1.10.2-4845623** sous Windows : en solo sur Steam, et le mode normal en coopération à
+deux joueurs, l'hôte sur Steam et l'invité sur Epic Games.
 
 ## Ce qu'il fait
 
@@ -56,6 +57,6 @@ nul en cas d'échec.
 - Le mode Horde demande beaucoup à ton PC. Si le jeu ralentit, baisse « Ennemis maximum », choisis un niveau plus bas
   ou baisse les graphismes du jeu.
 - « Gérer les ennemis éloignés » est toujours activé pour l'instant : ce réglage sera revu dans une prochaine version.
-- Le mode Horde ne se lance pas en coopération ni en véhicule. Le mod n'a été essayé ni en coopération, ni sur la
-  version Epic Games.
+- Le mode Horde ne se lance pas en coopération ni en véhicule.
+- En coopération, chaque joueur doit avoir le mod pour que le mode normal marche pleinement.
 - Un autre mod qui change les ennemis, leur nombre ou leur vie peut entrer en conflit avec celui-ci.

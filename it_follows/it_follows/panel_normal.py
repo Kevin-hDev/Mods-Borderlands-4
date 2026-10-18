@@ -23,7 +23,7 @@ KEY = "normal"
 # The Hardcore's card, on the same page.
 HARDCORE = "hardcore"
 # What a start refused says in the footer, by session.start_normal's answer.
-REFUSALS = {"horde_running": "start_horde_running", "already_on": "start_already_on", "coop": "start_coop",
+REFUSALS = {"horde_running": "start_horde_running", "already_on": "start_already_on",
             "start_failed": "normal_start_failed"}
 
 

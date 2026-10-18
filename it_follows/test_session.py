@@ -164,10 +164,6 @@ try:
           and FakeMode.made == [] and not session.normal_on())
     session.stop()
     runs_made = len(FakeRun.made)
-    players(2)
-    check("two players: the normal mode refused, said, nothing made", session.start_normal(normal) == "coop"
-          and said().endswith("only works in solo games for now. Your game is not changed.") and FakeMode.made == [])
-    players(1)
     check("turned on: the mode made with its settings and the session's stop, playing",
           session.start_normal(normal) == "playing" and session.normal_on()
           and FakeMode.made[-1].given == (normal, session.stop_normal))

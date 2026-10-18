@@ -4,9 +4,12 @@ enemies met given the level (enemies.py) and the shields it gives them (shields.
 image unless the player switched it off (options.fast_dodges) and their gestures sped up (enemy_time.py), and the damage
 the player takes raised (damage_taken.py, the Horde's, the normal mode's own BUFF), and the player's rewards raised
 (rewards.py: experience of the kills, ammo and money picked up), and the armed bandits' rest between two blows
-shortened at each census (melee_rest.py). At its end everything it holds is given back, as far as the game still
-holds it, and the Hardcore's kills are written. They are written with each status
-line too: a game quit to the desktop never ends its play (trial 31), and its kills were lost.
+shortened at each census (melee_rest.py). In co-op the host's game does the same for each guest (coop_guests.py,
+decision 131): the damage taken and the gains raised on the guest's character, the camps grown and the gestures watched
+around each player, the dodges near a guest left to the game (decision 132), each guest told its kills and its
+Hardcore's percent heard (coop_messages.py, decision 133). At its end everything it holds is given
+back, as far as the game still holds it, and the Hardcore's kills are written. They are written with each status line
+too: a game quit to the desktop never ends its play (trial 31), and its kills were lost.
 
 The Hardcore (decision 89, normal/hardcore.py): the enemies the player killed are counted, and its factor is read
 again each second; when it changes (switched on or off, a step reached), it is given at once to every enemy held and
@@ -26,7 +29,7 @@ from typing import Any, Callable
 import unrealsdk
 
 from .. import damage_taken, frame, reads, report
-from . import camps_grown, enemies, enemy_time, hardcore, melee_rest, pursuit, rewards
+from . import camps_grown, coop_guests, coop_messages, enemies, enemy_time, hardcore, melee_rest, pursuit, rewards
 
 STATUS_EVERY_S = 30.0
 SLOW_S = 0.5
@@ -46,6 +49,8 @@ class Play:
         self.taken = damage_taken.DamageTaken(report.announce, level.taken * self.hard)
         self.rewards = rewards.Rewards(level, report.announce)
         self.melee = melee_rest.MeleeRest(level.melee_rest, report.note, report.announce)
+        self.guests = coop_guests.CoopGuests(level, report.announce)
+        self.link = coop_messages.Link(host=True)
         self.watch = enemy_time.EnemyTime(report.note, level.dodge_speed if settings.fast_dodges else None,
                                           level.gestures, fail)
         self.dodges = dodges
@@ -60,6 +65,7 @@ class Play:
             report.note("normal_taken_raised", **raised)
         report.note("normal_rewards_raised", **self.rewards.start(self.player()))
         self.watch.start()
+        self.link.start()
         self.next_status = now + STATUS_EVERY_S
         self.tick(now)
 
@@ -70,8 +76,16 @@ class Play:
             return
         began = frame.now()
         here = reads.point(player)
+        heard = self.guests.heard(self.link.take())
+        if heard:
+            report.note("normal_guest_hardcore", **heard)
+        if self.guests.due(now):
+            joined = self.guests.look(player, now)
+            if joined:
+                report.note("normal_guests", **joined)
+        places = ([here] if here is not None else []) + self.guests.places()
         if self.camps.due(now):
-            grown = self.camps.grow(here, now)
+            grown = self.camps.grow(places, now)
             self.camps_stopped = grown["stopped"]
             if grown["grown"] or grown["refused"] or grown["too_many"]:
                 report.note("normal_camps", **grown)
@@ -80,7 +94,11 @@ class Play:
             if looked:
                 report.note("normal_enemies", **looked)
                 self._count(looked.get("kills", 0))
-            self.watch.follow(self.enemies.nearest(here))
+                told = self.guests.kills(looked.get("by_others", {}))
+                if told:
+                    report.note("normal_guest_kills", told=told)
+            plain = self.enemies.nearest(self.guests.places(), coop_guests.PLAIN_M, enemies.MOST)
+            self.watch.follow(self.enemies.nearest(places), frozenset(plain))
             rested = self.melee.keep()
             if rested:
                 report.note("normal_melee_rest", **rested)
@@ -92,6 +110,10 @@ class Play:
         if kept is not None and f"taken:{kept['taken']}" not in self.said:
             self.said.add(f"taken:{kept['taken']}")
             report.note("normal_taken_kept", **kept)
+        for name, done in self.guests.keep().items():
+            if f"guest:{name}:{done['taken']}" not in self.said:
+                self.said.add(f"guest:{name}:{done['taken']}")
+                report.note("normal_guest_taken_kept", guest=name, **done)
         took_ms = (frame.now() - began) * 1000.0
         self.slowest_ms = max(self.slowest_ms, took_ms)
         if took_ms > SLOW_S * 1000.0:
@@ -99,7 +121,8 @@ class Play:
         if now >= self.next_status:
             self.next_status = now + STATUS_EVERY_S
             hardcore.save("status")
-            report.note("normal_status", enemies=len(self.enemies.met), watched=len(self.watch.watched),
+            report.note("normal_status", enemies=len(self.enemies.met), guests=len(self.guests.held),
+                        watched=len(self.watch.watched),
                         dodges_sped=self.watch.counts[enemy_time.DODGE],
                         gestures_sped=self.watch.counts[enemy_time.GESTURE], camps_held=len(self.camps.held),
                         camps_grown=sum(1 for _, owed in self.camps.held.values() if owed),
@@ -130,5 +153,6 @@ class Play:
         given = {"enemies": self.enemies.end(), "zones": self.chase.narrow(),
                  "camps": self.camps.put_back(), "taken": self.taken.put_back(self.player()),
                  "rewards": self.rewards.put_back(self.player()), "melee_rest": self.melee.put_back(),
+                 "guests": self.guests.end(), "link": self.link.stop(),
                  "hardcore_saved": hardcore.save("end")}
         report.note("normal_given_back", reason=reason, **sped, **given)

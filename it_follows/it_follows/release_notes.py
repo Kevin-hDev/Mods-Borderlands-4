@@ -3,6 +3,17 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.6', {
+        'en': (
+            'Normal mode now works in co-op.',
+        ),
+        'fr': (
+            'Le mode normal fonctionne maintenant en coopération.',
+        ),
+        'zh': (
+            '普通模式现已支持合作模式。',
+        ),
+    }),
     ('1.0.5', {
         'en': (
             'Normal mode: in combat, the enemies strike, leap and throw their weapons faster, a little more at each level.',

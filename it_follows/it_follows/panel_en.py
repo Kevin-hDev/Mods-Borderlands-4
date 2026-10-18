@@ -31,7 +31,7 @@ TEXT = {
     "start_off": "It Follows is off: switch it on, then press START.",
     "start_in_vehicle": "No run from a vehicle: get out of it, then press START.",
     "start_no_character": "No run here: load a game first.",
-    "start_coop": "It Follows only works in solo games for now. Your game is not changed.",
+    "start_coop": "The Horde only works in solo games for now. Your game is not changed.",
     "start_already_running": "A run is already going.",
     "start_normal_on": "Stop the normal mode first, then press START.",
     "run_blocked": "The normal mode is on: stop it on its page to start a run.",

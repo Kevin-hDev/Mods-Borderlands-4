@@ -83,7 +83,7 @@ class Enemies:
         """One census: the lost let go, the new met; what changed, empty when nothing did."""
         self.read_at = now
         found, read, sighting = census.seen_around(player, READ_S, bosses=True, kills=True, pc=mods_base.get_pc())
-        kills, said, fights = self.kills.count(sighting, self.met)
+        kills, said, fights, by_others = self.kills.count(sighting, self.met)
         lost = self._lose(sighting, read["stopped"] == "complete")
         here = reads.point(player)
         new = [seen for seen in census.everyone(found, here, len(found)) if seen.name not in self.met]
@@ -105,6 +105,8 @@ class Enemies:
             result["kills"], result["killers"] = kills, said
         if fights:
             result["fights"] = fights
+        if by_others:
+            result["by_others"] = by_others
         if again:
             result["aim_again"] = again
         if joined:
@@ -204,16 +206,18 @@ class Enemies:
                 tally[outcome] = tally.get(outcome, 0) + 1
         return tally
 
-    def nearest(self, here: tuple | None) -> dict[str, Any]:
-        """The enemies met within WATCH_M, nearest first, at most WATCH_MOST: name to weak pointer."""
+    def nearest(self, places: list[tuple], within_m: float = WATCH_M, most: int = WATCH_MOST) -> dict[str, Any]:
+        """The enemies met within within_m of any of the places (each player's), nearest first, at most most, bosses
+        left out: name to weak pointer."""
         near = []
         for met in self.met.values():
             mover = met.actor() if not met.boss else None
-            metres = reads.metres(reads.point(mover), here) if mover is not None else None
-            if metres is not None and metres <= WATCH_M:
+            at = reads.point(mover) if mover is not None else None
+            metres = min((reads.metres(at, here) for here in places), default=None) if at is not None else None
+            if metres is not None and metres <= within_m:
                 near.append((metres, met))
         near.sort(key=lambda pair: pair[0])
-        return {met.name: met.pointer for _, met in near[:WATCH_MOST]}
+        return {met.name: met.pointer for _, met in near[:most]}
 
     def harden(self, hard: float) -> dict[str, int]:
         """The Hardcore's factor hard on top of the level's health: given to the enemies met from now on and to every

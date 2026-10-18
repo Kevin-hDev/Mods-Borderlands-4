@@ -18,6 +18,10 @@ enemy left sped up would stay fast. Its time is written back even dead, a value 
 A value the game wrote over the level's meanwhile is the game's own and stays: it is given back as the game left it,
 and a new factor is laid on it (audit of 17 October 2026: a gesture lasts up to 8 s, and giving back the time read at
 its start would undo what the game did meanwhile). Each of the two values on its own: the game may change one only.
+
+In co-op the enemies near a guest dodge at the game's speed (decision 132): the guest's copy plays a dodge sped on the
+host at the game's speed, stops short, then pops to where the host put it (trial 77, Kevin: « quand les esquives
+accelerer son desactiver, le probleme n'est plus présent »). Their gestures are still sped.
 """
 
 from itertools import islice
@@ -75,6 +79,7 @@ class EnemyTime:
         self.note, self.fail = note, fail
         self.factors = {DODGE: dodge, GESTURE: gesture}
         self.watched: dict[str, Any] = {}
+        self.plain: frozenset[str] = frozenset()
         # By name: its weak pointer, what speeds it and since when, and its own time to give back.
         self.held: dict[str, dict] = {}
         # Given back at LONGEST_S while it still did the same, DODGE or the gesture's script: not taken again while it
@@ -93,9 +98,10 @@ class EnemyTime:
         self.hook = hook(frame.HOOK, Type.POST, hook_identifier=IDENTIFIER)(self._frame)
         self.hook.enable()
 
-    def follow(self, watched: dict[str, Any]) -> None:
-        """The enemies to look at from now on, by name, nearest first, each a weak pointer."""
-        self.watched = watched
+    def follow(self, watched: dict[str, Any], plain: frozenset[str] = frozenset()) -> None:
+        """The enemies to look at from now on, by name, nearest first, each a weak pointer; plain: those whose dodges
+        are left to the game."""
+        self.watched, self.plain = watched, plain
 
     def _frame(self, *_args: Any) -> None:
         if self.hook is None:
@@ -133,8 +139,8 @@ class EnemyTime:
                 self._stick(name, doing)
 
     def _doing(self, name: str, pawn: Any) -> str | None:
-        """What speeds the enemy now: a dodge first, else a gesture, else None. With the dodges left to the game, a
-        dodge within a gesture plays at the game's speed too (decision 121)."""
+        """What speeds the enemy now: a dodge first, else a gesture, else None. With the dodges left to the game, for
+        all or for this enemy (plain), a dodge within a gesture plays at the game's speed too (decision 121)."""
         dodge = self._dodging(pawn)
         script = self.playing.get(name)
         stuck = self.stuck.get(name)
@@ -142,7 +148,7 @@ class EnemyTime:
             self.stuck.pop(name)
             stuck = None
         if dodge:
-            if self.factors[DODGE] is None:
+            if self.factors[DODGE] is None or name in self.plain:
                 return None
             if stuck != DODGE:
                 return DODGE

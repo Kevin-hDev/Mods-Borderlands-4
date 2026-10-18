@@ -42,7 +42,7 @@ TEXT = {
     "start_off": "It Follows 已停用：请启用它，然后选择「开始」。",
     "start_in_vehicle": "无法在载具中开始一局：请退出载具，然后选择「开始」。",
     "start_no_character": "无法在此处开始一局：请先加载一个存档。",
-    "start_coop": "It Follows 目前只能在单人游戏中使用。你的游戏未做任何更改。",
+    "start_coop": "敌群模式目前只能在单人游戏中使用。你的游戏未做任何更改。",
     "start_already_running": "已有一局正在进行。",
     "start_normal_on": "请先停止普通模式，然后选择「开始」。",
     "run_blocked": "普通模式已开启：请在它的页面上将其停止，才能开始一局。",

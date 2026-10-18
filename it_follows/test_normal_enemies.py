@@ -138,7 +138,11 @@ try:
           chance(near) == 0.35 and chance(cat) == 0.35 and scale(near) == 1.2
           and near.actor.pools[0].base == 145.0 and camp.settings.CombatTerritory.Radius == 35000.0
           and cat.actor.team is BANDITS and ("set", "Char_CatAdult", str(BANDITS)) in team_calls)
-    check("the nearest within 60 m watched", list(met.nearest((0.0, 0.0, 0.0))) == ["Char_GunToter", "Char_Psycho"])
+    check("the nearest within 60 m watched", list(met.nearest([(0.0, 0.0, 0.0)])) == ["Char_GunToter", "Char_Psycho"])
+    check("near any of the players", list(met.nearest([(1e8, 0.0, 0.0), (0.0, 0.0, 0.0)])) == list(
+        met.nearest([(0.0, 0.0, 0.0)])) and met.nearest([(1e8, 0.0, 0.0)]) == {})
+    check("within a reach and a number given", list(met.nearest([(0.0, 0.0, 0.0)], 1e6, 1)) == ["Char_GunToter"]
+          and met.nearest([(0.0, 0.0, 0.0)], 0.01) == {})
     near.actor.CharacterMovement.MaxGroundSpeedScale.Value = 1.0
     check("a census that changes nothing says nothing; a speed the game put back written again",
           met.look(player, 15.0) == {} and scale(near) == 1.2)
@@ -207,7 +211,7 @@ try:
           and looked["aim"] == {"given": 1} and boss.actor.gun.values()["aiaccuracy"] == [6.6, 6.6])
     check("no dodge nor chase for it, and never watched", list(dodges.files) == files
           and met.met["Char_CatBoss"].family is None and chase.widened() == widened
-          and "Char_CatBoss" not in met.nearest((0.0, 0.0, 0.0)))
+          and "Char_CatBoss" not in met.nearest([(0.0, 0.0, 0.0)]))
 
     stray.actor.HealthState.bCurrentlyDead = True
     hardened = met.harden(1.1)
@@ -261,6 +265,8 @@ try:
     check("those another character killed named, with who killed them and whether each was met",
           looked["fights"] == [{"dead": "Char_Lynx", "dead_met": True, "by": "Char_Raider", "by_met": True},
                                {"dead": "Char_Pup", "dead_met": False, "by": "Char_Newborn", "by_met": False}])
+    check("each other character's kills counted by its name (a co-op guest's, decision 133)",
+          looked["by_others"] == {"Char_Raider": 1, "Char_Newborn": 1})
     kills_module.FIGHTS_MOST = 1
     census_reads([raider], killed=(("Char_A1", other), ("Char_A2", other)),
                  by_other=(("Char_A1", "Char_Raider"), ("Char_A2", "Char_Raider")))

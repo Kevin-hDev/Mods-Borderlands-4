@@ -231,6 +231,19 @@ try:
     check("a dodge begun within it: the enemy's own time given back", time_of(lone) == (1.0, 0.8))
     no_dodges.stop()
 
+    shared = enemy_time.EnemyTime(lambda event, **f: None, 3.0, 1.3, failures.append)
+    by_guest, by_host = pawn("Char_ByGuest"), pawn("Char_ByHost")
+    shared.follow(weak(by_guest, by_host), frozenset({"Char_ByGuest"}))
+    by_guest.AIDodgeState.ActiveDodge.Action = by_host.AIDodgeState.ActiveDodge.Action = "Dodge"
+    shared.look(410.0)
+    check("co-op: a dodge near a guest left to the game, the others sped",
+          time_of(by_guest) == (1.0, 0.8) and near(time_of(by_host), (3.0, 2.4)))
+    by_guest.AIDodgeState.ActiveDodge.Action = None
+    plays(by_guest, "T_Psycho_Melee180_Script_Instanced_C")
+    shared.look(411.0)
+    check("its gestures still sped", near(time_of(by_guest), (1.3, 1.04)))
+    shared.stop()
+
     kept = enemy_time.EnemyTime(lambda event, **f: None, 3.0, 1.2, failures.append)
     slowed = pawn("Char_Slowed")
     kept.follow(weak(slowed))
