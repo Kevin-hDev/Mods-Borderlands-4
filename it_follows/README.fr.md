@@ -36,7 +36,8 @@ lances un mode à la fois.
 - **Hardcore**, une option du mode normal : les ennemis se renforcent de 1 % tous les 100 ennemis tués, tout au long
   du jeu. Seuls les tués de ton chasseur comptent, pas ceux de tes compagnons. Tu peux mettre la progression en pause, et elle est gardée quand l'option est désactivée.
 - **HISTORIQUE.** Tes 20 derniers runs de la Horde.
-- **OPTIONS.** La barre en jeu et sa taille.
+- **OPTIONS.** La barre en jeu et sa taille ; la machine du butin perdu jusqu'à 400 objets ; une résolution
+  16:10 en plein écran ; trois profils de couleurs plus vives, avec un aperçu pour les essayer en jeu.
 
 Le bouton **ACTIVÉ**, en bas à gauche de la fenêtre, allume ou éteint tout le mod.
 

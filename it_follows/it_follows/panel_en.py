@@ -72,6 +72,7 @@ TEXT = {
     "start_refused": "The run could not start here. Your game is not changed. The reason is in unrealsdk.log.",
     "start_place_caption": "THE PLACE", "start_map_caption": "ON THE MAP",
     "start_choose": "CHOOSE", "start_chosen": "CHOSEN", "start_back": "BACK",
+    "colour_preview": "PREVIEW", "colour_back": "BACK",
     "help_start_title": "STARTING POINT",
     "help_start": "Choose where your Horde run starts.\n\n"
                   "Switch Starting point on, then open a place's tab beside RUN SETTINGS: its picture, and where it "

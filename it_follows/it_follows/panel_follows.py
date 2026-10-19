@@ -9,7 +9,8 @@ The game stands still while the window is open (game_pause.py), except while STA
 
 from typing import Any
 
-from . import game_pause, open_key, panel_buttons as b, panel_history, panel_i18n as i18n, panel_options
+from . import game_pause, open_key, panel_buttons as b, panel_colours, panel_history, panel_i18n as i18n
+from . import panel_options
 from . import panel_hardcore, panel_help, panel_normal, panel_result, panel_run, panel_starts, panel_updates
 from . import panel_text as tx, panel_theme as t, panel_welcome, panel_widgets as w, report, session, start_point
 from . import updates, welcome
@@ -112,6 +113,8 @@ def poll(form: Any, widgets: dict) -> str | bool:
     if form.closer is not None and form.closer.released(panel_options.selecting(widgets)):
         report.note("open_key_closes", key=open_key.key())
         return CLOSE if form.flush(widgets) else True
+    if panel_colours.poll(form, widgets):
+        return True
     if form.take(widgets["run_start"]):
         outcome = panel_run.start(form, widgets)
         form.refresh_labels(widgets)
@@ -140,6 +143,11 @@ def poll(form: Any, widgets: dict) -> str | bool:
         form.refresh_labels(widgets)
         return True
     return False
+
+
+def held(holder: Any, menu: Any, widgets: dict, template: Any) -> None:
+    """The window's screen layer made (panel_view.build_view): the colour profile's preview card beside the window."""
+    panel_colours.build_card(holder, menu, widgets, template)
 
 
 def selecting(form: Any) -> bool:

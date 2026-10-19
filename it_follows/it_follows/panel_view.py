@@ -86,10 +86,12 @@ def build_view(pc, model, _return_to_menu=True):
         updates = updates_module()
         if updates is not None:
             updates.build(widgets, template)
+        holder = modal.held(pc, root)
+        panel_follows.held(holder, root, widgets, template)
     finally:
         tx.use({})
     widgets["focus"] = widgets[f"nav:{model.page}"]
     report.note(f"settings window: fonts={'+'.join(sorted(loaded)) or 'engine'}, "
                 f"avatar={'shown' if avatar else 'hidden'}")
-    return modal.held(pc, root), widgets
+    return holder, widgets
 

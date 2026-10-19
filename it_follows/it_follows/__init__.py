@@ -9,16 +9,20 @@ normal mode on stays on from one game launch to the next: the mod turns it on ag
 
 from mods_base import build_mod
 
-from . import kept, open_key, options, panel_open, panel_preferences, report, session, start_point, updates, welcome
+from . import colours, kept, lost_loot, open_key, options, panel_open, panel_preferences, report, resolution
+from . import session, start_point, updates, welcome
 from .normal import hardcore, options as normal_options
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.7"
+__version__ = "1.0.8"
 __author__ = "kevin-hDev"
 
 
 def _on_enable() -> None:
     report.note("enabled", version=__version__)
+    lost_loot.start()
+    resolution.start()
+    colours.start()
     if normal_options.on.value is True:
         outcome = session.start_normal(normal_options.read())
         report.note("normal_resumed", outcome=outcome)
@@ -33,6 +37,9 @@ def _on_disable() -> None:
     session.stop("mod_disabled")
     # The choice to be on stays in the settings file: the mode comes back when the mod is enabled again.
     session.stop_normal("mod_disabled")
+    lost_loot.stop()
+    resolution.stop()
+    colours.stop()
     report.note("disabled")
 
 
@@ -50,6 +57,11 @@ mod = build_mod(
 )
 # build_mod has read the settings file (mods_base, register_mod).
 options.shelve()
+# Set here, not in options.py: lost_loot, resolution and colours import options.
+options.lost_loot.on_change_while_enabled = lost_loot.changed
+options.resolution.on_change_while_enabled = resolution.changed
+options.colours.on_change_while_enabled = colours.switched
+options.colour_profile.on_change_while_enabled = colours.chosen
 kept.load()
 hardcore.load()
 open_key.align()

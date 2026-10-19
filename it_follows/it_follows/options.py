@@ -61,14 +61,36 @@ bar = BoolOption("bar", True, display_name="In-game bar",
                  description="Your kills, deaths and time, at the top left of the screen during a run.")
 bar_size = SpinnerOption("bar_size", DEFAULT_BAR_SIZE, list(BAR_SIZES), display_name="Bar size",
                          description="Its size on the screen.")
+# Decision 146: off at first, for the whole game, not only during a run (lost_loot.py does the work).
+lost_loot = BoolOption("lost_loot", False, display_name="Lost Loot: 400 items",
+                       description="The Lost Loot machine keeps up to 400 items instead of the game's limit. Off: the "
+                                   "items it holds stay in it.")
+# Decision 148: a switch, the 16:10 of the screen's own height (resolution.py). Its identifier is not trial 113's
+# "resolution_1610", whose saved "Off" a switch would read as on (mods_base's BoolOption takes bool("Off")).
+resolution = BoolOption("stretch_1610", False, display_name="16:10 resolution",
+                        description="Plays in Fullscreen at the 16:10 resolution of your screen's height, 2304×1440 "
+                                    "on a 1440p screen; on a 16:9 screen the image is stretched. Off: your own "
+                                    "resolution and display mode come back.")
+# The player's own resolution and display mode, "<width>x<height>:<mode>", kept while a 16:10 one is applied.
+resolution_own = HiddenOption("resolution_own", "")
+# Decision 149, Kevin, 19 October 2026: three profiles, the photo mode's Saturation at 140, 170 and 200 (trial 116:
+# its 170 is the engine's 1.7), « le profil par défaut à l'activation ce sera 1,7 ». colours.py does the work.
+COLOUR_PROFILES = {"Profile 1": 1.4, "Profile 2": 1.7, "Profile 3": 2.0}
+DEFAULT_COLOUR_PROFILE = "Profile 2"
+# One line, Kevin after trial 119: « Profil de couleurs », « juste "Des couleurs plus vives dans tout le jeu." »; the
+# profile's buttons sit on the switch's line (panel_colours.py), so its own label and help are never shown.
+colours = BoolOption("saturated_colours", False, display_name="Color profile",
+                     description="Brighter colors over the whole game.")
+colour_profile = SpinnerOption("colour_profile", DEFAULT_COLOUR_PROFILE, list(COLOUR_PROFILES), display_name="Profile",
+                               description="")
 
 # The RUN page's rows, which a run in progress locks, then the OPTIONS page's.
 RUN = [start_point, level, speed, buff, duration, crowd, far]
-DISPLAY = [bar, bar_size]
+DISPLAY = [bar, bar_size, lost_loot, resolution, colours, colour_profile]
 # Decision 99: rows shown greyed and held at their default. Off, the horde stayed at 0 to 22 enemies at levels 2 and 5,
 # and rose to 51 within 30 s once on again (trial 33).
 SHELVED = (far,)
-ALL = [*RUN, start_place, *DISPLAY]
+ALL = [*RUN, start_place, *DISPLAY, resolution_own]
 
 
 @dataclass(frozen=True)

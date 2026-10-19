@@ -11,9 +11,12 @@ speed 速度 (223), chase 追击 (Cyber Chase), on foot 步行 (Only On Foot 仅
 graphics 图形 (Graphics Preset 图形预设, 12; 画质 0), Quit to Main Menu 退出至主菜单, Quit Game 退出游戏, a save 存档
 loaded 加载, solo 单人 (Solo campaign 单人主剧情), Normal 普通 (5; 正常 1), Buff 增益, Infinite 无限, Progress 进度,
 Hardcore Mode 硬核模式 (硬核 7 of 7 rows), the game's name 《无主之地®4》, Bandit 匪徒 (21; 强盗 8), Predator 掠食者
-(19), Veteran 资深 (Senior's nearest; 老手 1). The game has no word for a horde (a horde of bandits is 一群强盗): the
-mod's horde is 敌群, a run 一局. The mod's name stays in Latin letters, as the other mods keep theirs. Buttons named in
-a sentence are quoted 「…」, as the buttons show them; a controller player selects, never clicks (选择, never 点击).
+(19), Veteran 资深 (Senior's nearest; 老手 1), Lost Loot 失物 (2 of 2 rows) and its machine 失物招领机 (4), Resolution
+分辨率, Fullscreen 全屏 (the exclusive one; Windowed Fullscreen 窗口全屏), Display Mode 显示模式, Photo Mode
+拍照模式, Saturation 饱和度, Color Preset 颜色预设 (read 2026-10-19).
+The game has no word for a horde (a horde of bandits is 一群强盗): the mod's horde is 敌群, a run 一局. The mod's
+name stays in Latin letters, as the other mods keep theirs. Buttons named in a sentence are quoted 「…」, as the
+buttons show them; a controller player selects, never clicks (选择, never 点击).
 """
 
 from .panel_common_zh import TEXT as COMMON
@@ -78,6 +81,7 @@ TEXT = {
     "start_refused": "本局无法在此处开始。你的游戏未做任何更改。原因记录在 unrealsdk.log 中。",
     "start_place_caption": "地点", "start_map_caption": "地图上的位置",
     "start_choose": "选择", "start_chosen": "已选择", "start_back": "返回",
+    "colour_preview": "预览", "colour_back": "返回",
     "help_start_title": "起点",
     "help_start": "选择你的敌群模式一局从哪里开始。\n\n"
                   "开启「起点」，然后打开「单局设置」旁边某个地点的标签页：它的图片，以及它在地图上的位置。按「选择」。\n\n"
@@ -139,6 +143,10 @@ OPTIONS = {
     "manage_far": ("管理远处的敌人", "远远落在你身后的敌人会被带回到你身后。目前始终开启：此设置会在之后的版本中调整。"),
     "bar": ("游戏内状态栏", "一局进行时，你的击杀、死亡和时间显示在屏幕左上角。"),
     "bar_size": ("状态栏大小", "它在屏幕上的大小。"),
+    "lost_loot": ("失物：400 件物品", "失物招领机最多可保存 400 件物品，而不是游戏原本的上限。关：机器中已有的物品会被保留。"),
+    "stretch_1610": ("16：10 分辨率", "以全屏模式使用与屏幕高度相同的 16：10 分辨率（1440p 屏幕为 2304×1440）；在 16：9 屏幕上，"
+                                     "画面会被拉伸。关：恢复你原本的分辨率和显示模式。"),
+    "saturated_colours": ("颜色预设", "整个游戏的颜色更鲜艳。"),
     "normal_level": ("等级", "游戏中敌人的难度。"),
     "normal_allies": ("敌人结盟", "所有敌人同属一队：它们不再互相攻击。"),
     "normal_fast_dodges": ("加速闪避", "敌人的闪避比游戏原本更快。关：游戏原本的闪避速度。"),
@@ -157,4 +165,5 @@ CHOICES = {"level:25": "等级 1", "level:40": "等级 2", "level:60": "等级 3
            "Large": "大", "buff:Normal": "普通", "normal_speed:Increased": "提高",
            "normal_speed:Reduced": "降低",
            "Bandit": "匪徒", "Senior": "资深", "Predator": "掠食者", "Buff": "增益", "Buff+": "增益+",
-           "10 min": "10 分钟", "20 min": "20 分钟", "30 min": "30 分钟", "45 min": "45 分钟", "60 min": "60 分钟"}
+           "10 min": "10 分钟", "20 min": "20 分钟", "30 min": "30 分钟", "45 min": "45 分钟", "60 min": "60 分钟",
+           "colour_profile:Profile 1": "预设 1", "colour_profile:Profile 2": "预设 2", "colour_profile:Profile 3": "预设 3"}

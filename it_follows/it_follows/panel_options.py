@@ -1,5 +1,6 @@
 """The OPTIONS page (sketch 4 of esquisses_menu, validated by Kevin): the bar shown or not (decision 50), its size among
-three (decision 52) with a look at it under the choice, and the key that opens the window (decision 48).
+three (decision 52) with a look at it under the choice, the Lost Loot, the 16:10 resolution, the colour profile on one
+line (decision 149, panel_colours.py), and the key that opens the window (decision 48).
 
 The look writes the bar's words at the size chosen, in points as the bar itself does (bar.py): the window is drawn for
 a 1080p screen and scaled, so the look is the bar's size on such a screen, not on every one. The key's field is the
@@ -11,7 +12,8 @@ from typing import Any
 
 import unrealsdk
 
-from . import open_key, options, panel_i18n as i18n, panel_pages as p, panel_text as tx, panel_theme as t
+from . import open_key, options, panel_colours, panel_i18n as i18n, panel_pages as p, panel_text as tx
+from . import panel_theme as t
 from . import panel_widgets as w, report, texts
 
 # The look's example: a run going well.
@@ -21,7 +23,10 @@ EXAMPLE = (152, 1, 64, 1, 767.0)
 def page(owner: Any, group: Any, key: str, widgets: dict, template: Any) -> Any:
     scroll, body = p.scrolling_body(owner, template)
     rows = p.card(body, widgets, key)
-    p.setting_rows(rows, group.children, widgets, template, expose_rows=True)
+    # The colour profile's buttons go on its switch's line (panel_colours.merge), not on a row of their own.
+    p.setting_rows(rows, [row for row in group.children if row is not options.colour_profile], widgets, template,
+                   expose_rows=True)
+    panel_colours.merge(rows, widgets, template)
     band = w.border(rows, t.COLOR_INK, w.pad(t.SPACE_2, t.SPACE_4))
     widgets["bar_look"] = tx.text(band, "", "look")
     band.SetContent(widgets["bar_look"])
@@ -56,8 +61,9 @@ def _chosen(form: Any) -> tuple[bool, float]:
 
 
 def look_changed(form: Any) -> bool:
-    """Whether a row was clicked since the look was painted: the look follows the click, not the write."""
-    return _chosen(form) != getattr(form, "look_shown", None)
+    """Whether a row was clicked since the look, or the colour profile's line, was painted: they follow the click, not
+    the write."""
+    return _chosen(form) != getattr(form, "look_shown", None) or panel_colours.changed(form)
 
 
 def paint(form: Any, widgets: dict, language: str) -> None:
@@ -68,6 +74,7 @@ def paint(form: Any, widgets: dict, language: str) -> None:
     look.SetText(texts.bar(language, *EXAMPLE))
     w.cosmetic("bar_look_size", lambda: _size(look, points))
     look.SetRenderOpacity(1.0 if shown else t.OPACITY_DISABLED)
+    panel_colours.paint(form, widgets, language)
     widgets["open_key_label"].SetText(i18n.text("key_label", language).upper())
     widgets["open_key_hint"].SetText(i18n.text("key_hint", language))
     selector = widgets["open_key"]

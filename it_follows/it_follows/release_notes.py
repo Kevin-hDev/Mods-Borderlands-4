@@ -3,6 +3,23 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.8', {
+        'en': (
+            'Options: new "Lost Loot: 400 items" option, the Lost Loot machine keeps up to 400 items instead of the game\'s limit.',
+            'Options: new "16:10 resolution" option, to play in Fullscreen at the 16:10 resolution of your screen\'s height.',
+            'Options: new "Color profile" option, brighter colors over the whole game, with three profiles and a preview to try them in game.',
+        ),
+        'fr': (
+            "Options : nouvelle option « Butin perdu : 400 objets », la machine du butin perdu garde jusqu'à 400 objets au lieu de la limite du jeu.",
+            'Options : nouvelle option « Résolution 16:10 », pour jouer en plein écran dans la résolution 16:10 de la hauteur de ton écran.',
+            'Options : nouvelle option « Profil de couleurs », des couleurs plus vives dans tout le jeu, avec trois profils et un aperçu pour les essayer en jeu.',
+        ),
+        'zh': (
+            '选项：新增「失物：400 件物品」选项，失物招领机最多可保存 400 件物品，而不是游戏原本的上限。',
+            '选项：新增「16：10 分辨率」选项，以全屏模式使用与屏幕高度相同的 16：10 分辨率。',
+            '选项：新增「颜色预设」选项，让整个游戏的颜色更鲜艳，提供三种预设，并可在游戏中预览。',
+        ),
+    }),
     ('1.0.7', {
         'en': (
             'Horde mode: new Starting point option, to start your run from one of seven places on the map.',

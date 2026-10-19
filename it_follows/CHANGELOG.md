@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.8 - 2026-10-19
+
+- Options: new "Lost Loot: 400 items" option, the Lost Loot machine keeps up to 400 items instead of the game's limit.
+- Options: new "16:10 resolution" option, to play in Fullscreen at the 16:10 resolution of your screen's height.
+- Options: new "Color profile" option, brighter colors over the whole game, with three profiles and a preview to try them in game.
+
 ## 1.0.7 - 2026-10-19
 
 - Horde mode: new Starting point option, to start your run from one of seven places on the map.

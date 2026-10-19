@@ -73,6 +73,7 @@ TEXT = {
     "start_refused": "Le run n'a pas pu démarrer ici. Ta partie n'est pas modifiée. La raison est dans unrealsdk.log.",
     "start_place_caption": "LE LIEU", "start_map_caption": "SUR LA CARTE",
     "start_choose": "CHOISIR", "start_chosen": "CHOISI", "start_back": "RETOUR",
+    "colour_preview": "APERÇU", "colour_back": "RETOUR",
     "help_start_title": "POINT DE DÉPART",
     "help_start": "Choisis où commence ton run de la Horde.\n\n"
                   "Allume Point de départ, puis ouvre l'onglet d'un lieu à côté de RÉGLAGES DU RUN : sa photo, et où "
@@ -149,6 +150,12 @@ OPTIONS = {
                                                  "prochaine version."),
     "bar": ("Barre en jeu", "Tes tués, tes morts et le temps, en haut à gauche de l'écran pendant un run."),
     "bar_size": ("Taille de la barre", "Sa taille à l'écran."),
+    "lost_loot": ("Butin perdu : 400 objets", "La machine du butin perdu garde jusqu'à 400 objets au lieu de la "
+                                              "limite du jeu. Désactivé : les objets qu'elle contient y restent."),
+    "stretch_1610": ("Résolution 16:10", "Joue en plein écran dans la résolution 16:10 de la hauteur de ton écran, "
+                                         "2304×1440 sur un écran 1440p ; sur un écran 16:9, l'image est étirée. "
+                                         "Désactivée : ta résolution et ton mode d'affichage reviennent."),
+    "saturated_colours": ("Profil de couleurs", "Des couleurs plus vives dans tout le jeu."),
     "normal_level": ("Niveau", "La difficulté donnée aux ennemis du jeu."),
     "normal_allies": ("Ennemis alliés", "Tous les ennemis dans une même équipe : ils ne se battent plus entre eux."),
     "normal_fast_dodges": ("Esquives accélérées",
@@ -167,4 +174,5 @@ CHOICES = {"level:25": "Niveau 1", "level:40": "Niveau 2", "level:60": "Niveau 3
            "level:100": "Niveau 5", "Normal": "Normale", "+10%": "+10 %", "+20%": "+20 %", "+30%": "+30 %",
            "+40%": "+40 %", "+50%": "+50 %", "Unlimited": "Illimitée", "Small": "Petite", "Medium": "Moyenne",
            "Large": "Grande", "buff:Normal": "Normal", "normal_speed:Increased": "Augmentée",
-           "normal_speed:Reduced": "Réduite"}
+           "normal_speed:Reduced": "Réduite", "colour_profile:Profile 1": "Profil 1",
+           "colour_profile:Profile 2": "Profil 2", "colour_profile:Profile 3": "Profil 3"}

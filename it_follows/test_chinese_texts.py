@@ -20,7 +20,9 @@ from it_follows import panel_zh  # noqa: E402
 from it_follows.normal import options as normal_options  # noqa: E402
 
 NOTES = HERE.parents[3] / "publication" / "nexus" / "it_follows"
-VERSIONS = {"1.0.4": "1.0.4", "1.0.3": "1.0.3", "1.0.2": "1.0.2", "1.0.1": "archive/1.0.1"}
+# Each version's notes, in their own folder or in archive/, where the older ones are moved.
+VERSIONS = {version: next((folder for folder in (version, f"archive/{version}") if (NOTES / folder).is_dir()),
+                          version) for version in ("1.0.8", "1.0.4", "1.0.3", "1.0.2", "1.0.1")}
 # Words that stay as they are in Chinese: the game's name in the theme's button, a percent, a buff's plus.
 SAME = {"BL4"}
 CHINESE = re.compile(r"[㐀-鿿]")

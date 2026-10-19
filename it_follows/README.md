@@ -34,7 +34,8 @@ a time.
   Only your Vault Hunter's kills count, not your companions'.
   You can pause the progress, and it is kept while the option is off.
 - **HISTORY.** Your last 20 Horde runs.
-- **OPTIONS.** The in-game bar and its size.
+- **OPTIONS.** The in-game bar and its size; the Lost Loot machine up to 400 items; a 16:10 resolution in
+  Fullscreen; three color profiles for brighter colors, with a preview to try them in game.
 
 The **ENABLED** button, at the bottom left of the window, turns the whole mod on or off.
 

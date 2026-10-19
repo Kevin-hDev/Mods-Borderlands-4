@@ -48,8 +48,9 @@ try:
           "of its own (decision 62)",
           options.RUN == [options.start_point, options.level, options.speed, options.buff, options.duration,
                           options.crowd, options.far]
-          and options.DISPLAY == [options.bar, options.bar_size]
-          and options.ALL == [*options.RUN, options.start_place, *options.DISPLAY]
+          and options.DISPLAY == [options.bar, options.bar_size, options.lost_loot, options.resolution,
+                                  options.colours, options.colour_profile]
+          and options.ALL == [*options.RUN, options.start_place, *options.DISPLAY, options.resolution_own]
           and not hasattr(options, "language") and not hasattr(options, "start_button"))
     check("Starting point off at first, Kevin's first place chosen, kept with no row of its own",
           options.start_point.value is False and options.start_place.value == "3" and options.start_place.is_hidden
