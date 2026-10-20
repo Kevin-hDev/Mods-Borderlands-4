@@ -3,6 +3,17 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.9', {
+        'en': (
+            'Normal mode: Vile enemies no longer stay nearly immortal at Senior and Predator. Their eridium shield breaks fully again when you destroy their growths.',
+        ),
+        'fr': (
+            "Mode Normal : les ennemis Vile ne restent plus presque immortels en Senior et Predator. Leur bouclier d'eridium casse de nouveau en entier quand tu détruis leurs excroissances.",
+        ),
+        'zh': (
+            '普通模式：腐化敌人在资深和掠食者等级下不再近乎无敌。摧毁它们身上的生长物后，镒矿护盾会再次完全破碎。',
+        ),
+    }),
     ('1.0.8', {
         'en': (
             'Options: new "Lost Loot: 400 items" option, the Lost Loot machine keeps up to 400 items instead of the game\'s limit.',

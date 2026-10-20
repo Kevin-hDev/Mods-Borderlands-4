@@ -29,6 +29,15 @@ POOL_READER, POOL_PARAMETER = "GetResourcePoolValue", "InResource"
 UNREAD = -1.0
 # A share this close is already the one asked: no call for the pool's rounding.
 SHARE_NOISE = 0.001
+# An enemy's health types, one by layer; a few more are read than the three pools, for a surprise.
+TYPES_MOST = 6
+
+
+def types(actor: Any) -> list[str]:
+    """The enemy's health types in the order the game keeps them (trial 46: Flesh then Energy, the layers 0 and 1, the
+    shield on top): a field read, no call."""
+    slots = list(actor.HealthState.HealthTypeStates)[:TYPES_MOST]
+    return [str(getattr(slot.HealthType, "_name", "")) for slot in slots]
 
 
 class HealthPools:

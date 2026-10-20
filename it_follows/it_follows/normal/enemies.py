@@ -67,7 +67,7 @@ class Enemies:
         self.speed = speed.SpeedBoost(announce, level.speed)
         self.toughness = toughness.Toughness(announce, note, level.health * hard)
         self.teams = teams.Teams(announce) if allies else None
-        self.shields = shields_module.Shields(announce, level.shield_refill) if shields else None
+        self.shields = shields_module.Shields(announce, level.shield_refill, note=note) if shields else None
         self.shielded: dict[str, int] = {}
         self.aim = aim_module.Aim(announce, level.spread, level.bullet_speed)
         self.aimed: dict[str, int] = {}

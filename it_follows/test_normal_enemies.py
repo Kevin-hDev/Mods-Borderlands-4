@@ -341,6 +341,18 @@ try:
     check("the end takes the shields off the living only", ended["shields"] == {"removed": 2, "left": 1, "none": 1}
           and soldier.actor.pools[1] is None and late.actor.pools[1] is None and chief.actor.pools[1] is not None
           and owner.actor.pools[1] is not None)
+
+    vile = enemy("Char_CreepCorrupt", 12.0, HUMAN, BANDITS, None)
+    vile.actor.pools = [health_fixture.Pool(100.0), health_fixture.Pool(5.0), health_fixture.Pool(5.0)]
+    vile.actor.HealthState.HealthTypeStates = []
+    health_fixture.give_type(vile.actor, "HealthType_AI_Flesh")
+    corrupt = enemies_module.Enemies(predator, False, dodges, chase, note, announce, shields=True)
+    census_reads([vile])
+    lines.clear()
+    looked = corrupt.look(player, 300.0)
+    check("an enemy whose three pools are taken: none, its health types and pools written down",
+          looked["shields"] == {"no_room": 1} and ("normal_shield_no_room", {
+              "on": "Char_CreepCorrupt", "types": ["HealthType_AI_Flesh"], "pools": [100, 5, 5]}) in lines)
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

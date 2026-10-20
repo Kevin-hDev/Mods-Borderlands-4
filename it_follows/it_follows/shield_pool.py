@@ -11,8 +11,15 @@ layer and its pool are gone and the health is untouched.
 
 The game picks the pool (bChoosePoolAutomatically, the pool 02 on the bandits): the shield's is the one whose maximum
 read nothing before and something after. When that is not one pool, nothing more is written nor taken off: taking a
-shield off names its pool, and a pool guessed could be the enemy's own armour (a boss's three bars). Never seen in
-game.
+shield off names its pool, and a pool guessed could be the enemy's own armour (a boss's three bars).
+
+The game is asked only when it can lay the shield in a pool of its own (room, 20 October 2026): never on an enemy
+whose three pools all hold something, nor on one whose pools read nothing yet. It was asked all the same on a Vile
+Creep whose pools read 222 172, 7 935 and 7 935 (no_pool, Kevin's trial of 09:08 UTC): its eridium shield then never
+broke whole and the enemy all but took no damage, which never happened without It Follows (Kevin, vérifié en jeu; two
+Nexus comments of 20 October 2026, at Senior and Predator). Kevin saw a blue bar break where the eridium should have
+(source unique); where the game laid something was never read, so it could never be taken off. An enemy read with
+no pool at all (a bat, trial 53) would get a shield sized on no health, or the same fault.
 
 The library's class default object and handles last as long as the game: built at the first use, dropped after any
 failure and built again at the next.
@@ -34,13 +41,21 @@ ASKED = 1
 REFILL_TICK_S = 0.1
 # The size written is reached within 1 %, as toughness.py's.
 TOLERANCE = 0.01
-TYPES_MOST = 6
 
 
 def shielded(actor: Any) -> bool:
     """Whether the enemy already holds a shield of the game's type, by its health types: a field read."""
-    slots = list(actor.HealthState.HealthTypeStates)[:TYPES_MOST]
-    return SHIELD in [str(getattr(slot.HealthType, "_name", "")) for slot in slots]
+    return SHIELD in health_pools.types(actor)
+
+
+def read(maxima: list[float]) -> bool:
+    """Whether the maxima ShieldPool.maxima read hold some health: one pool reading more than nothing."""
+    return any(most > 0.0 for most in maxima)
+
+
+def room(maxima: list[float]) -> bool:
+    """Whether a shield can be asked, by the maxima ShieldPool.maxima read: some health read, and a pool free."""
+    return read(maxima) and any(most <= 0.0 for most in maxima)
 
 
 class ShieldPool:
@@ -50,10 +65,16 @@ class ShieldPool:
         # By (function, parameter, name): at most 3 functions, 2 parameters, 4 names, from the code only.
         self._handles: dict[tuple[str, str, str], Any] = {}
 
-    def add(self, actor: Any, share: float) -> tuple[int, float] | None:
+    def maxima(self, actor: Any) -> list[float]:
+        """The most each of the enemy's three pools holds; zero or less for one it lacks."""
+        return [self.pools.most(actor, pool) for pool in range(len(POOLS))]
+
+    def add(self, actor: Any, share: float, before: list[float] | None = None) -> tuple[int, float] | None:
         """A shield of share of the health the enemy holds, full: its pool and the maximum read; None when no single
-        new pool was read."""
-        before = [self.pools.most(actor, pool) for pool in range(len(POOLS))]
+        new pool was read, or, the game never asked, without room. before: the maxima just read, else read here."""
+        before = self.maxima(actor) if before is None else before
+        if not room(before):
+            return None
         self._guarded(lambda: self._library().AddHealthPool(
             Context=actor, HealthType=self._handle("AddHealthPool", "HealthType", SHIELD), Segments=[],
             bChoosePoolAutomatically=True, Pool=self._handle("AddHealthPool", "Pool", POOLS[ASKED]),

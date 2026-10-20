@@ -1,7 +1,8 @@
 """Tests an enemy's shield as It Follows gives it (shield_pool): a shield of the game's type found by a field read; one
 added with the game's own call (the shield's type, the pool chosen by the game, nothing refilled, no segments), its
 pool the one that read nothing before, sized at the share of the health it held, written again for the game's bonus,
-full; when no single new pool is read, none given, nothing written nor taken off; refilled over the time asked every
+full; the game never asked for an enemy whose three pools are taken, nor for one whose pools read nothing; when no
+single new pool is read, none given, nothing written nor taken off; refilled over the time asked every
 tenth of a second; taken off its own pool; each handle of the type its parameter wants, looked up once; a call that
 fails raises and drops them all."""
 
@@ -63,10 +64,29 @@ try:
           and partial.pools[1].left == 400.0)
     game.install(state)
 
-    full = game.Enemy("Char_Full", game.Pool(100.0), game.Pool(100.0), game.Pool(100.0))
+    vile = game.Enemy("Char_CreepCorrupt", game.Pool(222172.0), game.Pool(7935.0), game.Pool(7935.0),
+                      kinds=("HealthType_AI_Flesh", "HealthType_Test_Other"))
+    check("no pool free: none", shield_pool.room(pool.maxima(vile)) is False
+          and shield_pool.room(pool.maxima(game.Enemy("Char_Two", game.Pool(1.0), game.Pool(1.0)))) is True)
     game.calls.clear()
-    check("no single new pool: none given, nothing written", pool.add(full, 0.4) is None
+    check("no pool free: the game never asked, the enemy's types untouched, nothing written",
+          pool.add(vile, 0.4) is None and game.of("AddHealthPool") == []
+          and game.types_of(vile) == ["HealthType_AI_Flesh", "HealthType_Test_Other"]
           and game.of("SetAttributeToFloat") == [] and game.of("RemoveHealthPool") == [])
+    game.calls.clear()
+    check("the maxima read before given: not read again", pool.add(vile, 0.4, [1.0, 1.0, 1.0]) is None
+          and game.of("GetValueOfAttribute") == [])
+    lone = game.Enemy("Char_Lone", game.Pool(1000.0))
+    check("the maxima read before given: the shield added in the pool free",
+          pool.add(lone, 0.4, pool.maxima(lone)) == (1, 400.0))
+    unread = game.Enemy("Char_BatRanged")
+    check("no pool read: no health, no room", pool.maxima(unread) == [-1.0, -1.0, -1.0]
+          and shield_pool.read(pool.maxima(unread)) is False and shield_pool.room(pool.maxima(unread)) is False
+          and shield_pool.read([0.0, 5.0, -1.0]) is True)
+    game.calls.clear()
+    check("no pool read: the game never asked, the enemy's types untouched", pool.add(unread, 0.4) is None
+          and game.of("AddHealthPool") == [] and game.types_of(unread) == ["HealthType_AI_Flesh"]
+          and game.of("SetAttributeToFloat") == [])
 
     class TwoPools(game.Damage):
         def AddHealthPool(self, **kwargs: object) -> int:

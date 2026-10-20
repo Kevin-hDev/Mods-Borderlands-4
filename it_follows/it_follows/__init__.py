@@ -14,7 +14,7 @@ from . import session, start_point, updates, welcome
 from .normal import hardcore, options as normal_options
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 __author__ = "kevin-hDev"
 
 

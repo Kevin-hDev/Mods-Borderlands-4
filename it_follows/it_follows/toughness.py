@@ -20,6 +20,10 @@ body's health again (one case), and that body is raised as a new one. Normal tou
 The normal mode's Hardcore changes the factor during a game (decision 89): harden sets the factor of the enemies met
 next, and reach writes it on one enemy already raised, as the game's own base times it, its share kept: the game's
 base is known since the first raise, and the maximum is that base times the game's bonus (MV1).
+
+Every pool is raised, a Vile's eridium shield too: its two layers of HealthType_AI_Corruption (the pools 02 and 03 by
+the types' order, not read), raised ×1.87 at Senior, still broke; 14 Vile met, all killed (20 October 2026, vérifié
+en jeu). The lines written down say each enemy's health types.
 """
 
 from typing import Any, Callable
@@ -100,6 +104,10 @@ class Toughness:
             self.tended[name] = pools
         if self.detailed < DETAILED or "failed" in line:
             self.detailed += 1
+            try:
+                line["types"] = health_pools.types(actor)
+            except Exception as error:
+                line["types"] = f"unread:{type(error).__name__}"
             self.note("health_raised", on=name, **line)
         return 1 if pools and "failed" not in line else 0
 

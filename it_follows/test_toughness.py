@@ -7,7 +7,8 @@ the game's base, never laid twice, never so for a maximum near it by nature; a p
 fails is said, those raised before it given back; the enemies tended, the ones detailed and the bodies remembered all
 bounded. The Hardcore's factor changed during a game: reached on an enemy raised, one write a pool from the game's
 base, its share kept, without a line; back to the level's; the enemies met next raised by the new factor; one never
-raised said so; a pool that fails said."""
+raised said so; a pool that fails said. Each line written down says the enemy's health types, or that they could not
+be read."""
 
 import pathlib
 import sys
@@ -67,7 +68,8 @@ try:
           == ["ai_health_resource_01_max_value", "ai_health_resource_01_max_value", "ai_health_resource_02_max_value"])
     check("the raise announced once, before the first call, and written down",
           announced == [("SetAttributeToFloat", True, {"on": "Char_Psycho", "health": 1.2})]
-          and notes == [("health_raised", {"on": "Char_Psycho", "pool_1": [1300, 1560], "pool_2": [500, 600]})])
+          and notes == [("health_raised", {"on": "Char_Psycho", "pool_1": [1300, 1560], "pool_2": [500, 600],
+                                           "types": ["HealthType_AI_Flesh"]})])
     check("each pool kept with the game's own base and the maximum reached",
           [(pool, round(base), round(most)) for pool, base, most in buff.tended["Char_Psycho"]]
           == [(0, 1000, 1560), (1, 500, 600)])
@@ -167,13 +169,15 @@ try:
     empty = game.Enemy("Char_Ghost")
     notes.clear()
     check("an enemy with no pool is neither raised nor kept, and said so", buff.start([chaser(empty)]) == 0
-          and "Char_Ghost" not in buff.tended and notes == [("health_raised", {"on": "Char_Ghost", "pools": 0})])
+          and "Char_Ghost" not in buff.tended and notes == [("health_raised", {"on": "Char_Ghost", "pools": 0,
+                                                                    "types": ["HealthType_AI_Flesh"]})])
 
     game.refused.add("GetResourcePoolPercent")
     notes.clear()
     broken = game.Enemy("Char_Broken", game.Pool(100.0))
     check("a pool that fails is said, the enemy not counted", buff.start([chaser(broken)]) == 0
-          and notes == [("health_raised", {"on": "Char_Broken", "failed": "RuntimeError"})]
+          and notes == [("health_raised", {"on": "Char_Broken", "failed": "RuntimeError",
+                                        "types": ["HealthType_AI_Flesh"]})]
           and "Char_Broken" not in buff.tended)
     game.refused.clear()
     half = game.Enemy("Char_Half", game.Pool(100.0), game.Pool(50.0))
@@ -208,6 +212,26 @@ try:
     check("the bodies remembered bounded, the oldest forgotten first, no enemy kept once let go",
           len(toughness_module._left) == toughness_module.LEFT_MOST and "Char_K0" not in toughness_module._left
           and f"Char_K{toughness_module.LEFT_MOST + 4}" in toughness_module._left and long_run.tended == {})
+
+    vile = game.Enemy("Char_CreepCorrupt", game.Pool(100.0), game.Pool(5.0), game.Pool(5.0),
+                      kinds=("HealthType_AI_Flesh", "HealthType_Test_Other"))
+    notes.clear()
+    check("every pool raised, the line saying the enemy's health types", toughness(1.5).start([chaser(vile)]) == 1
+          and notes[0][1]["types"] == ["HealthType_AI_Flesh", "HealthType_Test_Other"]
+          and [notes[0][1][f"pool_{n}"] for n in (1, 2, 3)] == [[100, 150], [5, 8], [5, 8]])
+    real_types = toughness_module.health_pools.types
+
+    def unreadable(actor: object) -> list[str]:
+        raise AttributeError("HealthTypeStates")
+
+    toughness_module.health_pools.types = unreadable
+    notes.clear()
+    try:
+        counted = toughness(1.5).start([chaser(game.Enemy("Char_Blind", game.Pool(10.0)))])
+    finally:
+        toughness_module.health_pools.types = real_types
+    check("types that cannot be read: said so, the enemy raised all the same", counted == 1
+          and notes[0][1]["types"] == "unread:AttributeError" and notes[0][1]["pool_1"] == [10, 15])
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

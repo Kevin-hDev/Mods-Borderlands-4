@@ -104,8 +104,13 @@ class Damage:
                 kwargs["bChoosePoolAutomatically"], kwargs["bRefillAllHealth"], kwargs["RefillPercent"],
                 kwargs["Segments"])
         free = [index for index, pool in enumerate(actor.pools) if pool is None]
-        if free and kwargs["HealthType"].name == SHIELD:
-            actor.pools[free[0]] = Pool(actor.pools[0].most / SHIELD_BONUS, bonus=SHIELD_BONUS)
+        health = actor.pools[0].most if actor.pools[0] is not None else 0.0
+        if free and health > 0.0 and kwargs["HealthType"].name == SHIELD:
+            actor.pools[free[0]] = Pool(health / SHIELD_BONUS, bonus=SHIELD_BONUS)
+            give_type(actor, SHIELD)
+        elif kwargs["HealthType"].name == SHIELD:
+            # No pool free, or no health to size it on: the type laid without a pool of its own, as a Vile Creep
+            # showed (20 October 2026).
             give_type(actor, SHIELD)
         return 1
 

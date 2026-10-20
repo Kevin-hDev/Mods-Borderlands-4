@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.9 - 2026-10-20
+
+- Normal mode: Vile enemies no longer stay nearly immortal at Senior and Predator. Their eridium shield breaks fully again when you destroy their growths.
+
 ## 1.0.8 - 2026-10-19
 
 - Options: new "Lost Loot: 400 items" option, the Lost Loot machine keeps up to 400 items instead of the game's limit.
