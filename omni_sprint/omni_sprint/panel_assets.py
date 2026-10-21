@@ -12,10 +12,12 @@ import unrealsdk
 
 from . import panel_widgets as w, report
 
-# Noto Sans SC cut to the Chinese a mod's texts use (outils/chinese_font.py), shipped by the mods offering Chinese.
+# Noto Sans SC and JP cut to the Chinese and Japanese a mod's texts use (outils/menu_fonts.py), shipped by the mods
+# offering that language.
 CHINESE_FONTS = ("NotoSansSC-Black.ttf", "NotoSansSC-Medium.ttf", "NotoSansSC-ExtraBold.ttf")
+JAPANESE_FONTS = ("NotoSansJP-Black.ttf", "NotoSansJP-Medium.ttf", "NotoSansJP-ExtraBold.ttf")
 FONTS = ("Anton-Regular.ttf", "BarlowCondensed-Medium.ttf", "BarlowCondensed-SemiBold.ttf",
-         "BarlowCondensed-ExtraBold.ttf", *CHINESE_FONTS)
+         "BarlowCondensed-ExtraBold.ttf", *CHINESE_FONTS, *JAPANESE_FONTS)
 AVATAR = "avatar.png"
 NAMES = (*FONTS, AVATAR)
 FOLDER = "omni_sprint_ui"

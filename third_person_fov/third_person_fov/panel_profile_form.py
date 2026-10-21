@@ -185,7 +185,10 @@ class ProfileForm:
     def _set_key(self, profiles, device, key):
         draft = profiles.draft
         chosen = {"keyboard": draft.keyboard, "controller": draft.controller, device: key}
-        if key is not None and key in {option.value for option in self.form.model.command_options.values()}:
+        taken = {option.value for option in self.form.model.command_options.values()}
+        if self.form.open_key is not None:
+            taken.add(self.form.open_key.key())  # the key that opens the window (open_key.py)
+        if key is not None and key in taken:
             self.notice = "key_command"
             return
         try:

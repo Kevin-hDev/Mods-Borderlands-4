@@ -7,7 +7,7 @@ from . import panel_assets as assets, panel_buttons as b, panel_text as tx, pane
 from . import panel_window_size as size
 
 # A language's button is named in its own words, so a player lost in another one still finds theirs (2026-09-24).
-BUTTON_NAMES = {"ZH": "中文"}
+BUTTON_NAMES = {"ZH": "中文", "JA": "日本語"}
 
 
 def language_button(language):

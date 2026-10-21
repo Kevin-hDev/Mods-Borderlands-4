@@ -36,7 +36,8 @@ library = types.SimpleNamespace(view_start=Function(), view_stop=Function(),
                                 view_set_suspended=Function(), view_set_right=Function(True),
                                 view_stats=Function())
 interaction_library = types.SimpleNamespace(interaction_start=Function(), interaction_stop=Function(),
-                                             interaction_stats=Function())
+                                             interaction_stats=Function(), beam_start=Function(),
+                                             beam_stop=Function(), beam_stats=Function())
 kismet = object()
 sdk = types.SimpleNamespace(make_struct=lambda *_args, **kwargs: types.SimpleNamespace(**kwargs))
 
@@ -86,6 +87,13 @@ class BootstrapTests(unittest.TestCase):
 
     def test_missing_interaction_library_keeps_camera(self):
         self.assert_camera_works(self.attach(None))
+
+    def test_a_library_without_beams_keeps_the_eyes_and_the_camera(self):
+        eyes_only = types.SimpleNamespace(interaction_start=Function(), interaction_stop=Function(),
+                                          interaction_stats=Function())
+        self.assert_camera_works(self.attach(eyes_only))
+        self.assertIn('beam alignment setup failed: AttributeError', self.messages)
+        self.assertNotIn('interaction alignment setup failed: AttributeError', self.messages)
 
     def test_incompatible_interaction_exports_keep_camera(self):
         self.assert_camera_works(self.attach(types.SimpleNamespace()))

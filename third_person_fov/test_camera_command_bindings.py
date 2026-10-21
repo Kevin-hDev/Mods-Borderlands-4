@@ -38,7 +38,7 @@ assert settings.commands.defaults() == {
     "camera_distance_key": EIGHT, "camera_distance_controller": None,
     "sniper_zoom_key": FREE_LOOK, "sniper_zoom_controller": "Gamepad_LeftThumbstick",
 }
-assert tuple(third_person_fov.mod.kwargs["keybinds"]) == (*settings.commands.binds, third_person_fov.open_key.bind)
+assert tuple(third_person_fov.mod.kwargs["keybinds"]) == (*settings.commands.binds, settings.open_key.bind)
 
 settings.commands.apply({"shoulder_key": "F6"})
 settings.commands.align()

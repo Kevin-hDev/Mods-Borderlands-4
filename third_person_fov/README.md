@@ -1,6 +1,6 @@
 # Third Person & FOV
 
-Version **1.2.9**.
+Version **1.2.10**.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
@@ -46,7 +46,7 @@ Tested in single player on game version **1.10.2-4845623**. Windows only.
   unless you hold a movement key; first person switches to third person while held. A vehicle keeps its speed and
   goes straight until you brake. Aiming ends it. Hold or press-to-toggle and the hold time (0.20 s) are set on the Camera page.
 
-Its settings window, in English, French and Simplified Chinese, has a **Camera** page, split into CAMERA VIEW and SHOULDER
+Its settings window, in English, French, Simplified Chinese and Japanese, has a **Camera** page, split into CAMERA VIEW and SHOULDER
 VIEW by two buttons at its top, and a **Commands** page. F7 opens the window in game and closes it; the key is changed,
 or removed, at the top of the Commands page, and no camera command or profile can share it. The Commands page sets
 every camera key, for keyboard and mouse and for controller, with PlayStation or Xbox icons: third person (P by

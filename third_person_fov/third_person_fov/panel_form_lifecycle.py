@@ -27,6 +27,8 @@ class Lifecycle:
     # The update notes on show and the page open (panel_updates.py).
     update_notes = ()
     update_page = 0
+    # The key that opens the window in game (open_key.py), made by the camera mods' form when the mod has one.
+    open_key = None
 
     def resolve(self):
         widgets = {name: reference() for name, reference in self.widgets.items()}
@@ -69,6 +71,26 @@ class Lifecycle:
         updates = updates_module()
         if updates is not None:
             updates.open_if_due(self, widgets)
+
+    def open_key_closes(self, widgets):
+        """Whether the key that opens the window was just let go: the window then closes as with Close."""
+        if self.open_key is None:
+            return False
+        from . import panel_open_key
+        return panel_open_key.closing(self, widgets)
+
+    def poll_open_key(self, widgets):
+        """The COMMANDS page's MENU SHORTCUT card; whether it handled something."""
+        if self.open_key is None or self.model.pages[self.page] != "commands":
+            return False
+        from . import panel_open_key
+        return panel_open_key.poll(self, widgets)
+
+    def selecting_open_key(self, widgets):
+        if self.open_key is None:
+            return False
+        from . import panel_open_key
+        return panel_open_key.selecting(widgets)
 
     def failure_notice(self):
         return getattr(self.model.transaction, "failure_reason", "failed") or "failed"

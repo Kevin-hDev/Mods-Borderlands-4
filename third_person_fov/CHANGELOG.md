@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.10 - 2026-10-22
+
+- New: the mod's window is now also in Japanese. Choose 日本語 at the top of the window.
+- Fix: in third person, beam weapons such as the Ohm I Got hit where the crosshair points.
+- Fix: in third person, thrown knives and grenades leave your hand and fly to the crosshair, instead of appearing beside you.
+
 ## 1.2.9 - 2026-10-18
 
 - New: F7 opens the mod's window in game, and closes it. Change the key at the top of the COMMANDS page.

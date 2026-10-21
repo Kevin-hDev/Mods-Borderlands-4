@@ -7,7 +7,7 @@ window, never while a key is chosen, a pop-up or a profile's window is open; the
 from types import SimpleNamespace as NS
 
 import panel_fixture as f
-from third_person_fov import open_key, panel_open_key, settings
+from third_person_fov import open_key as module, settings
 from third_person_fov.control_escape import EscapeWatch
 
 fails: list[str] = []
@@ -32,7 +32,8 @@ class Watch:
         return self.let_go and not busy
 
 
-open_key.EscapeWatch = Watch
+module.EscapeWatch = Watch
+open_key = settings.open_key
 root, widgets, form = f.build()
 ROW = "open_window:keyboard"
 selector = widgets[f"command:{ROW}"]
@@ -104,8 +105,9 @@ try:
     check("a camera command refused the key that opens the window",
           settings.commands.option("third_person_key").value == "P"
           and status() == "This key opens this window (MENU SHORTCUT): choose another one.")
-    check("a camera profile refused it too: it is one of the keys the profile window checks",
-          "K" in {option.value for option in form.model.command_options.values()})
+    form.profile_form.notice = None
+    form.profile_form._set_key(NS(draft=NS(keyboard=None, controller=None)), "keyboard", "K")
+    check("a camera profile refused it too", form.profile_form.notice == "key_command")
     settings.commands.apply({"orbit_key": "K"})
     check("a camera command saved with that key before keeps it, this one doing nothing",
           open_key.chosen() == "K" and open_key.key() is None)

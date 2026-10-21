@@ -146,9 +146,53 @@ ZH = {
     "profile_off_page": "请在「预设」页面将它关闭。",
     "profile_off_key": "请在「预设」页面或用它的按键将它关闭。",
 }
+JA = {
+    "profile_new": "新しいプロファイル",
+    "profile_edit": "プロファイルを編集",
+    "profile_desc": "ゲーム画面を見ながら調整します。「キャンセル」か「保存」でメニューに戻り、Escで閉じます。",
+    "profile_name": "プロファイル名",
+    "profile_key": "プロファイルのキー",
+    "profile_close": "距離：近い",
+    "profile_far": "距離：遠い",
+    "profile_word": "プロファイル",
+    "profile_cancel": "キャンセル",
+    "profile_save": "保存",
+    "name_invalid": "名前が無効です：1～24文字で、文字、数字、スペース、ハイフン、アポストロフィ、アンダースコアが"
+                    "使えます。文字か数字を1つ以上含めてください。",
+    "name_taken": "この名前はすでに別のプロファイルが使っています。別の名前を選んでください。",
+    "key_taken": "このキーはすでに別のプロファイルが使っています。別のキーを選んでください。",
+    "key_command": "このキーはすでにカメラ操作に使われています（「キー割り当て」ページ）。別のキーを選んでください。",
+    "command_held": "プロファイル「{name}」がすでにこのキーを使っています。別のキーを選ぶか、「プロファイル」ページで"
+                    "そのプロファイルのキーを変更してください。",
+    "key_invalid": "このキーではプロファイルを切り替えられません。別のキーを選んでください。",
+    "profiles_full": "プロファイルはすでに上限の10個あります。このプロファイルは保存されていません。",
+    "profile_unknown": "このプロファイルはもう存在しません。「キャンセル」でウィンドウを閉じてください。",
+    "save_failed": "プロファイルのファイルに書き込めませんでした。何も保存されていません。設定はこのウィンドウに残っています。",
+    "profile_refused": "このプロファイルを保存できませんでした。設定はこのウィンドウに残っています。",
+    "profiles_desc": "同時にオンにできるプロファイルは1つだけです。キーを押すとオンになり、もう一度押すと「カメラ視点」と"
+                     "「肩越し視点」の設定に戻ります。",
+    "profile_on": "オン",
+    "profile_off": "オフ",
+    "profile_modify": "編集",
+    "profile_delete": "削除",
+    "profile_values": "FOV {fov} · 近い {close} · 遠い {far} · 間隔 {spacing} · 高さ {height}。コントローラー：{controller}。",
+    "profile_no_key": "なし",
+    "toggle_failed": "プロファイルのファイルに書き込めませんでした。何も変更されていません。",
+    "delete_failed": "プロファイルのファイルに書き込めませんでした。プロファイルは削除されていません。",
+    "profile_delete_title": "プロファイルを削除",
+    "profile_delete_key": "プロファイル「{name}」とそのキーが削除されます。",
+    "profile_delete_keys": "プロファイル「{name}」とそのキーが削除されます。",
+    "profile_delete_plain": "プロファイル「{name}」が削除されます。",
+    "profile_delete_on": "このプロファイルはオンです。カメラは「カメラ視点」と「肩越し視点」の設定に戻ります。",
+    "profile_delete_rest": "ほかのプロファイルと、「カメラ視点」「肩越し視点」の設定は変わりません。",
+    "profile_held_camera": "FOVと距離はプロファイル「{name}」で設定されています。",
+    "profile_held": "プロファイル「{name}」で設定されています。",
+    "profile_off_page": "「プロファイル」ページでオフにしてください。",
+    "profile_off_key": "「プロファイル」ページか、そのキーでオフにしてください。",
+}
 # The store's refusals the window names (profile_store.py); any other reads as profile_refused.
 REFUSALS = ("name_invalid", "name_taken", "key_taken", "key_invalid", "profiles_full", "profile_unknown")
 
 
 def text(key, language):
-    return {"FR": FR, "ZH": ZH}.get(language, EN)[key]
+    return {"FR": FR, "ZH": ZH, "JA": JA}.get(language, EN)[key]

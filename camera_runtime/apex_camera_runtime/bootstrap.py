@@ -9,6 +9,7 @@ from .ads_bridge import AdsBridge
 from .build_preflight import BuildPreflight
 from .ads_context import ContextReader
 from .ads_session import AdsSession
+from .beam_bridge import BeamBridge
 from .camera_bridge import CameraBridge
 from .framing_bridge import FramingBridge
 from .framing_session import FramingSession
@@ -18,6 +19,7 @@ from .generated_limits import RUNTIME_FOLDER
 from .native_bridge import Bridge, load_packaged_library
 from .shoulder_offset import ShoulderOffset
 from .third_person import ThirdPersonController
+from .thrown_from_hand import ThrownFromHand
 
 IDENTIFIER = "apex_camera_runtime"
 
@@ -33,11 +35,19 @@ def attach(runtime: Any, library: Any, interaction_library: Any, hooks: Any, sdk
         # No native start has run yet; CameraBridge reports degraded operation on activation.
         interaction = None
         log(f"interaction alignment setup failed: {type(error).__name__}")
+    try:
+        beam = BeamBridge(interaction_library) if interaction is not None else None
+    except Exception as error:
+        # A library without the beam exports keeps the eyes.
+        beam = None
+        log(f"beam alignment setup failed: {type(error).__name__}")
     shoulder = ShoulderOffset()
     collision = CameraGuard(kismet, sdk, weak_ref, log, shoulder, status_log)
     preflight = BuildPreflight(library, log)
     preflight.start()
-    bridge = CameraBridge(Bridge(library), interaction, log, collision=collision, shoulder=shoulder)
+    thrown = ThrownFromHand(hooks, sdk, kismet, weak_ref, log, status_log or log)
+    bridge = CameraBridge(Bridge(library), interaction, log, collision=collision, shoulder=shoulder,
+                          beam=beam, sdk=sdk, thrown=thrown)
     framing = None
     try:
         native_ads = AdsBridge(library, log, preflight=preflight)

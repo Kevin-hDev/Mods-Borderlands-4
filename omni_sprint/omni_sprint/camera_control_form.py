@@ -7,8 +7,8 @@ from .camera_control_config import SLOTS
 
 
 class Form:
-    def __init__(self, widgets, actions):
-        self.widgets, self.actions = widgets, actions
+    def __init__(self, widgets, actions, open_key=None):
+        self.widgets, self.actions, self.open_key = widgets, actions, open_key
         self.draft = ()
         self.changed, self.notice = False, "ready"
 
@@ -45,10 +45,13 @@ class Form:
     def _finish(self, widgets, action, device, key):
         self.draft = (action, device, key)
         assign = getattr(self.actions, "assign_command", None) or self.actions.assign
-        success = assign(action, device, key)
+        # One press never does two things: the key that opens the window is no command's (open_key.py).
+        taken = key is not None and self.open_key is not None and key == self.open_key.key()
+        success = not taken and assign(action, device, key)
         self.changed = True
         status_owner = getattr(self.actions, "command_actions", self.actions)
-        self.notice = "saved" if success else getattr(status_owner, "last_status", "failed")
+        self.notice = ("saved" if success else "key_opens_window" if taken
+                       else getattr(status_owner, "last_status", "failed"))
         widgets["commands_status"].SetText(self.notice)
         self.clear_selector(widgets[f"command:{action}:{device}"])
         self.draft = ()

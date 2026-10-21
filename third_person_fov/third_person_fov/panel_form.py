@@ -7,11 +7,8 @@ from . import panel_camera_tabs as tabs, panel_ownership
 
 from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
 from . import panel_theme_choice
-from . import panel_size_choice
+from . import panel_language_choice, panel_size_choice
 from .panel_form_lifecycle import Lifecycle
-# Third Person & FOV's key that opens the window (outils/sync_menu_third_person_open_key.py)
-from . import panel_open_key
-from .panel_preferences import LANGUAGES
 
 # A setting that changes nothing while its switch is off; this mod's FOV has no switch of its own, so it is
 # always on, and on again when a camera profile that held it goes off (panel_profile_grey.py).
@@ -34,10 +31,12 @@ class PanelForm(Lifecycle):
         self.focus = widgets["focus"]
         self.command_form = self.command_catalogue = None
         if model.command_actions is not None:
+            from .camera_control_config import OPEN_KEY
             from .camera_control_form import Form
             from .panel_glyphs import Catalogue
             from .panel_profile_form import ProfileForm
-            self.command_form, self.command_catalogue = Form(widgets, model), Catalogue()
+            self.open_key = OPEN_KEY
+            self.command_form, self.command_catalogue = Form(widgets, model, OPEN_KEY), Catalogue()
             self.profile_form = ProfileForm(self)
         self.sync(self.resolve())
         panel_ownership.refresh(self, self.resolve())
@@ -172,8 +171,6 @@ class PanelForm(Lifecycle):
 
     def poll(self):
         widgets, now = self.resolve(), time.perf_counter_ns()
-        if panel_open_key.closing(self, widgets):
-            return self.flush(widgets)
         panel_ownership.update(self, widgets)
         self.refresh_aim(widgets)
         if "sensitivity_weapons" in self.model.options:
@@ -182,6 +179,8 @@ class PanelForm(Lifecycle):
         if "omni_body" in self.model.options:
             from . import panel_omni_direction
             panel_omni_direction.refresh(self, widgets)
+        if self.open_key_closes(widgets):
+            return self.flush(widgets)
         outcome = self.model.advance()
         if outcome is not None:
             self.notice = self.failure_notice() if outcome == "failed" else outcome
@@ -197,13 +196,8 @@ class PanelForm(Lifecycle):
         if self.take(widgets["window_size"]):
             panel_size_choice.choose(self, widgets)
             return False
-        for language in LANGUAGES:
-            if self.take(widgets[language]):
-                if self.flush(widgets) and self.model.change_language(language):
-                    self.refresh_labels(widgets)
-                else:
-                    self.report(widgets, "failed")
-                return False
+        if panel_language_choice.choose(self, widgets):
+            return False
         for family in ("PS5", "XSX"):
             if self.command_form is not None and self.take(widgets[f"icons:{family}"]):
                 if self.model.change_controller_icons(family):
@@ -236,7 +230,7 @@ class PanelForm(Lifecycle):
                 return False
         if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
             self.flush(widgets)
-        if self.model.pages[self.page] == "commands" and panel_open_key.poll(self, widgets):
+        if self.poll_open_key(widgets):
             return False
         if (not self.model.camera_elsewhere and self.command_form is not None and not self.model.transaction.pending
                 and self.model.pages[self.page] == "commands"):
@@ -251,5 +245,5 @@ class PanelForm(Lifecycle):
                                  for key, option in self.model.options.items())
         commands_selecting = (self.command_form is not None and self.model.pages[self.page] == "commands"
                               and self.command_form.selecting())
-        return (settings_selecting or commands_selecting or panel_open_key.selecting(widgets)
+        return (settings_selecting or commands_selecting or self.selecting_open_key(widgets)
                 or bool(self.profile_form and self.profile_form.selecting()))

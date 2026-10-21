@@ -5,6 +5,14 @@
 #include <cstring>
 
 namespace apex_interaction {
+void forward(const double rotation[3], double direction[3]) {
+    const double pitch = rotation[0] * radians_per_degree;
+    const double yaw = rotation[1] * radians_per_degree;
+    direction[0] = std::cos(pitch) * std::cos(yaw);
+    direction[1] = std::cos(pitch) * std::sin(yaw);
+    direction[2] = std::sin(pitch);
+}
+
 bool align(const View& eyes, const View& camera, View& aligned) {
     double distance_squared = 0;
     for (size_t i = 0; i < 3; ++i) {
@@ -16,17 +24,15 @@ bool align(const View& eyes, const View& camera, View& aligned) {
         distance_squared += delta * delta;
     }
     if (distance_squared > max_camera_distance * max_camera_distance) return false;
-    const double pitch = camera.rotation[0] * radians_per_degree;
-    const double yaw = camera.rotation[1] * radians_per_degree;
-    const double forward[] = {std::cos(pitch) * std::cos(yaw),
-                              std::cos(pitch) * std::sin(yaw), std::sin(pitch)};
+    double ahead[3]{};
+    forward(camera.rotation, ahead);
     double depth = 0;
-    for (size_t i = 0; i < 3; ++i) depth += (eyes.origin[i] - camera.origin[i]) * forward[i];
+    for (size_t i = 0; i < 3; ++i) depth += (eyes.origin[i] - camera.origin[i]) * ahead[i];
     if (depth < 0) return false;
     aligned = eyes;
     // Onto the camera ray at the eyes' own depth: starting at the camera itself would spend 2.6 m of every
     // fixed-length line (pickups) on the camera boom and meet what stands between the camera and the hunter.
-    for (size_t i = 0; i < 3; ++i) aligned.origin[i] = camera.origin[i] + depth * forward[i];
+    for (size_t i = 0; i < 3; ++i) aligned.origin[i] = camera.origin[i] + depth * ahead[i];
     // Pitch and yaw make the direction, the crosshair's even while the dynamic camera turns the view;
     // the game's roll stays, the eyes being level.
     aligned.rotation[0] = camera.rotation[0];

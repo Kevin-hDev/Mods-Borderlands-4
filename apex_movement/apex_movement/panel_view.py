@@ -98,6 +98,7 @@ def build_view(pc, model, _return_to_menu=True):
     root = w.new("ScaleBox", pc)
     root.SetStretch(w.enum("EStretch", "ScaleToFit"))
     template = w.new("InputKeySelector", root).WidgetStyle.Normal
+    fonts.use(model.language)  # Japanese draws from its own faces (panel_fonts.py)
     loaded = fonts.build(root)
     tx.use(loaded)
     try:

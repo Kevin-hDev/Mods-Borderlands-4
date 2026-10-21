@@ -34,11 +34,15 @@ REST = 0.01
 ZERO = (0.0, 0.0, 0.0)
 
 
-def to_camera(world: tuple, pitch: float, yaw: float) -> tuple[float, float, float]:
+def view_axes(pitch: float, yaw: float) -> tuple:
+    """Forward, right and up of a view (degrees) in the world; right stays level."""
     p, y = math.radians(pitch), math.radians(yaw)
     sp, cp, sy, cy = math.sin(p), math.cos(p), math.sin(y), math.cos(y)
-    axes = ((cp * cy, cp * sy, sp), (-sy, cy, 0.0), (-sp * cy, -sp * sy, cp))
-    return tuple(sum(w * a for w, a in zip(world, axis)) for axis in axes)
+    return (cp * cy, cp * sy, sp), (-sy, cy, 0.0), (-sp * cy, -sp * sy, cp)
+
+
+def to_camera(world: tuple, pitch: float, yaw: float) -> tuple[float, float, float]:
+    return tuple(sum(w * a for w, a in zip(world, axis)) for axis in view_axes(pitch, yaw))
 
 
 def clamp(values: tuple) -> tuple:

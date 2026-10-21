@@ -109,6 +109,11 @@ check("a switch already on is not written or said again",
       sum("bServerAcceptClientAuthoritativePosition True" in line for line in lines()) == 1)
 guests.update(host, 2 * S + 2, wanted({"GravityScale": 2.0}))
 check("and given back off, as a switch", moved.bServerAcceptClientAuthoritativePosition is False)
+moved.bServerAcceptClientAuthoritativePosition = True
+guests.update(host, 2 * S + 2, wanted({"GravityScale": 2.0, "bServerAcceptClientAuthoritativePosition": True}))
+guests.update(host, 2 * S + 2, wanted({"GravityScale": 2.0}))
+check("a switch found on, by Apex Grapple during a rope, still goes back off",
+      moved.bServerAcceptClientAuthoritativePosition is False)
 
 # 3. A field no movement wants any more gets the game's value back.
 guests.update(host, 2 * S + 3, wanted({"GravityScale": 2.0}))

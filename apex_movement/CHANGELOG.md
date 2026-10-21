@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.27 - 2026-10-22
+
+- New: the mod's window is now also in Japanese. Choose 日本語 on the OPTIONS page.
+- Co-op with Apex Grapple: after a joining player's grapple, their movement is handed back to the game as it should be.
+- Fix: in third person, beam weapons such as the Ohm I Got hit where the crosshair points.
+- Fix: in third person, thrown knives and grenades leave your hand and fly to the crosshair, instead of appearing beside you.
+
 ## 1.2.26 - 2026-10-18
 
 - New: F10 opens the mod's window in game, and closes it. Change the key at the top of the COMMANDS page.

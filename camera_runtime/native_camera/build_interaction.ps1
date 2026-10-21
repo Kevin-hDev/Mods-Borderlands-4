@@ -15,10 +15,11 @@ foreach ($line in $environmentLines) {
 }
 $common = @('/nologo', '/std:c++17', '/EHsc', '/W4', '/WX', '/O2', '/MT', '/Brepro', '/DNOMINMAX')
 $sources = @((Join-Path $sourceRoot 'interaction_alignment.cpp'),
-             (Join-Path $sourceRoot 'interaction_bridge.cpp'))
+             (Join-Path $sourceRoot 'interaction_bridge.cpp'),
+             (Join-Path $sourceRoot 'beam_bridge.cpp'))
 Push-Location $buildRoot
 try {
-    foreach ($test in @('test_interaction_alignment', 'test_interaction_bridge')) {
+    foreach ($test in @('test_interaction_alignment', 'test_interaction_bridge', 'test_beam_bridge')) {
         & cl.exe @common @sources (Join-Path $sourceRoot "$test.cpp") "/Fe:$test.exe"
         if ($LASTEXITCODE -ne 0) { throw 'Native test build failed' }
         & (Join-Path $buildRoot "$test.exe")

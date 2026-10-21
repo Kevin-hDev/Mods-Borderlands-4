@@ -5,6 +5,7 @@ from . import panel_buttons as b, panel_fonts as fonts, panel_header as h
 from . import panel_modal as modal, panel_window_size as size
 from . import panel_camera_pages as pages, panel_camera_tabs as tabs, panel_pages as p
 from . import panel_text as tx, panel_theme as t, panel_widgets as w, report
+from .panel_form_lifecycle import updates_module
 
 
 def _sidebar(owner, widgets, template):
@@ -95,11 +96,15 @@ def build_view(pc, model, _return_to_menu=True):
     root = w.new("ScaleBox", pc)
     root.SetStretch(w.enum("EStretch", "ScaleToFit"))
     template = w.new("InputKeySelector", root).WidgetStyle.Normal
+    fonts.use(model.language)  # Japanese draws from its own faces (panel_fonts.py)
     loaded = fonts.build(root)
     tx.use(loaded)
     try:
         widgets = {}
         avatar = _window(root, pc, model, widgets, template)
+        updates = updates_module()
+        if updates is not None:
+            updates.build(widgets, template)
         holder = modal.held(pc, root)
         if model.camera_options:
             # The camera profile window, beside the menu on the screen's layer, closed (panel_profile_window.py).

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.9 - 2026-10-22
+
+- Fix: in third person, beam weapons such as the Ohm I Got hit where the crosshair points.
+- Fix: in third person, thrown knives and grenades leave your hand and fly to the crosshair, instead of appearing beside you.
+
 ## 1.2.8 - 2026-10-13
 
 - New: the settings window is now also in Simplified Chinese. Choose 中文 at the top of the window.

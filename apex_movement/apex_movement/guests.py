@@ -164,7 +164,9 @@ def _follow(found: list[Any]) -> None:
 def _apply(guest: _Guest, movement: Any, wanted: dict[str, Any]) -> None:
     for field, value in wanted.items():
         current = _read(movement, field)
-        guest.originals.setdefault(field, current)
+        # A switch goes back off, the engine's own value, never as found: Apex Grapple turns the same trust switches on
+        # during a guest's rope, and one found on then would be put back on for good.
+        guest.originals.setdefault(field, False if isinstance(value, bool) else current)
         if _differs(current, value):
             _put(movement, field, value)
             _say_field(guest, field, f"co-op guest {guest.name}: {field} {value}")

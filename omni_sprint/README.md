@@ -1,6 +1,6 @@
 # Omni Sprint
 
-Version **1.2.8**.
+Version **1.2.9**.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 

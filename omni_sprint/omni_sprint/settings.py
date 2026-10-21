@@ -142,6 +142,7 @@ commands = CameraCommands(third_person=_toggle_third_person, shoulder=_toggle_sh
                           zoom_in=lambda: _zoom(-1), zoom_out=lambda: _zoom(1), camera_distance=_cycle_distance)
 free_look = FreeLookOptions(commands)
 optics = WeaponOpticOptions(commands)
+open_key = None  # no key opens the window (Kevin, 2026-10-18: « non rien pour omni sprint »)
 (third_person_bind, third_person_controller_bind, shoulder_bind, shoulder_controller_bind,
  orbit_bind, orbit_controller_bind) = commands.binds[:6]
 (third_person_key, third_person_controller, shoulder_key, shoulder_controller,

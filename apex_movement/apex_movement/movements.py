@@ -25,15 +25,14 @@ UI_SHARED = (
     "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_options_tabs", "panel_pages",
     "panel_preferences", "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_theme_choice",
     "panel_toggle", "panel_view", "panel_widgets", "panel_size_choice", "panel_window_size", "panel_scroll", "panel_dynamic",
-    "panel_popup",
+    "panel_popup", "panel_language_choice",
     # Apex Grapple's choice rows and page sentence, which its pages draw in every window (2026-10-14); no menu line
     # of this mod names a choice or a sentence yet, so they wait unused.
     "panel_choices", "panel_notice",
     # The header draws the camera profiles' floppy in every file, collapsed where there is no camera (2026-10-12).
     "panel_profile_floppy",
-    # The Chinese words the camera mods share are translated here once (2026-10-12); this mod does not offer
-    # Chinese yet (outils/menu_languages.py), so they wait unread.
-    "panel_common_zh", "panel_zh",
+    # The Chinese and Japanese words the camera mods share are translated here once (2026-10-12, 2026-10-21).
+    "panel_common_zh", "panel_zh", "panel_common_ja", "panel_ja",
 )
 # Every separate movement must configure itself without another mod installed; hence the window is shared by
 # all movement archives. Its visual modules are generated from Apex Grapple's approved design source.

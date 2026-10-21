@@ -5,7 +5,7 @@ import math
 
 from mods_base import KeybindOption
 
-from . import camera, menu, open_key, panel_preferences as prefs, report, settings
+from . import camera, menu, panel_preferences as prefs, report, settings
 from . import panel_toggle
 from .panel_transaction import Transaction, write_options
 from .panel_restore import Restore
@@ -24,7 +24,7 @@ class Model(Restore):
         self.camera_options = {option.identifier: option for group in menu.CAMERA
                                for option in group.children}
         self.options = {option.identifier: option for group in self.groups for option in group.children}
-        self.command_options = {option.identifier: option for option in (*settings.commands.options, open_key.option)}
+        self.command_options = {option.identifier: option for option in settings.commands.options}
         from .camera_control_actions import Actions
         self.command_actions = Actions(settings.commands, mod)
         self.pages += ("commands", "shoulder", "profiles")
@@ -155,9 +155,6 @@ class Model(Restore):
 
     def assign_command(self, action, device, key):
         if not self._commands_ready():
-            return False
-        if key is not None and key == open_key.key():
-            self.command_actions.last_status = "key_opens_window"
             return False
         if self._held_by_profile((key,)):
             self.command_actions.last_status = "command_held"

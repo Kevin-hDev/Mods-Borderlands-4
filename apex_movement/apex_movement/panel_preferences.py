@@ -6,8 +6,8 @@ from . import menu, pack
 from .panel_scroll import last_scroll
 from .panel_theme import SIZES, THEMES
 
-# Chinese only in a window whose every text exists in it, as outils/menu_languages.py decides.
-LANGUAGES = ("EN", "FR", "ZH")
+# A language only in a window whose every text exists in it, as outils/menu_languages.py decides.
+LANGUAGES = ("EN", "FR", "ZH", "JA")
 _COMMANDS = ("commands",) if pack.is_full() else ()
 # Last, so a page index saved before the Options tabs (2026-10-06) still names the same page.
 _LANGUAGE = ("language",) if pack.is_full() else ()

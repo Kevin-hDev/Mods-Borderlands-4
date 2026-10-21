@@ -11,6 +11,8 @@ constexpr double max_camera_distance = 2000.0;
 constexpr double radians_per_degree = 0.017453292519943295;
 using ViewStats = int (*)(apex_view::Stats*);
 
+// The unit vector a rotation (pitch, yaw, roll in degrees) looks along: the crosshair's line for the camera's.
+void forward(const double rotation[3], double direction[3]);
 // The game's eyes moved onto the camera's line at their own depth, looking where the camera looks; false when the
 // view cannot be trusted, and then nothing is to be written.
 bool align(const View& eyes, const View& camera, View& aligned);

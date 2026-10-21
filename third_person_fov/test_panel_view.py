@@ -4,7 +4,7 @@ from types import SimpleNamespace as NS
 import weakref
 
 import panel_fixture as f
-from third_person_fov import panel_preferences as prefs, settings
+from third_person_fov import panel_fonts, panel_preferences as prefs, settings
 from apex_camera_runtime import shared, constants
 from apex_camera_runtime.keyboard_layout import TOP_ROW_SEVEN, key_at
 
@@ -157,7 +157,7 @@ assert widgets["restore"].calls["SetIsEnabled"] == (False,), "Restore must be di
 assert f.click(elsewhere, widgets, "close")
 
 # Chinese, the third language (2026-10-12): its button named in its own words, kept at the next opening.
-assert prefs.LANGUAGES == ("EN", "FR", "ZH")
+assert prefs.LANGUAGES == ("EN", "FR", "ZH", "JA")
 root, widgets, form = f.build()
 assert widgets["ZH_label"].calls["SetText"][-1] == "中文" and widgets["EN_label"].calls["SetText"][-1] == "EN"
 f.click(form, widgets, "ZH")
@@ -168,6 +168,22 @@ root, widgets, form = f.build()
 assert form.model.language == "ZH" and widgets["close_label"].calls["SetText"][-1] == "关闭"
 f.click(form, widgets, "EN")
 assert form.model.language == "EN" and widgets["close_label"].calls["SetText"][-1] == "CLOSE"
+assert not form.redraw, "Chinese and English draw from the same faces: no new window"
+# Japanese, the fourth (2026-10-21): drawn from its own faces, so the window is drawn again when it comes or goes.
+assert widgets["JA_label"].calls["SetText"][-1] == "日本語"
+f.click(form, widgets, "JA")
+assert form.model.language == "JA" and widgets["close_label"].calls["SetText"][-1] == "閉じる"
+assert form.redraw and form.redraw_notice == "saved"
+form.redraw = False
+f.click(form, widgets, "ZH")
+assert form.redraw, "leaving Japanese draws the window again in the Chinese faces"
+form.redraw = False
+f.click(form, widgets, "JA")
+assert f.click(form, widgets, "close") and form.close_ready()
+root, widgets, form = f.build()
+assert form.model.language == "JA" and panel_fonts._script == "JA", "the next opening draws from the Japanese faces"
+f.click(form, widgets, "EN")
+assert panel_fonts.script(form.model.language) == "ZH"
 assert f.click(form, widgets, "close")
 shared.reset_for_tests()
 print("RESULTAT: TOUS LES TESTS PASSENT")

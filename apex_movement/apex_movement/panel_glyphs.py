@@ -31,11 +31,18 @@ CHINESE_SHAPES = {"Gamepad_FaceButton_Bottom": "×键", "Gamepad_FaceButton_Righ
                   "Gamepad_FaceButton_Left": "□键", "Gamepad_FaceButton_Top": "△键"}
 CHINESE_DPAD = {"Gamepad_DPad_Up": "方向键上", "Gamepad_DPad_Down": "方向键下",
                 "Gamepad_DPad_Left": "方向键左", "Gamepad_DPad_Right": "方向键右"}
+# Japanese players too, ×ボタン and the like; the D-pad is the game's own 方向キー (its Japanese texts, 2026-10-21).
+JAPANESE_SHAPES = {"Gamepad_FaceButton_Bottom": "×ボタン", "Gamepad_FaceButton_Right": "○ボタン",
+                   "Gamepad_FaceButton_Left": "□ボタン", "Gamepad_FaceButton_Top": "△ボタン"}
+JAPANESE_DPAD = {"Gamepad_DPad_Up": "方向キー上", "Gamepad_DPad_Down": "方向キー下",
+                 "Gamepad_DPad_Left": "方向キー左", "Gamepad_DPad_Right": "方向キー右"}
+NAMED = {"ZH": (CHINESE_SHAPES, CHINESE_DPAD), "JA": (JAPANESE_SHAPES, JAPANESE_DPAD)}
 
 
 def label(key, family, language):
-    if language == "ZH" and (key in CHINESE_DPAD or key in CHINESE_SHAPES and family != "XSX"):
-        return CHINESE_DPAD.get(key) or CHINESE_SHAPES[key]
+    shapes, dpad = NAMED.get(language, ({}, {}))
+    if key in dpad or key in shapes and family != "XSX":
+        return dpad.get(key) or shapes[key]
     choices = BUTTONS.get(key)
     return choices[2 if family == "XSX" else int(language == "FR")] if choices else key
 

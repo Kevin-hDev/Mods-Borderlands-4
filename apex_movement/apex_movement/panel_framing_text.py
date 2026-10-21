@@ -23,7 +23,18 @@ ZH = {
     "zoom_unavailable": "瞄准额外倍率不可用；显示的是镜头位置。",
     "position_unavailable": "镜头位置不可用；显示的是瞄准额外倍率。",
 }
-TRANSLATED = {"FR": FR, "ZH": ZH}
+JA = {
+    "zoom": ("照準ズーム", "各武器本来のズームに加える倍率。"),
+    "horizontal": ("肩との間隔", "キャラクターと照準の間隔。照準は中央のままです。"),
+    "height": ("カメラの高さ", "カメラを上げ下げします。照準は中央のままです。"),
+    "Wide": "広角", "Standard": "標準", "Close": "拡大",
+    "Tight": "狭め", "Open": "広め",
+    "Higher": "高め", "Lower": "低め", "Custom": "カスタム",
+    "unavailable": "ここでは構図のプレビューを表示できません。",
+    "zoom_unavailable": "照準の追加ズームを表示できません。カメラの位置を表示しています。",
+    "position_unavailable": "カメラの位置を表示できません。照準の追加ズームを表示しています。",
+}
+TRANSLATED = {"FR": FR, "ZH": ZH, "JA": JA}
 EN = {
     "zoom": "Additional magnification over each weapon's native zoom.",
     "horizontal": "Character-to-crosshair spacing. The crosshair stays centered.",
