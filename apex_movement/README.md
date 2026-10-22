@@ -1,6 +1,6 @@
 # Apex Movement
 
-Version **1.2.27**. Press F10 in game, or open Apex Movement in the SDK mods menu, for its English, French, Simplified Chinese and Japanese settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
+Version **1.2.28**. Press F10 in game, or open Apex Movement in the SDK mods menu, for its English, French, Simplified Chinese and Japanese settings window. It works at the title screen, in a game and while the game is paused. The window remembers the last section you opened. The gear at the top of the window opens the Options page: the camera, its commands and the menu language.
 
 Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. The custom climbing body animation is also not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 

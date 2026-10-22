@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.10 - 2026-10-22
+
+- Fix: third person, aiming and the longer pickup reach work again after the game's update of October 22, 2026. The previous version of the game stays supported.
+- If you use more than one of Third Person & FOV, Apex Movement and Omni Sprint, update them all: a camera mod left on an older version shows a message asking for its update.
+- Epic Games: the game's update of October 22 is not supported yet.
+
 ## 1.2.9 - 2026-10-22
 
 - Fix: in third person, beam weapons such as the Ohm I Got hit where the crosshair points.

@@ -3,6 +3,28 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.2.28', {
+        'en': (
+            "Fix: third person, aiming and the longer pickup reach work again after the game's update of October 22, 2026. The previous version of the game stays supported.",
+            'If you use more than one of Third Person & FOV, Apex Movement and Omni Sprint, update them all: a camera mod left on an older version shows a message asking for its update.',
+            "Epic Games: the game's update of October 22 is not supported yet.",
+        ),
+        'fr': (
+            "Correctif : la troisième personne, la visée et la portée de ramassage allongée fonctionnent de nouveau après la mise à jour du jeu du 22 octobre 2026. L'ancienne version du jeu reste prise en charge.",
+            'Si tu utilises plusieurs mods parmi Third Person & FOV, Apex Movement et Omni Sprint, mets-les tous à jour : un mod caméra resté sur une ancienne version affiche un message qui demande sa mise à jour.',
+            "Epic Games : la mise à jour du jeu du 22 octobre n'est pas encore prise en charge.",
+        ),
+        'zh': (
+            '修复：游戏 2026 年 10 月 22 日更新后，第三人称、瞄准和更远的拾取距离恢复正常。旧版本游戏仍然支持。',
+            '如果你同时使用 Third Person & FOV、Apex Movement 和 Omni Sprint 中的多个模组，请全部更新：仍为旧版本的镜头模组会显示提示，要求更新。',
+            'Epic Games：暂不支持游戏 10 月 22 日的更新。',
+        ),
+        'ja': (
+            '修正：2026年10月22日のゲームアップデート後も、三人称視点、照準、拡大された拾得距離が再び動作します。以前のバージョンのゲームも引き続き対応しています。',
+            'Third Person & FOV、Apex Movement、Omni Sprint のうち複数を使っている場合は、すべて更新してください：古いバージョンのままのカメラMODは、更新を求めるメッセージを表示します。',
+            'Epic Games：10月22日のゲームアップデートにはまだ対応していません。',
+        ),
+    }),
     ('1.2.26', {
         'en': (
             "New: F10 opens the mod's window in game, and closes it. Change the key at the top of the COMMANDS page.",

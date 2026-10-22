@@ -3,7 +3,8 @@ import ctypes
 
 from .ads_preflight import Preflight
 
-BUILD_NAMES = {1: "Steam", 2: "Epic"}
+# Profile numbers in outils/sync_camera_builds.py's order: Steam 4845623, Epic, Steam 4906557 (2026-10-22).
+BUILD_NAMES = {1: "Steam", 2: "Epic", 3: "Steam"}
 
 
 class BuildPreflight(Preflight):
@@ -22,5 +23,6 @@ class BuildPreflight(Preflight):
         name = BUILD_NAMES.get(profile) if type(profile) is int else None
         if not self._build_reported:
             self._build_reported = True
-            self._log_build(f"camera build qualified store={name}" if name else "camera build qualification refused")
+            self._log_build(f"camera build qualified store={name} profile={profile}" if name
+                            else "camera build qualification refused")
         return name is not None

@@ -12,6 +12,8 @@ SRWLOCK guard = SRWLOCK_INIT;
 Getter original = nullptr;
 void** slot = nullptr;
 bool installed = false;
+// Set before the slot is replaced and kept while installed, so dispatch never reads it unset.
+const apex_loot::Addresses* build = nullptr;
 std::atomic<bool> active{false};
 std::atomic<float> distance{apex_loot::min_distance};
 thread_local apex_loot::OverridePool pool{};
@@ -21,7 +23,7 @@ void* dispatch(void* self) {
     void* result = original(self);
     if (!active.load(std::memory_order_acquire)) return result;
     const uintptr_t module = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-    return const_cast<void*>(apex_loot::prepare_override(caller - module, result, distance.load(), pool));
+    return const_cast<void*>(apex_loot::prepare_override(*build, caller - module, result, distance.load(), pool));
 }
 }
 
@@ -29,16 +31,15 @@ extern "C" __declspec(dllexport) int loot_start(uint32_t abi, float value) {
     if (abi != 1 || !apex_loot::valid_distance(value)) return 1;
     AcquireSRWLockExclusive(&guard);
     const uintptr_t module = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-    auto* expected = reinterpret_cast<void*>(module + apex_loot::pickup_getter_rva);
-    auto** candidate = reinterpret_cast<void**>(module + apex_loot::pickup_slot_rva);
+    const apex_loot::Addresses* found = installed ? nullptr : apex_loot::matching_build(module);
     int status = 0;
     if (installed) {
         status = 2;
-    } else if (!apex_loot::range_fingerprints_match(module)
-               || !apex_camera::memory_access(candidate, sizeof(void*)) || *candidate != expected
-               || !apex_camera::executable_in_main_module(expected)) {
+    } else if (!found) {
         status = 3;
     } else {
+        auto* expected = reinterpret_cast<void*>(module + found->pickup_getter);
+        auto** candidate = reinterpret_cast<void**>(module + found->pickup_slot);
         HMODULE pinned{};
         if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
                                reinterpret_cast<LPCWSTR>(&dispatch), &pinned)) {
@@ -46,6 +47,7 @@ extern "C" __declspec(dllexport) int loot_start(uint32_t abi, float value) {
         } else {
             original = reinterpret_cast<Getter>(expected);
             slot = candidate;
+            build = found;
             status = apex_camera::replace_slot(slot, expected, reinterpret_cast<void*>(&dispatch));
             if (!status) {
                 installed = true;

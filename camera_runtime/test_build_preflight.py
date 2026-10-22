@@ -39,7 +39,25 @@ class BuildPreflightTests(unittest.TestCase):
             self.assertTrue(job.ready())
         self.assertEqual(library.ads_verify_files.calls, 1)
         self.assertEqual(len(messages), 2)
-        self.assertIn("store=Epic", messages[-1])
+        self.assertIn("store=Epic profile=2", messages[-1])
+
+    def test_updated_steam_build_is_qualified(self):
+        library = types.SimpleNamespace(ads_verify_files=Function(0), view_game_build=Function(3))
+        messages = []
+        job = BuildPreflight(library, messages.append)
+        job.start()
+        job.future.result(timeout=2)
+        self.assertTrue(job.ready())
+        self.assertIn("store=Steam profile=3", messages[-1])
+
+    def test_unknown_profile_number_is_refused(self):
+        library = types.SimpleNamespace(ads_verify_files=Function(0), view_game_build=Function(4))
+        messages = []
+        job = BuildPreflight(library, messages.append)
+        job.start()
+        job.future.result(timeout=2)
+        self.assertFalse(job.ready())
+        self.assertIn("qualification refused", messages[-1])
 
     def test_pending_does_not_read_or_log_a_profile(self):
         library = types.SimpleNamespace(ads_verify_files=Function(0), view_game_build=Function(2))

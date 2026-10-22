@@ -3,8 +3,8 @@ import ctypes
 from .native_bridge import load_packaged_library
 
 ABI_VERSION = 1
-LIBRARY_NAME = 'apex_camera_loot_v1.dll'
-HASH_NAME = 'apex_camera_loot_v1.sha256'
+LIBRARY_NAME = 'apex_camera_loot_v2.dll'
+HASH_NAME = 'apex_camera_loot_v2.sha256'
 
 
 class LootBridge:

@@ -92,10 +92,22 @@ else:
     refused = False
 check("v6 cannot share the build-qualified native libraries", refused)
 sys.modules.pop("_apex_camera_runtime_v6", None)
+old = types.ModuleType("_apex_camera_runtime_v7")
+old.protocol, old.runtime = 7, object()
+sys.modules["_apex_camera_runtime_v7"] = old
+try:
+    shared_module.shared(lambda item: item, lambda item: 1)
+except RuntimeError:
+    refused = True
+else:
+    refused = False
+check("v7 cannot share libraries made before the game's update of 2026-10-22", refused)
+sys.modules.pop("_apex_camera_runtime_v7", None)
 runtime = shared_module.shared(lambda item: item, lambda item: 1)
-state = sys.modules.get("_apex_camera_runtime_v7")
+state = sys.modules.get("_apex_camera_runtime_v8")
 check("all names reserve the same zoom-capable runtime",
-      shared_module.PROTOCOL == 7 and state is not None
+      shared_module.PROTOCOL == 8 and state is not None
+      and sys.modules.get("_apex_camera_runtime_v7") is state
       and sys.modules.get("_apex_camera_runtime_v1") is state
       and sys.modules.get("_apex_camera_runtime_v2") is state
       and sys.modules.get("_apex_camera_runtime_v3") is state
