@@ -5,7 +5,7 @@ import struct
 from ctypes import wintypes
 from pathlib import Path
 
-from . import protection_config as cfg
+from . import game_build, protection_config as cfg
 
 
 class Memory:
@@ -41,13 +41,7 @@ class Memory:
         count = self.api.GetModuleFileNameW(base, path, len(path))
         if not 1 <= count < len(path) or Path(path.value).name.lower() != cfg.EXE_NAME.lower():
             raise ValueError("Unexpected module")
-        dos = self.read(base, 64)
-        offset = struct.unpack_from("<I", dos, 0x3C)[0]
-        if dos[:2] != b"MZ" or not 64 <= offset <= cfg.MAX_HEADER_OFFSET:
-            raise ValueError("Invalid header")
-        pe = self.read(base + offset, 128)
-        if (pe[:6] != b"PE\0\0\x64\x86" or struct.unpack_from("<H", pe, 24)[0] != 0x20B
-                or struct.unpack_from("<I", pe, 80)[0] != cfg.IMAGE_SIZE):
+        if game_build.image_size(self.read, base) != cfg.IMAGE_SIZE:
             raise ValueError("Unsupported image")
         return base, path.value
 

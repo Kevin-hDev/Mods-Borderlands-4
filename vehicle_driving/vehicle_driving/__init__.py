@@ -11,7 +11,7 @@ from .settings_persistence import AtomicMod
 from . import command_keys, frame, panel_open, panel_preferences, report, settings, updates, view_key
 from .vehicle_unlock_runtime import runtime as vehicle_runtime
 
-__version__ = "1.0.10"
+__version__ = "1.0.11"
 __author__ = "kevin-hDev"
 
 

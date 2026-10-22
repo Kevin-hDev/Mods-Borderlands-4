@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.11 - 2026-10-22
+
+- Vehicle unlocks work again with the game update of October 22, 2026 (Steam build 4906557). The previous game build is still supported.
+
 ## 1.0.10 - 2026-10-17
 
 - Vehicle Driving now works in co-op.

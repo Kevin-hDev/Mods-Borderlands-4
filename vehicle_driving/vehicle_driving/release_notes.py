@@ -3,6 +3,17 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.11', {
+        'en': (
+            'Vehicle unlocks work again with the game update of October 22, 2026. The previous game version is still supported.',
+        ),
+        'fr': (
+            "Le déblocage des véhicules refonctionne avec la mise à jour du jeu du 22 octobre 2026. L'ancienne version du jeu reste prise en charge.",
+        ),
+        'zh': (
+            '车辆解锁在 2026 年 10 月 22 日的游戏更新后恢复正常。仍支持更新前的游戏版本。',
+        ),
+    }),
     ('1.0.10', {
         'en': (
             'Vehicle Driving now works in co-op.',

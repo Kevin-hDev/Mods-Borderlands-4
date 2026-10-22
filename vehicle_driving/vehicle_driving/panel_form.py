@@ -8,9 +8,8 @@ from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t
 from . import panel_choices, panel_theme_choice
 from .command_form import Form
 from .panel_glyphs import Catalogue
-from . import panel_size_choice
+from . import panel_language_choice, panel_size_choice
 from .panel_form_lifecycle import Lifecycle
-from .panel_preferences import LANGUAGES
 
 
 class PanelForm(Lifecycle):
@@ -120,13 +119,8 @@ class PanelForm(Lifecycle):
         if self.take(widgets["window_size"]):
             panel_size_choice.choose(self, widgets)
             return False
-        for language in LANGUAGES:
-            if self.take(widgets[language]):
-                if self.flush(widgets) and self.model.change_language(language):
-                    self.refresh_labels(widgets)
-                else:
-                    self.report(widgets, "failed")
-                return False
+        if panel_language_choice.choose(self, widgets):
+            return False
         for family in ("PS5", "XSX"):
             if self.take(widgets[f"icons:{family}"]):
                 if self.model.change_controller_icons(family):

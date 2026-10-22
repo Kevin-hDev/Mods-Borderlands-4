@@ -7,7 +7,7 @@ from . import menu
 from .panel_scroll import last_scroll
 from .panel_theme import SIZES, THEMES
 
-# Chinese only in a window whose every text exists in it, as outils/menu_languages.py decides.
+# A language only in a window whose every text exists in it, as outils/menu_languages.py decides.
 LANGUAGES = ("EN", "FR", "ZH")
 _COMMANDS = ()
 PAGE_KEYS = tuple(group.identifier.removesuffix("_menu") for group in menu.ALL)
