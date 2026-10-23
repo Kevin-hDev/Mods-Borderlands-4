@@ -1,9 +1,9 @@
 {
   "constants": {
-    "PROTOCOL": 8,
+    "PROTOCOL": 9,
     "ADS_ABI": 2,
-    "VIEW_ABI": 10,
-    "INTERACTION_ABI": 6,
+    "VIEW_ABI": 11,
+    "INTERACTION_ABI": 7,
     "CATEGORY_PISTOL": 1,
     "CATEGORY_SMG": 2,
     "CATEGORY_SHOTGUN": 3,

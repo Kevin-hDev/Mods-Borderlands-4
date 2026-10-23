@@ -31,6 +31,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Epic camera profile test failed' }
     & .\camera_builds_test.exe steam_4906557
     if ($LASTEXITCODE -ne 0) { throw 'Steam 4906557 camera profile test failed' }
+    & .\camera_builds_test.exe epic_4906557
+    if ($LASTEXITCODE -ne 0) { throw 'Epic 4906557 camera profile test failed' }
     & cl.exe @common (Join-Path $sourceRoot 'test_offset_blend.cpp') '/Fe:offset_blend_test.exe'
     if ($LASTEXITCODE -ne 0) { throw 'Camera offset transition test build failed' }
     & .\offset_blend_test.exe

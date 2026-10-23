@@ -1,8 +1,8 @@
 # Omni Sprint
 
-Version **1.2.10**.
+Version **1.2.11**.
 
-Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
+Third-person view and aiming support Steam and Epic Games, before and after the game's update of October 22, 2026. Extended loot reach is not supported on the Epic Games version from before that update. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
 Sprint in every direction in Borderlands 4: sideways, diagonally and backwards, while the camera stays free. Omni
 Sprint keeps the game's sprint speed, supplies a backward running animation in third person, and offers an optional

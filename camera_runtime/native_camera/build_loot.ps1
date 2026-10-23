@@ -21,13 +21,13 @@ try {
         & (Join-Path $buildRoot "$test.exe")
         if ($LASTEXITCODE -ne 0) { throw 'Native interaction test failed' }
     }
-    & cl.exe @common '/LD' @sources '/Fe:apex_camera_loot_v2.dll'
+    & cl.exe @common '/LD' @sources '/Fe:apex_camera_loot_v3.dll'
     if ($LASTEXITCODE -ne 0) { throw 'Native library build failed' }
     $assets = Join-Path (Split-Path $sourceRoot) 'apex_camera_runtime\assets'
-    $target = Join-Path $assets 'apex_camera_loot_v2.dll'
-    Copy-Item -LiteralPath (Join-Path $buildRoot 'apex_camera_loot_v2.dll') -Destination $target -Force
+    $target = Join-Path $assets 'apex_camera_loot_v3.dll'
+    Copy-Item -LiteralPath (Join-Path $buildRoot 'apex_camera_loot_v3.dll') -Destination $target -Force
     $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $target).Hash.ToLowerInvariant()
-    Set-Content -LiteralPath (Join-Path $assets 'apex_camera_loot_v2.sha256') -Value $hash -Encoding ascii -NoNewline
+    Set-Content -LiteralPath (Join-Path $assets 'apex_camera_loot_v3.sha256') -Value $hash -Encoding ascii -NoNewline
     Write-Output "RESULTAT: OK - native loot range built: $hash"
 } finally {
     Pop-Location

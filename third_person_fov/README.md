@@ -1,8 +1,8 @@
 # Third Person & FOV
 
-Version **1.2.11**.
+Version **1.2.12**.
 
-Third-person view and aiming support the tested Steam and Epic Games builds. Extended loot reach is not supported on Epic Games yet. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
+Third-person view and aiming support Steam and Epic Games, before and after the game's update of October 22, 2026. Extended loot reach is not supported on the Epic Games version from before that update. If you have several of our camera mods installed, update Apex Movement, Omni Sprint and Third Person & FOV together.
 
 An over-the-shoulder camera and a wider field of view for Borderlands 4, without the movement changes from Apex
 Movement or Omni Sprint.

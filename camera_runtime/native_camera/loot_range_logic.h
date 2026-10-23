@@ -16,11 +16,12 @@ struct Addresses {
     uintptr_t pickup_slot, pickup_getter, pickup_primary_caller, pickup_secondary_caller, lootable_caller, struct_size;
 };
 // One row per build whose loot path was measured (releves/third_person_fov/2026-09-25-loot-range,
-// releves/third_person_fov/2026-10-22-mise-a-jour-jeu). The game carries no build number here, so the row whose every
+// releves/third_person_fov/2026-10-22-mise-a-jour-jeu, releves/third_person_fov/2026-10-23-copie-epic). The game carries no build number here, so the row whose every
 // fingerprint matches is used (loot_range_fingerprints.cpp); none matching means no loot range, as before.
 constexpr Addresses builds[] = {
     {0xB310750, 0x3C53BF2, 0x3E559F7, 0x3E55EAF, 0x3E54834, 0x6538897}, // Steam 4845623
     {0xB318290, 0x3C55BBA, 0x3E5A3CF, 0x3E5A887, 0x3E5920C, 0x65413E3}, // Steam 4906557, 2026-10-22
+    {0xB3042D0, 0x3C4B252, 0x3E4FA67, 0x3E4FF1F, 0x3E4E8A4, 0x654968B}, // Epic 4906557, 2026-10-23
 };
 struct alignas(8) ConfigImage { unsigned char bytes[config_size]; };
 struct OverridePool { ConfigImage slots[pool_size]{}; uint32_t cursor = 0; };

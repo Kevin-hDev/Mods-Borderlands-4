@@ -3,8 +3,9 @@ import ctypes
 
 from .ads_preflight import Preflight
 
-# Profile numbers in outils/sync_camera_builds.py's order: Steam 4845623, Epic, Steam 4906557 (2026-10-22).
-BUILD_NAMES = {1: "Steam", 2: "Epic", 3: "Steam"}
+# Profile numbers in outils/sync_camera_builds.py's order: Steam 4845623, Epic, Steam 4906557 (2026-10-22),
+# Epic 4906557 (2026-10-23).
+BUILD_NAMES = {1: "Steam", 2: "Epic", 3: "Steam", 4: "Epic"}
 
 
 class BuildPreflight(Preflight):

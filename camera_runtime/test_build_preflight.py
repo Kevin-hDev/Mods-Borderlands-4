@@ -50,8 +50,17 @@ class BuildPreflightTests(unittest.TestCase):
         self.assertTrue(job.ready())
         self.assertIn("store=Steam profile=3", messages[-1])
 
-    def test_unknown_profile_number_is_refused(self):
+    def test_updated_epic_build_is_qualified(self):
         library = types.SimpleNamespace(ads_verify_files=Function(0), view_game_build=Function(4))
+        messages = []
+        job = BuildPreflight(library, messages.append)
+        job.start()
+        job.future.result(timeout=2)
+        self.assertTrue(job.ready())
+        self.assertIn("store=Epic profile=4", messages[-1])
+
+    def test_unknown_profile_number_is_refused(self):
+        library = types.SimpleNamespace(ads_verify_files=Function(0), view_game_build=Function(5))
         messages = []
         job = BuildPreflight(library, messages.append)
         job.start()
