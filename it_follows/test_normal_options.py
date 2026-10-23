@@ -25,7 +25,7 @@ def check(label: str, condition: bool) -> None:
 
 
 try:
-    check("the three levels, Bandit at first", options.level.choices == ["Bandit", "Senior", "Predator"]
+    check("the four levels, Bandit at first", options.level.choices == ["Bandit", "Senior", "Predator", "God"]
           and options.level.value == "Bandit")
     check("the allied enemies off at first", options.allies.value is False)
     check("the mode off at first, kept hidden", options.on.value is False and options.on.is_hidden)
@@ -51,13 +51,13 @@ try:
           options.read() == options.Settings(levels.LEVELS["Bandit"], False))
     options.level.value, options.shields.value = "Bandit", False
     check("the shields switched off at Bandit: none given", options.read().shields is False)
-    for name in ("Senior", "Predator"):
+    for name in ("Senior", "Predator", "God"):
         options.level.value = name
         check(f"at {name}, the shields given whatever the option holds (decision 112)", options.read().shields is True)
     options.level.value, options.shields.value = "Bandit", "no"
     check("a value that is no choice reads as on", options.read().shields is True)
     options.shields.value = True
-    for name in ("Senior", "Predator"):
+    for name in ("Senior", "Predator", "God"):
         options.level.value, options.speed.value = name, "Reduced"
         chosen = options.read()
         check(f"at {name}, reduced: the level's run and faster dodges x0.85, said so",
@@ -73,7 +73,7 @@ try:
     check("a speed that is no choice reads as increased", options.read().level is levels.LEVELS["Predator"]
           and options.read().reduced is False)
     options.speed.value = "Increased"
-    for name, staggers in (("Bandit", 0.85), ("Senior", 0.75), ("Predator", 0.5)):
+    for name, staggers in (("Bandit", 0.85), ("Senior", 0.75), ("Predator", 0.5), ("God", 0.5)):
         options.level.value = name
         check(f"at {name}, the staggers x{staggers}", options.read().level.staggers == staggers)
     options.no_staggers.value = True
@@ -83,7 +83,9 @@ try:
     options.level.value = "Predator"
     check("at Predator, no staggers switched on: zero, the rest of the level as it is",
           options.read().level.staggers == 0.0 and options.read().level.speed == levels.LEVELS["Predator"].speed)
-    options.speed.value = "Reduced"
+    options.level.value = "God"
+    check("at God, no staggers switched on: zero, as at Predator", options.read().level.staggers == 0.0)
+    options.level.value, options.speed.value = "Predator", "Reduced"
     check("at Predator, reduced and no staggers: both", options.read().level.staggers == 0.0
           and options.read().reduced is True and options.read().level.speed < levels.LEVELS["Predator"].speed)
     options.no_staggers.value, options.speed.value = "yes", "Increased"

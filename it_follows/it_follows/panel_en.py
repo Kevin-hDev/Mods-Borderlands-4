@@ -3,9 +3,11 @@ its result. The words are the sketches' (esquisses_menu, validated by Kevin), pu
 spec-mode-normal.md's (decision 80)."""
 
 from .panel_common_en import TEXT as COMMON
+from .panel_companion_texts import EN as COMPANIONS
 
 TEXT = {
     **COMMON,
+    **COMPANIONS,
     "run": "HORDE MODE [BETA]", "normal": "NORMAL MODE", "history": "HISTORY", "options": "OPTIONS",
     "running_tag": "RUNNING",
     "run_settings": "RUN SETTINGS", "run_live": "RUN IN PROGRESS · {level}",
@@ -47,6 +49,9 @@ TEXT = {
                            "every enemy without one.",
     "normal_level:Predator": "Even more enemies, very fast and very tough. Lightning dodges, and they chase you "
                              "much farther. A shield for every enemy without one, back 10 seconds after it breaks.",
+    "normal_level:God": "As many enemies as at Predator, far tougher but a little slower. A shield for every enemy "
+                        "without one, back 10 seconds after it breaks. More ammo, money and experience. Made to play "
+                        "with your companions.",
     "hardcore_settings": "HARDCORE", "hardcore_lead": "A difficulty that rises slowly, all game long.",
     "hardcore_badge": "HARDCORE {percent}%", "hardcore_badge_paused": "HARDCORE {percent}% · PAUSED",
     "help_hardcore_title": "THE HARDCORE MODE",
@@ -123,10 +128,10 @@ TEXT = {
     "updates_next": "NEXT",
     "welcome_normal_lead": "The normal mode: play your game as usual. The enemies you meet are more numerous, faster "
                            "and tougher, dodge faster and chase you farther. It is made first for starting or "
-                           "restarting the game from the beginning, a little like three levels of NG+, and still "
+                           "restarting the game from the beginning, a little like four levels of NG+, and still "
                            "works mid-game.",
-    "welcome_levels_title": "THREE LEVELS",
-    "welcome_levels": "Bandit, Senior and Predator, from a harder game to a much harder one.",
+    "welcome_levels_title": "FOUR LEVELS",
+    "welcome_levels": "Bandit, Senior, Predator and God, from a harder game to a much harder one.",
     "welcome_evolving_title": "STILL EVOLVING",
     "welcome_evolving": "A first overhaul of the game's enemies, which will keep evolving from one version to the "
                         "next.",

@@ -1,6 +1,7 @@
 """It Follows' pages wired into our windows' form (docs/RUN/outils/menu_window.py writes the calls): HORDE MODE (key
-run), NORMAL MODE, HISTORY and OPTIONS drawn by their own modules, the welcome, the update notes, a run's result and
-the « ? »'s help over the whole window, the RUNNING tag of each mode's button while it is on, the Hardcore's tag at the
+run), NORMAL MODE, COMPANIONS, HISTORY and OPTIONS drawn by their own modules, the welcome, the update notes, a run's
+result and the « ? »'s help over the whole window, the RUNNING tag of each mode's button while it is on, and of
+COMPANIONS' while the team is, the Hardcore's tag at the
 top (panel_hardcore.py), the footer's sentence while nothing else is said, and the key that opens the window closing it
 too (open_key.py).
 
@@ -10,18 +11,22 @@ The game stands still while the window is open (game_pause.py), except while STA
 from typing import Any
 
 from . import game_pause, open_key, panel_buttons as b, panel_colours, panel_history, panel_i18n as i18n
-from . import panel_options
+from . import panel_companions, panel_companions_poll, panel_options
 from . import panel_hardcore, panel_help, panel_normal, panel_result, panel_run, panel_starts, panel_updates
 from . import panel_text as tx, panel_theme as t, panel_welcome, panel_widgets as w, report, session, start_point
-from . import updates, welcome
+from . import team_key, updates, welcome
 
 # What poll answers when the window must close without the mods list (a mode that starts), and when it closes as its
 # CLOSE button does (panel_form.py, control_window.py).
 LEAVE, CLOSE = "leave", "close"
-RUN, NORMAL, HISTORY, OPTIONS = "run", "normal", "history", "options"
-PAGES = {RUN: panel_run.page, NORMAL: panel_normal.page, HISTORY: panel_history.page, OPTIONS: panel_options.page}
-# Each mode's button tag: its widgets' name, and whether that mode is on.
-TAGS = {RUN: ("nav_running", session.running), NORMAL: ("nav_normal_running", session.normal_on)}
+RUN, NORMAL, COMPANIONS, HISTORY, OPTIONS = "run", "normal", "companions", "history", "options"
+PAGES = {RUN: panel_run.page, NORMAL: panel_normal.page, COMPANIONS: panel_companions.page,
+         HISTORY: panel_history.page, OPTIONS: panel_options.page}
+# Each tagged button: its widgets' name, and whether what it starts is on. The two modes never run at once (decision
+# 80); the team runs with either or alone (decision 24 of docs/renforts/README.md).
+TAGS = {RUN: ("nav_running", session.running), NORMAL: ("nav_normal_running", session.normal_on),
+        COMPANIONS: ("nav_companions_running", session.team_on)}
+MODES = (RUN, NORMAL)
 
 
 def page(owner: Any, group: Any, key: str, widgets: dict, template: Any) -> Any:
@@ -58,7 +63,9 @@ def start(form: Any) -> None:
     form.run_shown = form.result = None
     form.update_notes, form.update_page = [], 0
     panel_starts.reset(form)
+    panel_companions.reset(form)
     open_key.align()
+    team_key.align()
     form.closer = open_key.closer()
     widgets = form.resolve()
     trip = start_point.take_outcome()
@@ -101,7 +108,8 @@ def poll_over(form: Any, widgets: dict) -> bool:
 
 
 def _follow_key(form: Any) -> None:
-    """The SDK's keybind and the closing watch given the key just chosen."""
+    """The SDK's keybinds and the closing watch given the keys just chosen."""
+    team_key.align()
     if open_key.align():
         form.closer = open_key.closer()
 
@@ -133,13 +141,17 @@ def poll(form: Any, widgets: dict) -> str | bool:
         return True
     if panel_starts.poll(form, widgets):
         return True
+    polled = panel_companions_poll.poll(form, widgets)
+    if polled:
+        return polled
     if panel_help.poll(form, widgets):
         return True
     if panel_options.poll_key(form, widgets):
         _follow_key(form)
         form.refresh_labels(widgets)
         return True
-    if panel_options.look_changed(form) or panel_run.changed(form) or panel_normal.changed(form):
+    if (panel_options.look_changed(form) or panel_run.changed(form) or panel_normal.changed(form)
+            or panel_companions.changed(form)):
         form.refresh_labels(widgets)
         return True
     return False
@@ -157,6 +169,7 @@ def selecting(form: Any) -> bool:
 def paint(form: Any, widgets: dict, language: str) -> None:
     panel_run.paint(form, widgets, language)
     panel_normal.paint(form, widgets, language)
+    panel_companions.paint(form, widgets, language)
     panel_history.paint(widgets, language)
     panel_options.paint(form, widgets, language)
     panel_welcome.paint(widgets, language)
@@ -170,10 +183,14 @@ def paint(form: Any, widgets: dict, language: str) -> None:
 
 def notice(form: Any, language: str) -> str:
     """The footer's sentence: the page's own while the window has nothing else to say. On a mode's page, the pause
-    while either mode is on: the other's START is away then, and READY would ask to press it (trial 20)."""
+    while either mode is on: the other's START is away then, and READY would ask to press it (trial 20). On
+    COMPANIONS, how to change the team while it is on."""
     if form.notice != "ready":
         return i18n.text(form.notice, language)
     key = form.model.pages[form.page]
-    if key in TAGS:
-        return i18n.text("paused_run" if any(on() for _, on in TAGS.values()) else f"ready_{key}", language)
+    if key in MODES:
+        playing = any(TAGS[mode][1]() for mode in MODES)
+        return i18n.text("paused_run" if playing else f"ready_{key}", language)
+    if key == COMPANIONS:
+        return i18n.text("companions_on" if session.team_on() else "ready_companions", language)
     return i18n.text("ready_history" if key == HISTORY else "ready_options", language)

@@ -1,5 +1,10 @@
-"""The normal mode's three levels (decisions 80 and 85, Kevin, 15 October 2026), set in advance and never tuned in
+"""The normal mode's four levels (decisions 80 and 85, Kevin, 15 October 2026), set in advance and never tuned in
 game: every value of a level is here and nowhere else.
+
+God (decisions 153 and 155, Kevin, 20 and 21 October 2026), made to play with the companions without the game growing
+too easy: Predator, but for Senior's run, dodges' speed and gestures (« plus fort que en predator mais moins rapide »;
+Kevin, 22 October 2026: all three of Senior's), the enemies' health +250 %, the damage the player takes +35 % (the
+companions take the game's own, decision 40 of the reinforcements), ammo +50 %, money +40 % and experience +25 %.
 
 camps: how many times their enemies the game's camps hold (camps_grown.py). chase_m: the combat radius each enemy's
 own zone is widened to (Kevin: « 250m c'est pas long, poursuite on peu pousser a 350m pour bandit/senior »); Predator
@@ -23,7 +28,7 @@ Faster after trial 35 (decision 100, Kevin, 15 October 2026: « c'est pas assez 
 ×1.2, ×1.5 and ×1.7 in place of ×1.1, ×1.2 and ×1.4. Senior and Predator brought back to ×1.4 and ×1.5 (decision 121,
 Kevin, 16 October 2026): faster in everything, the game would be « infernal et injouable ».
 
-reducible: whether the window's « Enemy speed » row shows at that level, Senior and Predator only (decision 121); its
+reducible: whether the window's « Enemy speed » row shows at that level, Senior, Predator and God (decision 121); its
 REDUCED choice runs the level's speed, faster dodges and gestures times REDUCED (Kevin: « reduis la vitesse de 15%
 uniquement pour les deux niveau senior et predator [...] Pour ceux qui pourrait trouver que c'est trop rapide »),
 never below Bandit's own (decision 125, Kevin, 17 October 2026: « comme ca senior descend comme bandit et predator
@@ -55,7 +60,7 @@ Kevin, 17 October 2026: « Senior 3 a 5 et preda 2 a 3 s c'est bon »; melee_res
 the pistol (trial 66).
 
 staggers: the game's chances of a stagger and a launch times this (decision 135, Kevin, 18 October 2026: 15, 25 and
-50 % fewer; staggers.py). staggers_off: whether the window's « No staggers » row shows at that level, Predator only
+50 % fewer; staggers.py). staggers_off: whether the window's « No staggers » row shows at that level, Predator and God
 (Kevin: « un bouton qui apparait uniquement pour ce niveau et qui desactive completement les sursauts »); on, the
 level's staggers are zero.
 """
@@ -96,14 +101,16 @@ LEVELS = {
                     0.15, 0.20, 0.15, 1.2, (4.0, 1.0), 0.75, False),
     "Predator": Level("Predator", 2.0, 600.0, 1.5, 2.8, 0.55, 100.0, 2.3, 1.3, ALWAYS, True, 0.8, 1.12, True,
                       0.20, 0.25, 0.15, 1.3, (2.5, 0.5), 0.5, True),
+    "God": Level("God", 2.0, 600.0, 1.4, 2.3, 0.55, 100.0, 3.5, 1.35, ALWAYS, True, 0.8, 1.12, True,
+                 0.25, 0.50, 0.40, 1.2, (2.5, 0.5), 0.5, True),
 }
 # The faster dodges switched off keep the game's own speed, never reduced (play.py speeds up no dodge then; Kevin: « on
 # ne re reduis pas de 15% »).
 REDUCED = 0.85
 FLOOR = "Bandit"
 # Every level's shield: SHIELD_SHARE of the health the enemy had (Kevin: « Shield = 40% de la vie », the share of the
-# game's GunToterBadass, trial 46). Predator's, broken, comes back SHIELD_REFILL_AFTER_S later at SHIELD_REFILL_RATE of
-# itself a second, the hunter's own (trial 46: 13 % a second).
+# game's GunToterBadass, trial 46). Predator's and God's, broken, come back SHIELD_REFILL_AFTER_S later at
+# SHIELD_REFILL_RATE of themselves a second, the hunter's own (trial 46: 13 % a second).
 SHIELD_SHARE = 0.4
 SHIELD_REFILL_AFTER_S = 10.0
 SHIELD_REFILL_RATE = 0.13

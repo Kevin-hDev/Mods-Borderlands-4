@@ -1,9 +1,9 @@
 """The normal mode's shields (decisions 111 to 113, Kevin, 16 October 2026): every enemy it meets without a shield,
 bosses too (« Oui, eux aussi »), gets one of levels.SHIELD_SHARE of its health, at Bandit while the player keeps the
-option, at Senior and Predator always. Only Predator's comes back: broken, levels.SHIELD_REFILL_AFTER_S later it fills
-again at levels.SHIELD_REFILL_RATE a second, even under fire (Kevin: « c'est le meme fonctionnement que pour les 6
-chasseur de l'arche »); one broken again during its refill waits for the refill's end. The game's shields are never
-touched.
+option, at Senior, Predator and God always. Only Predator's and God's come back: broken, levels.SHIELD_REFILL_AFTER_S
+later it fills again at levels.SHIELD_REFILL_RATE a second, even under fire (Kevin: « c'est le meme fonctionnement
+que pour les 6 chasseur de l'arche »); one broken again during its refill waits for the refill's end. The game's
+shields are never touched.
 
 Every shield given is taken off the living when the mode stops or the game is left (decision 113: « Retirés tout de
 suite »). A dead enemy is never called on: the game gives its body to the next one (spec, « Oublier les morts »); one
@@ -45,8 +45,8 @@ class Given:
 
 
 class Shields:
-    """refill: whether a broken shield comes back (Predator). announce(call, log, **fields) notes a call before it is
-    made, note(event, **fields) writes a line."""
+    """refill: whether a broken shield comes back (Predator and God). announce(call, log, **fields) notes a call before
+    it is made, note(event, **fields) writes a line."""
 
     def __init__(self, announce: Callable[..., None], refill: bool, pool: Any = None,
                  note: Callable[..., None] | None = None) -> None:
@@ -105,7 +105,8 @@ class Shields:
         self.note(event, on=name, **fields)
 
     def keep(self, name: str, actor: Any, now: float) -> str | None:
-        """Predator's: a shield broken refilled REFILL_AFTER_S later, once at a time. On an enemy alive only."""
+        """Predator's and God's: a shield broken refilled REFILL_AFTER_S later, once at a time. On an enemy alive
+        only."""
         given = self.given.get(name)
         if not self.refill or given is None:
             return None

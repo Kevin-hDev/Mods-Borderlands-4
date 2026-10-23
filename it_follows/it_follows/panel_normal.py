@@ -1,7 +1,7 @@
 """The NORMAL MODE page (decision 80, spec-mode-normal.md, section 2): the mode's card, its sentence beside the title,
 its rows (the level, whose help is the chosen level's sentence, the allied enemies, the faster dodges, the enemies'
-speed, shown at Senior and Predator only, decision 121, the shields, shown at Bandit only, decision 112, and the
-staggers switched off, shown at Predator only, decision 135) and START
+speed, shown at Senior, Predator and God, decision 121, the shields, shown at Bandit only, decision 112, and the
+staggers switched off, shown at Predator and God, decision 135) and START
 across it; while the mode is on, above it the mode's card with STOP, saying whether it plays or waits for a game, and
 the rows locked under a line that says to stop the mode to change them; while a Horde run goes on, START replaced by a
 line that says to stop the run first.

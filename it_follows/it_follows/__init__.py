@@ -10,11 +10,12 @@ normal mode on stays on from one game launch to the next: the mod turns it on ag
 from mods_base import build_mod
 
 from . import colours, kept, lost_loot, open_key, options, panel_open, panel_preferences, report, resolution
-from . import session, start_point, updates, welcome
+from . import session, start_point, team_key, updates, welcome
+from .companions import bars as companion_bars, choices as companion_choices
 from .normal import hardcore, options as normal_options
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.9"
+__version__ = "1.0.10"
 __author__ = "kevin-hDev"
 
 
@@ -33,25 +34,31 @@ def _on_enable() -> None:
 
 
 def _on_disable() -> None:
-    start_point.cancel("mod_disabled")
-    session.stop("mod_disabled")
-    # The choice to be on stays in the settings file: the mode comes back when the mod is enabled again.
-    session.stop_normal("mod_disabled")
-    lost_loot.stop()
-    resolution.stop()
-    colours.stop()
-    report.note("disabled")
+    # Each stop on its own: one that raises must not leave the next running with the mod disabled.
+    failed = []
+    for name, stop in (("start_point", lambda: start_point.cancel("mod_disabled")),
+                       ("run", lambda: session.stop("mod_disabled")),
+                       # The choice to be on stays in the settings file: the mode comes back when the mod is enabled.
+                       ("normal", lambda: session.stop_normal("mod_disabled")),
+                       ("team", lambda: session.stop_team("mod_disabled")),
+                       ("lost_loot", lost_loot.stop), ("resolution", resolution.stop), ("colours", colours.stop)):
+        try:
+            stop()
+        except Exception as error:
+            failed.append(f"{name}:{type(error).__name__}")
+    report.note("disabled", **({"failed": failed} if failed else {}))
 
 
 mod = build_mod(
     cls=AtomicMod,
     name="It Follows",
-    # The run's settings and the normal mode's, then the window's own (language, theme, window size, last page), the
-    # welcome edition last seen, the version whose update notes were seen last, the last runs, the Hardcore's kills and
-    # the key that opens the window, hidden in the SDK's menu.
-    options=[*options.ALL, *normal_options.ALL, *panel_preferences.ALL, welcome.seen, updates.seen, kept.option,
-             hardcore.option, open_key.option],
-    keybinds=[open_key.bind],
+    # The run's settings and the normal mode's, the companions' team and bars, then the window's own (language, theme,
+    # window size, last page), the welcome edition last seen, the version whose update notes were seen last, the last
+    # runs, the Hardcore's kills, the key that opens the window and the team's, hidden in the SDK's menu.
+    options=[*options.ALL, *normal_options.ALL, *companion_choices.ALL, companion_bars.option,
+             *panel_preferences.ALL, welcome.seen, updates.seen, kept.option, hardcore.option, open_key.option,
+             team_key.option],
+    keybinds=[open_key.bind, team_key.bind],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )

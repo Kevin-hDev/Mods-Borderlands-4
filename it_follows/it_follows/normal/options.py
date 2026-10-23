@@ -18,12 +18,12 @@ modes la »): the page shows the row at Bandit only, and the other levels give t
 The enemies' speed (decision 121), INCREASED at first, the level's own; REDUCED, its run, faster dodges and
 gestures slower, never below Bandit's (levels.reduced, decision 125), for those who find them too fast. Its help says
 only what the player sees slow down (Kevin, 17 October 2026: « faut juste dire que la vitesse de ca, ca et ca est
-reduite c'est tout »). The page shows the row at Senior and Predator only, and Bandit
+reduite c'est tout »). The page shows the row at Senior, Predator and God, and Bandit
 keeps its speed whatever it holds.
 
-The staggers can be switched off completely at Predator only, the row off at first (decision 135, Kevin, 18 October
+The staggers can be switched off completely at Predator and God, the row off at first (decision 135, Kevin, 18 October
 2026: « un bouton qui apparait uniquement pour ce niveau et qui desactive completement les sursauts »): on, its
-enemies never stagger nor fall under the player's shots. The page shows the row at Predator only; the other levels
+enemies never stagger nor fall under the player's shots. The page shows the row at Predator and God; the other levels
 keep theirs whatever it holds."""
 
 from dataclasses import dataclass, replace
@@ -47,9 +47,9 @@ shields = BoolOption("normal_shields", True, display_name="Shields",
                                  "once broken.")
 INCREASED, REDUCED = "Increased", "Reduced"
 speed = SpinnerOption("normal_speed", INCREASED, [INCREASED, REDUCED], display_name="Enemy speed",
-                      description="Reduced: at Senior and Predator, the enemies run, dodge and strike slower.")
+                      description="Reduced: at Senior, Predator and God, the enemies run, dodge and strike slower.")
 no_staggers = BoolOption("normal_no_staggers", False, display_name="No staggers",
-                          description="At Predator: the enemies never stagger nor fall under your shots.")
+                          description="At Predator and God: the enemies never stagger nor fall under your shots.")
 on = BoolOption("normal_on", False, is_hidden=True)
 
 # The NORMAL MODE page's rows: those the mode on locks, then the Hardcore's, never locked; then the hidden one.

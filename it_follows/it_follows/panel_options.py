@@ -1,6 +1,8 @@
 """The OPTIONS page (sketch 4 of esquisses_menu, validated by Kevin): the bar shown or not (decision 50), its size among
 three (decision 52) with a look at it under the choice, the Lost Loot, the 16:10 resolution, the colour profile on one
-line (decision 149, panel_colours.py), and the key that opens the window (decision 48).
+line (decision 149, panel_colours.py), the key that opens the window (decision 48), and the key that launches the
+companions' team or stops it (team_key.py). The two keys are never the same: one would open the window and start the
+team at once.
 
 The look writes the bar's words at the size chosen, in points as the bar itself does (bar.py): the window is drawn for
 a 1080p screen and scaled, so the look is the bar's size on such a screen, not on every one. The key's field is the
@@ -12,12 +14,14 @@ from typing import Any
 
 import unrealsdk
 
-from . import open_key, options, panel_colours, panel_i18n as i18n, panel_pages as p, panel_text as tx
+from . import open_key, options, panel_colours, panel_i18n as i18n, panel_pages as p, panel_text as tx, team_key
 from . import panel_theme as t
 from . import panel_widgets as w, report, texts
 
 # The look's example: a run going well.
 EXAMPLE = (152, 1, 64, 1, 767.0)
+# Each key's row: its module, which holds it, then its words.
+KEYS = {"open_key": (open_key, "key_label", "key_hint"), "team_key": (team_key, "team_key_label", "team_key_hint")}
 
 
 def page(owner: Any, group: Any, key: str, widgets: dict, template: Any) -> Any:
@@ -31,16 +35,17 @@ def page(owner: Any, group: Any, key: str, widgets: dict, template: Any) -> Any:
     widgets["bar_look"] = tx.text(band, "", "look")
     band.SetContent(widgets["bar_look"])
     w.column(rows, band, padding=w.pad(t.SPACE_2, 0, t.SPACE_3), halign="Left")
-    widgets["open_key_label"] = tx.text(rows, "", "label", wrap=True)
-    widgets["open_key"] = p.selector(rows, "", template)
-    p._row(rows, widgets["open_key_label"], p._selector_frame(rows, widgets["open_key"]))
-    widgets["open_key_hint"] = tx.text(rows, "", "hint", wrap=True)
-    w.column(rows, widgets["open_key_hint"], padding=w.pad(t.SPACE_2, 0, t.SPACE_3))
+    for name in KEYS:
+        widgets[f"{name}_label"] = tx.text(rows, "", "label", wrap=True)
+        widgets[name] = p.selector(rows, "", template)
+        p._row(rows, widgets[f"{name}_label"], p._selector_frame(rows, widgets[name]))
+        widgets[f"{name}_hint"] = tx.text(rows, "", "hint", wrap=True)
+        w.column(rows, widgets[f"{name}_hint"], padding=w.pad(t.SPACE_2, 0, t.SPACE_3))
     return scroll
 
 
-def _show_key(selector: Any) -> None:
-    key = unrealsdk.make_struct("Key", KeyName=open_key.key())
+def _show_key(selector: Any, held: Any) -> None:
+    key = unrealsdk.make_struct("Key", KeyName=held.key())
     selector.SetSelectedKey(unrealsdk.make_struct("InputChord", Key=key))
 
 
@@ -75,34 +80,43 @@ def paint(form: Any, widgets: dict, language: str) -> None:
     w.cosmetic("bar_look_size", lambda: _size(look, points))
     look.SetRenderOpacity(1.0 if shown else t.OPACITY_DISABLED)
     panel_colours.paint(form, widgets, language)
-    widgets["open_key_label"].SetText(i18n.text("key_label", language).upper())
-    widgets["open_key_hint"].SetText(i18n.text("key_hint", language))
-    selector = widgets["open_key"]
-    selector.SetKeySelectionText(i18n.text("press_key", language))
-    if not selector.GetIsSelectingKey():
-        _show_key(selector)
+    for name, (held, label, hint) in KEYS.items():
+        widgets[f"{name}_label"].SetText(i18n.text(label, language).upper())
+        widgets[f"{name}_hint"].SetText(i18n.text(hint, language))
+        selector = widgets[name]
+        selector.SetKeySelectionText(i18n.text("press_key", language))
+        if not selector.GetIsSelectingKey():
+            _show_key(selector, held)
 
 
 def selecting(widgets: dict) -> bool:
-    """Whether the key's field waits for a key: Escape then cancels the wait alone (control_escape)."""
-    return bool(widgets["open_key"].GetIsSelectingKey())
+    """Whether a key's field waits for a key: Escape then cancels the wait alone (control_escape)."""
+    return any(bool(widgets[name].GetIsSelectingKey()) for name in KEYS)
 
 
 def poll_key(form: Any, widgets: dict) -> bool:
-    """The key the field got, written; refused, the field shows the chosen key again. Whether it changed."""
-    selector = widgets["open_key"]
+    """The key each field got, written; refused, the field shows its chosen key again. Whether one changed."""
+    return any([_poll_one(form, widgets, name) for name in KEYS])
+
+
+def _poll_one(form: Any, widgets: dict, name: str) -> bool:
+    held = KEYS[name][0]
+    other = next(module for module, _label, _hint in KEYS.values() if module is not held)
+    selector = widgets[name]
     if selector.GetIsSelectingKey() or form.model.transaction.pending:
         return False
-    name = str(selector.SelectedKey.Key.KeyName)
-    if name == open_key.key():
+    chosen = str(selector.SelectedKey.Key.KeyName)
+    if chosen == held.key():
         return False
-    if not open_key.valid(name):
-        _show_key(selector)
-        report.note("open_key_refused", key=name)
+    if not open_key.valid(chosen) or chosen == other.key():
+        _show_key(selector, held)
+        if chosen == other.key():
+            form.report(widgets, "key_taken")
+        report.note(f"{name}_refused", key=chosen)
         return False
-    saved = form.model.save(((open_key.option, name),))
+    saved = form.model.save(((held.option, chosen),))
     if saved is False:
         form.report(widgets, form.failure_notice())
-        _show_key(selector)
-    report.note("open_key_saved", key=name, saved=saved)
+        _show_key(selector, held)
+    report.note(f"{name}_saved", key=chosen, saved=saved)
     return saved is True

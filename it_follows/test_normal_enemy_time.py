@@ -13,6 +13,7 @@ back and unhooks; the enemies given back stay bounded."""
 
 import pathlib
 import sys
+import threading
 import types
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -283,6 +284,20 @@ try:
     state["hooks"][enemy_time.IDENTIFIER].fn()
     check("a look that raises ends the mode", failures == ["time_error:TypeError"])
     broken.stop()
+    away = enemy_time.EnemyTime(lambda event, **f: None, 3.0, None, failures.append)
+    away.start()
+    jumper = pawn("Char_Psycho")
+    away.follow(weak(jumper))
+    jumper.AIDodgeState.ActiveDodge.Action = "Dodge_Left"
+    clock["now"] += 1.0
+    worker = threading.Thread(target=state["hooks"][enemy_time.IDENTIFIER].fn)
+    worker.start()
+    worker.join(5)
+    check("a call on another thread than the game's: no enemy touched (trial 206)",
+          time_of(jumper) == (1.0, 0.8) and away.counts["dodge"] == 0)
+    state["hooks"][enemy_time.IDENTIFIER].fn()
+    check("the next on the game's thread: the dodge sped up", near(time_of(jumper), (3.0, 2.4)))
+    away.stop()
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

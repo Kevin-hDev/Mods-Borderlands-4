@@ -192,7 +192,8 @@ class Enemies:
         return given
 
     def keep_shields(self, now: float) -> dict[str, int]:
-        """Predator's broken shields refilled when due, on the enemies the game says alive; what happened, counted."""
+        """Predator's and God's broken shields refilled when due, on the enemies the game says alive; what happened,
+        counted."""
         tally: dict[str, int] = {}
         if self.shields is None:
             return tally

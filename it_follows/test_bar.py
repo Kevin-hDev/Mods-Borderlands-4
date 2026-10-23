@@ -48,7 +48,16 @@ try:
     check("the screen in play is found past the class default", bar_module.viewport() is screen)
     state["all"]["GameViewportSubsystem"] = [fixture.default_screen]
     check("no screen but the class default: none", bar_module.viewport() is None)
-    bar = bar_module.Bar(announce)
+    BARLOW = object()
+    asked_under: list = []
+
+
+    def window_fonts(outer: object) -> dict:
+        asked_under.append(outer)
+        return {"title": object(), "body": BARLOW}
+
+
+    bar = bar_module.Bar(announce, fonts=window_fonts)
     check("with no screen, the bar is kept off and nothing is built",
           bar.show(pc, "x") == "no_viewport" and not built and not journal)
     state["all"]["GameViewportSubsystem"] = [fixture.default_screen, screen]
@@ -61,7 +70,8 @@ try:
           [entry[:2] for entry in journal] == [("announce", "construct_object"), ("construct", "UserWidget"),
                                               ("construct", "WidgetTree"), ("construct", "Overlay"),
                                               ("construct", "Border"), ("construct", "TextBlock"),
-                                              ("announce", "AddWidget"), ("AddWidget", "UserWidget")])
+                                              ("announce", "construct_object"), ("announce", "AddWidget"),
+                                              ("AddWidget", "UserWidget")])
     check("a UserWidget under the controller holds the tree, the layer and its root",
           holder.outer is pc and tree.outer is holder and layer.outer is holder and holder.WidgetTree is tree
           and tree.RootWidget is layer and holder.bIsFocusable is False)
@@ -69,6 +79,9 @@ try:
     check("the words, white, in 19 points", words.text == "KILLS 0   DEATHS 0   00:00" and words.font is words.Font
           and words.Font.Size == 19.0 and type(words.Font.Size) is float
           and rgba(words.colour.SpecifiedColor) == (1.0, 1.0, 1.0, 1.0))
+    check("the window's Barlow, bold, built under the bar's holder, in place of the engine's font (trial 202)",
+          words.Font.FontObject is BARLOW and words.Font.TypefaceFontName == "ExtraBold"
+          and asked_under == [holder])
     check("the band, dark and see-through, holds the words with 6 px above and 12 px aside",
           rgba(band.brush) == (0.0, 0.0, 0.0, 0.55) and margin(band.padding) == (12.0, 6.0, 12.0, 6.0)
           and band.content is words)
@@ -84,7 +97,8 @@ try:
           and (slot.Anchors.Minimum.X, slot.Anchors.Minimum.Y, slot.Anchors.Maximum.X, slot.Anchors.Maximum.Y)
           == (0.0, 0.0, 1.0, 1.0) and (slot.Alignment.X, slot.Alignment.Y) == (0.0, 0.0)
           and margin(slot.Offsets) == (0.0, 0.0, 0.0, 0.0))
-    check("the holder's order is written down with its call", journal[6][2] == {"zorder": 5000})
+    check("the holder's order is written down with its call", journal[7][2] == {"zorder": 5000}
+          and journal[6][2] == {"widgets": "Font"})
 
     check("on the screen, the bar is on", bar.where() == "on")
     check("kept while on, its words are written again", bar.keep(pc, "KILLS 0   DEATHS 1   00:09") == "written"
@@ -120,18 +134,19 @@ try:
 
     fixture.whole_points = True
     built.clear()
-    other = bar_module.Bar(announce)
+    other = bar_module.Bar(announce, fonts=lambda _outer: {})
     check("an engine counting whole points gets 19", other.show(pc, "x") == "shown"
           and built[4].Font.Size == 19 and type(built[4].Font.Size) is int)
     fixture.whole_points = False
+    check("no font of the window: the engine's left", getattr(built[4].Font, "FontObject", None) is not BARLOW)
     built[0].removal_fails = True
     check("a removal that raises says why", other.remove() == "failed:RuntimeError")
 
     screen.answer = (True,)
-    odd = bar_module.Bar(announce)
+    odd = bar_module.Bar(announce, fonts=lambda _outer: {})
     check("an answer of another shape that says yes is taken for shown", odd.show(pc, "x") == "shown")
     screen.answer = False
-    refused = bar_module.Bar(announce)
+    refused = bar_module.Bar(announce, fonts=lambda _outer: {})
     check("a screen refusing the bar keeps it off, and nothing is kept", refused.show(pc, "x") == "refused"
           and refused.where() == "gone")
     screen.answer, screen.add_fails = True, True

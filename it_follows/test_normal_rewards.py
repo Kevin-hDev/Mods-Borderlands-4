@@ -73,12 +73,17 @@ def fresh(level: str = "Senior") -> tuple[rewards.Rewards, Attributes]:
 
 
 def column(field: str) -> list:
-    return [getattr(levels.LEVELS[name], field) for name in ("Bandit", "Senior", "Predator")]
+    return [getattr(levels.LEVELS[name], field) for name in ("Bandit", "Senior", "Predator", "God")]
 
 
 try:
-    check("experience +10, +15, +20 %; ammo +10, +20, +25 %; money +15 % (decision 119)",
-          column("xp") == [0.1, 0.15, 0.2] and column("ammo") == [0.1, 0.2, 0.25] and column("cash") == [0.15] * 3)
+    check("experience +10, +15, +20 %, God +25 %; ammo +10, +20, +25 %, God +50 %; money +15 %, God +40 % "
+          "(decisions 119 and 155)", column("xp") == [0.1, 0.15, 0.2, 0.25]
+          and column("ammo") == [0.1, 0.2, 0.25, 0.5] and column("cash") == [0.15, 0.15, 0.15, 0.4])
+
+    given, library = fresh("God")
+    check("at God, each share added as the others", given.start(hunter)["shares"] == {XP: 0.25, AMMO: 0.5, CASH: 0.4}
+          and library.added == [(XP, 0.25), (AMMO, 0.5), (CASH, 0.4)])
 
     given, library = fresh()
     started = given.start(hunter)

@@ -20,9 +20,11 @@ buttons show them; a controller player selects, never clicks (选择, never 点�
 """
 
 from .panel_common_zh import TEXT as COMMON
+from .panel_companion_texts import ZH as COMPANIONS, OPTIONS_ZH
 
 TEXT = {
     **COMMON,
+    **COMPANIONS,
     "run": "敌群模式【测试版】", "normal": "普通模式", "history": "历史记录", "options": "选项",
     "running_tag": "进行中",
     "run_settings": "单局设置", "run_live": "本局进行中 · {level}",
@@ -61,6 +63,8 @@ TEXT = {
                            "每个没有护盾的敌人都会获得一个护盾。",
     "normal_level:Predator": "敌人还要更多，速度非常快，也非常坚韧。闪避快如闪电，追击你的距离远得多。"
                              "每个没有护盾的敌人都会获得一个护盾，护盾耗尽 10 秒后重新充能。",
+    "normal_level:God": "敌人数量与掠食者等级相同，坚韧得多，但速度稍慢。每个没有护盾的敌人都会获得一个护盾，"
+                        "护盾耗尽 10 秒后重新充能。获得更多弹药、现金和经验值。专为与伙伴一起游戏而设计。",
     "hardcore_settings": "硬核", "hardcore_lead": "在整个游戏过程中缓慢上升的难度。",
     "hardcore_badge": "硬核 {percent}%", "hardcore_badge_paused": "硬核 {percent}% · 已暂停",
     "help_hardcore_title": "硬核模式",
@@ -123,17 +127,18 @@ TEXT = {
     "updates_count": "{page} / {pages}",
     "updates_next": "下一页",
     "welcome_normal_lead": "普通模式：像平常一样玩你的游戏。你遇到的敌人更多、更快、更坚韧，闪避更快，追击你的距离更远。"
-                           "它首先是为从头开始或重新开始游戏而设计的，有点像三个等级的多周目，在游戏中途也能使用。",
-    "welcome_levels_title": "三个等级",
-    "welcome_levels": "匪徒、资深和掠食者，从更难的游戏到难得多的游戏。",
+                           "它首先是为从头开始或重新开始游戏而设计的，有点像四个等级的多周目，在游戏中途也能使用。",
+    "welcome_levels_title": "四个等级",
+    "welcome_levels": "匪徒、资深、掠食者和神，从更难的游戏到难得多的游戏。",
     "welcome_evolving_title": "持续完善中",
     "welcome_evolving": "对游戏敌人的首次改造，会随着一个又一个版本持续完善。",
     "welcome_go": "出发",
 }
 
-GROUPS = {"run": "", "normal": "", "history": "", "options": ""}
+GROUPS = {"run": "", "normal": "", "companions": "", "history": "", "options": ""}
 
 OPTIONS = {
+    **OPTIONS_ZH,
     "start_point": ("起点", "从标签页中选择的地图地点开始本局，而不是从你所站的位置开始。"),
     "level": ("等级", "等级越高，你周围的敌人越多。"),
     "speed": ("敌人速度", "追杀你的敌人的奔跑速度。"),
@@ -150,9 +155,9 @@ OPTIONS = {
     "normal_level": ("等级", "游戏中敌人的难度。"),
     "normal_allies": ("敌人结盟", "所有敌人同属一队：它们不再互相攻击。"),
     "normal_fast_dodges": ("加速闪避", "敌人的闪避比游戏原本更快。关：游戏原本的闪避速度。"),
-    "normal_speed": ("敌人速度", "降低：在资深和掠食者等级下，敌人的奔跑、闪避和攻击速度更慢。"),
+    "normal_speed": ("敌人速度", "降低：在资深、掠食者和神等级下，敌人的奔跑、闪避和攻击速度更慢。"),
     "normal_shields": ("护盾", "没有护盾的敌人会获得一个护盾，相当于其生命值的 40%。护盾一旦耗尽就不会恢复。"),
-    "normal_no_staggers": ("无硬直", "掠食者等级下：敌人被你击中时不再踉跄，也不会被击倒。"),
+    "normal_no_staggers": ("无硬直", "掠食者和神等级下：敌人被你击中时不再踉跄，也不会被击倒。"),
     "normal_hardcore": ("硬核", "随着你不断击杀，敌人会在整个游戏过程中缓慢变强。"),
     "normal_hardcore_progress": ("进度", "关：已达到的难度保持不变，不再上升。"),
 }
@@ -164,6 +169,6 @@ CHOICES = {"level:25": "等级 1", "level:40": "等级 2", "level:60": "等级 3
            "+40%": "+40%", "+50%": "+50%", "Unlimited": "无限", "Small": "小", "Medium": "中",
            "Large": "大", "buff:Normal": "普通", "normal_speed:Increased": "提高",
            "normal_speed:Reduced": "降低",
-           "Bandit": "匪徒", "Senior": "资深", "Predator": "掠食者", "Buff": "增益", "Buff+": "增益+",
+           "Bandit": "匪徒", "Senior": "资深", "Predator": "掠食者", "God": "神", "Buff": "增益", "Buff+": "增益+",
            "10 min": "10 分钟", "20 min": "20 分钟", "30 min": "30 分钟", "45 min": "45 分钟", "60 min": "60 分钟",
            "colour_profile:Profile 1": "预设 1", "colour_profile:Profile 2": "预设 2", "colour_profile:Profile 3": "预设 3"}

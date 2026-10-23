@@ -30,7 +30,7 @@ from typing import Any, Callable
 from mods_base import hook
 from unrealsdk.hooks import Type
 
-from .. import frame
+from .. import frame, game_thread
 from . import gestures
 
 IDENTIFIER = "it_follows:normal_time"
@@ -91,10 +91,13 @@ class EnemyTime:
         self.failed: set[str] = set()
         self.said: set[str] = set()
         self.hook: Any = None
+        self.guard: game_thread.Guard | None = None
         self.last = 0.0
         self.last_gestures = 0.0
 
     def start(self) -> None:
+        # On the game's thread, as the hook: a call that comes elsewhere does nothing (game_thread.py).
+        self.guard = game_thread.Guard(IDENTIFIER)
         self.hook = hook(frame.HOOK, Type.POST, hook_identifier=IDENTIFIER)(self._frame)
         self.hook.enable()
 
@@ -104,7 +107,7 @@ class EnemyTime:
         self.watched, self.plain = watched, plain
 
     def _frame(self, *_args: Any) -> None:
-        if self.hook is None:
+        if self.hook is None or (self.guard is not None and not self.guard.here()):
             return
         moment = frame.now()
         if moment - self.last < FRAME_GAP_S:

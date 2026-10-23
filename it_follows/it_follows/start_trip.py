@@ -29,7 +29,7 @@ from mods_base import hook
 from unrealsdk.hooks import Type
 from unrealsdk.unreal import WeakPointer
 
-from . import ground, report, start_calls as calls, start_cover as cover, start_hold as hold
+from . import game_thread, ground, report, start_calls as calls, start_cover as cover, start_hold as hold
 
 FRAME_HOOK = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 IDENTIFIER = "it_follows:start_trip"
@@ -109,6 +109,8 @@ def go(place: Any, pc: Any, character: Any, arrived: Callable[[], None], failed:
     _trip.update(number=number, place=place, pawn=WeakPointer(character), pc=WeakPointer(pc), home=home, ticked=now,
                  arrived=arrived, failed=failed, trace=ground.GroundTrace(report.announce), back=None)
     _held(place.spot, now)
+    # On the game's thread, as the hook: a call that comes elsewhere does nothing (game_thread.py).
+    _trip["guard"] = game_thread.Guard(IDENTIFIER)
     _trip["hook"] = hook(FRAME_HOOK, Type.POST, hook_identifier=IDENTIFIER)(_frame)
     _trip["hook"].enable()
     calls.say(number, f"held on the mark until a floor stays under it {hold.STABLE_S:.0f} s, "
@@ -215,7 +217,7 @@ def _arrive() -> None:
 
 
 def _frame(_obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
-    if not _trip:
+    if not _trip or ("guard" in _trip and not _trip["guard"].here()):
         return
     now = clock()
     if now - _trip["ticked"] < hold.HOLD_EVERY_S:

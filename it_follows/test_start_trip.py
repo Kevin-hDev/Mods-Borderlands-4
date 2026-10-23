@@ -9,6 +9,7 @@ error and cancel each ending the trip badly, the cover given back, the player se
 import pathlib
 from types import SimpleNamespace
 import sys
+import threading
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -228,6 +229,15 @@ check("the trip's clock leaves a pause out: 30 s paused on the black screen coun
 
 run = Run()
 run.go()
+held = start_trip._trip["ticked"]
+clock.now += hold.HOLD_EVERY_S * 2
+worker = threading.Thread(target=lambda: start_trip._frame(None, None, None, None))
+worker.start()
+worker.join(5)
+check("a call on another thread than the game's: the hunter not held (trial 206)",
+      start_trip._trip["ticked"] == held)
+start_trip._frame(None, None, None, None)
+check("the next on the game's thread: held", start_trip._trip["ticked"] == clock.now)
 start_trip.cancel("the mod switched off")
 check("cancel: ended badly as cancelled, sent back, the cover given back", run.failed == ["cancelled"]
       and run.game.character.at == home and ("stop",) in run.game.camera and not start_trip.travelling())

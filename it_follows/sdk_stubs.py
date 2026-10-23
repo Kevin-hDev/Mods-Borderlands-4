@@ -412,6 +412,8 @@ def install(character: Any | None = None) -> dict:
     mods_base.Mod = FakeMod
     mods_base.ButtonOption = FakeButtonOption
     mods_base.MODS_DIR = FakePath(state, "mods_dir")
+    # The mod as a folder, as mods_base reads one that is no .sdkmod.
+    mods_base.open_in_mod_dir = lambda path, binary=False: open(path, "rb" if binary else "r")
     mods_base.get_pc = lambda **k: state["pc"]
     mods_base.hook = lambda path, kind, hook_identifier="": (
         lambda fn: FakeHook(fn, state, hook_identifier or path)

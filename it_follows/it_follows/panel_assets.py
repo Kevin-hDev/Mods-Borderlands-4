@@ -13,14 +13,14 @@ from pathlib import Path
 
 import unrealsdk
 
-from . import panel_widgets as w, report, start_places_data
+from . import companion_pictures_data, panel_widgets as w, report, start_places_data
 
 # Noto Sans SC cut to the Chinese a mod's texts use (outils/chinese_font.py), shipped by the mods offering Chinese.
 CHINESE_FONTS = ("NotoSansSC-Black.ttf", "NotoSansSC-Medium.ttf", "NotoSansSC-ExtraBold.ttf")
 FONTS = ("Anton-Regular.ttf", "BarlowCondensed-Medium.ttf", "BarlowCondensed-SemiBold.ttf",
          "BarlowCondensed-ExtraBold.ttf", *CHINESE_FONTS)
 AVATAR = "avatar.png"
-NAMES = (*FONTS, AVATAR, *start_places_data.PICTURES)
+NAMES = (*FONTS, AVATAR, *start_places_data.PICTURES, *companion_pictures_data.FILES)
 FOLDER = "it_follows_ui"
 # The largest shipped file is a Chinese face, 1.1 MB with the everyday characters; anything larger is refused.
 MAX_BYTES = 2_000_000

@@ -18,13 +18,17 @@ from typing import Any, Callable, NamedTuple
 import mods_base
 
 from . import camps, ending, frame, horde, presence, report, start_point, start_trip
+from .companions import bars as companion_bars, main_menu, team as companions_team
 from .normal import mode as normal_mode, options as normal_options
 from .run import Run
 
 # The mod's camps, kept from one run to the next in a game session: a run would otherwise leave up to CROWD_MAX more
 # in the world each time. The run in progress, None between two, and when it began, in seconds since 1970. The normal
-# mode while it is on, None while it is off: never on during a run (decision 80).
-_state: dict[str, Any] = {"pool": None, "run": None, "began": 0, "normal": None}
+# mode while it is on, None while it is off: never on during a run (decision 80). The companions' team while it is on,
+# None while it is off: with a run, with the normal mode, or alone (decision 24 of docs/renforts). The companions'
+# camps, kept from one team to the next as the Horde's (decision 59 of docs/renforts).
+_state: dict[str, Any] = {"pool": None, "run": None, "began": 0, "normal": None, "team": None,
+                          "companion_births": None}
 # The reasons a mode stops for when a second (frame.Beat) or an enemy's image (normal/enemy_time.py) raised.
 ERRORS = ("error:", "time_error:")
 
@@ -192,3 +196,57 @@ def _written_off() -> bool | str:
     except Exception as error:
         return f"failed:{type(error).__name__}"
     return True
+
+
+class TeamLive(NamedTuple):
+    """What the window shows of the companions' team on: how many follow the hunter, how many are on their way."""
+    following: int
+    on_their_way: int
+
+
+def team_on() -> bool:
+    return _state["team"] is not None
+
+
+def team_live() -> TeamLive | None:
+    team = _state["team"]
+    return None if team is None else TeamLive(len(team.active()), len(team.respawns.waiting))
+
+
+def start_team(names: list[str], picks: dict | None = None) -> str:
+    """The companions chosen, by their name (companions/kinds.py), each with its card's choice in picks
+    (companions/choices.py), called, then born and followed (companions/team.py): "started", or why not: none chosen
+    ("empty"), the team already on, the main menu showing ("main_menu": the team would stop at once, decision 61 of
+    docs/renforts). In a run, in the normal mode or in the game alone; without a hunter on foot they wait for one
+    (companions/respawn.py)."""
+    if _state["team"] is not None:
+        return "already_on"
+    if main_menu.showing(mods_base.get_pc()) is True:
+        return "main_menu"
+    if _state["companion_births"] is None:
+        _state["companion_births"] = companions_team.new_births()
+    team = companions_team.Team(births=_state["companion_births"], end=lambda why: _team_ended(team, why))
+    outcome = team.start(names, picks)
+    if outcome == "started":
+        _state["team"] = team
+        # Started whatever the bars' option: it also names the hunter aimed at (decision 53), and reads the option
+        # at each publish.
+        team.bars = companion_bars.start(team.clock)
+    return outcome
+
+
+def _team_ended(team: Any, why: str) -> None:
+    """A team asking to stop (at the main menu), stopped here, its owner, if it is still the one on."""
+    if _state["team"] is team:
+        stop_team(why)
+
+
+def stop_team(reason: str = "stopped") -> str:
+    """Ends the team: every follow ended, its companions taken out of the world, those on their way forgotten:
+    "stopped", or "not_on". The team's stop removes its hook whatever fails in it (team.py), so that forgetting it
+    here never leaves one running unowned."""
+    team, _state["team"] = _state["team"], None
+    if team is None:
+        return "not_on"
+    team.stop(reason)
+    return "stopped"

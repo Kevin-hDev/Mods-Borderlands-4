@@ -17,6 +17,7 @@ import sdk_stubs  # noqa: E402
 sdk_stubs.install()
 from it_follows import options, panel_en, panel_fr, panel_i18n, panel_words, release_notes, texts  # noqa: E402
 from it_follows import panel_zh  # noqa: E402
+from it_follows.companions import bars as companion_bars  # noqa: E402
 from it_follows.normal import options as normal_options  # noqa: E402
 
 NOTES = HERE.parents[3] / "publication" / "nexus" / "it_follows"
@@ -115,7 +116,8 @@ for key, text in own.items():
     # A clock is no sentence: its colon stays between the hours and the minutes.
     sentence_rules(key, panel_en.TEXT[key], text, punctuation=key != "clock_time")
 
-rows = {option.identifier: option for option in (*options.RUN, *options.DISPLAY, *normal_options.PAGE)}
+rows = {option.identifier: option for option in (*options.RUN, *options.DISPLAY, *normal_options.PAGE,
+                                                 companion_bars.option)}
 for key, (name, description) in panel_zh.OPTIONS.items():
     option = rows.get(key)
     check(option is not None, f"option {key}: a row of the mod")
@@ -126,7 +128,9 @@ for key, (name, description) in panel_zh.OPTIONS.items():
 
 # A sentence naming a button names it as the button shows it; a row or a card's title it names, as it shows. The
 # starting point's help names its CHOOSE and the card its tabs sit beside (decision 140).
-buttons = {panel_zh.TEXT[key] for key in ("start", "stop", "start_choose", "start_back")}
+# The companions' launch button is a button too, STOP THE TEAM while the team is on: no sentence naming STOP.
+BUTTONS = ("start", "stop", "start_choose", "start_back", "companions_launch", "companions_stop")
+buttons = {panel_zh.TEXT[key] for key in BUTTONS}
 rows_shown = {name for name, _description in panel_zh.OPTIONS.values()} | {panel_zh.TEXT["run_settings"]}
 sentences = {**own, **{f"option {key}": text for key, (_name, text) in panel_zh.OPTIONS.items()}}
 english = {**panel_en.TEXT, **{f"option {key}": rows[key].description for key in panel_zh.OPTIONS if key in rows}}
@@ -135,7 +139,7 @@ for key, text in sentences.items():
         check(quoted in buttons | rows_shown, f"{key}: 「{quoted}」 is no button, row or title of the window")
     for button in ("start", "stop"):
         word = panel_en.TEXT[button]
-        if re.search(rf"\b{word}\b", english.get(key, "")) and english.get(key) != word:
+        if re.search(rf"\b{word}\b", english.get(key, "")) and english.get(key) != word and key not in BUTTONS:
             check(f"「{panel_zh.TEXT[button]}」" in text, f"{key}: names the {button} button as it shows")
 check("「最大敌人数」" in own["caution"], "caution: Max enemies named as its row shows it")
 # The switch at the bottom left shows 已启用 / 已停用: a sentence about it uses the same verbs.
@@ -152,9 +156,10 @@ for option in rows.values():
 check(set(panel_fr.CHOICES) <= set(panel_zh.CHOICES), f"French choices missing: "
                                                         f"{sorted(set(panel_fr.CHOICES) - set(panel_zh.CHOICES))}")
 check(panel_zh.CHOICES.get("level:40") == "等级 2" and panel_zh.CHOICES.get("30 min") == "30 分钟", "a level, a time limit")
-levels_named = [panel_zh.CHOICES.get(name, name) for name in ("Bandit", "Senior", "Predator")]
-check(levels_named == ["匪徒", "资深", "掠食者"], "the normal mode's levels as the game names a bandit and a predator")
-check(all(level in own["welcome_levels"] for level in levels_named), "welcome_levels: the three levels")
+levels_named = [panel_zh.CHOICES.get(name, name) for name in ("Bandit", "Senior", "Predator", "God")]
+check(levels_named == ["匪徒", "资深", "掠食者", "神"],
+      "the normal mode's levels as the game names a bandit, a predator and a god (黄金之神, 弑神者)")
+check(all(level in own["welcome_levels"] for level in levels_named), "welcome_levels: the four levels")
 
 
 # The dates, read through panel_words.py as the window reads them; Chinese put in for this check only.

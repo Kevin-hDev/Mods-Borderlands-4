@@ -15,6 +15,14 @@ from typing import Any, Callable
 
 import unrealsdk
 
+from . import panel_fonts, panel_theme
+
+# The window's own Barlow, bold, built for the bar as the window builds it (panel_fonts.py). After the game's update of
+# 22 October 2026 (build 4906557), the bar on the engine's default font no longer showed while the window, on its own
+# fonts, did (trial 202, Kevin: « la barre qui affiche les kills [...] a disparue »; the cause non vérifiée). A family
+# that cannot be built leaves the engine's font, as before.
+FAMILY = "body"
+WEIGHT = panel_theme.WEIGHT_BOLD
 # Under BL4 Arena's window (10000), so that a mod's menu covers the bar.
 ZORDER = 5000
 # From the screen's top and left edges, and inside the band, in pixels.
@@ -67,8 +75,10 @@ class Bar:
     """The bar's holder on the screen and its words, held weakly. announce(call, log=True, **fields) writes each call
     to the game down before it is made: the last line before a crash names it."""
 
-    def __init__(self, announce: Callable[..., None], points: float = TEXT_POINTS) -> None:
-        self.announce, self.points = announce, points
+    def __init__(self, announce: Callable[..., None], points: float = TEXT_POINTS,
+                 fonts: Callable[[Any], dict] = panel_fonts.build) -> None:
+        """fonts(outer): the window's fonts built under outer, {family: font}."""
+        self.announce, self.points, self.fonts = announce, points, fonts
         self.holder = self.words = self.screen = None
 
     def show(self, pc: Any, text: str) -> str:
@@ -88,7 +98,8 @@ class Bar:
             tree.RootWidget = layer
             band = unrealsdk.construct_object("Border", layer)
             words = unrealsdk.construct_object("TextBlock", band)
-            self._style(holder, layer, band, words, text, self.points)
+            self.announce("construct_object", widgets="Font")
+            self._style(holder, layer, band, words, text, self.points, self.fonts(holder).get(FAMILY))
             step = "add"
             self.announce("AddWidget", zorder=ZORDER)
             # Read as BL4 Arena's window reads it: a strict "is True" would take an answer of another shape for a
@@ -102,7 +113,7 @@ class Bar:
         return "shown"
 
     @staticmethod
-    def _style(holder: Any, layer: Any, band: Any, words: Any, text: str, points: float) -> None:
+    def _style(holder: Any, layer: Any, band: Any, words: Any, text: str, points: float, family: Any = None) -> None:
         words.SetText(text)
         font = words.Font
         try:
@@ -110,6 +121,9 @@ class Bar:
         except TypeError:
             # Engines before 5.1 size fonts in whole points (BL4 Arena's window).
             font.Size = round(points)
+        if family is not None:
+            font.FontObject = family
+            font.TypefaceFontName = panel_fonts.face(FAMILY, WEIGHT)
         words.SetFont(font)
         words.SetColorAndOpacity(unrealsdk.make_struct("SlateColor", SpecifiedColor=_colour(TEXT_RGBA)))
         band.SetBrushColor(_colour(BAND_RGBA))

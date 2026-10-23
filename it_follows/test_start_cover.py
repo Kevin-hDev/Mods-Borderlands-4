@@ -7,6 +7,7 @@ the log one of the trip's events; nothing let go nor given back when nothing is 
 import json
 import pathlib
 import sys
+import threading
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -105,6 +106,18 @@ cover.cover(9, None, game.pc)
 check("nothing set to wait for: the trip goes on, counted as ended well", not cover.covered()
       and cover.ended_well())
 
+game = fresh()
+cover.cover(10, game.character, game.pc)
+looked = cover._state["ticked"]
+clock.now += cover.EVERY_S * 2
+worker = threading.Thread(target=lambda: trip_fixture.Game.run(state))
+worker.start()
+worker.join(5)
+check("a call on another thread than the game's: nothing looked at (trial 206)",
+      cover._state["ticked"] == looked)
+trip_fixture.Game.run(state)
+check("the next on the game's thread: looked at", cover._state["ticked"] == clock.now)
+cover.give_back("done")
 state["info"].clear()
 cover.landed()
 cover.give_back("nothing covered")

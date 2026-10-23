@@ -2,9 +2,11 @@
 normal mode's (spec-mode-normal.md, decision 80)."""
 
 from .panel_common_fr import TEXT as COMMON
+from .panel_companion_texts import FR as COMPANIONS, OPTIONS_FR
 
 TEXT = {
     **COMMON,
+    **COMPANIONS,
     "run": "MODE HORDE [BETA]", "normal": "MODE NORMAL", "history": "HISTORIQUE", "options": "OPTIONS",
     "running_tag": "EN COURS",
     "run_settings": "RÉGLAGES DU RUN", "run_live": "RUN EN COURS · {level}",
@@ -48,6 +50,9 @@ TEXT = {
     "normal_level:Predator": "Encore plus d'ennemis, très rapides et très résistants. Des esquives fulgurantes, et "
                              "ils te poursuivent bien plus loin. Un bouclier pour chaque ennemi qui n'en a pas, qui "
                              "revient 10 secondes après avoir été cassé.",
+    "normal_level:God": "Autant d'ennemis qu'en Predator, bien plus résistants mais un peu moins rapides. Un bouclier "
+                        "pour chaque ennemi qui n'en a pas, qui revient 10 secondes après avoir été cassé. Plus de "
+                        "munitions, d'argent et d'expérience. Pensé pour jouer avec tes compagnons.",
     "hardcore_settings": "HARDCORE", "hardcore_lead": "Une difficulté qui monte lentement, tout au long du jeu.",
     "hardcore_badge": "HARDCORE {percent} %", "hardcore_badge_paused": "HARDCORE {percent} % · EN PAUSE",
     "help_hardcore_title": "LE MODE HARDCORE",
@@ -126,17 +131,18 @@ TEXT = {
     "welcome_normal_lead": "Le mode normal : joue ta partie comme d'habitude. Les ennemis que tu croises sont plus "
                            "nombreux, plus rapides et plus résistants, esquivent plus vite et te poursuivent plus "
                            "loin. Il est pensé d'abord pour commencer ou recommencer le jeu depuis le début, un peu "
-                           "comme trois niveaux de NG+, et reste utilisable en cours de partie.",
-    "welcome_levels_title": "TROIS NIVEAUX",
-    "welcome_levels": "Bandit, Senior et Predator, d'une partie plus dure à une partie bien plus dure.",
+                           "comme quatre niveaux de NG+, et reste utilisable en cours de partie.",
+    "welcome_levels_title": "QUATRE NIVEAUX",
+    "welcome_levels": "Bandit, Senior, Predator et God, d'une partie plus dure à une partie bien plus dure.",
     "welcome_evolving_title": "EN ÉVOLUTION",
     "welcome_evolving": "Un début de refonte des ennemis du jeu, qui évoluera encore d'une version à l'autre.",
     "welcome_go": "C'EST PARTI",
 }
 
-GROUPS = {"run": "", "normal": "", "history": "", "options": ""}
+GROUPS = {"run": "", "normal": "", "companions": "", "history": "", "options": ""}
 
 OPTIONS = {
+    **OPTIONS_FR,
     "start_point": ("Point de départ", "Lance le run depuis un lieu de la carte choisi dans les onglets en haut, "
                                        "au lieu de là où tu te tiens."),
     "level": ("Niveau", "Plus le niveau est haut, plus il y a d'ennemis autour de toi."),
@@ -161,11 +167,11 @@ OPTIONS = {
     "normal_fast_dodges": ("Esquives accélérées",
                            "Les ennemis esquivent plus vite que dans le jeu. Désactivé : la vitesse d'esquive du jeu."),
     "normal_speed": ("Vitesse des ennemis",
-                     "Réduite : en Senior et Predator, les ennemis courent, esquivent et frappent moins vite."),
+                     "Réduite : en Senior, Predator et God, les ennemis courent, esquivent et frappent moins vite."),
     "normal_shields": ("Boucliers", "Les ennemis sans bouclier en reçoivent un, de 40 % de leur vie. Une fois cassé, "
                                     "il ne revient pas."),
-    "normal_no_staggers": ("Sans sursaut", "En Predator : les ennemis ne sursautent plus et ne tombent plus sous tes "
-                                           "tirs."),
+    "normal_no_staggers": ("Sans sursaut", "En Predator et God : les ennemis ne sursautent plus et ne tombent plus "
+                                           "sous tes tirs."),
     "normal_hardcore": ("Hardcore", "Les ennemis se renforcent à mesure que tu tues, lentement, tout au long du jeu."),
     "normal_hardcore_progress": ("Progression", "Désactivée : la difficulté atteinte reste telle quelle, sans monter."),
 }

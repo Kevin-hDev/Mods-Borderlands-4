@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.10 - 2026-10-23
+
+- Added 10 companions: the 6 Vault Hunters and 4 allies, in the new COMPANIONS tab. Up to 8 follow you and fight at your side.
+- Normal mode: new God level.
+- Fix after the game update: the Horde bar shows again.
+
 ## 1.0.9 - 2026-10-20
 
 - Normal mode: Vile enemies no longer stay nearly immortal at Senior and Predator. Their eridium shield breaks fully again when you destroy their growths.

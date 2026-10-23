@@ -3,6 +3,23 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.10', {
+        'en': (
+            'Added 10 companions: the 6 Vault Hunters and 4 allies, in the new COMPANIONS tab. Up to 8 follow you and fight at your side.',
+            'Normal mode: new God level.',
+            'Fix after the game update: the Horde bar shows again.',
+        ),
+        'fr': (
+            "Ajout de 10 compagnons : les 6 chasseurs de l'Arche et 4 alliés, dans le nouvel onglet COMPAGNONS. Jusqu'à 8 te suivent et se battent avec toi.",
+            'Mode Normal : nouveau niveau God.',
+            "Correctif après la mise à jour du jeu : la barre de la Horde s'affiche de nouveau.",
+        ),
+        'zh': (
+            '新增 10 名伙伴：6 名秘藏猎人和 4 名盟友，位于新的「伙伴」页面。最多 8 名伙伴跟随你并与你并肩作战。',
+            '普通模式：新增「神」等级。',
+            '游戏更新后的修复：敌群状态栏重新显示。',
+        ),
+    }),
     ('1.0.9', {
         'en': (
             'Normal mode: Vile enemies no longer stay nearly immortal at Senior and Predator. Their eridium shield breaks fully again when you destroy their growths.',

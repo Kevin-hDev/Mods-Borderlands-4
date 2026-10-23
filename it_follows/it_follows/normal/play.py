@@ -17,7 +17,8 @@ again each second; when it changes (switched on or off, a step reached), it is g
 to the damage taken, on top of the level's.
 
 Each second (the mode's beat) does what is due: the camps every camps_grown.EVERY_S, the census every enemies.EVERY_S
-but never in the camps' second, Predator's broken shields refilled when their time comes, the damage taken kept.
+but never in the camps' second, Predator's and God's broken shields refilled when their time comes, the damage taken
+kept.
 Both every 5 s, the camps and the census fell in the same second, which held the game 35 to 43 ms in trials 28 to 32,
 against some 25 ms for the camps alone (audit of 15 October 2026); the census
 waits a second then, and they fall a second apart from then on. The camps go first: they are grown before their

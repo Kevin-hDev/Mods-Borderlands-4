@@ -7,6 +7,7 @@ called, and no error ever escaping; the mod disabled, the hooks gone and the bon
 
 import pathlib
 import sys
+import threading
 import types
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -19,7 +20,7 @@ sys.modules["unrealsdk"].unreal.WrappedStruct = lambda fn, **fields: types.Simpl
 # The trials' form, a name and the definition's type; the shared stub only knows a name.
 sys.modules["unrealsdk"].unreal.FGbxDefPtr = lambda name, kind: types.SimpleNamespace(name=name, def_type=kind)
 
-from it_follows import frame, lost_loot, lost_loot_game as game, menu, options, report  # noqa: E402
+from it_follows import frame, game_thread, lost_loot, lost_loot_game as game, menu, options, report  # noqa: E402
 
 fails: list[str] = []
 clock = [1000.0]
@@ -197,6 +198,20 @@ for label, signature in (("a missing parameter", props()[:-1]),
     outcome = lost_loot.apply(True)
     check(f"an add function with {label}: never called, no error escaping, said once",
           outcome == "failed" and library.calls == [] and len(state["errors"]) == 1 and limit() == 6.0)
+
+for known in (None, threading.get_native_id()):
+    lost_loot.stop()
+    library = fresh()
+    options.lost_loot.value = True
+    game_thread._game[0] = known
+    loader = threading.Thread(target=lost_loot.start)
+    loader.start()
+    loader.join(5)
+    run_to(clock[0] + 1.1)
+    check(f"started on the mod's load thread, the game's thread {'known' if known else 'unknown'} (trial 207): "
+          "the watch adds the bonus on the game's", limit() == 400.0 and lost_loot.WATCH_ID not in state["hooks"])
+lost_loot.stop()
+options.lost_loot.value = False
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

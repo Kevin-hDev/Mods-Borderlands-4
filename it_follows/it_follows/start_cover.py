@@ -22,7 +22,7 @@ import unrealsdk
 from unrealsdk.hooks import Type, add_hook, has_hook, remove_hook
 from unrealsdk.unreal import WeakPointer
 
-from . import start_calls as calls, start_hold as hold
+from . import game_thread, start_calls as calls, start_hold as hold
 
 FRAME_HOOK = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 IDENTIFIER = "it_follows:start_cover"
@@ -87,6 +87,8 @@ def cover(number: int, character: Any, pc: Any) -> None:
         calls.say(number, "neither black nor shielded: the trip goes on without", WHAT)
         return
     _ended["well"] = False
+    # On the game's thread, as the hook: a call that comes elsewhere does nothing (game_thread.py).
+    _state["guard"] = game_thread.Guard(IDENTIFIER)
     add_hook(FRAME_HOOK, Type.POST, IDENTIFIER, _frame)
     calls.say(number, f"black {_state['black']}, shielded {_state['was'] is not None}, until the trip lets go and the "
                       "keys come back", WHAT)
@@ -138,7 +140,7 @@ def _look(now: float) -> None:
 
 
 def _frame(_obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
-    if not _state:
+    if not _state or ("guard" in _state and not _state["guard"].here()):
         return
     now = clock()
     if now - _state.get("ticked", 0.0) < EVERY_S:

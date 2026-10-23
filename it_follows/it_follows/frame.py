@@ -21,6 +21,8 @@ from typing import Any, Callable
 from mods_base import hook
 from unrealsdk.hooks import Type
 
+from . import game_thread
+
 HOOK = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 IDENTIFIER = "it_follows:run"
 EVERY_S = 1.0
@@ -47,6 +49,8 @@ class Beat:
                  identifier: str = IDENTIFIER) -> None:
         self.tick, self.fail, self.identifier = tick, fail, identifier
         self.hook: Any = None
+        # Made with the hook, on the game's thread: a call that comes elsewhere does nothing (game_thread.py).
+        self.guard: game_thread.Guard | None = None
         self.next = 0.0
         # The tasks put off, by name, in their order: one name is never waiting twice.
         self.later: dict[str, Callable[[float], None]] = {}
@@ -61,6 +65,7 @@ class Beat:
         """Hooks the animation update; the first tick comes a second later."""
         self.next = now() + EVERY_S
         self.counted_at = now()
+        self.guard = game_thread.Guard(self.identifier)
         self.hook = hook(HOOK, Type.POST, hook_identifier=self.identifier)(self._frame)
         self.hook.enable()
 
@@ -69,7 +74,7 @@ class Beat:
         self.later.setdefault(name, task)
 
     def _frame(self, obj: Any = None, *_args: Any) -> None:
-        if self.hook is None:
+        if self.hook is None or (self.guard is not None and not self.guard.here()):
             return
         began = perf_counter()
         self.calls += 1

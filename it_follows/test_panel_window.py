@@ -115,8 +115,8 @@ try:
     check("NEXT turns to the normal mode's page: its levels, still evolving, LET'S GO",
           press("welcome_next") is False and form.popup == "welcome" and shown("welcome_page:1")
           and not shown("welcome_page:0") and text("welcome_lead:1").startswith("The normal mode: play your game")
-          and "like three levels of NG+" in text("welcome_lead:1")
-          and text("welcome_box_title:1:0") == "THREE LEVELS" and text("welcome_box_title:1:1") == "STILL EVOLVING"
+          and "like four levels of NG+" in text("welcome_lead:1")
+          and text("welcome_box_title:1:0") == "FOUR LEVELS" and text("welcome_box_title:1:1") == "STILL EVOLVING"
           and "keep evolving" in text("welcome_box_text:1:1") and shown("welcome_go_box")
           and not shown("welcome_next_box") and text("welcome_go_label") == "LET'S GO")
     check("LET'S GO closes it", press("welcome_go") is False and form.popup is None and not shown("popup:welcome"))
@@ -218,8 +218,8 @@ try:
     check("the NORMAL MODE page: its title, its sentence, its levels, START; no card, no lock, nothing blocked",
           text("nav:normal_label") == "NORMAL MODE" and text("heading:normal") == "NORMAL MODE"
           and text("group:normal") == "A first overhaul of the game's enemies, still evolving."
-          and [text(f"setting:normal_level:{name}_label") for name in ("Bandit", "Senior", "Predator")]
-          == ["BANDIT", "SENIOR", "PREDATOR"] and shown("normal_start_box") and not shown("normal_live_box")
+          and [text(f"setting:normal_level:{name}_label") for name in ("Bandit", "Senior", "Predator", "God")]
+          == ["BANDIT", "SENIOR", "PREDATOR", "GOD"] and shown("normal_start_box") and not shown("normal_live_box")
           and not shown("normal_locked") and not shown("normal_blocked") and not shown("nav_normal_running_tag")
           and text("notice") == "Ready: press START, the menu closes and the normal mode begins.")
     check("the level's help is the chosen level's sentence, the allied enemies off",
@@ -247,7 +247,7 @@ try:
           and [text(f"setting:normal_speed:{name}_label") for name in ("Increased", "Reduced")]
           == ["INCREASED", "REDUCED"]
           and text("description:normal_speed")
-          == "Reduced: at Senior and Predator, the enemies run, dodge and strike slower.")
+          == "Reduced: at Senior, Predator and God, the enemies run, dodge and strike slower.")
     press("setting:normal_speed:Reduced")
     form.poll()
     check("REDUCED clicked: written, the level read slower", form.flush(widgets)
@@ -262,12 +262,19 @@ try:
           and shown("row:normal_no_staggers") and shown("description:normal_no_staggers")
           and text("label:normal_no_staggers") == "NO STAGGERS" and text("setting:normal_no_staggers_label") == "OFF"
           and text("description:normal_no_staggers")
-          == "At Predator: the enemies never stagger nor fall under your shots.")
+          == "At Predator and God: the enemies never stagger nor fall under your shots.")
     press("setting:normal_no_staggers")
     form.poll()
     check("NO STAGGERS clicked: written, Predator read without staggers", form.flush(widgets)
           and normal_options.no_staggers.value is True and normal_options.read().level.staggers == 0.0)
     press("setting:normal_no_staggers")
+    press("setting:normal_level:God")
+    form.poll()
+    check("God clicked: written, its sentence, the speed's and staggers' rows shown, the shields' hidden "
+          "(decision 153)", form.flush(widgets) and normal_options.level.value == "God"
+          and text("description:normal_level").startswith("As many enemies as at Predator, far tougher but a "
+                                                           "little slower.")
+          and shown("row:normal_speed") and shown("row:normal_no_staggers") and not shown("row:normal_shields"))
     press("setting:normal_level:Senior")
     form.poll()
     check("clicked back off, Senior again", form.flush(widgets) and normal_options.no_staggers.value is False

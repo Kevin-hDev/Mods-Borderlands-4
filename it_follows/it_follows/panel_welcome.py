@@ -1,7 +1,7 @@
 """The welcome (decision 61; sketch 6 of esquisses_menu, validated by Kevin): over the whole window the first time it
 opens, in two pages (decision 80). The first says that It Follows holds two modes, independent of each other, and
 presents the Horde: what it does, its two inspirations, the film It Follows and Call of Duty: Black Ops Zombies, and
-the caution about the PC (decisions 54 and 60); NEXT turns to the second, the normal mode: its three levels, and that
+the caution about the PC (decisions 54 and 60); NEXT turns to the second, the normal mode: its four levels, and that
 it is a first overhaul of the game's enemies, still evolving. LET'S GO closes it.
 
 It is remembered as seen as soon as it shows (welcome.py), as BL4 Arena's: a game that crashes later must not show it

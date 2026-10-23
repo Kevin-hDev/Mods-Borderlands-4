@@ -8,6 +8,7 @@ left out (audit of 16 October 2026, A11)."""
 
 import pathlib
 import sys
+import threading
 import types
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -152,6 +153,16 @@ try:
           said["hook_idle_us"] is None and said["hook_calls_s"] > 0.0)
     frame.perf_counter = real_perf_counter
     counted.stop()
+    away: list[float] = []
+    guarded = frame.Beat(away.append, failures.append)
+    guarded.start()
+    worker = threading.Thread(target=lambda: call(400.0, PLAYER))
+    worker.start()
+    worker.join(5)
+    check("a call on another thread than the game's: no tick (trial 206)", away == [])
+    call(400.1, PLAYER)
+    check("the next on the game's thread: the tick", away == [400.1])
+    guarded.stop()
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")
