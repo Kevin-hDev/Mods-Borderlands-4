@@ -20,7 +20,8 @@ except in co-op.
   at first (×1 to ×20); shield, 30% of their health (0% to 100%); shield refill, NEVER at first (5 to 120 s); speed,
   +20% (0 to +50%); back after death, 45 s (10 to 120 s).
 - **OPTIONS.** Health bars on the left, the menu key and the team key. With the `Companions Paks` file, each
-  companion's health shows at the bottom left of the screen, and its bars in green when you aim at it.
+  companion's health shows at the bottom left of the screen, and its bars in green when you aim at it, with its
+  name for a Vault Hunter.
 
 The **ENABLED** button, at the bottom left of the window, turns the whole mod on or off.
 

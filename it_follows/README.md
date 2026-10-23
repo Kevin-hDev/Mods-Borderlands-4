@@ -42,7 +42,7 @@ a time.
   outfit or your colors. A dead companion comes back near you 45 seconds later; the team finds you again after a
   fast travel or a change of map, and leaves when you stop it or go back to the main menu. With the
   `It Follows Companions Paks` file, each companion's health shows at the bottom left of the screen, and its bars in
-  green when you aim at it.
+  green when you aim at it, with its name for a Vault Hunter.
 - **HISTORY.** Your last 20 Horde runs.
 - **OPTIONS.** The in-game bar and its size; the Lost Loot machine up to 400 items; a 16:10 resolution in
   Fullscreen; three color profiles for brighter colors, with a preview to try them in game.

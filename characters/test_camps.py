@@ -5,8 +5,9 @@ pending, those whose enemy HaveAllDied(InternalAndExternal) says died as free, a
 none of their enemies alive, counted as stuck; the others busy, a read that raises counting busy; the room is the free
 camps and those still to be made under most; a free camp moved where asked, made movable first, one that does not move
 or lands too far left aside, else a new one made, none past most and none kept that the game refused; an enemy handed
-with its requests critical, the spawner enabled, the definition pushed typed with the game's definition type and the
-camp started again, in that order, the steps after a refused one never made; refused up to the push the camp is free
+with its requests critical and never to come back on their own (trial 218), the spawner enabled, the definition pushed
+typed with the game's definition type and the camp started again, in that order, the steps after a refused one never
+made; details the game will not take noted, the enemy asked all the same; refused up to the push the camp is free
 again, after it busy; the status counts the camps holding their enemy, those gone and the reads that fail. Every call
 but the status's is written by report.py before it is made."""
 
@@ -52,10 +53,15 @@ def named(call: str) -> list[tuple]:
 class Locked:
     """Spawn details the game will not let be written."""
 
-    bCritical = bOverrideCritical = False
+    bCritical = bOverrideCritical = bOverrideRespawnStyle = False
+    RespawnStyle = sdk_stubs.RespawnStyle.Timed
 
     def __setattr__(self, name: str, value: object) -> None:
         raise RuntimeError("read only")
+
+
+def refusals() -> list[dict]:
+    return [line for line in fake.lines() if line["event"] == "spawn_details_refused"]
 
 
 try:
@@ -143,13 +149,19 @@ try:
           and pushes[0][2] == camps.REASON == "RUN" and pushes[0][3].name == "Char_CatYoung"
           and pushes[0][3].kind is def_type and pushes[0][4] is True
           and first[0].kind == "Char_CatYoung" and first[0].handed_at == 100.0)
-    check("its requests made critical first; each step written to the log before it is made, with the camp and the "
-          "definition",
-          calls() == ["SpawnDetails critical", "SetSpawnerEnabled", "PushActorDef", "ResetSpawner"]
+    check("trial 218: its requests never to come back on their own, the game's Timed bearing it again some 20 minutes "
+          "after losing it", component.SpawnDetails.bOverrideRespawnStyle is True
+          and component.SpawnDetails.RespawnStyle is sdk_stubs.RespawnStyle.Never)
+    check("its requests made critical and never to come back first; each step written to the log before it is made, "
+          "with the camp and the definition; nothing refused",
+          calls() == ["SpawnDetails critical", "SpawnDetails never respawn", "SetSpawnerEnabled", "PushActorDef",
+                      "ResetSpawner"]
           and fake.lines()[0] == {"event": "call", "run": 0, "call": "SpawnDetails critical", "on": first[1].Name}
-          and fake.lines()[2] == {"event": "call", "run": 0, "call": "PushActorDef", "on": first[1].Name,
+          and fake.lines()[1] == {"event": "call", "run": 0, "call": "SpawnDetails never respawn",
+                                  "on": first[1].Name}
+          and fake.lines()[3] == {"event": "call", "run": 0, "call": "PushActorDef", "on": first[1].Name,
                                   "definition": "Char_CatYoung"}
-          and fake.announced_first(events))
+          and fake.announced_first(events) and refusals() == [])
 
     second = own.place(kit, [], (600.0, 0.0, 0.0), 0.0, hunter)
     own.hand(kit, *second, "Char_BatBasic")
@@ -239,9 +251,23 @@ try:
     third[1].SpawnerComponent.fails = set()
     third[1].SpawnerComponent.SpawnDetails = Locked()
     events.clear()
-    check("requests that cannot be made critical: the enemy asked all the same",
+    check("requests that cannot be made critical nor kept from coming back: the enemy asked all the same, each "
+          "refusal noted with its error and the camp",
           own.hand(kit, *third, "Char_CatYoung") is None and named("ResetSpawner") == [("ResetSpawner", third[1].Name,
-                                                                                         True)])
+                                                                                         True)]
+          and refusals() == [
+              {"event": "spawn_details_refused", "run": 0, "detail": "SpawnDetails critical",
+               "why": "SpawnDetails critical:RuntimeError", "on": third[1].Name},
+              {"event": "spawn_details_refused", "run": 0, "detail": "SpawnDetails never respawn",
+               "why": "SpawnDetails never respawn:RuntimeError", "on": third[1].Name}])
+    renamed = sdk_stubs.spawn_details()
+    renamed.RespawnStyle = sdk_stubs.enum.IntEnum("ERespawnStyle", ["Timed", "Level"])(1)
+    third[1].SpawnerComponent.SpawnDetails = renamed
+    events.clear()
+    check("a game whose choices no longer hold Never: refused and noted, nothing of it written, its requests "
+          "critical, the enemy asked all the same", own.hand(kit, *third, "Char_CatYoung") is None
+          and renamed.bCritical is True and renamed.bOverrideRespawnStyle is False
+          and [line["why"] for line in refusals()] == ["SpawnDetails never respawn:KeyError"])
 
     first[1].SpawnerComponent.alive = 1
     second[1].SpawnerComponent.alive = RuntimeError("no count")

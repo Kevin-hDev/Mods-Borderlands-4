@@ -7,10 +7,12 @@ The recipe is the domed arena's, its calls and their order verified in game (doc
 placed straight: placed straight, bandits crashed the game after their deaths. A spawner is never destroyed, for
 destroying an actor the mod spawned crashed the game: it is held weakly and handed a new enemy once
 HaveAllDied(InternalAndExternal) says its enemy died, or once STUCK_S passed with none of its enemies alive. Its
-requests are made critical: without it, of 50 asked, 29 lived at once at most. The definition is pushed typed with the
-game's own definition type: untyped, such a reference crashed the game. A spawner whose root is static is made movable
-before it is moved, or the game refuses the move without an error. Each call is announced before it is made: the SDK
-log outlives a crash.
+requests are made critical: without it, of 50 asked, 29 lived at once at most. They are made never to come back on
+their own (trial 218, docs/renforts): left to the spawner's style (Timed), a spawner bears its character again some 20
+minutes after losing it, removed or dead, and a stopped team's companions came back as Lemmy, standing, unfollowed. The
+definition is pushed typed with the game's own definition type: untyped, such a reference crashed the game. A spawner
+whose root is static is made movable before it is moved, or the game refuses the move without an error. Each call is
+announced before it is made: the SDK log outlives a crash.
 """
 
 import math
@@ -20,11 +22,14 @@ from typing import Any, Callable, NamedTuple
 import unrealsdk
 from unrealsdk.unreal import FGbxDefPtr, WeakPointer
 
-from . import reads
+from . import reads, report
 from .camp_kit import Kit, enemy_list, look_up
 
 # PushActorDef's reason, a name the game keeps with the definition pushed.
 REASON = "RUN"
+# ERespawnStyle's choice, asked by its name (trial 218 read Timed, Never and Level), for which a spawner never bears its
+# character again on its own: our mods ask each birth themselves.
+NEVER = "Never"
 # ESpawnedActorType.InternalAndExternal, read in game (boss bar trial 21): External said "all died" with a boss alive.
 ALL_SPAWNED = 2
 # ESpawnActorCollisionHandlingMethod.AlwaysSpawn and ESpawnActorScaleMethod.MultiplyWithRoot, as the domed arena's.
@@ -221,8 +226,18 @@ class Camps:
             details.bCritical = details.bOverrideCritical = True
             component.SpawnDetails = details
 
-        # Refused, the enemy is asked all the same, as the domed arena's were.
-        self._called("SpawnDetails critical", critical, on=spawner.Name)
+        def never() -> None:
+            details = component.SpawnDetails
+            # Looked up before anything is written: a game without that choice leaves the details as they were.
+            style = type(details.RespawnStyle)[NEVER]
+            details.bOverrideRespawnStyle, details.RespawnStyle = True, style
+            component.SpawnDetails = details
+
+        # Refused, the enemy is asked all the same, as the domed arena's were; the refusal noted.
+        for detail, write in (("SpawnDetails critical", critical), ("SpawnDetails never respawn", never)):
+            written, why = self._called(detail, write, on=spawner.Name)
+            if not written:
+                report.note("spawn_details_refused", detail=detail, why=why, on=spawner.Name)
         reference = FGbxDefPtr(kind, kit.kind)
         steps = (("SetSpawnerEnabled", lambda: component.SetSpawnerEnabled(True)),
                  ("PushActorDef", lambda: component.PushActorDef(REASON, reference, True)),

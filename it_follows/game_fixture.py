@@ -13,7 +13,7 @@ import types
 from typing import Any
 
 import bar_fixture
-from sdk_stubs import FakeCharacter, FakeGbxDefPtr, FakePawn, FakeStruct, vector
+from sdk_stubs import FakeCharacter, FakeGbxDefPtr, FakePawn, FakeStruct, spawn_details, vector
 
 # EComponentMobility.Movable, ESpawnedActorType.InternalAndExternal.
 MOVABLE, ALL_SPAWNED = 2, 2
@@ -230,7 +230,7 @@ class Spawner:
 class SpawnerComponent:
     def __init__(self, spawner: Spawner) -> None:
         self.spawner = spawner
-        self.SpawnDetails = types.SimpleNamespace(bCritical=False, bOverrideCritical=False)
+        self.SpawnDetails = spawn_details()
         self.pushed: str | None = None
         self.child: Any = None
         self.births = 0

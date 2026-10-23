@@ -116,6 +116,18 @@ def rotator(yaw: float) -> Any:
     return types.SimpleNamespace(Pitch=0.0, Yaw=yaw, Roll=0.0)
 
 
+# The game's ERespawnStyle, its choices as trial 218 read them on a spawner's SpawnDetails. Their numbers are not the
+# game's, never read: the mod asks a choice by its name.
+RespawnStyle = enum.IntEnum("ERespawnStyle", ["Timed", "Never", "Level", "ERespawnStyle_MAX"], start=0)
+
+
+def spawn_details() -> Any:
+    """A spawner's SpawnDetails as the game first gives them: not critical, coming back as the spawner's style says
+    (Timed: some 20 minutes after losing its character, trial 218)."""
+    return types.SimpleNamespace(bCritical=False, bOverrideCritical=False, bOverrideRespawnStyle=False,
+                                 RespawnStyle=RespawnStyle.Timed)
+
+
 def asset_registry(state: dict, load: Any) -> None:
     """Stands in for the engine's AssetRegistryHelpers.GetAsset, apex_held_object's loader: load gets the AssetData,
     and GetAsset gives back its result with the struct, as the game did. The model classes get a made-up path."""

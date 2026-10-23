@@ -11,7 +11,7 @@ import types
 from typing import Any
 
 import characters_fixture
-from sdk_stubs import vector
+from sdk_stubs import spawn_details, vector
 
 camp_kit, report = characters_fixture.part("camp_kit"), characters_fixture.part("report")
 
@@ -79,7 +79,7 @@ class Component:
 
     def __init__(self, owner: str) -> None:
         self.owner, self.died, self.alive, self.fails = owner, True, 0, set()
-        self.SpawnDetails = types.SimpleNamespace(bCritical=False, bOverrideCritical=False)
+        self.SpawnDetails = spawn_details()
 
     def _read(self, name: str, kind: int, value: Any) -> Any:
         events.append((name, self.owner, kind))

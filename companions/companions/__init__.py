@@ -13,7 +13,7 @@ from . import open_key, panel_open, panel_preferences, report, session, settings
 from .characters.companions import owners, team as companions_team
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "kevin-hDev"
 
 

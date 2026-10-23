@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.12 - 2026-10-23
+
+- Your team's Vault Hunters now show their name under their health bar when you aim at them, in green like the game's allies. Update the It Follows Companions Paks file too.
+- Fix: about twenty minutes after a team was stopped, its companions could come back on their own where they had appeared, the Vault Hunters looking like Lemmy, standing still and not following you. They no longer come back.
+
 ## 1.0.11 - 2026-10-23
 
 - The window is now also in Japanese.
