@@ -7,13 +7,12 @@ drawing stay as they were."""
 
 from mods_base import NestedOption
 
-from . import options
-from .companions import bars
+from . import companion_choices, options
 from .normal import options as normal_options
 
 run = NestedOption("run_menu", options.RUN, display_name="Horde mode", description="")
 normal = NestedOption("normal_menu", normal_options.PAGE, display_name="Normal mode", description="")
-companions = NestedOption("companions_menu", [bars.option], display_name="Companions", description="")
+companions = NestedOption("companions_menu", [companion_choices.bars], display_name="Companions", description="")
 history = NestedOption("history_menu", [], display_name="History", description="")
 display = NestedOption("options_menu", options.DISPLAY, display_name="Options", description="")
 ALL = MENU = [run, normal, companions, history, display]

@@ -54,7 +54,7 @@ TEXT = {
                         "pour chaque ennemi qui n'en a pas, qui revient 10 secondes après avoir été cassé. Plus de "
                         "munitions, d'argent et d'expérience. Pensé pour jouer avec tes compagnons.",
     "hardcore_settings": "HARDCORE", "hardcore_lead": "Une difficulté qui monte lentement, tout au long du jeu.",
-    "hardcore_badge": "HARDCORE {percent} %", "hardcore_badge_paused": "HARDCORE {percent} % · EN PAUSE",
+    "hardcore_badge": "HARDCORE {percent} %", "hardcore_badge_paused": "HARDCORE {percent} %\nEN PAUSE",
     "help_hardcore_title": "LE MODE HARDCORE",
     "help_hardcore": "Dans Borderlands 4, le niveau des ennemis suit celui de ton chasseur : le jeu ne devient jamais "
                      "vraiment plus difficile, il reste même très facile.\n\n"
@@ -62,7 +62,7 @@ TEXT = {
                      "renforcent de 1 % tous les 100 ennemis tués, lentement et régulièrement, tout au long du jeu. Ça "
                      "s'ajoute au niveau choisi.\n\n"
                      "Celui-ci agit seulement pendant que le mode normal est lancé : le mode Horde a le sien, qui "
-                     "repart de 0 à chaque run. Le pourcentage atteint s'affiche en haut du menu.\n\n"
+                     "repart de 0 à chaque run. Le pourcentage atteint s'affiche dans la colonne de gauche du menu.\n\n"
                      "Tu peux mettre la progression en pause pour garder la difficulté qui te convient, ou désactiver "
                      "le mode à tout moment : ta progression est gardée, et tu la retrouves en le réactivant.",
     "ready_normal": "Prêt : appuie sur START, le menu se ferme et le mode normal commence.",

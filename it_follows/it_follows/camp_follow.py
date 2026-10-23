@@ -15,7 +15,7 @@ docs/RUN/sondes/run_camp_follow.py.
 
 from typing import Any, Callable, Iterable
 
-from . import reads
+from .characters import reads
 from .camp_map import CampMap
 from .hunter_zone import FOLLOW_M, FOLLOW_S
 from .zone_shift import Shift

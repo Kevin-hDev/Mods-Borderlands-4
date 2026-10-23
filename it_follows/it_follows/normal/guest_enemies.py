@@ -13,7 +13,8 @@ import time
 from itertools import islice
 from typing import Any
 
-from .. import census, kinds, reads
+from .. import census, kinds
+from ..characters import reads
 
 MAX_SCAN = 400
 MAX_SECONDS = 0.5

@@ -13,7 +13,7 @@ says none while LastHitBy says player.
 
 from typing import Any
 
-from . import reads
+from .characters import reads
 
 PLAYER, VEHICLE, NONE, UNREADABLE = "player", "vehicle", "none", "unreadable"
 MAX_CLASS_TEXT = 40

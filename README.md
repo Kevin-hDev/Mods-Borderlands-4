@@ -12,12 +12,16 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 | [Apex Heirloom](apex_heirloom/) | An Apex Legends style heirloom: the Jakobs knife or the axe in your hand when your weapon is put away, and a key to put it away | 1.0.6 |
 | [Hunter Change](hunter_change/) | Become another Vault Hunter in your game, keeping its level, backpack and story, each hunter with their own skill tree; or only wear another hunter's look | 1.0.7 |
 | [Benefix Ohm Attack](benefix_ohm_attack/) | Fire an attack beam from your hand that locks onto enemies, with six elements to choose from, its own energy bar and damage that scales with your level | 1.0.4 |
-| [It Follows](it_follows/) | Two modes to make the game harder: the enemies of your normal game reworked, more numerous, faster and tougher, with a Hardcore option that strengthens them as you kill; and a Horde mode (beta) where every enemy around you follows you without end; and a team of companions to fight at your side | 1.0.10 |
+| [It Follows](it_follows/) | Two modes to make the game harder: the enemies of your normal game reworked, more numerous, faster and tougher, with a Hardcore option that strengthens them as you kill; and a Horde mode (beta) where every enemy around you follows you without end; and a team of companions to fight at your side | 1.0.11 |
+| [Companions](companions/) | A team of up to 8 companions, among the 6 Vault Hunters and 4 allies, who follow you and fight at your side, without It Follows | 1.0.0 |
 | [Co-op Duel](coop_duel/) | Fight your teammates in co-op, 2 to 4 players, each for themselves or in teams, anywhere in the world: endless rounds, then back up on the spot; only the host needs the mod | 1.0.1 |
 
 [camera_runtime](camera_runtime/) is not a mod of its own: it is the camera, field of view and loot reach that Apex
 Movement, Omni Sprint and Third Person & FOV carry inside their `.sdkmod`, with the C++ source of its small native
 libraries.
+
+[characters](characters/) is not a mod of its own either: it is the companions' team that It Follows and Companions
+carry inside their `.sdkmod`, so that only one team runs when both are installed.
 
 ## Installing a mod
 
@@ -46,7 +50,7 @@ Run each test script separately. A failing test exits with a non-zero code; opti
 
 The original code in this repository is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Kevin-hDev.
 
-The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Apex Movement, Omni Sprint, Third Person & FOV, Apex Grapple, Vehicle Driving, Hunter Change and Co-op Duel also bundle a subset of Noto Sans SC for their Chinese window, under the same license (`OFL-NotoSansSC.txt` in their `assets` directory). Apex Movement and Third Person & FOV also bundle a subset of Noto Sans JP for their Japanese window, under the same license (`OFL-NotoSansJP.txt`). Game assets and the Borderlands 4 SDK are not relicensed by this repository. Apex Heirloom's models and animations, Benefix Ohm Attack's hand poses and energy bar, and Apex Grapple's grapple gun gestures are built from the game's own files: they are not in this repository, only in each mod's Nexus archive.
+The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Apex Movement, Omni Sprint, Third Person & FOV, Apex Grapple, Vehicle Driving, Hunter Change, Co-op Duel, It Follows and Companions also bundle a subset of Noto Sans SC for their Chinese window, under the same license (`OFL-NotoSansSC.txt` in their `assets` directory). Apex Movement, Third Person & FOV, It Follows and Companions also bundle a subset of Noto Sans JP for their Japanese window, under the same license (`OFL-NotoSansJP.txt`). Game assets and the Borderlands 4 SDK are not relicensed by this repository. Apex Heirloom's models and animations, Benefix Ohm Attack's hand poses and energy bar, and Apex Grapple's grapple gun gestures are built from the game's own files: they are not in this repository, only in each mod's Nexus archive.
 
 ## Credits
 

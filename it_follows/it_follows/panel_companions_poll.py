@@ -1,6 +1,6 @@
 """The COMPANIONS page's clicks (panel_companions.py): a tab opened; a card's name adding one more to the team, its
 « − » taking one away, its shield switched, a speed chosen, each written at once through the window's settings
-transaction (companions/choices.py), so that the team is kept from one launch to the next; the outfit of the hunter
+transaction (companion_choices.py), so that the team is kept from one launch to the next; the outfit of the hunter
 the player plays chosen; a ninth refused, said in
 the footer (spec-compagnons.md: « un 9e ajout est refusé avec un message »). While the team is on, the cards are
 locked: a click on one says so. The launch button starts the team with the choices kept and closes the window, as
@@ -9,13 +9,15 @@ at each poll, so that none keeps a click for later."""
 
 from typing import Any
 
-from . import panel_companions as cards, report, session
-from .companions import choices, kinds
+from . import companion_choices as choices, panel_companions as cards, report, session
+from .characters.companions import kinds
 
 # What closes the window without the mods list (panel_follows.LEAVE).
 LEAVE = "leave"
-# A launch refused: the window's notice for each answer of session.start_team; any other, as none chosen.
-NOTICES = {"already_on": "team_already_on", "main_menu": "team_main_menu"}
+# A launch refused: the window's notice for each answer of session.start_team; any other, as none chosen. It
+# Follows leads the team before any mod (owners.py): refused as elsewhere, no mod can be known to lead, its copy of
+# the characters' package and another mod's being of two versions.
+NOTICES = {"already_on": "team_already_on", "main_menu": "team_main_menu", "elsewhere": "team_mismatch"}
 
 
 def _save(form: Any, widgets: dict, option: Any, value: Any) -> None:

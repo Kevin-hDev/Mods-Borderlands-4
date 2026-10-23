@@ -29,7 +29,8 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from .. import camps, gbx_param, kinds, reads
+from .. import gbx_param, kinds
+from ..characters import camps, reads
 
 EVERY_S = 5.0
 # Farther than the 80 to 300 m at which the game wakes a camp (trial 6u): a camp is grown before the player comes near.

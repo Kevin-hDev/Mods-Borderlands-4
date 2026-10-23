@@ -12,7 +12,7 @@ from typing import Any, NamedTuple
 import mods_base
 import unrealsdk
 
-from . import reads
+from .characters import reads
 
 # Borderlands 4 takes four players: the host and three guests.
 MAX_GUESTS = 3

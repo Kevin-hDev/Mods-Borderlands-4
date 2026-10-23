@@ -12,7 +12,7 @@ on, it stops. A team still empty starts nothing. Each press is written in the lo
 from mods_base import HiddenOption, keybind
 
 from . import open_key, report, session
-from .companions import choices
+from . import companion_choices as choices
 
 DEFAULT = "F8"
 # The team's key when the settings file gives the window F8 by hand (OPTIONS refuses it): F9, the other key Kevin left

@@ -20,7 +20,8 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from it_follows import kinds, presence, reads, report  # noqa: E402
+from it_follows import kinds, presence, report  # noqa: E402
+from it_follows.characters import reads  # noqa: E402
 from it_follows.normal import coop_messages, enemy_time, guest, guest_enemies, levels, mode, options  # noqa: E402
 
 fails: list[str] = []

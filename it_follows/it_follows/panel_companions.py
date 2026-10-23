@@ -19,9 +19,10 @@ from typing import Any
 
 from . import panel_buttons as b, panel_companion_pictures as pictures, panel_i18n as i18n, panel_pages as p
 from . import panel_text as tx, panel_theme as t, panel_widgets as w, session
+from . import companion_choices as choices
 from mods_base import get_pc
 
-from .companions import bars, bars_names, choices, kinds, player_paint
+from .characters.companions import bars, bars_names, kinds, owners, player_paint
 
 TABS = {"hunters": kinds.HUNTERS, "allies": kinds.ALLIES}
 SPEEDS = tuple(choices.SPEEDS)
@@ -29,9 +30,6 @@ OUTFITS = choices.OUTFITS
 HUNTERS = tuple(kind.name for kind in kinds.HUNTERS)
 # The words beside a card's buttons, wide enough for BOUCLIER and VITESSE.
 LABEL_WIDTH = 96
-# The window's language as the game's files of texts name it, for the allies' names (bars_names.py).
-CULTURES = {"EN": None, "FR": "fr", "ZH": "zh-Hans"}
-_names: dict = {}  # language -> {companion: name shown}; three at most
 
 
 def buttons(name: str) -> list[str]:
@@ -47,12 +45,9 @@ def _visible(widget: Any, shown: bool) -> None:
 
 def names(language: str) -> dict:
     """Each companion's name as the window shows it in that language: the hunters' own, the allies' as the game's
-    texts name them, English when that language has no culture of the game's."""
-    if language not in _names:
-        culture = CULTURES.get(language)
-        _names[language] = (bars_names.shown(culture)[0] if culture is not None
-                            else {kind.name: kind.name for kind in kinds.ALL})
-    return _names[language]
+    texts name them, English when that language has no culture of the game's (bars_names.in_window, the one
+    for both mods)."""
+    return bars_names.in_window(language)
 
 
 def opened(form: Any) -> str:
@@ -185,9 +180,15 @@ def _paint_card(widgets: dict, name: str, shown: dict, count: int, locked: bool,
         widgets[button].SetIsEnabled(not locked)
 
 
+def mismatch() -> bool:
+    """Whether no mod can be known to lead the team: two versions of the companions' code are loaded, It Follows'
+    and another mod's (owners.py); no team starts until both are updated and the game restarted."""
+    return owners.leads() == owners.UNKNOWN
+
+
 def paint(form: Any, widgets: dict, language: str) -> None:
-    on, tab, team = session.team_on(), opened(form), choices.names()
-    form.companions_on = on
+    on, tab, team, apart = session.team_on(), opened(form), choices.names(), mismatch()
+    form.companions_on = (on, apart)
     shown = names(language)
     for one in TABS:
         widgets[f"companions_tab:{one}_label"].SetText(i18n.text(f"companions_{one}", language))
@@ -195,19 +196,21 @@ def paint(form: Any, widgets: dict, language: str) -> None:
         _visible(widgets[f"companions_grid:{one}"], one == tab)
     pictures.load(form, widgets, tab, TABS[tab])
     for kind in kinds.ALL:
-        _paint_card(widgets, kind.name, shown, team.count(kind.name), on, language,
+        _paint_card(widgets, kind.name, shown, team.count(kind.name), on or apart, language,
                     getattr(form, "companions_played", None))
     widgets["companions_count"].SetText(i18n.text("companions_team", language).format(
         count=len(team), most=choices.MOST))
     widgets["companions_who"].SetText(_who(team, shown, language))
     widgets["companions_lead"].SetText(i18n.text("companions_lead", language))
-    widgets["companions_locked"].SetText(i18n.text("companions_locked", language))
-    _visible(widgets["companions_locked"], on)
+    widgets["companions_locked"].SetText(i18n.text("team_mismatch" if apart and not on else "companions_locked",
+                                                   language))
+    _visible(widgets["companions_locked"], on or apart)
     _visible(widgets["companions_bars_box"], getattr(form, "companions_bars_offered", False))
     widgets["companions_launch_label"].SetText(i18n.text("companions_stop" if on else "companions_launch", language))
-    b.paint(widgets, "companions_launch", "stop" if on else "primary")
+    widgets["companions_launch"].SetIsEnabled(on or not apart)
+    b.paint(widgets, "companions_launch", "stop" if on else "disabled" if apart else "primary")
 
 
 def changed(form: Any) -> bool:
-    """Whether the team began or ended since the page was painted."""
-    return getattr(form, "companions_on", None) != session.team_on()
+    """Whether the team began or ended, or two versions of the companions' code met, since the page was painted."""
+    return getattr(form, "companions_on", None) != (session.team_on(), mismatch())

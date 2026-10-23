@@ -27,7 +27,7 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from . import reads
+from .characters import reads
 
 # Places in one second, each farther along the hunter's way than the one before by SPACING_M, so that the enemies
 # brought back together do not land on each other: Kevin, 13 October 2026, after trial 6z, where three a second left

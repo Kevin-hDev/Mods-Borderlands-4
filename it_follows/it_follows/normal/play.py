@@ -30,7 +30,8 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from .. import damage_taken, frame, reads, report
+from .. import damage_taken, frame, report
+from ..characters import reads
 from . import camps_grown, coop_guests, coop_messages, enemies, enemy_time, hardcore, melee_rest, pursuit, rewards
 from . import staggers
 

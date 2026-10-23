@@ -5,7 +5,7 @@
 
 from . import panel_buttons as b, panel_fonts as fonts, panel_header as h
 from . import panel_modal as modal, panel_window_size as size
-from . import panel_follows, panel_pages as p
+from . import panel_follows, panel_hardcore, panel_pages as p
 from . import panel_text as tx, panel_theme as t, panel_widgets as w, report
 from .panel_form_lifecycle import updates_module
 
@@ -25,6 +25,7 @@ def _sidebar(owner, widgets, template):
         button = panel_follows.nav_button(nav, widgets, page, template)
         w.column(nav, button, padding=w.pad(0, 0, t.SPACE_2))
     w.column(column, scroll, fill=True)
+    panel_hardcore.badge(column, widgets)
     widgets["meta"] = tx.text(column, "", "meta", wrap=True)
     w.column(column, widgets["meta"], padding=w.pad(t.SPACE_5, t.SPACE_4 + t.SPACE_2, t.SPACE_3))
     w.column(column, b.button(column, widgets, "enabled", "master", template, "on"), halign="Left",
@@ -78,6 +79,7 @@ def build_view(pc, model, _return_to_menu=True):
     root = w.new("ScaleBox", pc)
     root.SetStretch(w.enum("EStretch", "ScaleToFit"))
     template = w.new("InputKeySelector", root).WidgetStyle.Normal
+    fonts.use(model.language)  # Japanese draws from its own faces (panel_fonts.py)
     loaded = fonts.build(root)
     tx.use(loaded)
     try:

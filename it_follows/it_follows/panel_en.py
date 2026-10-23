@@ -53,7 +53,7 @@ TEXT = {
                         "without one, back 10 seconds after it breaks. More ammo, money and experience. Made to play "
                         "with your companions.",
     "hardcore_settings": "HARDCORE", "hardcore_lead": "A difficulty that rises slowly, all game long.",
-    "hardcore_badge": "HARDCORE {percent}%", "hardcore_badge_paused": "HARDCORE {percent}% · PAUSED",
+    "hardcore_badge": "HARDCORE {percent}%", "hardcore_badge_paused": "HARDCORE {percent}%\nPAUSED",
     "help_hardcore_title": "THE HARDCORE MODE",
     "help_hardcore": "In Borderlands 4, the enemies' level follows your hunter's: the game never really gets harder, "
                      "it even stays very easy.\n\n"
@@ -61,7 +61,7 @@ TEXT = {
                      "1% stronger every 100 enemies killed, slowly and steadily, all game long. It adds to the level "
                      "chosen.\n\n"
                      "This one only works while the normal mode is on: the Horde mode has its own, which starts "
-                     "again at each run. The percent reached shows at the top of the menu.\n\n"
+                     "again at each run. The percent reached shows in the menu's left column.\n\n"
                      "You can pause its progress to keep the difficulty that suits you, or switch the mode off at any "
                      "time: your progress is kept, and you find it again when you switch it back on.",
     "ready_normal": "Ready: press START, the menu closes and the normal mode begins.",

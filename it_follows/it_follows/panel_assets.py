@@ -15,10 +15,12 @@ import unrealsdk
 
 from . import companion_pictures_data, panel_widgets as w, report, start_places_data
 
-# Noto Sans SC cut to the Chinese a mod's texts use (outils/chinese_font.py), shipped by the mods offering Chinese.
+# Noto Sans SC and JP cut to the Chinese and Japanese a mod's texts use (outils/menu_fonts.py), shipped by the mods
+# offering that language.
 CHINESE_FONTS = ("NotoSansSC-Black.ttf", "NotoSansSC-Medium.ttf", "NotoSansSC-ExtraBold.ttf")
+JAPANESE_FONTS = ("NotoSansJP-Black.ttf", "NotoSansJP-Medium.ttf", "NotoSansJP-ExtraBold.ttf")
 FONTS = ("Anton-Regular.ttf", "BarlowCondensed-Medium.ttf", "BarlowCondensed-SemiBold.ttf",
-         "BarlowCondensed-ExtraBold.ttf", *CHINESE_FONTS)
+         "BarlowCondensed-ExtraBold.ttf", *CHINESE_FONTS, *JAPANESE_FONTS)
 AVATAR = "avatar.png"
 NAMES = (*FONTS, AVATAR, *start_places_data.PICTURES, *companion_pictures_data.FILES)
 FOLDER = "it_follows_ui"

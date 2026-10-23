@@ -17,8 +17,9 @@ from typing import Any, Callable, NamedTuple
 
 import mods_base
 
-from . import camps, ending, frame, horde, presence, report, start_point, start_trip
-from .companions import bars as companion_bars, main_menu, team as companions_team
+from . import companion_choices, companion_levels, ending, frame, horde, presence, report, start_point, start_trip
+from .characters import camps
+from .characters.companions import bars as companion_bars, main_menu, team as companions_team
 from .normal import mode as normal_mode, options as normal_options
 from .run import Run
 
@@ -215,7 +216,8 @@ def team_live() -> TeamLive | None:
 
 def start_team(names: list[str], picks: dict | None = None) -> str:
     """The companions chosen, by their name (companions/kinds.py), each with its card's choice in picks
-    (companions/choices.py), called, then born and followed (companions/team.py): "started", or why not: none chosen
+    (companion_choices.py) and the level played at its birth (companion_levels.given), called, then born and followed
+    (companions/team.py): "started", or why not: none chosen
     ("empty"), the team already on, the main menu showing ("main_menu": the team would stop at once, decision 61 of
     docs/renforts). In a run, in the normal mode or in the game alone; without a hunter on foot they wait for one
     (companions/respawn.py)."""
@@ -226,12 +228,13 @@ def start_team(names: list[str], picks: dict | None = None) -> str:
     if _state["companion_births"] is None:
         _state["companion_births"] = companions_team.new_births()
     team = companions_team.Team(births=_state["companion_births"], end=lambda why: _team_ended(team, why))
-    outcome = team.start(names, picks)
+    cards = dict(picks or {})
+    outcome = team.start(names, lambda name: companion_levels.given(cards.get(name, companion_choices.Choice())))
     if outcome == "started":
         _state["team"] = team
         # Started whatever the bars' option: it also names the hunter aimed at (decision 53), and reads the option
         # at each publish.
-        team.bars = companion_bars.start(team.clock)
+        team.bars = companion_bars.start(team.clock, lambda: companion_choices.bars.value is True)
     return outcome
 
 

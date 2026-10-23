@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.11 - 2026-10-23
+
+- The window is now also in Japanese.
+- The HARDCORE tag now sits in the window's left column, above the version, so CLOSE always fits.
+- Works with the new Companions mod: with both enabled, It Follows runs the team, one team at a time. Update both together.
+- Fix: stopping the team while the companions were appearing could leave one standing there. It is now removed.
+- Fix: with the same companion several times in the team, all of them come back after a fast travel.
+- Fix: the Chinese window shows every character again.
+
 ## 1.0.10 - 2026-10-23
 
 - Added 10 companions: the 6 Vault Hunters and 4 allies, in the new COMPANIONS tab. Up to 8 follow you and fight at your side.

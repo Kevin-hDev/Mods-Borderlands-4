@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from .. import zone_radius
+from ..characters import zone_radius
 
 # Zones held at once: the census reads every enemy the game holds, all within some 360 m of the player (trial 1). The
 # zones the game freed are forgotten before this refuses (audit of 15 October 2026).

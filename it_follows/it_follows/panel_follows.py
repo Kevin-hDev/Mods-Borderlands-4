@@ -192,5 +192,7 @@ def notice(form: Any, language: str) -> str:
         playing = any(TAGS[mode][1]() for mode in MODES)
         return i18n.text("paused_run" if playing else f"ready_{key}", language)
     if key == COMPANIONS:
+        if not session.team_on() and panel_companions.mismatch():
+            return i18n.text("team_mismatch", language)
         return i18n.text("companions_on" if session.team_on() else "ready_companions", language)
     return i18n.text("ready_history" if key == HISTORY else "ready_options", language)

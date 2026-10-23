@@ -30,10 +30,10 @@ from typing import Any, Callable
 import mods_base
 import unrealsdk
 
-from . import (bar, brain_walk, budget, camp_follow, camp_map, catch_up, census, chaser, clock, copies, damage_taken,
-               float_watch, frame, game_camps, ground, horde, hunter_zone, levels, recruit, reads, report, run_gauge,
-               run_hardcore,
-               speed, spread, stats, sweep, teams, texts, toughness, wave)
+from . import (bar, budget, camp_follow, camp_map, catch_up, census, chaser, clock, copies, damage_taken, float_watch,
+               frame, game_camps, ground, horde, hunter_zone, levels, recruit, report, run_gauge, run_hardcore, speed,
+               spread, stats, sweep, teams, texts, toughness, wave)
+from .characters import brain_walk, reads
 
 # Decision 33: the radius with which a Psycho followed the hunter much farther from its home (enemy research,
 # session 11, verified in game).

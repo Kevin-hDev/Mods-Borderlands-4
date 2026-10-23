@@ -14,7 +14,7 @@ from typing import Any
 
 import unrealsdk
 
-from . import reads
+from .characters import reads
 
 TIME_OF_DAY = "WorldTimeOfDayActor"
 VOLUME = "PostProcessVolume"

@@ -20,7 +20,8 @@ sys.modules["unrealsdk"].unreal.WrappedStruct = lambda fn, **fields: types.Simpl
 # The trials' form, a name and the definition's type; the shared stub only knows a name.
 sys.modules["unrealsdk"].unreal.FGbxDefPtr = lambda name, kind: types.SimpleNamespace(name=name, def_type=kind)
 
-from it_follows import frame, game_thread, lost_loot, lost_loot_game as game, menu, options, report  # noqa: E402
+from it_follows import frame, lost_loot, lost_loot_game as game, menu, options, report  # noqa: E402
+from it_follows.characters import game_thread  # noqa: E402
 
 fails: list[str] = []
 clock = [1000.0]

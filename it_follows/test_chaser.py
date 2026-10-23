@@ -26,7 +26,8 @@ from chaser_fixture import character  # noqa: E402
 
 game = chaser_fixture.Game(state)
 
-from it_follows import brain_walk, chaser as chasers  # noqa: E402
+from it_follows import chaser as chasers  # noqa: E402
+from it_follows.characters import brain_walk  # noqa: E402
 from it_follows.seen import Seen  # noqa: E402
 
 brain_walk.process_event = lambda: game.process_event

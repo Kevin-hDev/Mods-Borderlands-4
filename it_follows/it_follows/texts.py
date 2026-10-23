@@ -1,15 +1,16 @@
 """The bar's words, in the window's language (decision 62): English by default, French the second, Chinese the
-third in panel_zh.py's words. The languages are the window's codes (panel_preferences.py). HORDE is how many enemies
-follow the player (Kevin, 2026-10-14: « le nombre d'ennemis qui suivent le joueur en temps réel »), the same word in
-English and French; HARDCORE the run's percent (decision 109), written as the window's tag writes it in each
-language."""
+third in panel_zh.py's words, Japanese the fourth in panel_ja.py's. The languages are the window's codes
+(panel_preferences.py). HORDE is how many enemies follow the player (Kevin, 2026-10-14: « le nombre d'ennemis qui
+suivent le joueur en temps réel »), the same word in English and French; HARDCORE the run's percent (decision 109),
+written as the window's tag writes it in each language."""
 
-ENGLISH, FRENCH, CHINESE = "EN", "FR", "ZH"
-LANGUAGES = (ENGLISH, FRENCH, CHINESE)
+ENGLISH, FRENCH, CHINESE, JAPANESE = "EN", "FR", "ZH", "JA"
+LANGUAGES = (ENGLISH, FRENCH, CHINESE, JAPANESE)
 _BAR = {
     ENGLISH: "KILLS {kills}   DEATHS {deaths}   HORDE {horde}   HARDCORE {percent}%   {clock}",
     FRENCH: "TUÉS {kills}   MORTS {deaths}   HORDE {horde}   HARDCORE {percent} %   {clock}",
     CHINESE: "击杀 {kills}   死亡 {deaths}   敌群 {horde}   硬核 {percent}%   {clock}",
+    JAPANESE: "キル {kills}   死亡 {deaths}   ホード {horde}   ハードコア {percent}%   {clock}",
 }
 
 

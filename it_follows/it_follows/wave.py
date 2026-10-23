@@ -29,7 +29,8 @@ then where he came back; an enemy asked there would have been born in the air.
 import math
 from typing import Any, Callable
 
-from . import guard, horde, reads, zone_kinds
+from . import guard, horde, zone_kinds
+from .characters import reads
 
 # The run's pace, a sample a second: the killed of one second are asked together.
 EVERY_S = 1.0

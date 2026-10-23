@@ -12,9 +12,9 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from . import reads
+from .characters import reads
 from .seen import Seen
-from .target import same
+from .characters.target import same
 
 
 class Loan:

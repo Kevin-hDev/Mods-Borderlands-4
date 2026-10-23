@@ -13,7 +13,7 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from . import reads
+from .characters import reads
 
 # A zone read back within 1 m of the point asked counts as moved: moving one does not snap it to a grid.
 PLACED_CM = 100.0

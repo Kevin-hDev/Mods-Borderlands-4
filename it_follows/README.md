@@ -11,7 +11,7 @@ Games.
 ## What it does
 
 Press **F5** during the game, or open the console with `~`, type `mods` and choose **It Follows**: its window, in
-English, French and Simplified Chinese, has five pages. The game is paused while it is open. You start one mode at
+English, French, Simplified Chinese and Japanese, has five pages. The game is paused while it is open. You start one mode at
 a time.
 
 - **HORDE MODE [BETA].** Press START: every enemy around you comes for you and follows you everywhere. The ones you meet
@@ -63,8 +63,9 @@ To uninstall, stop the running mode with STOP and your team, then delete `it_fol
 ## Tests
 
 Run each test separately from this folder, for example `python test_wave.py`. The tests replace the game's SDK with
-stand-ins (`sdk_stubs.py`, `*_fixture.py`). Each test prints a `RESULTAT:` line and exits with a non-zero code on
-failure.
+stand-ins (`sdk_stubs.py`, `*_fixture.py`). The companions' code and its stand-ins live in
+[characters](../characters/), which the tests load from beside this folder. Each test prints a `RESULTAT:` line and
+exits with a non-zero code on failure.
 
 ## Known limits
 
@@ -74,4 +75,6 @@ failure.
 - The Horde mode does not start in co-op or in a vehicle; its starting point only works from the open world.
 - In co-op, every player needs the mod for the normal mode to work fully.
 - The companions were tested in single player only.
+- [Companions](../companions/) gives the same companions without It Follows. With both enabled, It Follows runs the
+  team, one team at a time; update both together.
 - Another mod that changes the enemies, their number or their health may conflict with this one.

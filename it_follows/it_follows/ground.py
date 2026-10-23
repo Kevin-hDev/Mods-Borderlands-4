@@ -19,7 +19,7 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from . import reads
+from .characters import reads
 
 LIBRARY = "KismetSystemLibrary"
 TRACE_CHANNEL = 2

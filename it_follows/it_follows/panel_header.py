@@ -8,11 +8,11 @@ and Close."""
 import math
 
 from . import panel_assets as assets, panel_buttons as b, panel_text as tx, panel_theme as t, panel_widgets as w
-from . import panel_hardcore, panel_window_size as size
+from . import panel_window_size as size
 from .panel_preferences import LANGUAGES
 
 # A language's button is named in its own words, so a player lost in another one still finds theirs (2026-09-24).
-BUTTON_NAMES = {"ZH": "中文"}
+BUTTON_NAMES = {"ZH": "中文", "JA": "日本語"}
 
 
 def language_button(language):
@@ -78,7 +78,6 @@ def header(owner, world, widgets, template):
     widgets["tag"] = tx.text(tag, "", "tag")
     tag.SetContent(widgets["tag"])
     w.row(line, w.slant(tag), valign="Center")
-    panel_hardcore.badge(line, widgets)
     w.row(line, w.new("Spacer", line), fill=True)
     # The window's size and the theme sit left of the languages, preferences of the same kind (Kevin, 2026-10-06).
     w.row(line, b.button(line, widgets, "window_size", "lang", template, "lang_off"),

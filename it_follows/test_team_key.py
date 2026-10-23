@@ -25,7 +25,7 @@ import it_follows  # noqa: E402
 from it_follows import game_pause, open_key, panel_assets, panel_fonts, panel_form, panel_model  # noqa: E402
 from it_follows import control_window  # noqa: E402
 from it_follows import panel_view, session, team_key, updates, welcome  # noqa: E402
-from it_follows.companions import choices  # noqa: E402
+from it_follows import companion_choices as choices  # noqa: E402
 
 fails: list[str] = []
 

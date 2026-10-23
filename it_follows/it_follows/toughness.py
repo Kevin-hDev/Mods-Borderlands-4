@@ -28,7 +28,7 @@ en jeu). The lines written down say each enemy's health types.
 
 from typing import Any, Callable
 
-from . import health_pools
+from .characters import health_pools
 
 # Within 1 % a maximum is reached: no bar shows less.
 TOLERANCE = 0.01

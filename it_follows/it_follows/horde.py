@@ -26,7 +26,7 @@ reach, and not before.
 import time
 from typing import Any, Callable
 
-from . import reads, target
+from .characters import reads, target
 
 # run_chaser's reason for an enemy found dead: the one loss that comes back (wave.py).
 KILLED = "mover_dead"

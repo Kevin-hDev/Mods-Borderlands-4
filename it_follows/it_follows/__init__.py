@@ -9,18 +9,21 @@ normal mode on stays on from one game launch to the next: the mod turns it on ag
 
 from mods_base import build_mod
 
-from . import colours, kept, lost_loot, open_key, options, panel_open, panel_preferences, report, resolution
-from . import session, start_point, team_key, updates, welcome
-from .companions import bars as companion_bars, choices as companion_choices
+from . import colours, companion_choices, kept, lost_loot, open_key, options, panel_open, panel_preferences, report
+from . import resolution, session, start_point, team_key, updates, welcome
+from .characters.companions import owners, team as companions_team
 from .normal import hardcore, options as normal_options
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.10"
+__version__ = "1.0.11"
 __author__ = "kevin-hDev"
 
 
 def _on_enable() -> None:
     report.note("enabled", version=__version__)
+    # It Follows leads the companions' team before Companions when both are on (spec-compagnons.md: « It Follows
+    # reste prioritaire »); switched off, it leaves the team to the other.
+    owners.switched_on(companions_team.OWNER, first=True)
     lost_loot.start()
     resolution.start()
     colours.start()
@@ -41,6 +44,7 @@ def _on_disable() -> None:
                        # The choice to be on stays in the settings file: the mode comes back when the mod is enabled.
                        ("normal", lambda: session.stop_normal("mod_disabled")),
                        ("team", lambda: session.stop_team("mod_disabled")),
+                       ("team_owner", lambda: owners.switched_off(companions_team.OWNER)),
                        ("lost_loot", lost_loot.stop), ("resolution", resolution.stop), ("colours", colours.stop)):
         try:
             stop()
@@ -55,7 +59,7 @@ mod = build_mod(
     # The run's settings and the normal mode's, the companions' team and bars, then the window's own (language, theme,
     # window size, last page), the welcome edition last seen, the version whose update notes were seen last, the last
     # runs, the Hardcore's kills, the key that opens the window and the team's, hidden in the SDK's menu.
-    options=[*options.ALL, *normal_options.ALL, *companion_choices.ALL, companion_bars.option,
+    options=[*options.ALL, *normal_options.ALL, *companion_choices.ALL, companion_choices.bars,
              *panel_preferences.ALL, welcome.seen, updates.seen, kept.option, hardcore.option, open_key.option,
              team_key.option],
     keybinds=[open_key.bind, team_key.bind],

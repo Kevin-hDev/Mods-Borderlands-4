@@ -14,7 +14,7 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from . import brain_walk, reads, target
+from .characters import brain_walk, reads, target
 
 # Trial 2 quinquies: the walk aborted within 35 m, the enemy fights the hunter instead of sticking to him.
 ARRIVAL_M = 35.0

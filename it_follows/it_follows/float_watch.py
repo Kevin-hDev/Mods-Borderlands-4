@@ -11,7 +11,8 @@ catch-up last moved it (none: it was born there or walked there).
 
 from typing import Any, Callable
 
-from . import ground, reads
+from . import ground
+from .characters import reads
 
 # Two traces a second: with the 120 enemies the horde holds at most (decision 69), each one looked at every 60 s.
 # Four, each was looked at between two status lines, for a watch that saw no enemy float in all of trial 33's run

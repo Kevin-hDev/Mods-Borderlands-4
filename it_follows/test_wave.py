@@ -29,7 +29,8 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 sys.modules["unrealsdk"].make_struct = lambda name, **fields: types.SimpleNamespace(struct_name=name, **fields)
 
-from it_follows import budget, camps, guard, horde, report, spread  # noqa: E402
+from it_follows import budget, guard, horde, report, spread  # noqa: E402
+from it_follows.characters import camps  # noqa: E402
 from it_follows import copies as copies_module  # noqa: E402
 from it_follows import wave as wave_module  # noqa: E402
 from it_follows.seen import Seen  # noqa: E402

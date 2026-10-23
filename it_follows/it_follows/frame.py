@@ -21,7 +21,7 @@ from typing import Any, Callable
 from mods_base import hook
 from unrealsdk.hooks import Type
 
-from . import game_thread
+from .characters import game_thread
 
 HOOK = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 IDENTIFIER = "it_follows:run"

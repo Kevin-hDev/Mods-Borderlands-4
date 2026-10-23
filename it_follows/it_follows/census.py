@@ -20,7 +20,8 @@ import math
 import time
 from typing import Any, Iterable
 
-from . import killers, kinds, reads
+from . import killers, kinds
+from .characters import reads
 from .seen import Seen
 
 # The game waits while the census reads (trial 1, docs/RUN/sondes/run_census.py): it stops at MAX_SCAN characters or

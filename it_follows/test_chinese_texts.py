@@ -17,7 +17,7 @@ import sdk_stubs  # noqa: E402
 sdk_stubs.install()
 from it_follows import options, panel_en, panel_fr, panel_i18n, panel_words, release_notes, texts  # noqa: E402
 from it_follows import panel_zh  # noqa: E402
-from it_follows.companions import bars as companion_bars  # noqa: E402
+from it_follows import companion_choices  # noqa: E402
 from it_follows.normal import options as normal_options  # noqa: E402
 
 NOTES = HERE.parents[3] / "publication" / "nexus" / "it_follows"
@@ -117,7 +117,7 @@ for key, text in own.items():
     sentence_rules(key, panel_en.TEXT[key], text, punctuation=key != "clock_time")
 
 rows = {option.identifier: option for option in (*options.RUN, *options.DISPLAY, *normal_options.PAGE,
-                                                 companion_bars.option)}
+                                                 companion_choices.bars)}
 for key, (name, description) in panel_zh.OPTIONS.items():
     option = rows.get(key)
     check(option is not None, f"option {key}: a row of the mod")

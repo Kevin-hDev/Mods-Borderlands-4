@@ -27,7 +27,7 @@ from typing import Any, Callable
 
 from unrealsdk.unreal import WeakPointer
 
-from . import reads
+from .characters import reads
 
 EVERY_S = 10.0
 RANGE_M = 1000.0

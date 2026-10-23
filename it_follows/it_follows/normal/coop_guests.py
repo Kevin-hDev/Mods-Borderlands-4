@@ -26,7 +26,8 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from .. import damage_taken, hardcore_steps, presence, reads
+from .. import damage_taken, hardcore_steps, presence
+from ..characters import reads
 from . import coop_messages, rewards
 
 EVERY_S = 5.0

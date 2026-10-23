@@ -32,7 +32,8 @@ try:
           texts.bar(texts.FRENCH, 12, 1, 37, 3, 277.9) == "TUÉS 12   MORTS 1   HORDE 37   HARDCORE 3 %   04:37")
     check("English for a language the mod does not have", texts.bar("Klingon", 0, 0, 0, 0, 0.0)
           == "KILLS 0   DEATHS 0   HORDE 0   HARDCORE 0%   00:00")
-    check("the three languages, English first", texts.LANGUAGES == (texts.ENGLISH, texts.FRENCH, texts.CHINESE))
+    check("the four languages, English first",
+          texts.LANGUAGES == (texts.ENGLISH, texts.FRENCH, texts.CHINESE, texts.JAPANESE))
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")

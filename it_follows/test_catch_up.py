@@ -29,7 +29,8 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 import catch_up_fixture as fixture  # noqa: E402
-from it_follows import catch_up as catch_module, ground as ground_module, levels, reads, spread  # noqa: E402
+from it_follows import catch_up as catch_module, ground as ground_module, levels, spread  # noqa: E402
+from it_follows.characters import reads  # noqa: E402
 
 fixture.keep_struct_names()
 fails: list[str] = []

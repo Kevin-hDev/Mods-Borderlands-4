@@ -22,7 +22,8 @@ import unrealsdk
 from unrealsdk.hooks import Type, add_hook, has_hook, remove_hook
 from unrealsdk.unreal import WeakPointer
 
-from . import game_thread, start_calls as calls, start_hold as hold
+from . import start_calls as calls, start_hold as hold
+from .characters import game_thread
 
 FRAME_HOOK = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 IDENTIFIER = "it_follows:start_cover"

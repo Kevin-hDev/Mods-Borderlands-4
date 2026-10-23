@@ -25,7 +25,7 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from . import reads
+from .characters import reads
 from .seen import Seen
 
 # Kevin, decision 38: « dupliquer les premiers ennemis des premiers camps à proximité ». Trial 6y: 20 enemies stood

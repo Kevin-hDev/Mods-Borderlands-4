@@ -21,7 +21,7 @@ health types and pools.
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from .. import health_pools, shield_pool
+from ..characters import health_pools, shield_pool
 from . import levels
 
 # A fill at or under this is broken (trial 46: an empty layer reads 0.0).

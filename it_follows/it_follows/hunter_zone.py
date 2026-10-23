@@ -10,10 +10,10 @@ docs/RUN/sondes/run_hunter_zone.py.
 
 from typing import Any, Callable
 
-from . import reads
+from .characters import reads
 from .seen import Seen
 from .zone_loan import Loan
-from .zone_radius import TerritoryRadiusPatch
+from .characters.zone_radius import TerritoryRadiusPatch
 from .zone_shift import Shift
 
 # docs/RUN/spec-run.md, section 3: the zone set off after the hunter every 2 seconds.

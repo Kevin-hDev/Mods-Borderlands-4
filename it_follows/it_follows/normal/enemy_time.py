@@ -30,7 +30,8 @@ from typing import Any, Callable
 from mods_base import hook
 from unrealsdk.hooks import Type
 
-from .. import frame, game_thread
+from .. import frame
+from ..characters import game_thread
 from . import gestures
 
 IDENTIFIER = "it_follows:normal_time"

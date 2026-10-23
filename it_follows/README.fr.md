@@ -11,7 +11,7 @@ Games.
 ## Ce qu'il fait
 
 Appuie sur **F5** pendant le jeu, ou ouvre la console avec `~`, tape `mods` et choisis **It Follows** : sa fenêtre, en
-anglais, en français et en chinois simplifié, a cinq pages. Le jeu se met en pause tant qu'elle est ouverte. Tu
+anglais, en français, en chinois simplifié et en japonais, a cinq pages. Le jeu se met en pause tant qu'elle est ouverte. Tu
 lances un mode à la fois.
 
 - **MODE HORDE [BETA].** Appuie sur START : tous les ennemis autour de toi viennent vers toi et te suivent partout. Ceux
@@ -66,8 +66,9 @@ fichiers `it-follows-…_999_P.pak`. Le mod ne touche pas à ta sauvegarde.
 ## Tests
 
 Lance chaque test à part depuis ce dossier, par exemple `python test_wave.py`. Les tests remplacent le SDK du jeu par
-de faux objets (`sdk_stubs.py`, `*_fixture.py`). Chaque test écrit une ligne `RESULTAT:` et se termine par un code non
-nul en cas d'échec.
+de faux objets (`sdk_stubs.py`, `*_fixture.py`). Le code des compagnons et ses faux objets sont dans
+[characters](../characters/), que les tests chargent à côté de ce dossier. Chaque test écrit une ligne `RESULTAT:` et
+se termine par un code non nul en cas d'échec.
 
 ## Limites connues
 
@@ -77,4 +78,6 @@ nul en cas d'échec.
 - Le mode Horde ne se lance pas en coopération ni en véhicule ; son point de départ ne marche que depuis le monde
   ouvert.
 - En coopération, chaque joueur doit avoir le mod pour que le mode normal marche pleinement.
+- [Companions](../companions/) donne les mêmes compagnons sans It Follows. Quand les deux sont activés, It Follows mène
+  l'équipe, une seule équipe à la fois ; mets les deux à jour ensemble.
 - Un autre mod qui change les ennemis, leur nombre ou leur vie peut entrer en conflit avec celui-ci.

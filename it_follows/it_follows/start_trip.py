@@ -29,7 +29,8 @@ from mods_base import hook
 from unrealsdk.hooks import Type
 from unrealsdk.unreal import WeakPointer
 
-from . import game_thread, ground, report, start_calls as calls, start_cover as cover, start_hold as hold
+from . import ground, report, start_calls as calls, start_cover as cover, start_hold as hold
+from .characters import game_thread
 
 FRAME_HOOK = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 IDENTIFIER = "it_follows:start_trip"

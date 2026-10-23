@@ -13,7 +13,8 @@ with every enemy, its end not run that second, and counted (cut).
 from time import perf_counter
 from typing import Any, Callable
 
-from . import reads, wave
+from . import wave
+from .characters import reads
 
 # 120 enemies, the most a run draws (horde.CROWD_MAX), in four parts.
 PART = 30

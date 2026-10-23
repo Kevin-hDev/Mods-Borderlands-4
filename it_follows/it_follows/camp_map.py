@@ -11,7 +11,7 @@ from typing import Any
 
 import unrealsdk
 
-from . import reads
+from .characters import reads
 
 
 class CampMap:

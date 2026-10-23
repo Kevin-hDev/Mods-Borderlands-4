@@ -9,8 +9,8 @@ from . import menu
 from .panel_scroll import last_scroll
 from .panel_theme import SIZES, THEMES
 
-# Chinese only in a window whose every text exists in it, as outils/menu_languages.py decides.
-LANGUAGES = ("EN", "FR", "ZH")
+# A language only in a window whose every text exists in it, as outils/menu_languages.py decides.
+LANGUAGES = ("EN", "FR", "ZH", "JA")
 _COMMANDS = ()
 PAGE_KEYS = tuple(group.identifier.removesuffix("_menu") for group in menu.ALL)
 # The language as a code, since a third one came (Chinese, 2026-10-12). A value this mod does not offer reads as

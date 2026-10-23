@@ -31,7 +31,8 @@ import it_follows  # noqa: E402
 from it_follows import companion_pictures_data, game_pause, panel_assets, panel_companions, panel_fonts  # noqa: E402
 from it_follows import panel_companion_pictures, panel_form, panel_model, panel_window_size  # noqa: E402
 from it_follows import panel_theme as t, panel_view, panel_widgets as w, session, updates, welcome  # noqa: E402
-from it_follows.companions import bars, choices, player_paint  # noqa: E402
+from it_follows import companion_choices as choices  # noqa: E402
+from it_follows.characters.companions import bars, owners, player_paint  # noqa: E402
 
 fails: list[str] = []
 
@@ -221,6 +222,27 @@ try:
     press("companions_launch")
     check("at the main menu: said, the window kept (decision 61 of the companions)",
           text("notice") == "Load a game first, then launch the team.")
+    MISMATCH = ("It Follows and Companions are at versions that do not work together, so no team starts: update both, "
+                "then restart the game.")
+    foreign = SimpleNamespace(protocol=owners.PROTOCOL + 1, owners={})
+    sys.modules[owners.STATE] = foreign
+    check("two versions meeting while the page is open: the page told to paint again",
+          panel_companions.changed(form))
+    form.notice = "ready"
+    form.refresh_labels(widgets)
+    check("two versions of the companions' code: the page says so before any click, its cards and LAUNCH THE "
+          "TEAM greyed, the footer too", text("companions_locked") == MISMATCH and shown("companions_locked")
+          and widgets["companions_launch"].calls["SetIsEnabled"][0] is False
+          and widgets["mate_add:Crankus"].calls["SetIsEnabled"][0] is False
+          and text("notice") == MISMATCH)
+    owners.reset_for_tests()
+    form.refresh_labels(widgets)
+    check("the versions apart no more: LAUNCH THE TEAM back", widgets["companions_launch"].calls["SetIsEnabled"][0]
+          is True and not shown("companions_locked"))
+    team["answer"] = "elsewhere"
+    press("companions_launch")
+    check("no mod can be known to lead (two versions of the companions' code): said, update both (review of "
+          "23 October 2026)", text("notice") == MISMATCH)
     team["answer"] = "started"
 
     installed = bars.installed
@@ -273,7 +295,8 @@ try:
     check("in Chinese: the allies as the game's zh-Hans names them", text("mate_add:Crankus_label") == "克兰库斯"
           and text("companions_tab:allies_label") == "盟友" and text("mate_add:Vex_label") == "VEX")
     press("EN")
-    check("the page's names read once per language", set(panel_companions._names) == {"EN", "FR", "ZH"})
+    check("the page's names read once per language", {"EN", "FR", "ZH"} <= set(
+          panel_companions.bars_names._in_window))
 except Exception as error:  # noqa: BLE001 - a test file says what broke and goes on to its verdict
     import traceback
     traceback.print_exc()

@@ -312,10 +312,14 @@ try:
           and shown("hardcore_badge_box") and text("hardcore_badge") == "HARDCORE 0%"
           and text("label:normal_hardcore_progress") == "PROGRESS"
           and text("setting:normal_hardcore_progress_label") == "ON")
+    column = widgets["meta"].owner
+    check("the tag in the side column, above the version: the header's line had no room for it beside a "
+          "fourth language (Kevin, 2026-10-23)", widgets["hardcore_badge_box"].owner is column
+          and column.children.index(widgets["hardcore_badge_box"]) < column.children.index(widgets["meta"]))
     press("setting:normal_hardcore_progress")
     form.poll()
     check("its progress paused: said by the tag", form.flush(widgets) and normal_options.progress.value is False
-          and text("hardcore_badge") == "HARDCORE 0% · PAUSED")
+          and text("hardcore_badge") == "HARDCORE 0%\nPAUSED")
     check("its « ? » opens the Hardcore's help", press("hardcore_help") is False and form.popup == "help_hardcore"
           and shown("popup:help_hardcore") and text("heading:popup_help_hardcore") == "THE HARDCORE MODE"
           and text("help:help_hardcore").startswith("In Borderlands 4, the enemies' level follows your hunter's")
@@ -385,7 +389,7 @@ try:
           and text("notice") == "Prêt : appuie sur START, le menu se ferme et le mode normal commence.")
     check("the Hardcore in French", text("heading:hardcore") == "HARDCORE"
           and text("label:normal_hardcore_progress") == "PROGRESSION"
-          and text("hardcore_badge") == "HARDCORE 0 % · EN PAUSE"
+          and text("hardcore_badge") == "HARDCORE 0 %\nEN PAUSE"
           and press("hardcore_help") is False and text("heading:popup_help_hardcore") == "LE MODE HARDCORE"
           and "1 % tous les 100 ennemis tués" in text("help:help_hardcore"))
     form.escape()

@@ -23,7 +23,8 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from .. import gbx_param, reads
+from .. import gbx_param
+from ..characters import reads
 from . import levels
 
 ENTRIES = ("DodgeBullet", "DodgeGrenade", "DodgeZone")

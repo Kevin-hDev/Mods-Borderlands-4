@@ -26,7 +26,8 @@ import unrealsdk
 
 import mods_base
 
-from .. import reads, report, speed
+from .. import report, speed
+from ..characters import reads
 from . import coop_messages, enemies, guest_enemies, hardcore
 
 STATUS_EVERY_S = 30.0

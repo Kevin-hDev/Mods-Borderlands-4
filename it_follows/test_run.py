@@ -34,7 +34,8 @@ import health_fixture  # noqa: E402
 game = game_fixture.Game(state)
 
 import it_follows  # noqa: E402
-from it_follows import brain_walk, camps, census, copies, frame, game_camps, options, recruit, report  # noqa: E402
+from it_follows import census, copies, frame, game_camps, options, recruit, report  # noqa: E402
+from it_follows.characters import brain_walk, camps  # noqa: E402
 from it_follows import ending, kept, levels, texts  # noqa: E402
 from it_follows import run as run_module  # noqa: E402
 from it_follows import session  # noqa: E402

@@ -29,7 +29,8 @@ from typing import Any, Callable
 import mods_base
 import unrealsdk
 
-from .. import census, reads, speed, teams, toughness
+from .. import census, speed, teams, toughness
+from ..characters import reads
 from . import aim as aim_module
 from . import kills as kills_module
 from . import shields as shields_module
