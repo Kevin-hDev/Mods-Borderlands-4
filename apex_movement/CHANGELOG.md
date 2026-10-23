@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.30 - 2026-10-24
+
+- Fix: in third person, Amon, Harlow and C4sh no longer freeze stiff and glide when sprinting toward the camera or to the left.
+- Fix: changing weapons while sprinting to the left no longer freezes the body, with every Vault Hunter.
+- These fixes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
 ## 1.2.29 - 2026-10-23
 
 - Fix for the Epic Games version after the game's update of October 22, 2026: third person, aiming and the longer pickup reach work again.

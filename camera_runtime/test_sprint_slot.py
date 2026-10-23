@@ -72,6 +72,29 @@ slot.update(None, anim, 1, FORWARD, 5)
 backward.BlendSpace = other
 slot.update(None, anim, 1, NONE, 6)
 check("a slot something else changed meanwhile is left as it is", backward.BlendSpace is other)
+
+# A weapon change while sprinting left (watch of 2026-10-24): the game empties both players and fills only the one it
+# plays, the backward one, with nothing; the forward one stays empty until the sprint starts again.
+switch = body()
+old_sprint = switch.players[0].BlendSpace
+written = slot.writes
+slot.update(None, switch, 7, FORWARD, 40)
+switch.players[0].BlendSpace = switch.players[1].BlendSpace = None
+slot.update(None, switch, 7, FORWARD, 41)
+check("the game's forward player emptied: the last sprint stays in the slot", switch.players[1].BlendSpace is old_sprint)
+slot.update(None, switch, 7, FORWARD, 42)
+new_sprint = object()
+switch.players[0].BlendSpace = new_sprint
+slot.update(None, switch, 7, FORWARD, 43)
+check("the new weapon's sprint replaces it once the game gives it", switch.players[1].BlendSpace is new_sprint
+      and slot.writes - written == 3)
+switch.players[0].BlendSpace = None
+slot.update(None, switch, 7, NONE, 44)
+check("let go with the forward player empty, the kept sprint leaves the slot", switch.players[1].BlendSpace is None)
+fresh = body()
+fresh.players[0].BlendSpace = None
+slot.update(None, fresh, 8, FORWARD, 45)
+check("a new body never gets the old body's sprint", fresh.players[1].BlendSpace is None)
 backward.BlendSpace = None
 
 new_anim = body()
@@ -87,12 +110,12 @@ broken = types.SimpleNamespace(players=None)
 slot.update(None, broken, 3, FORWARD, 30)
 slot.update(None, broken, 3, FORWARD, 31)
 check("a body whose layout is unknown is left alone, said once",
-      lines.count("sprint slot left alone for this body: ValueError") == 1)
+      lines.count("sprint slot left alone for this body: ValueError Unexpected animation player count") == 1)
 slot.update(None, new_anim, 4, FORWARD, 32)
 check("the next body is tried again", new_anim.players[1].BlendSpace is new_anim.players[0].BlendSpace)
 slot.stop()
 check("stopping empties the slot and gives the count", new_anim.players[1].BlendSpace is None
-      and lines[-1] == "forward sprint writes this session: 15")
+      and lines[-1] == "forward sprint writes this session: 18")
 slot.update(None, new_anim, 4, CARRIER, 40)
 slot.anim_ref = lambda: None
 slot.holding = True

@@ -4,11 +4,16 @@ Moved from Omni Sprint (animation.py) on 2026-10-09: the omni direction unit (om
 when it may fill the sprint's backward slot, so one writer owns that slot (sprint_slot.py).
 """
 
+import re
+
 from . import backward_carrier_assets as animation_assets
 
 BACK_KEY = 'AnimSet.Player.3rd.Run_B'
 SPRINT_KEY = 'AnimSet.Player.3rd.BS_Sprint'
-BODY_CLASS = 'BPAnim_Player_3rd_C'
+# Vex, Rafa and the Harmonica DLC hunter (CorpoHacker) play BPAnim_Player_3rd_C; Harlow plays BPAnim_Player_3rd_Grav_C, Amon and C4sh
+# BPAnim_Player_3rd_Paladin_C, with the same sprint node and keys (read in game on 2026-10-24). The name only says
+# it is a hunter's third-person body: the node, player and key checks below are what guard the slot.
+BODY_CLASS = re.compile(r'BPAnim_Player_3rd(_[A-Za-z0-9]+)?_C')
 NODE_CLASS = 'GbxAnimNode_Locomotion'
 PLAYER_CLASS = 'GbxAnimNode_BlendSpacePlayer'
 GROUND_MODE = 1
@@ -16,8 +21,9 @@ RETRY_NS = 5_000_000_000
 
 
 def players(anim):
-    if str(anim.Class.Name) != BODY_CLASS:
-        raise ValueError('Unsupported player animation class')
+    name = str(anim.Class.Name)
+    if not BODY_CLASS.fullmatch(name):
+        raise ValueError(f'Unsupported player animation class {name[:64]}')
     node = anim.GbxAnimGraphNode_Locomotion_2
     if str(node._type.Name) != NODE_CLASS:
         raise ValueError('Unsupported locomotion node')

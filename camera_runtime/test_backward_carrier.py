@@ -114,6 +114,18 @@ class AnimationTests(unittest.TestCase):
         self.assertFalse(self.builds)
         self.assertIsNone(self.backward.BlendSpace)
 
+    def test_hunters_with_their_own_body_class_are_carried(self):
+        # Read in game on 2026-10-24: Harlow and Amon (C4sh shares Amon's) have their own body class.
+        for name in ('BPAnim_Player_3rd_Grav_C', 'BPAnim_Player_3rd_Paladin_C'):
+            self.anim.Class.Name = name
+            self.assertEqual(animation.players(self.anim), [self.forward, self.backward])
+
+    def test_other_body_classes_are_refused_by_name(self):
+        for name in ('BPAnim_Player_1st_C', 'BPAnim_Player_3rd_Grav', 'ABP_Layer_C', 'BPAnim_Player_3rd__C'):
+            self.anim.Class.Name = name
+            with self.assertRaisesRegex(ValueError, name):
+                animation.players(self.anim)
+
     def test_missing_resource_is_retried_after_delay(self):
         def unavailable(source, owner):
             self.builds.append(source)
