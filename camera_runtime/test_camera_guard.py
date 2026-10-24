@@ -124,6 +124,17 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(self.physics.lines[0], ((-250, 0, 50), (-250, 92.25, 50)))
         self.assertAlmostEqual(self.guard.clearance.take().room, 20.0 / 92.25)
 
+    def test_the_cameras_yaw_is_asked_once_a_frame_with_both_sides_measured(self):
+        asked = []
+        self.manager.GetCameraRotation = lambda: (asked.append(1), NS(Yaw=0.0))[1]
+        self.shoulder.show(61.5)
+        self.shoulder.place(0.5, 0.0)
+        self.physics.distance = 20.0
+        self.guard.clearance.wanted = self.guard.clearance.active = True
+        self.invoke()
+        self.assertIsNotNone(self.guard.clearance.take().other_room)
+        self.assertEqual(len(asked), 1)
+
     def test_a_camera_the_game_pulled_in_from_a_side_wall_still_meets_the_wall(self):
         self.shoulder.show(61.5)
         self.shoulder.place(0.5, 0.0)

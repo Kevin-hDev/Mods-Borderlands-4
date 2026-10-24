@@ -16,7 +16,7 @@ import math
 from typing import NamedTuple
 
 from .shoulder_auto import CLEAR
-from .shoulder_sight import seen
+from .shoulder_sight import Seen
 
 # Below this sideways offset (cm), mid-switch, the two sides are the same point: no reading.
 MIN_SIDE = 10.0
@@ -32,15 +32,15 @@ class Reading(NamedTuple):
     camera: tuple
     # Where the other side's camera would stand, as far as its room lets it; None when not measured.
     other_camera: tuple | None
-    # What cut each side's roomiest sweep, for the swap's log line (shoulder_sight.seen).
-    seen: str = ""
-    other_seen: str = ""
+    # What cut each side's roomiest sweep, for the swap's log line (shoulder_sight.Seen, or a text).
+    seen: object = ""
+    other_seen: object = ""
 
 
-def _met(sweep, distance: float, length: float) -> str:
+def _met(sweep, distance: float, length: float) -> object:
     hit = getattr(sweep, "hit", None)
     if hit is not None:
-        return seen(hit, distance)
+        return Seen(hit, distance)
     return "clear" if distance >= length else f"{distance:.0f} cm"
 
 
@@ -55,13 +55,17 @@ class ShoulderClearance:
         self.reading: Reading | None = None
         self.age = MAX_AGE
 
-    def record(self, sweep, actor, manager, anchor, desired, distance: float, position) -> None:
+    def record(self, sweep, actor, manager, anchor, desired, distance: float, position,
+               yaw_degrees: float | None = None) -> None:
+        """yaw_degrees: the camera's yaw when the guard already asked the game for it this frame."""
         length = math.dist(anchor, desired)
         room = distance / length
         self.reading, self.age = Reading(room, None, tuple(position), None), 0
         if not (self.wanted or self.active):
             return
-        yaw = math.radians(float(manager.GetCameraRotation().Yaw))
+        if yaw_degrees is None:
+            yaw_degrees = float(manager.GetCameraRotation().Yaw)
+        yaw = math.radians(yaw_degrees)
         right = (-math.sin(yaw), math.cos(yaw), 0.0)
         forward = (math.cos(yaw), math.sin(yaw), 0.0)
         side = sum((b - a) * r for a, b, r in zip(anchor, desired, right))
@@ -82,7 +86,7 @@ class ShoulderClearance:
                                              _met(sweep, other_distance, other_length))
         self.reading = Reading(room, other_room, tuple(position), other_camera, met, other_met)
 
-    def _widest(self, sweep, actor, anchor, end, forward, room: float, met: str) -> tuple:
+    def _widest(self, sweep, actor, anchor, end, forward, room: float, met: object) -> tuple:
         """The roomiest of the sweep and the same sweep moved ahead and behind, once the side is cramped, with what
         cut it."""
         if not self.active or room >= CLEAR:

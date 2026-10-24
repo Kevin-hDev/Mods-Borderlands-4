@@ -82,11 +82,13 @@ class OmniDirection:
             if self.game is None:
                 self._start()
             self.values = wanted_values(settings)
-            self.played_id = played_address(pc)
             self.third_person = in_third_person(controller)
             facing = self.third_person and self.values is not None and self.values.body
             self.open_wanted = sprint_everywhere(clients) or (
                 self.third_person and self.values is not None and self.values.sprint)
+            # Only the hook reads it, and the hook is on only while something is asked or held: otherwise its reads
+            # come back every frame for nothing (2026-10-24).
+            self.played_id = played_address(pc) if facing or self.open_wanted or self.installed else 0
             self.keeper.update(pc, self.open_wanted, now_ns)
             self.crouch.update(pc, self.open_wanted, self.values is None or self.values.dash, now_ns)
             self.slides.update(facing or self.open_wanted, now_ns)

@@ -1,21 +1,32 @@
-"""Refresh live container fields without retaining Unreal object references."""
+"""Refresh live container fields, holding the containers only by weak pointers."""
 import math
 import struct
+from itertools import islice
+from typing import Any, Callable, NamedTuple
 
 from .loot_constants import (BASE_DISTANCE, FIELD_OFFSET, FIELD_SIZE, LOOT_DEFINITION,
                              MAX_MULTIPLIER, MAX_OBJECTS, MAX_PATH, MAX_SCAN)
 
 
+class Owned(NamedTuple):
+    original: bytes
+    # None marks a competing write until that object unloads.
+    last: bytes | None
+    # The container while the game keeps it, None once destroyed.
+    pointer: Callable[[], Any]
+
+
 class LootFields:
-    def __init__(self, objects, memory):
-        self.objects = objects
+    def __init__(self, containers, memory, weak):
+        self.containers = containers
         self.memory = memory
-        # Keys are scalar identities; None marks a competing write until that object unloads.
+        self.weak = weak
+        # Keys are scalar identities.
         self.saved = {}
 
     @property
     def pending(self):
-        return any(last is not None for _original, last in self.saved.values())
+        return any(owned.last is not None for owned in self.saved.values())
 
     @staticmethod
     def identity(obj):
@@ -39,22 +50,21 @@ class LootFields:
         except Exception:
             return False
 
-    def live(self):
+    def live(self, world):
+        objects = list(islice(self.containers(world), MAX_SCAN + 1))
+        if len(objects) > MAX_SCAN:
+            raise RuntimeError('Loot scan budget exceeded')
         seen = set()
-        complete = True
-        for index, obj in enumerate(self.objects()):
-            if index >= MAX_SCAN:
-                raise RuntimeError('Loot scan budget exceeded')
+        for obj in objects:
             key = self.identity(obj)
             if key is not None:
                 seen.add(key)
                 if self.eligible(obj, key[0]):
-                    yield key
-            else:
-                complete = False
-        # Only a completed live enumeration proves that a previous identity disappeared.
-        for key in tuple(self.saved):
-            if complete and key not in seen:
+                    yield key, obj
+        # The world's list leaves out the cells being unloaded, whose containers the game has not destroyed yet:
+        # only a destroyed container is forgotten.
+        for key, owned in tuple(self.saved.items()):
+            if key not in seen and owned.pointer() is None:
                 del self.saved[key]
 
     @staticmethod
@@ -64,19 +74,20 @@ class LootFields:
         flag, distance = struct.unpack('<Bf', data)
         return flag in (0, 1) and math.isfinite(distance) and 0 <= distance <= 3000
 
-    def apply(self, distance):
+    def apply(self, distance, world):
         if (not math.isfinite(distance)
                 or not BASE_DISTANCE <= distance <= BASE_DISTANCE * MAX_MULTIPLIER):
             raise ValueError('Invalid loot range')
-        for key in self.live():
+        for key, obj in self.live(world):
             before = self.memory.read(key[1], FIELD_SIZE)
             if not self.valid(before):
                 continue
-            if key in self.saved:
-                original, last = self.saved[key]
-                if last is None or before != last:
-                    self.saved[key] = (original, None)
+            owned = self.saved.get(key)
+            if owned is not None:
+                if owned.last is None or before != owned.last:
+                    self.saved[key] = owned._replace(last=None)
                     continue
+                original = owned.original
             else:
                 if len(self.saved) >= MAX_OBJECTS:
                     raise RuntimeError('Loot ownership budget exceeded')
@@ -87,30 +98,34 @@ class LootFields:
             target = struct.pack('<Bf', 1, value)
             if before == target:
                 continue
-            self.saved[key] = (original, target)
+            pointer = owned.pointer if owned is not None else self.weak(obj)
+            self.saved[key] = Owned(original, target, pointer)
             if (not self.memory.write(key[1], target)
                     or self.memory.read(key[1], FIELD_SIZE) != target):
                 observed = self.memory.read(key[1], FIELD_SIZE)
-                self.saved[key] = (original, observed if observed is not None else target)
+                self.saved[key] = Owned(original, observed if observed is not None else target, pointer)
                 raise RuntimeError('Loot update refused')
 
     def restore(self):
         failed = False
-        for key in self.live():
-            if key not in self.saved:
+        for key, owned in tuple(self.saved.items()):
+            if owned.last is None:
                 continue
-            original, last = self.saved[key]
-            if last is None:
+            obj = owned.pointer()
+            if obj is None:
+                del self.saved[key]
+                continue
+            if not self.eligible(obj, key[0]):
                 continue
             before = self.memory.read(key[1], FIELD_SIZE)
             if before is None:
                 failed = True
                 continue
-            if before != last:
-                self.saved[key] = (original, None)
+            if before != owned.last:
+                self.saved[key] = owned._replace(last=None)
                 continue
-            if (self.memory.write(key[1], original)
-                    and self.memory.read(key[1], FIELD_SIZE) == original):
+            if (self.memory.write(key[1], owned.original)
+                    and self.memory.read(key[1], FIELD_SIZE) == owned.original):
                 del self.saved[key]
             else:
                 failed = True

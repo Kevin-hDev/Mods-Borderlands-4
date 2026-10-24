@@ -46,6 +46,25 @@ wall_climb.update(player, 10 * MS)
 check("in the air a trace per height looks for a wall; without one nothing starts",
       len(kismet.calls) == 5 and notes("wall climb") == 0)
 
+reads = {"location": 0, "half_height": 0}
+locate, measure = player.K2_GetActorLocation, player.CapsuleComponent.GetScaledCapsuleHalfHeight
+
+
+def counted(name, read):
+    def call():
+        reads[name] += 1
+        return read()
+    return call
+
+
+player.K2_GetActorLocation = counted("location", locate)
+player.CapsuleComponent.GetScaledCapsuleHalfHeight = counted("half_height", measure)
+wall_climb.update(player, 15 * MS)
+check("a frame in the air asks the game for the location and the half height once each",
+      reads == {"location": 1, "half_height": 1})
+del player.K2_GetActorLocation
+player.CapsuleComponent.GetScaledCapsuleHalfHeight = measure
+
 kismet.hit = (120.0, sdk_stubs.vector(-1.0, 0.0, 0.0))
 player.input = sdk_stubs.vector(1.0, 0.0)
 player.JumpCurrentCount = 1

@@ -154,14 +154,15 @@ class CameraGuard:
         if applied is None or abs(applied[0]) <= config.MIN_LENGTH:
             self.clearance.clear()
             return
-        yaw = math.radians(float(manager.GetCameraRotation().Yaw))
+        yaw_degrees = float(manager.GetCameraRotation().Yaw)
+        yaw = math.radians(yaw_degrees)
         right = (-math.sin(yaw), math.cos(yaw), 0.0)
         across = sum((c - h) * r for c, h, r in zip(camera, hunter, right))
         anchor = tuple(c - across * r for c, r in zip(camera, right))
         desired = tuple(a + applied[0] * r for a, r in zip(anchor, right))
         try:
             distance = self.sweep.distance(actor, anchor, desired)
-            self.clearance.record(self.sweep, actor, manager, anchor, desired, distance, camera)
+            self.clearance.record(self.sweep, actor, manager, anchor, desired, distance, camera, yaw_degrees)
         except ValueError:
             # A sweep starting inside a wall proves nothing about the room; the camera itself is the game's and stays.
             self.clearance.clear()

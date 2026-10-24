@@ -43,6 +43,21 @@ class OverlayTests(unittest.TestCase):
         self.assertTrue(self.settings.third_person_enabled())
         self.assertEqual(self.settings.note, "kept")
 
+    def test_each_reading_is_looked_up_once_and_still_follows_the_profile_shown(self):
+        looked = []
+
+        class Counted:
+            def __getattr__(_self, name):
+                looked.append(name)
+                return getattr(self.base, name)
+        settings = ProfiledSettings(Counted(), self.profiles)
+        for _ in range(3):
+            settings.third_person_enabled()
+            settings.fov_value()
+        self.assertEqual(looked, ["third_person_enabled", "fov_value"])
+        self.profiles.values = values(fov=100, close=1.4, far=4.2, spacing=-40, height=25)
+        self.assertEqual(settings.fov_value(), 100.0)
+
     def test_a_profile_places_its_five_values_and_keeps_the_zoom_and_the_normal_distance(self):
         self.profiles.values = values(fov=100, close=1.4, far=4.2, spacing=-40, height=25)
         fov_enabled, fov, distances, distance, rows = self.readings()

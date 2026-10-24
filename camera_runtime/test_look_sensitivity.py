@@ -64,6 +64,33 @@ class SensitivityTests(unittest.TestCase):
         for got, wanted in zip(self.value(modifier), expected):
             self.assertAlmostEqual(got, wanted, places=6)
 
+    def test_at_100_percent_with_nothing_written_the_game_is_not_read(self):
+        reads = []
+        self.pc.PlayerCameraManager.GetActorCameraMode = lambda _actor: (reads.append("mode"), self.mode)[1]
+        walked = []
+        original_find = look_multiplier.find
+        look_multiplier.find = lambda pc, key: (walked.append(key), original_find(pc, key))[1]
+        try:
+            for _ in range(3):
+                self.tick(Settings(1.0, 1.0, {"pistol": 1.0}))
+        finally:
+            look_multiplier.find = original_find
+        self.assertEqual((reads, walked), ([], []))
+        self.assertValue(GAME)
+
+    def test_back_to_100_percent_the_games_value_is_still_given_back(self):
+        self.tick()
+        self.assertValue(tuple(axis * 0.5 for axis in GAME))
+        self.tick(Settings(1.0, 1.0))
+        self.assertValue(GAME)
+        self.tick(Settings(1.0, 1.0))
+        self.assertValue(GAME)
+
+    def test_a_weapon_row_off_100_percent_still_reads_the_game(self):
+        self.actor.ZoomState.bWantsToZoom = True
+        self.tick(Settings(1.0, 1.0, {"pistol": 1.5}))
+        self.assertValue(tuple(axis * 1.5 for axis in GAME))
+
     def test_the_factor_follows_the_mode_and_the_aim(self):
         weapons = {"pistol": 1.5}
         self.assertEqual(factor((0.5, 2.0, weapons), "ThirdPerson", True, "pistol"), 1.5)

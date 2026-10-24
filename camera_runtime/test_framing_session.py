@@ -5,6 +5,7 @@ import unittest
 from types import SimpleNamespace as NS
 from unittest.mock import patch
 from ads_sdk_test_fixtures import obj
+from apex_camera_runtime.ads_context import ContextReader
 from apex_camera_runtime.generated_ads import FramingContext, ObjectId, VIEW_ABI
 try:
     from apex_camera_runtime.framing_session import FramingSession
@@ -21,8 +22,13 @@ class Tests(unittest.TestCase):
         self.root.Outer, self.root.AttachParent = self.actor, None
         self.manager.GetActorCameraMode = lambda _: "ThirdPerson"
         self.writes, self.logs, self.serial = [], [], 1
-        self.context = NS(capture=lambda item: (lambda: item,
-                          ObjectId(item._get_address(), 1, self.serial)))
+
+        def weak(item):
+            # As the game's weak references: one taken before a serial change no longer resolves.
+            serial = self.serial
+            return lambda: item if self.serial == serial else None
+        self.context = NS(capture=lambda item: (weak(item), ObjectId(item._get_address(), 1, self.serial)))
+        self.context.capture_all = lambda items, kept=None: ContextReader.capture_all(self.context, items, kept)
         self.bridge = NS(publish=self.writes.append, status=lambda: 1)
         self.native = NS(prepare=lambda: True)
         self.session = FramingSession(self.bridge, self.native, self.context, self.logs.append)
@@ -44,6 +50,18 @@ class Tests(unittest.TestCase):
 
     def sync(self):
         self.session.sync(self.controller, self.pc, self.actor, self.manager, self.settings)
+
+    def test_the_same_body_is_captured_once_for_frames_in_a_row(self):
+        captures = []
+        capture = self.context.capture
+        self.context.capture = lambda item: (captures.append(item), capture(item))[1]
+        for _ in range(5):
+            self.sync()
+        self.assertEqual(len(captures), 4)
+        self.serial = 2
+        self.sync()
+        self.assertEqual(len(captures), 8)
+        self.assertEqual(len(self.writes), 2)
 
     def test_publish_once_live_value_and_serial_changes_republish(self):
         self.sync(); self.sync()

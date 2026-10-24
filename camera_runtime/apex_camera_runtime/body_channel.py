@@ -34,6 +34,8 @@ class BodyChannel:
         self.find_class, self.make_tag, self.make_rotator = find_class, make_tag, make_rotator
         self.weak, self.log = weak, log
         self.library: Any = None
+        # The channel's tag, made once: the same name every call, and the call only reads it (2026-10-24).
+        self.tag: Any = None
         self.aimed_yaw: float | None = None
         self.held: Any = None  # the hunter whose channel is aimed, weakly
         self.held_id = 0
@@ -51,9 +53,11 @@ class BodyChannel:
             if self.library is None:
                 # A class default object lasts as long as the game.
                 self.library = self.find_class(LIBRARY).ClassDefaultObject
+            if self.tag is None:
+                self.tag = self.make_tag(CHANNEL)
             # Marked before the call, so whatever comes next gives the channel back, even after a refused call.
             self.aimed_yaw, self.held, self.held_id = yaw, self.weak(character), address
-            self.library.SetRotationTargetRotation(Actor=character, ChannelTag=self.make_tag(CHANNEL),
+            self.library.SetRotationTargetRotation(Actor=character, ChannelTag=self.tag,
                                                    InRotation=self.make_rotator(0.0, yaw, 0.0))
         except Exception as error:
             self._break(error)
@@ -66,7 +70,7 @@ class BodyChannel:
         if character is None:
             return  # gone with the hunter: nothing left to give back
         try:
-            self.library.SetRotationTargetDefault(Actor=character, ChannelTag=self.make_tag(CHANNEL))
+            self.library.SetRotationTargetDefault(Actor=character, ChannelTag=self.tag)
         except Exception as error:
             self._break(error)
 

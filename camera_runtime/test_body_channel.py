@@ -123,5 +123,16 @@ channel.aim(amon, 10.0)
 check("the game's library missing: nothing aimed, nothing to give back, said once",
       channel.broken and channel.aimed_yaw is None and len(lines) == 1)
 
+made = []
+library = Library()
+channel = body_channel.BodyChannel(lambda _name: types.SimpleNamespace(ClassDefaultObject=library),
+                                   lambda name: (made.append(name), f"tag:{name}")[1],
+                                   lambda p, y, r: types.SimpleNamespace(Pitch=p, Yaw=y, Roll=r), Pointer, lines.append)
+for yaw in (10.0, 20.0, 30.0):
+    channel.aim(amon, yaw)
+channel.give_back()
+check("the channel's tag is made once, whatever the number of calls",
+      made == ["RotationChannel.Body"] and len(library.calls) == 4)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

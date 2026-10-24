@@ -216,6 +216,16 @@ reclimb_delay = SliderOption(
 # another movement (2026-09-18): one value, one place, read by both.
 LONGEST_SLIDE_S = 30.0
 
+_own_sliders: tuple[SliderOption, ...] | None = None
+
+
+def _sliders() -> tuple[SliderOption, ...]:
+    """This file's sliders, gathered at the first call once every one is declared: keep_in_bounds runs every frame."""
+    global _own_sliders
+    if _own_sliders is None:
+        _own_sliders = tuple(option for option in globals().values() if isinstance(option, SliderOption))
+    return _own_sliders
+
 
 def keep_in_bounds(*others: SliderOption) -> list[str]:
     """Brings every slider back within its own bounds, and a value that is not a number back to its default.
@@ -228,7 +238,7 @@ def keep_in_bounds(*others: SliderOption) -> list[str]:
     either (Vehicle Driving, 2026-09-19: 250 typed for a slider shown [100-200] was taken).
     """
     told: list[str] = []
-    for option in [*globals().values(), *others]:
+    for option in (*_sliders(), *others):
         if not isinstance(option, SliderOption) or getattr(option, "min_value", None) is None:
             continue
         value = float(option.value)

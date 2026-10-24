@@ -290,5 +290,26 @@ else:
     refused = False
 check("a refused swap reaches the camera's stop path", refused)
 
+
+class Named:
+    """A contact's name that counts how often it is written out."""
+    def __init__(self, text):
+        self.text, self.written = text, 0
+
+    def __str__(self):
+        self.written += 1
+        return self.text
+
+
+owner, settings, state, clearance = start()
+named = Named("90 cm on Wall/SM_Wall up 0.00")
+clearance.set(0.9, 1.0, named, "clear")
+frames(state, owner, settings, 0.5, 0)
+check("frames that swap nothing write no measure out: each name read is a trip into the game", named.written == 0)
+clearance.set(0.1, 1.0, named, "clear")
+frames(state, owner, settings, SWAP_S + 0.05, 10 ** 9)
+check("the swap's line still names what cut the room", any("(90 cm on Wall/SM_Wall up 0.00)" in line
+                                                           for line in owner.lines) and named.written == 1)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

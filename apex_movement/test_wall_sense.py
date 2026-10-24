@@ -93,5 +93,16 @@ check("a floor keeps a straight way up rather than none at all",
       (floor_up.up_x, floor_up.up_y, floor_up.up_z) == (0.0, 0.0, 1.0))
 kismet.hit = (60.0, sdk_stubs.vector(-1.0, 0.0, 0.0))
 
+made: list[str] = []
+make = wall_sense.unrealsdk.make_struct
+wall_sense.unrealsdk.make_struct = lambda name, **fields: made.append(name) or make(name, **fields)
+wall_sense.reset()
+wall_sense.walls_ahead(player, 0.0, HALF)
+wall_sense.walls_ahead(player, 0.0, HALF)
+heights = len(climb_aim.TRACE_HEIGHTS)
+check("the trace's result and colours are made once, its two ends at every trace",
+      (made.count("HitResult"), made.count("LinearColor"), made.count("Vector")) == (1, 2, 2 * 2 * heights))
+wall_sense.unrealsdk.make_struct = make
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

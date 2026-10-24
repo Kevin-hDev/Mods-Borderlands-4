@@ -127,8 +127,8 @@ mirror_pole = Pole(free=0.4)
 clearance.record(mirror_pole, None, manager(0.0), ANCHOR, RIGHT, LENGTH, CAMERA)
 reading = clearance.take()
 check("a pole on the other side is not a wall either", reading.other_room >= CLEAR)
-check("each side says what cut its roomiest sweep, here nothing", reading.seen == "clear"
-      and reading.other_seen == "clear")
+check("each side says what cut its roomiest sweep, here nothing", str(reading.seen) == "clear"
+      and str(reading.other_seen) == "clear")
 check("the other camera still stands where its own sweep stops", close(reading.other_camera, (100.0, 180.64, 52.0)))
 
 class Named(Sweep):
@@ -153,7 +153,7 @@ clearance.active = True
 named = Named()
 named.hit = types.SimpleNamespace(HitObjectHandle=types.SimpleNamespace(Actor=types.SimpleNamespace(Name="Main")))
 clearance.record(named, None, manager(0.0), ANCHOR, RIGHT, LENGTH * 0.3, CAMERA)
-check("a wall alongside is named from the guard's own contact", clearance.take().seen.startswith(
+check("a wall alongside is named from the guard's own contact", str(clearance.take().seen).startswith(
     f"{LENGTH * 0.3:.0f} cm on Main/"))
 failing = Named(fail_moved=True)
 clearance.record(failing, None, manager(0.0), ANCHOR, RIGHT, LENGTH * 0.3, CAMERA)
@@ -162,7 +162,7 @@ check("a moved sweep starting inside the wall proves nothing and stops nothing (
       math.isclose(reading.room, 0.3) and len(failing.calls) == 2)
 unnamed = Sweep(free=0.3)
 clearance.record(unnamed, None, manager(0.0), ANCHOR, RIGHT, LENGTH * 0.3, CAMERA)
-check("without a contact the side still gives its distance", clearance.take().seen == f"{LENGTH * 0.3:.0f} cm")
+check("without a contact the side still gives its distance", str(clearance.take().seen) == f"{LENGTH * 0.3:.0f} cm")
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -80,5 +80,17 @@ for glide_s in (0.25, 0.5):
     moves.append(out[0])
 check("a longer glide moves the distance slower", 0.0 < moves[1] < moves[0] < CLOSE)
 
+resting = DynamicCamera()
+framing, distance, motion = resting.framing, resting.distance, resting.motion
+for _ in range(3):
+    resting.reset()
+check("a reset with nothing moved since makes nothing new: first person asks for one every frame",
+      (resting.framing, resting.distance, resting.motion) == (framing, distance, motion))
+resting.step((1.0, 1.0), sample((900.0, 0.0, 0.0)), 0.0, 0.0, FRAME_NS, CLOSE)
+resting.step((1.0, 1.0), sample((900.0, 0.0, 0.0)), 0.0, 0.0, 2 * FRAME_NS, CLOSE)
+resting.reset()
+check("once it has moved, a reset starts it again from rest",
+      resting.framing is not framing and resting.distance is not distance and resting._last_ns is None)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

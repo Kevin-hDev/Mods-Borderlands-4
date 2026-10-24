@@ -228,5 +228,13 @@ check("stop puts the game's slide speed back", constant() == 720.0 and not owner
 slide.stop(None)
 check("stop with nothing written does not raise", constant() == 720.0)
 
+counted = sdk_stubs.FakeCharacter()
+asked: list[int] = []
+ask_game = counted.CharacterMovement.IsPerformingControlledMove
+counted.CharacterMovement.IsPerformingControlledMove = lambda: asked.append(1) or ask_game()
+slide.update(counted, 3000 * MS)
+check("standing on the ground, the game is asked once a frame whether a slide is under way", len(asked) == 1)
+slide.stop(counted)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

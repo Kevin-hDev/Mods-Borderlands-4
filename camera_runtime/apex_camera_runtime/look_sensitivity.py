@@ -46,6 +46,13 @@ def factor(values: tuple, mode: str, aiming: bool, weapon: str | None = None) ->
     return weapons.get(weapon, aim)
 
 
+def neutral(values: tuple) -> bool:
+    """Every factor at 1: the game's own sensitivity wherever the player stands and whatever he holds."""
+    look, aim, *rest = values
+    weapons = rest[0] if rest else {}
+    return look == 1.0 and aim == 1.0 and all(value == 1.0 for value in weapons.values())
+
+
 def optic_weapon(weapons: dict, zoom: int, weapon: str | None) -> str | None:
     """The zoom's own row while the per-optic switch is on, else the weapon's (look_sensitivity_options.py)."""
     name = f"sniper_x{zoom}"
@@ -82,6 +89,11 @@ class LookSensitivity:
             self.stop()
 
     def _sync(self, read_values: Callable, pc: Any, now_ns: int, zoom: int | None) -> None:
+        values = read_values()
+        if neutral(values) and all(multiplier.written is None for multiplier in self.multipliers):
+            # The defaults: every read below would find nothing to write, and the key list is walked each second
+            # (2026-10-24). A value already written still goes through, to give the game's back.
+            return
         located = [(multiplier, multiplier.locate(pc, now_ns)) for multiplier in self.multipliers]
         located = [(multiplier, modifier) for multiplier, modifier in located if modifier is not None]
         if not located:
@@ -89,7 +101,7 @@ class LookSensitivity:
         wanted_factor = 1.0
         actor = getattr(pc, "OakCharacter", None)
         if actor is not None:
-            mode, values = str(pc.PlayerCameraManager.GetActorCameraMode(actor)), read_values()
+            mode = str(pc.PlayerCameraManager.GetActorCameraMode(actor))
             aiming = wants_to_aim(actor)
             rows = aiming and mode in THIRD_MODES and len(values) > 2 and values[2]
             weapon = held_weapon(actor) if rows else None

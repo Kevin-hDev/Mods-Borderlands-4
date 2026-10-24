@@ -33,11 +33,13 @@ class MappingArray:
     def __init__(self, entries: list[types.SimpleNamespace]) -> None:
         self.entries = entries
         self.writes: list[int] = []
+        self.reads = 0
 
     def __len__(self) -> int:
         return len(self.entries)
 
     def __getitem__(self, index: int) -> types.SimpleNamespace:
+        self.reads += 1
         return copy.deepcopy(self.entries[index])
 
     def __setitem__(self, index: int, entry: types.SimpleNamespace) -> None:
@@ -77,6 +79,14 @@ if slam_hold is not None:
     slam_hold.update({"LeftControl"})
     slam_hold.release()
     check("shutdown preserves a mapping that was already ignored", mappings.entries[2].bShouldBeIgnored)
+
+    mappings.reads = 0
+    idle = slam_hold.update(set())
+    check("a frame with no key held and nothing to give back reads no mapping", idle and mappings.reads == 0)
+    slam_hold.update({pad})
+    check("a held key after idle frames is muted again", mappings.entries[1].bShouldBeIgnored)
+    slam_hold.update(set())
+    check("its release after idle frames still gives the state back", not mappings.entries[1].bShouldBeIgnored)
 
     slam_hold.game.controller = lambda: None
     check("loading without a controller is a normal no-op", not slam_hold.update({pad}))

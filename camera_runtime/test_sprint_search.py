@@ -175,5 +175,17 @@ check("and it is not looked up again at each check", state["type_finds"] == 1)
 state["types"] = [fixtures.movement_type()]
 keeper.stop()
 
+wanted = False
+state["type_finds"] = 0
+step()
+step()
+check("the type is not read while the open sprint is never asked: reading it walks every object",
+      state["type_finds"] == 0)
+wanted = True
+step()
+check("it is read at the first check that asks for it, and the limit opens", state["type_finds"] == 1
+      and angle(SIREN) == 180.0)
+keeper.stop()
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

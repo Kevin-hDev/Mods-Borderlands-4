@@ -13,6 +13,7 @@ from .beam_bridge import BeamBridge
 from .camera_bridge import CameraBridge
 from .framing_bridge import FramingBridge
 from .framing_session import FramingSession
+from .frame_hooks import front
 from .framing_status import START_FAILURE
 from .interaction_bridge import InteractionBridge, load_library as load_interaction_library
 from .generated_limits import RUNTIME_FOLDER
@@ -93,4 +94,5 @@ def ensure(runtime: Any) -> ThirdPersonController:
         interaction_library = None
         log(f"interaction alignment load failed: {type(error).__name__}")
     kismet = unrealsdk.find_class("KismetSystemLibrary").ClassDefaultObject
-    return attach(runtime, library, interaction_library, hooks, unrealsdk, WeakPointer, kismet, log, status_log)
+    return attach(runtime, library, interaction_library, front(hooks), unrealsdk, WeakPointer, kismet, log,
+                  status_log)

@@ -37,6 +37,7 @@ def install() -> dict:
 
     def find_all(class_name: str, exact: bool = True) -> Any:
         if class_name == "OakControlledMove":
+            state["move_scans"] = state.get("move_scans", 0) + 1
             return iter(list(state.get("controlled_moves", [])))
         if class_name == "/Script/EnhancedInput.EnhancedInputLocalPlayerSubsystem":
             state["subsystem_scans"] += 1

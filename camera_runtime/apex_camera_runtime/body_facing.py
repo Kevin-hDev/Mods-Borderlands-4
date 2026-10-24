@@ -52,10 +52,17 @@ def turned(offset: float, goal: float, most: float) -> float:
     return signed_gap(offset + math.copysign(most, gap), 0.0)
 
 
+_NO_NAME = object()
+
+
 def aiming(character: Any) -> bool:
-    """The test player_sample.py uses."""
+    """The test player_sample.py uses, each field read once."""
     zoom = character.ZoomState
-    return bool(zoom.bWantsToZoom) or getattr(zoom.State, "name", str(zoom.State)) != "NotZoomed"
+    if zoom.bWantsToZoom:
+        return True
+    state = zoom.State
+    name = getattr(state, "name", _NO_NAME)
+    return (str(state) if name is _NO_NAME else name) != "NotZoomed"
 
 
 class BodyFacing:
@@ -76,9 +83,10 @@ class BodyFacing:
         if movement.MovementMode not in MODES or anim.bIsGliding or aiming(character):
             return None
         velocity = movement.Velocity
-        if math.hypot(velocity.X, velocity.Y) < MIN_SPEED:
+        x, y = float(velocity.X), float(velocity.Y)
+        if math.hypot(x, y) < MIN_SPEED:
             return STILL
-        gap = signed_gap(heading(velocity.X, velocity.Y), view)
+        gap = signed_gap(heading(x, y), view)
         if full_turn:
             self.behind = False
             return gap

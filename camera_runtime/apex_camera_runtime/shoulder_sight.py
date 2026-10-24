@@ -68,11 +68,44 @@ def seen(result, distance: float) -> str:
             f"/{_name(lambda: result.Component.StaticMesh.Name)} up {_name(lambda: f'{result.ImpactNormal.Z:.2f}')}")
 
 
+class Seen:
+    """What a line met, named only when a log line asks (2026-10-24): naming reads several objects of the game, a
+    frame near walls meets many contacts, and a swap's line is rare. The hit's actor and component are weak
+    references in the engine's hit result: one gone since is named "?"."""
+
+    __slots__ = ("result", "distance", "_text")
+
+    def __init__(self, result, distance: float) -> None:
+        self.result, self.distance, self._text = result, distance, None
+
+    def __str__(self) -> str:
+        if self._text is None:
+            self._text, self.result = seen(self.result, self.distance), None
+        return self._text
+
+
+class LazyText:
+    """A log line's measures, kept as pieces and written out only when the line is."""
+
+    __slots__ = ("pieces",)
+
+    def __init__(self) -> None:
+        self.pieces: list = []
+
+    def add(self, write) -> None:
+        self.pieces.append(write)
+
+    def __str__(self) -> str:
+        return "".join(write() for write in self.pieces)
+
+
 class ShoulderSight:
     def __init__(self, kismet, sdk) -> None:
         self.kismet, self.sdk = kismet, sdk
-        # What the farthest line of the last share met, or "clear".
+        # What the farthest line of the last share met (Seen), or "clear".
         self.seen = "clear"
+        # The two drawing colours, made once: debug drawing is off, the game never reads them (2026-10-24).
+        self._colours = None
 
     def share(self, actor, start, yaw: float) -> float:
         """Free share of the view ahead of start (free_share), level, along the camera's yaw (degrees): the farthest of
@@ -115,11 +148,13 @@ class ShoulderSight:
         first = self.sdk.make_struct("Vector", X=start[0], Y=start[1], Z=start[2])
         last = self.sdk.make_struct("Vector", X=end[0], Y=end[1], Z=end[2])
         nearest, met = SIGHT_CM, "clear"
+        if self._colours is None:
+            self._colours = (self.sdk.make_struct("LinearColor"), self.sdk.make_struct("LinearColor"))
+        trace_colour, hit_colour = self._colours
         for detailed in (False, True):
             answer = self.kismet.SphereTraceSingle(
                 actor, first, last, RADIUS, CAMERA_CHANNEL, detailed, [actor], 0,
-                self.sdk.make_struct("HitResult"), True, self.sdk.make_struct("LinearColor"),
-                self.sdk.make_struct("LinearColor"), 0.0)
+                self.sdk.make_struct("HitResult"), True, trace_colour, hit_colour, 0.0)
             if not isinstance(answer, tuple) or not 2 <= len(answer) <= 3 or type(answer[0]) is not bool:
                 raise ValueError("invalid sight result")
             if answer[0]:
@@ -127,5 +162,5 @@ class ShoulderSight:
                 if not math.isfinite(distance) or not 0 <= distance <= SIGHT_CM:
                     raise ValueError("invalid sight contact")
                 if distance < nearest:
-                    nearest, met = distance, seen(answer[-1], distance)
+                    nearest, met = distance, Seen(answer[-1], distance)
         return nearest, met

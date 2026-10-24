@@ -201,6 +201,22 @@ game.forget()
 dash.update(arrival, 50)
 check("two dashes loaded at once tell nothing on their own: neither is written until one is played",
       near(before_any.Duration.constant, 0.33) and near(other_one.Duration.constant, 0.33))
+SECOND = 1_000_000_000
+scans = state["move_scans"]
+dash.update(arrival, 50 + 2 * SECOND)
+dash.update(arrival, 50 + 9 * SECOND)
+check("two dashes found are not searched again every second: a search walks every object of the game",
+      state["move_scans"] == scans)
+state["controlled_moves"] = [before_any]
+dash.update(arrival, 50 + 10 * SECOND)
+check("they are searched again 10 s later, and one dash left is known and lengthened",
+      state["move_scans"] == scans + 1 and near(before_any.Duration.constant, 0.33 + extra))
+dash.stop(arrival)
+state["controlled_moves"] = []
+game.forget()
+dash.update(arrival, 60 * SECOND)
+dash.update(arrival, 61 * SECOND)
+check("with no dash loaded yet, the search is still made once a second", state["move_scans"] == scans + 3)
 state["controlled_moves"] = []
 state["objects"][("OakControlledMove", sdk_stubs.DASH_PATH)] = asset
 game.forget()

@@ -87,6 +87,24 @@ class LookupTests(unittest.TestCase):
         with self.assertRaisesRegex(LookupError, "not found"):
             find(sdk(), memory)
 
+    def test_the_game_types_are_walked_once_for_both_structs(self):
+        memory = Memory()
+        game(memory)
+        fake = sdk()
+        walks = []
+        find_all = fake.find_all
+        fake.find_all = lambda type_name, exact=True: (walks.append(type_name), find_all(type_name, exact))[1]
+        find(fake, memory)
+        self.assertEqual(walks.count("ScriptStruct"), 1)
+
+    def test_a_missing_struct_type_is_named(self):
+        memory = Memory()
+        game(memory)
+        fake = sdk()
+        fake.find_all = lambda type_name, exact=True: iter([])
+        with self.assertRaisesRegex(LookupError, "CameraModeDef type not found"):
+            find(fake, memory)
+
 
 if __name__ == "__main__":
     result = unittest.main(exit=False).result

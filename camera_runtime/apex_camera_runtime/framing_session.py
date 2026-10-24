@@ -39,6 +39,7 @@ class FramingSession:
     def __init__(self, bridge, native, reader, log, clock=None):
         self.bridge, self.native, self.reader = bridge, native, reader
         self._key = None
+        self._captured = None
         self.reason = None
         self.unavailable = False
         self.diagnostics = Diagnostics(log, clock)
@@ -51,7 +52,7 @@ class FramingSession:
     def stop(self):
         if self._key is not None:
             self.bridge.publish(None)
-        self._key = None
+        self._key = self._captured = None
         self.reason = None
 
     def confirm(self, snapshot):
@@ -89,7 +90,7 @@ class FramingSession:
                     or address(root) != address(actor.CapsuleComponent)
                     or address(root.Outer) != address(actor) or root.AttachParent is not None):
                 raise ValueError("Camera body unavailable")
-            captured = tuple(self.reader.capture(item) for item in (pc, actor, manager, root))
+            captured = self._captured = self.reader.capture_all((pc, actor, manager, root), self._captured)
             snapshot = read()
             if (type(snapshot) is not tuple or len(snapshot) != len(GROUPS)
                     or any(type(row) is not tuple or len(row) != 2 or not group.valid(row[0])

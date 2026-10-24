@@ -113,6 +113,11 @@ def on_frame(obj: Any, now_ns: int) -> None:
     if obj != game.anim():
         return
     _camera_in_game = True
+    with game.player_frame():
+        _player_frame(character, now_ns)
+
+
+def _player_frame(character: Any, now_ns: int) -> None:
     _update_camera(now_ns)
     for line in settings.keep_in_bounds(walk_key.speed):
         report.warning(line)

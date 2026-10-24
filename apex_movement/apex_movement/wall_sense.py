@@ -44,11 +44,13 @@ CAPSULE_RADIUS = 40.0
 TRACE_CHANNEL = 2
 
 _library: Any = None
+# The trace's result and drawing colours, made once: only inputs to the call, never read back (2026-10-24).
+_unread: tuple[Any, Any, Any] | None = None
 
 
 def reset() -> None:
-    global _library
-    _library = None
+    global _library, _unread
+    _library = _unread = None
 
 
 def _kismet() -> Any:
@@ -61,9 +63,12 @@ def _kismet() -> Any:
 _heights: list[float] = []
 
 
-def walls_ahead(character: Any, yaw: float, half_height: float) -> list[Wall]:
-    """Every surface the traces met, lowest height first; an empty list when they all went through."""
-    centre = character.K2_GetActorLocation()
+def walls_ahead(character: Any, yaw: float, half_height: float, centre: Any = None) -> list[Wall]:
+    """Every surface the traces met, lowest height first; an empty list when they all went through.
+
+    centre: the character's location when the caller already read it this frame."""
+    if centre is None:
+        centre = character.K2_GetActorLocation()
     angle = math.radians(yaw)
     ahead_x, ahead_y = math.cos(angle), math.sin(angle)
     reach_x, reach_y = ahead_x * (TRACE_RANGE + BACK_OFF), ahead_y * (TRACE_RANGE + BACK_OFF)
@@ -84,12 +89,20 @@ def hit_heights(walls: list[Wall]) -> list[float]:
     return list(_heights) if len(_heights) == len(walls) else []
 
 
+def _unread_structs() -> tuple[Any, Any, Any]:
+    global _unread
+    if _unread is None:
+        _unread = (unrealsdk.make_struct("HitResult"), unrealsdk.make_struct("LinearColor"),
+                   unrealsdk.make_struct("LinearColor"))
+    return _unread
+
+
 def _trace(character: Any, x: float, y: float, z: float, reach_x: float, reach_y: float) -> Wall | None:
     start = unrealsdk.make_struct("Vector", X=x, Y=y, Z=z)
     end = unrealsdk.make_struct("Vector", X=x + reach_x, Y=y + reach_y, Z=z)
+    out_hit, trace_colour, hit_colour = _unread_structs()
     hit, _ignored, result = _kismet().LineTraceSingle(
-        character, start, end, TRACE_CHANNEL, False, [], 0, unrealsdk.make_struct("HitResult"), True,
-        unrealsdk.make_struct("LinearColor"), unrealsdk.make_struct("LinearColor"), 0.0,
+        character, start, end, TRACE_CHANNEL, False, [], 0, out_hit, True, trace_colour, hit_colour, 0.0,
     )
     if not hit or float(result.Distance) < BACK_OFF - CAPSULE_RADIUS:
         return None

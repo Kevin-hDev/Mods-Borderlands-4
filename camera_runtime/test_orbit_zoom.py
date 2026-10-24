@@ -56,6 +56,19 @@ class ZoomTests(unittest.TestCase):
         self.assertEqual(len(callbacks), 1)
         callbacks[0](animation or self.animation, None, None, None)
 
+    def test_with_orbit_off_the_zoom_reads_nothing_of_the_game(self):
+        reads = []
+
+        class Watched:
+            @property
+            def OakCharacter(_self):
+                reads.append("character")
+                return self.actor
+        self.settings.orbit = False
+        self.controller._lifetime.pc_ref = lambda: Watched()
+        self.assertFalse(self.controller.zoom.available())
+        self.assertEqual(reads, [])
+
     def test_steps_clamp_and_preserve_other_axes(self):
         self.assertFalse(self.runtime.adjust_orbit_zoom("other", -1))
         self.assertFalse(self.runtime.adjust_orbit_zoom("test", True))

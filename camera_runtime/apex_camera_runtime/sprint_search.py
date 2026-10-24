@@ -84,10 +84,12 @@ class SprintKeeper:
         if now_ns < self.next_ns:
             return
         self.next_ns = now_ns + CHECK_NS
-        shape = self._layout()
         if not wanted:
-            self._give_back(shape)
+            # Read only once the open sprint is asked: reading it walks every object of the game (2026-10-24), and
+            # nothing is opened without it, so there is nothing to put back either.
+            self._give_back(self.shape)
             return
+        shape = self._layout()
         component = component_address(pc) if shape is not None else 0
         if component == 0:
             return

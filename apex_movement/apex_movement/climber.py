@@ -17,8 +17,10 @@ INTO_WALL = 100.0
 NS_PER_S = 1_000_000_000
 
 
-def limits(character: Any) -> climb_rules.Limits:
-    distance = 2.0 * game.half_height(character) * float(settings.climb_height.value) / 100.0
+def limits(character: Any, half_height: float | None = None) -> climb_rules.Limits:
+    if half_height is None:
+        half_height = game.half_height(character)
+    distance = 2.0 * half_height * float(settings.climb_height.value) / 100.0
     return climb_rules.Limits(distance=distance, delay_ns=int(float(settings.reclimb_delay.value) * NS_PER_S),
                               lean_deg=float(settings.climb_lean.value), speed=float(settings.climb_speed.value))
 
@@ -40,17 +42,19 @@ def remote_stick(character: Any) -> tuple[float, float]:
     return (x / length, y / length) if length > 1.0 else (x, y)
 
 
-def moment(character: Any, now_ns: int, stick: tuple[float, float]) -> climb_rules.Moment:
+def moment(character: Any, now_ns: int, stick: tuple[float, float], half_height: float) -> climb_rules.Moment:
+    # Each read once a frame: nothing between them moves the character or changes its mode (2026-10-24).
     movement = character.CharacterMovement
-    in_air = game.is_in_air(movement)
+    mode = game.movement_mode(movement)
+    in_air = mode == "MOVE_Falling"
     yaw = game.view_yaw(character)
+    location = character.K2_GetActorLocation()
     # Traces in the air only: on the ground no climb can start or go on.
-    walls = (wall_sense.walls_ahead(character, yaw, game.half_height(character))
+    walls = (wall_sense.walls_ahead(character, yaw, half_height, location)
              if in_air and yaw is not None else [])
     high = [wall for wall, share in zip(walls, wall_sense.hit_heights(walls)) if share >= climb_aim.HIGH_FROM]
-    location = character.K2_GetActorLocation()
     return climb_rules.Moment(
-        now_ns=now_ns, in_air=in_air, on_ground=game.is_on_ground(movement),
+        now_ns=now_ns, in_air=in_air, on_ground=mode == "MOVE_Walking",
         game_move=game.in_controlled_move(movement), mantling=game.is_mantling(movement),
         near_game_climb=game.is_near_game_climb(movement),
         x=float(location.X), y=float(location.Y), z=float(location.Z),
@@ -72,8 +76,9 @@ class Climber:
              ) -> tuple[climb_rules.Moment, climb_rules.Limits, climb_rules.Step]:
         """Judges this frame and, while climbing, pushes the character up the wall."""
         self.last_ns = now_ns
-        seen = moment(character, now_ns, stick)
-        bounds = limits(character)
+        half_height = game.half_height(character)
+        seen = moment(character, now_ns, stick, half_height)
+        bounds = limits(character, half_height)
         step = self.rules.step(seen, bounds)
         if step.event == "start":
             self.max_lean = 0.0

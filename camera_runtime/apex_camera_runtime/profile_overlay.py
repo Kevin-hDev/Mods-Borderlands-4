@@ -57,4 +57,8 @@ class ProfiledSettings:
     def __getattr__(self, name):
         found = getattr(self.base, name)
         over = OVER.get(name)
-        return found if over is None else partial(over, self.profiles, found)
+        reading = found if over is None else partial(over, self.profiles, found)
+        # Kept for the next frames: the readings are the mod's own functions, which never change, and a profile is
+        # asked at each call, not here. About twenty readings a frame went through this lookup (2026-10-24).
+        self.__dict__[name] = reading
+        return reading

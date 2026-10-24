@@ -12,7 +12,12 @@ class SessionTests(unittest.TestCase):
         self.collector = collector
         self.actor.ZoomState = NS(bWantsToZoom=True)
         self.native, self.logs = Native(), []
-        self.reader = ContextReader(lambda item: lambda: item, self.native.identify, lambda _: [collector])
+        self.searches = 0
+
+        def search(_kind):
+            self.searches += 1
+            return [collector]
+        self.reader = ContextReader(lambda item: lambda: item, self.native.identify, search)
         self.session = AdsSession(self.native, self.reader, self.logs.append)
         self.settings = NS(third_person_ads=lambda: True)
 
@@ -33,6 +38,25 @@ class SessionTests(unittest.TestCase):
         self.assertTrue(self.session.effective)
         self.session.confirm("ThirdPerson")
         self.assertEqual(len(self.native.contexts), 1)
+
+    def test_the_weapon_collector_is_searched_once_for_aims_in_a_row(self):
+        self.assertTrue(self.prepare())
+        self.actor.ZoomState.bWantsToZoom = False
+        self.prepare()
+        self.actor.ZoomState.bWantsToZoom = True
+        self.assertTrue(self.prepare())
+        self.assertEqual(self.searches, 1)
+
+    def test_another_character_searches_its_collector_again(self):
+        self.assertTrue(self.prepare())
+        self.session.stop()
+        self.pc, self.actor, self.manager, self.animation, self.weapon, collector = player()
+        self.actor.ZoomState = NS(bWantsToZoom=True)
+        self.actor._get_address = lambda: 0x23000
+        collector.Outer = NS(_get_address=lambda: 0x23000)
+        self.reader.find_all = lambda _kind: (setattr(self, "searches", self.searches + 1), [collector])[1]
+        self.assertTrue(self.prepare())
+        self.assertEqual(self.searches, 2)
 
     def test_clean_shutdown_does_not_reuse_a_previous_identity_failure(self):
         self.prepare(); self.session.confirm('ThirdPerson')

@@ -113,6 +113,18 @@ bound = jump_report.MAX_LINES
 jump_report.MAX_LINES = 5
 jumps(3, 30_000)
 check("the bound never splits a jump in half", len(lines()) == 4 and lines()[-1].startswith("[Apex Movement] jump landed"))
+read_movement: list[int] = []
+
+
+class Reader:
+    @property
+    def CharacterMovement(self) -> object:
+        read_movement.append(1)
+        return movement
+
+
+jump_report.update(Reader(), 40_000)
+check("once the bound is reached, a frame reads nothing more of the character", read_movement == [])
 jump_report.MAX_LINES = bound
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")

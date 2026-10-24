@@ -59,9 +59,11 @@ def _hold(movement: Any, key: str, name: str, factor: float) -> None:
     def put(values: tuple[float, float]) -> None:
         _put(movement, name, values)
 
-    game = ownership.original(key) if ownership.is_owned(key) else read()
+    # The pair just read serves the comparison too: nothing writes it in between (2026-10-24).
+    current = _read(pair)
+    game = ownership.original(key) if ownership.is_owned(key) else current
     wanted = (game[0] * factor, game[1] * factor)
-    if all(abs(now - target) <= ownership.SPEED_TOLERANCE for now, target in zip(read(), wanted)):
+    if all(abs(now - target) <= ownership.SPEED_TOLERANCE for now, target in zip(current, wanted)):
         ownership.claim(key, ownership.CHARACTER, read, put)
         return
     ownership.write(key, ownership.CHARACTER, read, put, wanted)

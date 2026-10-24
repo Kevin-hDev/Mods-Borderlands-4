@@ -67,5 +67,30 @@ controller.sync("apex", new_pc, settings, 100_000_000)
 check("the successor starts only after cleanup succeeds", bridge.starts == 2)
 controller.stop()
 
+
+class AskedTarget(CleanupTarget):
+    """Counts each question whether a cleanup is pending: it can reach the camera's native library."""
+
+    def __init__(self):
+        super().__init__()
+        self.asked = 0
+
+    @property
+    def cleanup_pending(self):
+        self.asked += 1
+        return True
+
+    @cleanup_pending.setter
+    def cleanup_pending(self, _value):
+        pass
+
+
+asked_target = AskedTarget()
+early = CleanupRetry(Hooks(), "camera", clock=lambda: 0, log=messages.append)
+early.schedule(asked_target, now_ns=0, stale=False)
+for now in range(0, 50_000_000, 10_000_000):
+    early.retry(asked_target, now)
+check("before its time, a retry does not ask whether the cleanup is pending", asked_target.asked == 0)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

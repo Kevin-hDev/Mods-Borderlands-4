@@ -4,7 +4,7 @@ from typing import Any
 
 from .constants import THIRD_PERSON_MODE, THIRD_PERSON_RIGHT
 from .shoulder_auto import CLEAR, AutoShoulder, swap_due
-from .shoulder_sight import ShoulderSight
+from .shoulder_sight import LazyText, ShoulderSight
 
 # A long frame counts as this much, so a hitch never completes a swap's delay on its own.
 MAX_STEP_S = 0.1
@@ -129,7 +129,8 @@ class ShoulderState:
         """Each side's free share: the smaller of its room and its view ahead, and of the view past an opening when only
         the view would swap."""
         shown, other = reading.room, reading.other_room
-        self.measured = ""
+        # Written out only with a log line: built at every frame, its text read each contact's names (2026-10-24).
+        self.measured = LazyText()
         if self.sight_failed:
             return shown, other
         try:
@@ -138,20 +139,21 @@ class ShoulderState:
             actor, manager = controller._lifetime.owned()
             yaw = float(manager.GetCameraRotation().Yaw)
             view = self.sight.share(actor, reading.camera, yaw)
-            self.measured = f"; shown room {_share(shown)}{_met(reading.seen)} view {_share(view)} {self.sight.seen}"
+            self.measured.add(lambda room=shown, met=reading.seen, view=view, seen=self.sight.seen:
+                              f"; shown room {_share(room)}{_met(met)} view {_share(view)} {seen}")
             shown = min(shown, view)
             kept = False
             if other is not None and reading.other_camera is not None:
                 view = self.sight.share(actor, reading.other_camera, yaw)
-                self.measured += (f"; other room {_share(other)}{_met(reading.other_seen)} view {_share(view)} "
-                                  f"{self.sight.seen}")
+                self.measured.add(lambda room=other, met=reading.other_seen, view=view, seen=self.sight.seen:
+                                  f"; other room {_share(room)}{_met(met)} view {_share(view)} {seen}")
                 other = min(other, view)
                 if (self.auto.override is None and not self.auto.waiting and swap_due(shown, other)
                         and not swap_due(reading.room, other)):
                     # Only the view ahead asks for this swap: the other side must see on past the door or window it
                     # looks through (shoulder_sight.py). A camera squeezed by a wall still swaps on its room alone.
                     beyond = self.sight.opening(actor, reading.camera, reading.other_camera, yaw)
-                    self.measured += f"; beyond {_share(beyond)} {self.sight.seen}"
+                    self.measured.add(lambda beyond=beyond, seen=self.sight.seen: f"; beyond {_share(beyond)} {seen}")
                     other = min(other, beyond)
                     kept = other < CLEAR
             if kept and not self.kept:

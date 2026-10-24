@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.14 - 2026-10-24
+
+- Performance: the mod does less work on the game's main thread each frame. In third person, the camera reads less from the game and hooks it in fewer places; on the test PC, 10 to 20 more frames per second at the same spots.
+- Performance: the longer pickup reach no longer goes through every object of the game every 2 seconds; it lists only the containers of the world around you. Opening from afar works as before.
+- These changes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
 ## 1.2.13 - 2026-10-24
 
 - Fix: changing weapons while sprinting backward no longer freezes the body when it faces the camera (OMNI DIRECTION Angle at 180, or Body Orientation off), with every Vault Hunter.

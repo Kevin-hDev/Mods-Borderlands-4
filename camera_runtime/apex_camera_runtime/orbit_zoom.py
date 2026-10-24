@@ -21,6 +21,10 @@ class OrbitZoom:
     def available(self) -> bool:
         owner = self.controller
         settings = self.settings
+        # The settings and the unit's state first: outside Orbit they say no every frame, before any read of the
+        # game (2026-10-24).
+        if not (owner.offset.ready() and settings.orbit_enabled() and owner._desired_mode == ORBIT_MODE):
+            return False
         pc = owner._lifetime.pc_ref() if owner._lifetime.pc_ref else None
         actor, manager = owner._lifetime.owned()
         actor_id = owner._lifetime.address(getattr(pc, "OakCharacter", None))

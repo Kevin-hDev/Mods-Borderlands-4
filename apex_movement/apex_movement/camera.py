@@ -2,8 +2,6 @@
 
 from typing import Any
 
-from mods_base import get_pc
-
 try:
     from .apex_camera_runtime.option_texts import ADS_NOTICES
     from .apex_camera_runtime.bootstrap import ensure
@@ -20,7 +18,7 @@ except ModuleNotFoundError as error:
     from apex_camera_runtime.constants import PROTOCOL
     from apex_camera_runtime.shared import IncompatibleState, elected, shared
 
-from . import camera_settings, pack, report
+from . import camera_settings, game, pack, report
 
 OWNER = "apex_movement"
 PRIORITY = 200
@@ -95,7 +93,7 @@ def on_frame(now_ns: int) -> None:
         return
     setup_error = _runtime.prepare_third_person(
         OWNER, camera_settings.third_person_enabled(), ensure)
-    _runtime.tick(get_pc(possibly_loading=True), now_ns)
+    _runtime.tick(game.controller(), now_ns)
     if setup_error is not None:
         raise setup_error
 

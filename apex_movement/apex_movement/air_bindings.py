@@ -59,8 +59,19 @@ def _on_jump(event: Any) -> None:
 
 
 def _wanted(mappings: list[Any]) -> tuple[frozenset[str], frozenset[str]]:
-    crouch_keys = frozenset(keys_for(mappings, CROUCH_ACTIONS))
-    return crouch_keys, frozenset(keys_for(mappings, JUMP_ACTIONS)) - crouch_keys
+    # One pass over the game's list for both kinds: it is read again every second (2026-10-24).
+    crouch_keys: set[str] = set()
+    jump_keys: set[str] = set()
+    for mapping in mappings:
+        action = mapping.Action
+        if action is None:
+            continue
+        name = str(action.Name)
+        if name in CROUCH_ACTIONS:
+            crouch_keys.add(str(mapping.Key.KeyName))
+        elif name in JUMP_ACTIONS:
+            jump_keys.add(str(mapping.Key.KeyName))
+    return frozenset(crouch_keys), frozenset(jump_keys - crouch_keys)
 
 
 def is_bound() -> bool:

@@ -6,6 +6,19 @@ from apex_camera_runtime.shoulder_offset import ShoulderOffset
 from native_climb_test_fixture import NativeClimbFixture
 
 class Tests(NativeClimbFixture, unittest.TestCase):
+    def test_an_unchanged_suspension_does_no_work(self):
+        from apex_camera_runtime.offset_suspension import suspend
+        copies = []
+
+        class Counted(set):
+            def copy(inner):
+                copies.append(1)
+                return set(inner)
+        controller = NS(_suspensions=Counted({'climb'}), _bridge_started=True, bridge=NS())
+        suspend(controller, 'vehicle', False)
+        suspend(controller, 'climb', True)
+        self.assertEqual((copies, controller._suspensions), ([], {'climb'}))
+
     def test_third_person_aim_cancels_orbit_offset_without_suspending_ads(self):
         self.make()
         calls = []

@@ -48,7 +48,7 @@ class AdsSession:
         self._snapshot = self._key = None
         self.optic.clear()
         if self.reader is not None:
-            self.reader.clear()
+            self.reader.end()
         if not self._generation or self.native is None:
             return True
         try:

@@ -50,6 +50,9 @@ def _write(text: str) -> None:
 
 def update(character: Any, now_ns: int) -> None:
     global _floor, _speed, _start_z, _top_z, _airborne, _told
+    if _lines + 2 > MAX_LINES and not (_airborne and _told):
+        # Nothing more can be written until the mod is switched on again: the reads below only serve these lines.
+        return
     movement = character.CharacterMovement
     if game.is_on_ground(movement):
         if _airborne:

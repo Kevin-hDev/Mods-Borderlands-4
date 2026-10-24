@@ -12,15 +12,18 @@ class Unit:
         self.values = []
         self.fail = False
         self.starts = 0
+        self.worlds = []
 
-    def start(self, value):
+    def start(self, value, world):
         self.starts += 1
         self.pending = True
+        self.worlds.append(world)
         if self.fail:
             raise RuntimeError('refused')
         self.values.append(value)
 
-    def refresh(self, value):
+    def refresh(self, value, world):
+        self.worlds.append(world)
         self.values.append(value)
 
     def stop(self):
@@ -49,11 +52,21 @@ class FailingBridge:
 
 class Fields:
     def __init__(self): self.saved = {}; self.pending = False
-    def apply(self, _value): self.pending = True
+    def apply(self, _value, _world): self.pending = True
     def restore(self): self.pending = False
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_player_controller_is_the_world_searched(self):
+        unit = Unit()
+        runtime = LootRuntime(lambda: unit)
+        settings = NS(loot_distance=lambda: 660, note=lambda _: None)
+        pc = NS(_get_address=lambda: 0x10000, OakCharacter=NS(_get_address=lambda: 0x20000))
+        runtime.sync('a', pc, settings, 0)
+        settings.loot_distance = lambda: 990
+        runtime.sync('a', pc, settings, 1)
+        self.assertEqual(unit.worlds, [pc, pc])
+
     def test_mode_independent_and_option_off(self):
         unit = Unit()
         runtime = LootRuntime(lambda: unit)

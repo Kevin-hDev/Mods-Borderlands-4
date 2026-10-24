@@ -80,5 +80,30 @@ check("and the other value is still written", movement.GlidingSpeed.BaseValue ==
 glide.stop(character)
 ownership.restore_all()
 
+
+class CountedMovement:
+    """Counts the reads of each field of a movement component, and passes writes through."""
+
+    def __init__(self, inner: object) -> None:
+        object.__setattr__(self, "inner", inner)
+        object.__setattr__(self, "reads", {})
+
+    def __getattr__(self, name: str) -> object:
+        self.reads[name] = self.reads.get(name, 0) + 1
+        return getattr(self.inner, name)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        setattr(self.inner, name, value)
+
+
+counted = sdk_stubs.FakeCharacter()
+glide.update(counted, 9)
+counted.CharacterMovement = CountedMovement(counted.CharacterMovement)
+glide.update(counted, 10)
+check("a frame holding the glide reads each field once",
+      counted.CharacterMovement.reads == {"GlidingSpeed": 1, "GlidingAcceleration": 1})
+glide.stop(counted)
+ownership.restore_all()
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -20,6 +20,9 @@ def orbit_permission(controller, identity, entering=False):
 
 
 def suspend(controller, reason, enabled):
+    if (reason in controller._suspensions) == bool(enabled):
+        # Asked every frame with the same answer: nothing changes, nothing to tell the camera (2026-10-24).
+        return
     previous = controller._suspensions.copy()
     controller._suspensions.add(reason) if enabled else controller._suspensions.discard(reason)
     current = controller._suspensions

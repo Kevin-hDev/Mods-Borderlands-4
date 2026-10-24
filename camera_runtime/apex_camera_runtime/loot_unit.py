@@ -2,6 +2,7 @@
 import time
 from pathlib import Path
 from .cleanup_retry import CleanupRetry
+from .frame_hooks import front
 from .generated_limits import RUNTIME_FOLDER
 from .loot_bridge import LootBridge
 from .loot_constants import CLASS_NAME
@@ -24,19 +25,19 @@ class LootUnit:
     def cleanup_pending(self):
         return self.pending
 
-    def start(self, distance):
+    def start(self, distance, world):
         if self.pending:
             raise RuntimeError('Loot cleanup required')
         self.retry.reset()
         self.native_pending = True
         self.bridge.start(distance)
-        self.fields.apply(distance)
+        self.fields.apply(distance, world)
         self.distance = distance
         self.log(f'loot range enabled: distance={distance:g}')
 
-    def refresh(self, distance):
+    def refresh(self, distance, world):
         self.bridge.refresh(distance)
-        self.fields.apply(distance)
+        self.fields.apply(distance, world)
         if distance != self.distance:
             self.distance = distance
             self.log(f'loot range changed: distance={distance:g}')
@@ -72,14 +73,24 @@ class LootUnit:
             self.log('loot range released')
 
 
+def containers(sdk, world):
+    """The containers of the world in play. In game, 0.2 to 0.4 ms where find_all, which goes through every object
+    the game holds, took 8 to 12 ms; both gave the same containers within 50 m of the player, find_all adding only
+    those of cells being unloaded, 158 m and more away (docs/performance/enquetes/2026-10-24-butin-deux-listes.md)."""
+    statics = sdk.find_class('GameplayStatics').ClassDefaultObject
+    _void, found = statics.GetAllActorsOfClass(WorldContextObject=world, ActorClass=sdk.find_class(CLASS_NAME),
+                                               OutActors=[])
+    return found
+
+
 def create_unit():
     import unrealsdk
     from unrealsdk import hooks, logging
+    from unrealsdk.unreal import WeakPointer
     from mods_base import MODS_DIR
     log = lambda message: logging.info(f'[Loot Range] {message}')
-    # This is a class-specific refresh, never a scan of every Unreal object.
-    fields = LootFields(lambda: unrealsdk.find_all(CLASS_NAME, exact=False), ProcessMemory())
-    retry = CleanupRetry(hooks, 'apex_camera_runtime:loot', time.perf_counter_ns, log,
+    fields = LootFields(lambda world: containers(unrealsdk, world), ProcessMemory(), WeakPointer)
+    retry = CleanupRetry(front(hooks), 'apex_camera_runtime:loot', time.perf_counter_ns, log,
                          label='loot range')
     return LootUnit(LootBridge(Path(MODS_DIR) / RUNTIME_FOLDER), fields, retry,
                     time.perf_counter_ns, log)

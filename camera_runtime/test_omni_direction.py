@@ -131,10 +131,15 @@ check("an older mod: crouch keys not bound, a dash asked by default, the slides 
       crouch.calls[-1] == (pc, False, True, 1) and slides.calls[-1] == (False, 1))
 check("an elected mod older than the unit asks nothing: no hook, the sprint limit not asked",
       HOOK not in hooks.installed and parts.calls[-1] == ("update", pc, False, 1))
+looked: list[int] = []
+character.Mesh.GetAnimInstance = lambda: (looked.append(1), anim)[1]
+unit.sync(clients, old_mod, pc, None, 1)
+check("nothing asked: the played animation is not read either, only the hook would use it", looked == [])
 omni_switch[0] = True
 unit.sync(clients, old_mod, pc, None, 2)
 check("Omni Sprint's own switch opens the sprint whoever is elected, and the hook goes in",
       parts.calls[-1] == ("update", pc, True, 2) and HOOK in hooks.installed)
+check("and the played animation is read for it", len(looked) == 1)
 omni_switch[0] = False
 unit.sync(clients, apex, pc, controller, 3)
 check("third person with the sprint on: the limit is asked open", parts.calls[-1] == ("update", pc, True, 3)

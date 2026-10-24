@@ -19,6 +19,11 @@ def context_identity(pc, modes=(CAMERA_TRANSITION,)):
         return None
 
 
+def _view_on(settings):
+    return bool(getattr(settings, 'third_person_enabled', lambda: False)()
+                or getattr(settings, 'orbit_enabled', lambda: False)())
+
+
 class OrbitEntry:
     def __init__(self):
         self.context = None
@@ -26,6 +31,11 @@ class OrbitEntry:
         self.retirement = OrbitRetirement()
 
     def observe(self, client, pc):
+        if self.pending is None and client is not None and _view_on(client.settings):
+            # An entry is only asked with both views off (ready): with one on, the reads below find nothing to use,
+            # and they run every frame (2026-10-24).
+            self.context = None
+            return
         identity = context_identity(pc)
         self.context = (client.owner, identity) if client is not None and identity is not None else None
 

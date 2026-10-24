@@ -35,6 +35,15 @@ class Tests(unittest.TestCase):
             self.assertEqual(call[6], [self.actor])
             self.assertIs(call[0], self.actor)
 
+    def test_drawing_colours_are_made_once_and_each_trace_gets_its_own_hit_result(self):
+        self.answers = [(False, [], NS())] * 4
+        self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0))
+        self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0))
+        colours = {(id(call[10]), id(call[11])) for call in self.calls}
+        hit_results = {id(call[8]) for call in self.calls}
+        self.assertEqual(len(colours), 1)
+        self.assertEqual(len(hit_results), 4)
+
     def test_nearby_wall_limits_the_sphere_center_without_subtracting_radius_twice(self):
         self.answers = [(True, [], NS(Distance=18)), (True, [], NS(Distance=28))]
         self.assertEqual(self.trace.distance(self.actor, (0, 0, 0), (100, 0, 0)), 18)

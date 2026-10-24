@@ -5,6 +5,14 @@ from orbit_aim_test_fixture import OrbitAimFixture
 
 
 class Tests(OrbitAimFixture, unittest.TestCase):
+    def test_outside_orbit_the_aim_borrow_reads_nothing_of_the_game(self):
+        self.make(third=True)
+        self.controller._desired_mode = 'ThirdPerson'
+        asked = []
+        self.manager.GetActorCameraMode = lambda _actor: (asked.append(1), 'ThirdPerson')[1]
+        self.assertFalse(self.controller.orbit_aim.eligible(self.controller, self.actor))
+        self.assertEqual(asked, [])
+
     def test_borrow_uses_immediate_native_aim_not_the_shared_mode_blend(self):
         self.make()
         self.aim()

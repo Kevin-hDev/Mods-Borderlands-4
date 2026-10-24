@@ -23,17 +23,25 @@ class Modes(NamedTuple):
     addresses: dict
 
 
-def _offsets(sdk: Any, type_name: str) -> dict:
+def _offsets(sdk: Any, *type_names: str) -> dict:
+    """Each type's field offsets, by type name. One walk for all of them: it goes through every object of the game,
+    the first press of Free Look froze the game for each one (2026-10-24)."""
+    found_types: dict = {}
     for index, found in enumerate(sdk.find_all("ScriptStruct", exact=False)):
         if index >= MAX_STRUCTS:
             break
-        if str(found.Name) == type_name:
-            return {str(prop.Name).lower(): int(prop.Offset_Internal) for prop in found._properties()}
-    raise LookupError(f"{type_name} type not found")
+        name = str(found.Name)
+        if name in type_names and name not in found_types:
+            found_types[name] = {str(prop.Name).lower(): int(prop.Offset_Internal) for prop in found._properties()}
+            if len(found_types) == len(type_names):
+                break
+    for type_name in type_names:
+        if type_name not in found_types:
+            raise LookupError(f"{type_name} type not found")
+    return found_types
 
 
-def _name_keys(sdk: Any, memory: Any) -> dict:
-    offset = _offsets(sdk, KEY_TYPE)[KEY_FIELD]
+def _name_keys(sdk: Any, memory: Any, offset: int) -> dict:
     keys = {}
     for name in defs.NAMES:
         holder = sdk.make_struct(KEY_TYPE, CameraModeName=name)
@@ -48,9 +56,10 @@ def mode_at(memory: Any, address: int, shape: defs.Layout) -> "defs.Mode | None"
 
 def find(sdk: Any, memory: Any) -> Modes:
     """The three definitions, or LookupError saying why they cannot be trusted."""
-    offsets = _offsets(sdk, defs.TYPE_NAME)
+    types = _offsets(sdk, defs.TYPE_NAME, KEY_TYPE)
+    offsets = types[defs.TYPE_NAME]
     shape = defs.Layout(offsets[defs.BLEND], offsets[defs.METHOD], offsets[defs.BEHAVIORS])
-    keys = _name_keys(sdk, memory)
+    keys = _name_keys(sdk, memory, types[KEY_TYPE][KEY_FIELD])
     stores = [item for item in sdk.find_all(STORE_TYPE, exact=False) if not str(item.Name).startswith("Default__")]
     for store in stores[:MAX_STORES]:
         for _offset, address in defs.slots(memory.read(int(store._get_address()), STORE_WINDOW) or b""):

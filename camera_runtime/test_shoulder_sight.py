@@ -125,16 +125,37 @@ post = Sdk.make_struct("HitResult", Distance=450.0, HitObjectHandle=types.Simple
     Actor=types.SimpleNamespace(Name="Bridge_01")), Component=types.SimpleNamespace(
     StaticMesh=types.SimpleNamespace(Name="SM_Post")), ImpactNormal=types.SimpleNamespace(Z=0.004))
 _value, _kismet, sight = share(scene({0: 300.0, SPREAD_CM: post, -SPREAD_CM: 400.0}))
-check("the swap names what the farthest line met", sight.seen == "450 cm on Bridge_01/SM_Post up 0.00")
+check("the swap names what the farthest line met", str(sight.seen) == "450 cm on Bridge_01/SM_Post up 0.00")
 _value, _kismet, sight = share(scene({0: 600.0, SPREAD_CM: 600.0, -SPREAD_CM: 600.0}))
-check("a hit without names still gives its distance", sight.seen == "600 cm on ?/? up ?")
+check("a hit without names still gives its distance", str(sight.seen) == "600 cm on ?/? up ?")
 sight.kismet.rule = scene()
 sight.share(actor, (0, 0, 0), 0.0)
-check("a clear line says so", sight.seen == "clear")
+check("a clear line says so", str(sight.seen) == "clear")
 long = Sdk.make_struct("HitResult", Distance=1.0, HitObjectHandle=types.SimpleNamespace(
     Actor=types.SimpleNamespace(Name="A" * 300)))
 _value, _kismet, sight = share(scene({0: long, SPREAD_CM: long, -SPREAD_CM: long}))
-check("a long name is cut", sight.seen == f"1 cm on {'A' * MAX_NAME}/? up ?")
+check("a long name is cut", str(sight.seen) == f"1 cm on {'A' * MAX_NAME}/? up ?")
+
+
+class NamedHit(types.SimpleNamespace):
+    """A contact whose names count their reads: each is a trip into the game."""
+    def __init__(self):
+        self.Distance, self.reads = 450.0, 0
+
+    @property
+    def HitObjectHandle(self):
+        self.reads += 1
+        return types.SimpleNamespace(Actor=types.SimpleNamespace(Name="Bridge_01"))
+
+
+named = NamedHit()
+_value, kismet, sight = share(scene({0: named, SPREAD_CM: named, -SPREAD_CM: named}))
+check("a contact's names are not read while no log line asks for them", named.reads == 0)
+check("they are read when the line is written, once", str(sight.seen).startswith("450 cm on Bridge_01")
+      and str(sight.seen) and named.reads == 1)
+check("the drawing colours are made once per sight, a hit result at each trace",
+      len({(id(call[10]), id(call[11])) for call in kismet.calls}) == 1
+      and len({id(call[8]) for call in kismet.calls}) == len(kismet.calls))
 
 # The opening line: past the other camera, away from the shown one (Kevin, 2026-10-08: a door's edge swapped).
 SHOWN_CAMERA, OTHER_CAMERA = (0.0, 61.5, 30.0), (0.0, -61.5, 30.0)
@@ -148,7 +169,7 @@ def opening(rule, shown=SHOWN_CAMERA, other=OTHER_CAMERA, yaw=0.0):
 
 value, kismet, sight = opening(lambda start, detailed: None)
 first, last = kismet.calls[0][1], kismet.calls[0][2]
-check("nothing past the other camera is fully clear", value == 1.0 and sight.seen == "clear")
+check("nothing past the other camera is fully clear", value == 1.0 and str(sight.seen) == "clear")
 check("the opening line stands past the other camera, at its height",
       (first.X, first.Y, first.Z) == (0.0, -61.5 - OPENING_CM, 30.0))
 check("the opening line goes straight ahead and level",
@@ -163,7 +184,7 @@ check("the camera's yaw turns the opening line", math.isclose(first.X, -61.5 - O
 
 value, _kismet, sight = opening(lambda start, detailed: 440.0 if start[1] < -100 else None)
 check("the wall beside a door blocks the opening line", math.isclose(value, free_share(440.0)) and value < CLEAR
-      and sight.seen == "440 cm on ?/? up ?")
+      and str(sight.seen) == "440 cm on ?/? up ?")
 value, _kismet, _sight = opening(lambda start, detailed: 440.0 if start[2] < RISE_CM else None)
 check("a step of the floor past the other camera does not count as a wall", value == 1.0)
 

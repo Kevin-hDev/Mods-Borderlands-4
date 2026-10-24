@@ -1,7 +1,7 @@
 """Cleanup is independent for pickups/containers and survives the mod being disabled."""
 import unittest
 from types import SimpleNamespace as NS
-from apex_camera_runtime.loot_unit import LootUnit
+from apex_camera_runtime.loot_unit import LootUnit, containers
 from apex_camera_runtime.loot_runtime import LootRuntime
 from apex_camera_runtime.cleanup_retry import CleanupRetry
 from apex_camera_runtime.runtime import CameraRuntime
@@ -25,8 +25,8 @@ class Bridge:
 
 
 class Fields:
-    def __init__(self): self.saved = {}; self.pending = False; self.failed = False
-    def apply(self, value): self.pending = True
+    def __init__(self): self.saved = {}; self.pending = False; self.failed = False; self.worlds = []
+    def apply(self, value, world): self.pending = True; self.worlds.append(world)
     def restore(self):
         if self.failed: raise RuntimeError('refused')
         self.pending = False
@@ -38,7 +38,11 @@ class UnitTests(unittest.TestCase):
         self.hooks, self.bridge, self.fields = Hooks(), Bridge(), Fields()
         self.retry = CleanupRetry(self.hooks, 'loot', lambda: self.now, lambda _: None)
         self.unit = LootUnit(self.bridge, self.fields, self.retry, lambda: self.now, lambda _: None)
-        self.unit.start(660)
+        self.unit.start(660, 'world')
+
+    def test_the_world_reaches_the_fields(self):
+        self.unit.refresh(990, 'next world')
+        self.assertEqual(self.fields.worlds, ['world', 'next world'])
 
     def test_native_failure_does_not_skip_fields(self):
         self.bridge.failed = True
@@ -85,6 +89,22 @@ class UnitTests(unittest.TestCase):
         with self.assertRaises(RuntimeError): self.unit.stop()
         self.assertFalse(self.unit.pending)
         self.assertFalse(self.hooks.callbacks)
+
+
+class ContainersTests(unittest.TestCase):
+    def test_world_containers_from_get_all_actors_of_class(self):
+        loot_class, chests, calls = NS(Name='LootableObject'), [object(), object()], []
+
+        def search(*, WorldContextObject, ActorClass, OutActors):
+            calls.append((WorldContextObject, ActorClass, OutActors))
+            return ..., chests
+
+        classes = {'GameplayStatics': NS(ClassDefaultObject=NS(GetAllActorsOfClass=search)),
+                   'LootableObject': loot_class}
+        sdk = NS(find_class=lambda name: classes[name],
+                 find_all=lambda *_args, **_kwargs: self.fail('find_all goes through every object'))
+        self.assertIs(containers(sdk, 'world'), chests)
+        self.assertEqual(calls, [('world', loot_class, [])])
 
 
 if __name__ == '__main__':

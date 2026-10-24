@@ -13,9 +13,15 @@ ZERO = (0.0, 0.0, 0.0)
 
 class DynamicCamera:
     def __init__(self) -> None:
+        self.fresh = False
         self.reset()
 
     def reset(self) -> None:
+        # Asked every frame in first person: nothing has moved since the last reset, nothing is made again
+        # (2026-10-24). Only step() moves it.
+        if self.fresh:
+            return
+        self.fresh = True
         self.framing = Easing(2, REST)
         self.distance = Easing(1, REST)
         self.motion = Motion()
@@ -26,6 +32,7 @@ class DynamicCamera:
         """values: the framing's and the motion's strength (0 when off); distance: the chosen camera distance's
         forward offset (camera_distance.py), eased over glide_s. The offset (forward, right, up), or None once all rest
         at nothing, so the camera is left to the game."""
+        self.fresh = False
         framing_strength, motion_strength = values
         # The camera's places follow the held aim button: they come back while the game zooms out, in one move with
         # it. Waiting for the zoom-out to end made a second move after it (Kevin, 2026-10-11, close and far distances).

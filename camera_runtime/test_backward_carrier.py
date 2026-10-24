@@ -55,6 +55,23 @@ class AnimationTests(unittest.TestCase):
         self.assertIs(self.forward.BlendSpace, self.source)
         self.assertEqual(self.builds, [self.source])
 
+    def test_a_held_run_reads_the_backward_slot_once_a_frame(self):
+        self.runtime.update(self.character, self.anim, 0)
+        reads = []
+
+        class CountedSlot(types.SimpleNamespace):
+            @property
+            def BlendSpace(slot):
+                reads.append(1)
+                return slot.held
+
+        slot = CountedSlot(_get_address=self.backward._get_address, _type=self.backward._type,
+                           AnimAssetKey=self.backward.AnimAssetKey, held=self.backward.BlendSpace)
+        self.node.BlendSpacePlayers = [self.forward, slot]
+        self.runtime.update(self.character, self.anim, 1)
+        self.assertEqual(len(reads), 1)
+        self.assertIs(slot.held, self.targets[0])
+
     def test_disable_restores_empty_target(self):
         self.runtime.update(self.character, self.anim, 0)
         self.runtime.stop()

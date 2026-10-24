@@ -133,22 +133,23 @@ class BackwardCarrier:
             target = self.target()
             if source_id != self.source_id:
                 self.stop()
-            elif target is not None and backward.BlendSpace is None:
-                # The game emptied the slot on a weapon change: an empty slot is nobody's, the run goes back.
-                backward.BlendSpace = target
-                if not animation_assets.same(backward.BlendSpace, target):
-                    self.stop()
-                    raise ValueError('Backward carrier assignment failed')
-                self.put_back += 1
-                if self.put_back <= MAX_SAID:
-                    self.emit(f'backward carrier put back after the game emptied the slot, {self.put_back}')
-                return
-            elif target is None or not animation_assets.same(backward.BlendSpace, target):
-                self.blocked_id = source_id
-                self.blocked_owner_id = owner_id
-                self.stop()
-                return
             else:
+                # Read once: nothing writes the slot between the two questions below (2026-10-24).
+                current = backward.BlendSpace
+                if target is not None and current is None:
+                    # The game emptied the slot on a weapon change: an empty slot is nobody's, the run goes back.
+                    backward.BlendSpace = target
+                    if not animation_assets.same(backward.BlendSpace, target):
+                        self.stop()
+                        raise ValueError('Backward carrier assignment failed')
+                    self.put_back += 1
+                    if self.put_back <= MAX_SAID:
+                        self.emit(f'backward carrier put back after the game emptied the slot, {self.put_back}')
+                    return
+                if target is None or not animation_assets.same(current, target):
+                    self.blocked_id = source_id
+                    self.blocked_owner_id = owner_id
+                    self.stop()
                 return
         if not eligible or source is None or backward.BlendSpace is not None:
             return

@@ -12,9 +12,11 @@ from typing import Any, Callable
 
 from . import free_look_swap
 from .easing import MAX_STEP_S
+from .frame_hooks import front
 from .free_look_foot import Foot
 from .free_look_keys import Trigger
 from .free_look_wheel import Wheel
+from .vehicle_field import VehicleField
 
 FRAME = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 IDENTIFIER = "apex_camera_runtime:free_look"
@@ -38,6 +40,7 @@ class FreeLook:
         self.failed = (0, 0)
         self.last_ns = 0
         self.keys: dict = {}
+        self.vehicle_field: VehicleField | None = None
 
     def sync(self, settings: Any) -> None:
         """On foot, from the elected mod's frame: the clock runs while a Free Look key is set."""
@@ -91,7 +94,9 @@ class FreeLook:
     def _step(self, pc: Any, pawn: Any, step_s: float) -> None:
         values = self.values
         downs = tuple(name is not None and bool(pc.IsInputKeyDown(self._key(name))) for name in values.keys)
-        at_wheel = getattr(pawn, "OakVehicleMovement", None) is not None
+        if self.vehicle_field is None:
+            self.vehicle_field = VehicleField(self.game[6])
+        at_wheel = self.vehicle_field.movement(pawn) is not None
         if not at_wheel and free_look_swap.aiming(pc):
             self.trigger.cancel()
         wanted = self.trigger.step(downs, values.holds, values.hold_s, step_s)
@@ -153,5 +158,5 @@ def game_modules() -> tuple:
     from mods_base import get_pc
     from unrealsdk import hooks, logging
     from . import process_memory
-    return (unrealsdk, process_memory, hooks, get_pc, time.perf_counter_ns,
+    return (unrealsdk, process_memory, front(hooks), get_pc, time.perf_counter_ns,
             lambda message: logging.info(f"[Camera Runtime] {message}"), lambda item: int(item._get_address()))

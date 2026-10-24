@@ -37,6 +37,22 @@ check("bind succeeds with a crouch key", air_bindings.bind(state["mappings"]))
 check("every crouch and jump key gets a keybind", set(state["keybinds"]) == {"LeftControl", pad, cross, "SpaceBar"})
 check("the bound keys are logged", any("air crouch keys" in line for line in state["misc"]))
 check("the keys bound match the game's list", air_bindings.matches(state["mappings"]))
+action_reads: list[int] = []
+
+
+class CountedMapping:
+    def __init__(self, inner: object) -> None:
+        self.inner, self.Key = inner, inner.Key
+
+    @property
+    def Action(self) -> object:
+        action_reads.append(1)
+        return self.inner.Action
+
+
+air_bindings.matches([CountedMapping(entry) for entry in state["mappings"]])
+check("telling whether the keys still match reads each line of the game's list once",
+      len(action_reads) == len(state["mappings"]))
 check("a list without the gamepad's crouch no longer matches: read at a vehicle exit, it lacked it (2026-09-18)",
       not air_bindings.matches([m for m in state["mappings"] if m.Key.KeyName != pad]))
 

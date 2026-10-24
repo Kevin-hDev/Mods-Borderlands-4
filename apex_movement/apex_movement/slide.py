@@ -79,10 +79,10 @@ def _set_start_speed(target: float) -> None:
     report.note(f"slide start speed {target:.0f} (constant {wanted:.0f})")
 
 
-def _track(movement: Any, now_ns: int, target: float) -> None:
+def _track(movement: Any, now_ns: int, target: float, sliding: bool) -> None:
     global _started_ns, _target, _top_speed, _armed
     speed = game.horizontal_speed(movement)
-    if not game.is_sliding(movement):
+    if not sliding:
         _armed = True
         if _started_ns is not None:
             ended = "ground" if game.is_on_ground(movement) else "air"
@@ -109,12 +109,13 @@ def update(character: Any, now_ns: int) -> None:
         return
     movement = character.CharacterMovement
     target = axle_slide.start_speed()
+    # Asked once a frame: writing the start speed does not change it, and the game's answer is a call (2026-10-24).
+    sliding = game.is_sliding(movement)
     # Not during a slide: the game reads the constant only when a slide starts, and meanwhile the speed curve belongs to
     # slide_physics, so the constant followed it every frame (610 rewrites in three slides, 2026-09-17, 03:11-03:13).
-    if (game.is_on_ground(movement) and not character.bIsCrouched and not game.is_aiming(character)
-            and not game.is_sliding(movement)):
+    if game.is_on_ground(movement) and not character.bIsCrouched and not game.is_aiming(character) and not sliding:
         _set_start_speed(target)
-    _track(movement, now_ns, target)
+    _track(movement, now_ns, target, sliding)
 
 
 def for_guest(guest: Any) -> dict[str, Any]:

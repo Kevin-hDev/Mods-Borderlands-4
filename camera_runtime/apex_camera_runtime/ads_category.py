@@ -14,8 +14,10 @@ def address(item) -> int:
     return value
 
 
-def category(actor, weapon) -> dict:
-    animation = actor.Mesh.GetAnimInstance()
+def category(actor, weapon, animation=None) -> dict:
+    """animation: the actor's, when the caller already asked the game for it this frame."""
+    if animation is None:
+        animation = actor.Mesh.GetAnimInstance()
     if animation is None or weapon is None:
         return {"matched": False}
     if address(animation.CurrentWeapon) != address(weapon):

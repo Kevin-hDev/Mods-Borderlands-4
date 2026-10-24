@@ -76,9 +76,9 @@ class LootRuntime:
             if not self.distance:
                 if self.unit.pending:
                     return
-                self.unit.start(distance)
+                self.unit.start(distance, pc)
             else:
-                self.unit.refresh(distance)
+                self.unit.refresh(distance, pc)
             self.distance = distance
         except Exception:
             self.failed = True

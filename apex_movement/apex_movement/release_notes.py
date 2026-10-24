@@ -3,6 +3,32 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.2.32', {
+        'en': (
+            "Performance: the mod does less work on the game's main thread each frame. In third person, the camera reads less from the game and hooks it in fewer places; on the test PC, 10 to 20 more frames per second at the same spots.",
+            'Performance: the longer pickup reach no longer goes through every object of the game every 2 seconds; it lists only the containers of the world around you. Opening from afar works as before.',
+            'Performance: the movements read less from the game each frame (keys, wall climb, slide, glide, dash); they feel the same.',
+            'These changes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.',
+        ),
+        'fr': (
+            "Performance : le mod travaille moins sur le fil principal du jeu à chaque image. En troisième personne, la caméra lit moins le jeu et s'y branche à moins d'endroits ; sur le PC d'essai, 10 à 20 images par seconde de plus aux mêmes endroits.",
+            "Performance : la portée de ramassage allongée ne passe plus en revue tous les objets du jeu toutes les 2 secondes ; elle ne liste que les conteneurs du monde autour de toi. L'ouverture de loin marche comme avant.",
+            'Performance : les mouvements lisent moins le jeu à chaque image (touches, grimpe, glissade, plané, dash) ; leur ressenti ne change pas.',
+            'Ces changements sont dans la partie caméra commune à Third Person & FOV, Apex Movement et Omni Sprint : si tu en utilises plusieurs, mets-les tous à jour.',
+        ),
+        'zh': (
+            '性能：模组每帧在游戏主线程上的工作量减少。第三人称下，镜头读取游戏的次数更少、挂接的位置也更少；在测试电脑上，同一地点每秒多出 10 到 20 帧。',
+            '性能：更远的拾取距离不再每 2 秒遍历游戏中的所有对象，只列出你周围世界里的容器。远距离开箱和以前一样。',
+            '性能：各个动作每帧读取游戏的次数更少（按键、爬墙、滑铲、滑翔、冲刺）；手感不变。',
+            '这些改动位于 Third Person & FOV、Apex Movement 和 Omni Sprint 共用的镜头部分：如果你同时使用其中多个模组，请全部更新。',
+        ),
+        'ja': (
+            'パフォーマンス：MODがゲームのメインスレッドで毎フレーム行う処理が減りました。三人称視点では、カメラがゲームを読み取る回数と接続する箇所が減ります。テスト用PCでは、同じ場所で毎秒10〜20フレーム増えました。',
+            'パフォーマンス：拡大された拾得距離は、2秒ごとにゲーム内のすべてのオブジェクトを調べるのをやめ、周囲のワールドにあるコンテナだけを一覧にします。遠くからの開封は以前と同じように動作します。',
+            'パフォーマンス：各ムーブ（キー、壁登り、スライディング、グライド、ダッシュ）がゲームを読み取る回数が毎フレーム減りました。操作感は変わりません。',
+            'これらの変更は Third Person & FOV、Apex Movement、Omni Sprint が共有するカメラ部分にあります：複数を使っている場合は、すべて更新してください。',
+        ),
+    }),
     ('1.2.29', {
         'en': (
             "Fix for the Epic Games version after the game's update of October 22, 2026: third person, aiming and the longer pickup reach work again.",

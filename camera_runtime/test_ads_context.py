@@ -49,6 +49,32 @@ class ContextTests(unittest.TestCase):
         self.assertIsNotNone(self.read())
         self.assertEqual(self.scans, 1)
 
+    def test_a_read_of_the_same_objects_asks_the_native_library_nothing_and_the_animation_once(self):
+        self.assertIsNotNone(self.read())
+        asked, identified = [], []
+        animation = self.animation
+        self.actor.Mesh.GetAnimInstance = lambda: (asked.append(1), animation)[1]
+        self.reader.identify = lambda item: (identified.append(item), self.identify(item))[1]
+        self.assertIsNotNone(self.read())
+        self.assertEqual((len(asked), identified), (1, []))
+
+    def test_an_object_gone_since_is_captured_again(self):
+        self.assertIsNotNone(self.read())
+        identified = []
+        self.reader.identify = lambda item: (identified.append(item), self.identify(item))[1]
+        self.live = False
+        self.assertIsNone(self.read())
+        self.live = True
+        self.assertIsNotNone(self.read())
+        self.assertIn(self.pc, identified)
+
+    def test_each_capture_resolves_its_reference_once(self):
+        resolved = []
+        weak = self.reader.weak_ref
+        self.reader.weak_ref = lambda item: (lambda inner=weak(item): (resolved.append(1), inner())[1])
+        self.reader.capture(self.pc)
+        self.assertEqual(len(resolved), 1)
+
     def test_weapon_change_refuses_old_animation_mirror(self):
         self.animation.CurrentWeapon = obj(0x99000)
         self.assertIsNone(self.read())

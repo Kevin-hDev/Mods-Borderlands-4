@@ -52,6 +52,9 @@ def update(held_keys: Iterable[str]) -> bool:
     count = len(mappings)
     if count > MAX_MAPPINGS:
         report.error_once("slam_hold:mappings", f"input mappings limited to {MAX_MAPPINGS}")
+    if not held and not _originals:
+        # Most frames: the loop below would read every mapping and write none (performance, 2026-10-24).
+        return True
     occurrences: dict[str, int] = {}
     seen: set[tuple[str, int]] = set()
     for index in range(min(count, MAX_MAPPINGS)):

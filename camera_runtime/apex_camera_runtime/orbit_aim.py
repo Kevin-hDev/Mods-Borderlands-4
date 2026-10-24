@@ -26,19 +26,21 @@ class OrbitAim:
             self.blocked = False
         state = controller.foot_mode
         own_request = self.phase == 'enter' and state.pending_mode == THIRD_PERSON_MODE
-        try:
-            _, manager = controller._lifetime.owned()
-            climbing = climb_state(actor)
-            if (manager is None or str(manager.GetActorCameraMode(actor)) == VEHICLE_MODE
-                    or climbing is None or any(climbing)):
-                return False
-        except Exception:
-            return False
-        return (not self.blocked and self.phase != 'return'
+        # The unit's own state first: outside Orbit it says no every frame, and the game's reads below cost more
+        # (2026-10-24).
+        if not (not self.blocked and self.phase != 'return'
                 and controller._desired_mode == ORBIT_MODE and not controller._in_vehicle
                 and not controller._aiming and not controller._aim_returning
                 and not controller.climb.busy and not controller.cleanup_retry.pending
-                and (not state.pending or own_request) and state.transaction is None)
+                and (not state.pending or own_request) and state.transaction is None):
+            return False
+        try:
+            _, manager = controller._lifetime.owned()
+            climbing = climb_state(actor)
+            return not (manager is None or str(manager.GetActorCameraMode(actor)) == VEHICLE_MODE
+                        or climbing is None or any(climbing))
+        except Exception:
+            return False
 
     def interrupt(self, controller):
         if not self.busy:

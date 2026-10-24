@@ -54,12 +54,28 @@ check("a custom mode, such as a mantle, is neither", not game.is_in_air(movement
 movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
 check("an unknown mode text is kept", game.movement_mode(types.SimpleNamespace(MovementMode="odd")) == "'odd'")
 
+
+class NamedOnly:
+    name = "MOVE_Flying"
+
+    def __repr__(self) -> str:
+        raise AssertionError("repr read although the name was there")
+
+
+check("a mode carrying its name is read by name, without its text",
+      game.movement_mode(types.SimpleNamespace(MovementMode=NamedOnly())) == "MOVE_Flying")
+check("a mode whose name is not a movement name falls back to its text",
+      game.movement_mode(types.SimpleNamespace(MovementMode=types.SimpleNamespace(name=3))) == "namespace(name=3)")
+
 check("not aiming by default", not game.is_aiming(second))
 second.ZoomState.bWantsToZoom = True
 check("wanting to zoom counts as aiming", game.is_aiming(second))
 second.ZoomState.bWantsToZoom = False
 second.ZoomState.State = types.SimpleNamespace(name="Zoomed")
 check("being zoomed counts as aiming", game.is_aiming(second))
+second.ZoomState.State = "NotZoomed"
+check("a zoom state without a name is read by its text", not game.is_aiming(second))
+second.ZoomState.State = types.SimpleNamespace(name="NotZoomed")
 
 second.input = sdk_stubs.vector(0.6, 0.8)
 check("the stick reads its length", abs(game.stick(second) - 1.0) < 1e-9)
@@ -212,6 +228,25 @@ check("a character the game destroyed reads as none at once, before the next loo
 sdk_stubs.use_character(state, other)
 check("within the second, the player is not looked up again", game.refresh(50 * S + 1) == "")
 check("unless asked at once", game.refresh(50 * S + 2, at_once=True) == game.CHARACTER and game.character() is other)
+
+asked = []
+looked_up = game.get_pc
+game.get_pc = lambda **kwargs: (asked.append(1), "pc")[1]
+with game.player_frame():
+    seen = [game.controller() for _ in range(3)]
+check("within the player's frame the controller is asked of the game once", seen == ["pc"] * 3 and len(asked) == 1)
+game.controller()
+game.controller()
+check("outside it, every call asks again: a key press after a level load meets no gone controller", len(asked) == 3)
+game.get_pc = lambda **kwargs: (_ for _ in ()).throw(RuntimeError("loading"))
+with game.player_frame():
+    try:
+        game.controller()
+        failed = False
+    except RuntimeError:
+        failed = True
+check("a lookup that fails keeps nothing: each caller meets the failure as before", failed)
+game.get_pc = looked_up
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

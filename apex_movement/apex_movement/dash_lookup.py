@@ -23,6 +23,10 @@ CLASS_NAME = "OakControlledMove"
 MAX_MOVES = 64
 # While no dash is loaded yet, looked for again once a second rather than at every frame.
 SEARCH_NS = 1_000_000_000
+# Two dashes or more loaded tell nothing a new search could settle; the dash played settles it (note). A search walks
+# every object of the game, about 10 ms in one frame (It Follows trial 38), so it is made again only in case one of
+# them is unloaded meanwhile (2026-10-24).
+AMBIGUOUS_SEARCH_NS = 10_000_000_000
 
 _pointer: Any = None
 _next_search_ns = 0
@@ -40,14 +44,13 @@ def note(movement: Any) -> None:
         _pointer = unreal.WeakPointer(move)
 
 
-def _only_loaded() -> Any:
-    """The one dash the game has loaded, when there is exactly one; two or more say nothing on their own."""
+def _loaded() -> list[Any]:
+    """The dashes the game has loaded; only exactly one says whose it is."""
     try:
-        found = [move for move in islice(unrealsdk.find_all(CLASS_NAME, exact=False), MAX_MOVES) if _is_dash(move)]
+        return [move for move in islice(unrealsdk.find_all(CLASS_NAME, exact=False), MAX_MOVES) if _is_dash(move)]
     except Exception:
         # Expected while the game loads: looked up again a second later, and Move_Dash's own path is tried meanwhile.
-        return None
-    return found[0] if len(found) == 1 else None
+        return []
 
 
 def current(now_ns: int | None = None) -> Any:
@@ -60,10 +63,13 @@ def current(now_ns: int | None = None) -> Any:
     if now_ns is None or now_ns < _next_search_ns:
         return None
     _next_search_ns = now_ns + SEARCH_NS
-    only = _only_loaded()
-    if only is not None:
-        _pointer = unreal.WeakPointer(only)
-    return only
+    found = _loaded()
+    if len(found) != 1:
+        if found:
+            _next_search_ns = now_ns + AMBIGUOUS_SEARCH_NS
+        return None
+    _pointer = unreal.WeakPointer(found[0])
+    return found[0]
 
 
 def forget() -> None:

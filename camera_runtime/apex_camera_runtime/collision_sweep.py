@@ -10,6 +10,9 @@ class SphereSweep:
         self.kismet, self.sdk = kismet, sdk
         # The contact behind the last distance, None when clear: the automatic shoulder names it in the log.
         self.hit = None
+        # The two drawing colours, made once: debug drawing is off, the game never reads them (2026-10-24).
+        # The hit result stays new at each trace, since self.hit keeps the one the game hands back.
+        self._colours = None
 
     def distance(self, actor, anchor, desired):
         self.hit = None
@@ -18,7 +21,7 @@ class SphereSweep:
         last = self.sdk.make_struct("Vector", X=end[0], Y=end[1], Z=end[2])
         distance = length
         for complex_trace in (False, True):
-            answer = self._trace(actor, first, last, complex_trace)
+            answer = self._trace(actor, first, last, complex_trace, length)
             if not answer[0]:
                 continue
             hit = answer[-1]
@@ -31,17 +34,18 @@ class SphereSweep:
         return distance
 
     def _sphere(self, actor, first, last, radius, complex_trace):
+        if self._colours is None:
+            self._colours = (self.sdk.make_struct("LinearColor"), self.sdk.make_struct("LinearColor"))
+        trace_colour, hit_colour = self._colours
         answer = self.kismet.SphereTraceSingle(
             actor, first, last, radius, TRACE_CHANNEL, complex_trace, [actor], 0,
-            self.sdk.make_struct("HitResult"), True, self.sdk.make_struct("LinearColor"),
-            self.sdk.make_struct("LinearColor"), 0.0)
+            self.sdk.make_struct("HitResult"), True, trace_colour, hit_colour, 0.0)
         if not isinstance(answer, tuple) or not 2 <= len(answer) <= 3 or type(answer[0]) is not bool:
             raise ValueError("invalid collision result")
         return answer
 
-    def _trace(self, actor, first, last, complex_trace):
+    def _trace(self, actor, first, last, complex_trace, length):
         radius = RADIUS + MARGIN
-        length = math.dist((first.X, first.Y, first.Z), (last.X, last.Y, last.Z))
         for attempt in range(VOLUME_RECHECKS + 1):
             answer = self._sphere(actor, first, last, radius, complex_trace)
             if not answer[0]:

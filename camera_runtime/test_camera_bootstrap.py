@@ -115,7 +115,8 @@ class BootstrapTests(unittest.TestCase):
     def modules(self):
         sdk_module = types.ModuleType('unrealsdk')
         sdk_module.hooks = Hooks()
-        sdk_module.logging = types.SimpleNamespace(info=self.messages.append)
+        sdk_module.logging = types.SimpleNamespace(info=self.messages.append, misc=self.messages.append,
+                                                   error=self.messages.append)
         sdk_module.find_class = lambda _name: types.SimpleNamespace(ClassDefaultObject=kismet)
         unreal = types.ModuleType('unrealsdk.unreal')
         unreal.WeakPointer = lambda item: lambda: item

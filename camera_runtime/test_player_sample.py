@@ -58,5 +58,27 @@ check("no controller, no sample", read(None) is None)
 check("no character (vehicle, loading), no sample", read(NS(OakCharacter=None)) is None)
 check("a character not built yet, no sample", read(NS(OakCharacter=NS())) is None)
 
+
+class Counted:
+    """Counts each field read, as each one is a trip into the game."""
+
+    def __init__(self, reads, **fields):
+        self.__dict__.update(_reads=reads, _fields=fields)
+
+    def __getattr__(self, name):
+        self._reads[name] = self._reads.get(name, 0) + 1
+        return self._fields[name]
+
+
+reads = {}
+counted_movement = Counted(reads, bIsSprinting=False, MovementMode=NS(name="MOVE_Falling"),
+                           Velocity=NS(X=3.0, Y=4.0, Z=0.0), IsPerformingControlledMove=lambda: False,
+                           ControlledMoveReplicationData=NS(ControlledMove=None))
+counted = read(NS(OakCharacter=NS(CharacterMovement=counted_movement, bIsCrouched=False,
+                                  ZoomState=Counted(reads, bWantsToZoom=False, State=NS(name="NotZoomed")))))
+check("a mode carrying its name is read by it", counted.in_air is True)
+check("the speed, the mode, the aim button and the zoom state are each read once",
+      all(reads[name] == 1 for name in ("Velocity", "MovementMode", "bWantsToZoom", "State")))
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

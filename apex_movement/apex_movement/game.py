@@ -6,6 +6,7 @@ load can also unload an asset, so the asset is dropped with the character and fo
 
 import math
 import re
+from contextlib import contextmanager
 from typing import Any
 
 import unrealsdk
@@ -80,9 +81,31 @@ def last_character() -> Any:
     return _last_pointer() if _last_pointer is not None else None
 
 
+_NOT_IN_FRAME = object()
+_frame_controller: Any = _NOT_IN_FRAME
+
+
 def controller() -> Any:
     """The player controller; None while the game is loading."""
+    if _frame_controller is not _NOT_IN_FRAME:
+        return _frame_controller
     return get_pc(possibly_loading=True)
+
+
+@contextmanager
+def player_frame():
+    """Within the player's frame the controller is looked up once, for the camera and every movement (2026-10-24).
+    Outside it each call asks the game again: a key press after a level load never meets a controller gone with it.
+    A lookup that fails keeps nothing, and each caller meets the failure as before."""
+    global _frame_controller
+    try:
+        _frame_controller = get_pc(possibly_loading=True)
+    except Exception:
+        _frame_controller = _NOT_IN_FRAME
+    try:
+        yield
+    finally:
+        _frame_controller = _NOT_IN_FRAME
 
 
 def anim() -> Any:
@@ -129,7 +152,12 @@ def forget() -> None:
 
 def movement_mode(movement: Any) -> str:
     """The movement mode as its short name, such as MOVE_Falling."""
-    text = repr(movement.MovementMode)
+    mode = movement.MovementMode
+    # The game's enum carries its name; read six to eight times a frame, repr and a search cost more (2026-10-24).
+    name = getattr(mode, "name", None)
+    if isinstance(name, str) and name.startswith("MOVE_"):
+        return name
+    text = repr(mode)
     found = re.search(r"MOVE_\w+", text)
     return found.group(0) if found else text
 
@@ -166,9 +194,16 @@ def input_mappings() -> list[Any]:
     return list(pc.PlayerInput.EnhancedActionMappings) if pc is not None else []
 
 
+_NO_NAME = object()
+
+
 def is_aiming(character: Any) -> bool:
     zoom = character.ZoomState
-    return bool(zoom.bWantsToZoom) or getattr(zoom.State, "name", str(zoom.State)) != "NotZoomed"
+    if zoom.bWantsToZoom:
+        return True
+    state = zoom.State
+    name = getattr(state, "name", _NO_NAME)
+    return (str(state) if name is _NO_NAME else name) != "NotZoomed"
 
 
 def horizontal_speed(movement: Any) -> float:

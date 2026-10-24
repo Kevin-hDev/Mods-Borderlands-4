@@ -22,22 +22,42 @@ class ContextReader:
         self.weak_ref, self.identify, self.find_all = weak_ref, identify, find_all
         self._collector_ref = None
         self._owner = None
+        self._kept_first = self._kept_remaining = None
         self.reason = "context_unavailable"
         self.error_kind = None
 
     def clear(self) -> None:
         self._collector_ref = self._owner = None
+        self._kept_first = self._kept_remaining = None
+        self.reason = "context_unavailable"
+
+    def end(self) -> None:
+        """An aim ended. The collector found stays: the next aim reuses it only if it is alive, still the same
+        player's and his character's, and a search walks every object of the game, about 10 ms in one frame
+        (It Follows trial 38; 2026-10-24)."""
         self.reason = "context_unavailable"
 
     def capture(self, item):
         """Capture one weak identity; ADS and body framing share this authority."""
         ref = self.weak_ref(item)
         identity = self.identify(item)
+        held = ref()
         if (not isinstance(identity, ObjectId) or identity.address != address(item)
                 or identity.index < 0 or identity.serial <= 0
-                or ref() is None or address(ref()) != identity.address):
+                or held is None or address(held) != identity.address):
             raise ValueError("ADS identity unavailable")
         return ref, identity
+
+    def capture_all(self, items, kept=None):
+        """Each item's weak identity, the kept ones reused while every one still resolves to the very item: a weak
+        reference checks the object's serial, so the same address through it is the same object, and the native
+        camera checks its context again at every frame. A capture asks the native library each time, about
+        0.037 ms, four to eight a frame (probe of 2026-10-05; 2026-10-24)."""
+        if kept is not None and len(kept) == len(items) and all(
+                (held := ref()) is not None and address(held) == identity.address == address(item)
+                for (ref, identity), item in zip(kept, items)):
+            return kept
+        return tuple(self.capture(item) for item in items)
 
     def _collector(self, actor, owner):
         item = self._collector_ref() if self._collector_ref is not None else None
@@ -66,23 +86,23 @@ class ContextReader:
                 return None
             slots = actor.ActiveWeapons.Slots
             weapon = slots[0].Weapon if len(slots) else None
-            observation = category(actor, weapon)
+            observation = category(actor, weapon, animation)
             if not observation["matched"]:
                 self.reason = "unknown_weapon"
                 return None
-            first = tuple(self.capture(item) for item in (pc, actor, manager))
+            first = self._kept_first = self.capture_all((pc, actor, manager), self._kept_first)
             owner = tuple((identity.address, identity.index, identity.serial) for _, identity in first)
             collector = self._collector(actor, owner)
             if collector is None:
                 self.reason = "collector_unavailable"
                 return None
-            remaining = tuple(self.capture(item) for item in
-                              (weapon, animation, collector, manager.CameraModeState, manager.CameraModeInputs))
+            remaining = self._kept_remaining = self.capture_all(
+                (weapon, animation, collector, manager.CameraModeState, manager.CameraModeInputs), self._kept_remaining)
             captured = first + remaining
             paths = make_config(pc, manager, weapon)
             if (address(manager.CameraModeState.Inputs) != paths.inputs
                     or address(manager.CameraModeInputs.Controller) != paths.controller
-                    or any(ref() is None or address(ref()) != identity.address for ref, identity in captured)):
+                    or any((held := ref()) is None or address(held) != identity.address for ref, identity in captured)):
                 return None
             self.reason = ""
             return Snapshot(observation["value"], tuple(identity for _, identity in captured),

@@ -11,6 +11,8 @@ from typing import Any, Callable
 
 from . import action_framing, vehicle_share
 from .easing import MAX_STEP_S, Easing
+from .frame_hooks import front
+from .vehicle_field import VehicleField
 
 FRAME = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 IDENTIFIER = "apex_camera_runtime:vehicle_framing"
@@ -41,6 +43,7 @@ class VehicleFraming:
         self.hooks = None
         self.settings = None
         self.installed = False
+        self.vehicle_field: VehicleField | None = None
         self._forget()
 
     def _forget(self) -> None:
@@ -75,7 +78,9 @@ class VehicleFraming:
         self.last_ns = now_ns
         pc = self.get_pc(possibly_loading=True)
         vehicle = getattr(pc, "Pawn", None) if pc is not None else None
-        if vehicle is None or getattr(vehicle, "OakVehicleMovement", None) is None or self.settings is None:
+        if self.vehicle_field is None:
+            self.vehicle_field = VehicleField(self.address_of)
+        if vehicle is None or self.vehicle_field.movement(vehicle) is None or self.settings is None:
             self._leave()
             return
         vehicle_id = self.address_of(vehicle)
@@ -156,5 +161,5 @@ def game_modules() -> tuple:
     from mods_base import get_pc
     from unrealsdk import hooks, logging
     from unrealsdk.unreal import WeakPointer
-    return (hooks, get_pc, WeakPointer, lambda item: int(item._get_address()), time.perf_counter_ns,
+    return (front(hooks), get_pc, WeakPointer, lambda item: int(item._get_address()), time.perf_counter_ns,
             lambda message: logging.info(f"[Camera Runtime] {message}"))
