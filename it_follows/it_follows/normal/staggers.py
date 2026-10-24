@@ -9,10 +9,13 @@ once they were given back (trials 91 and 92, verified in game). That a chance ti
 likeliest, not measured: too few come in a few minutes (non vérifié). Blocking them enemy by enemy
 (LockHitReactions) was left: its unblock gives nothing back (trial 90, verified in game).
 
-The asset is found anew at each pass, never kept: an object the game drops while Python holds it crashes it. The
-chances first read in this launch of the game are the game's, kept here for every play after: a play that never ended
-cannot make the next take ours for the game's. Each pass of the census writes ours again where the game reads its own
-(an asset loaded again); at the end the game's are given back where ours still lie, an asset changed since left.
+The assets found are held by weak pointers only, read again at each pass: an object the game drops while Python
+holds it crashes it. They are searched again only when one of them is gone: a search of every object the game holds
+costs 9 to 13 ms (trial 38), and the game loads them once a game (211 logs: 260 writes, each the first of its game;
+audit of 24 October 2026, N1). The chances first read in this launch of the game are the game's, kept here for every
+play after: a play that never ended cannot make the next take ours for the game's. Each pass of the census writes ours
+again where the game reads its own (an asset loaded again); at the end the game's are given back where ours still
+lie, an asset changed since left.
 """
 
 from itertools import islice
@@ -48,13 +51,14 @@ class Staggers:
         self.factor = factor
         self.announce = announce
         self.ours: dict[str, dict[str, float]] = {}
+        self.found: list[Any] = []
 
     def keep(self) -> dict:
         """Ours written on each loaded asset that reads the game's: their names, or why none could be."""
         if self.factor == 1.0:
             return {}
         try:
-            assets = _assets()
+            assets = self._loaded()
         except Exception as error:
             return {"refused": f"unfound:{type(error).__name__}"}
         written = []
@@ -73,6 +77,15 @@ class Staggers:
             self.ours[name] = ours
             written.append(name)
         return {"staggers": round(self.factor, 3), "written": written} if written else {}
+
+    def _loaded(self) -> list:
+        """The assets held, when none is gone; else searched again and held."""
+        held = [pointer() for pointer in self.found]
+        if held and all(asset is not None for asset in held):
+            return held
+        assets = _assets()
+        self.found = [unrealsdk.unreal.WeakPointer(asset) for asset in assets]
+        return assets
 
     def put_back(self) -> dict | str:
         """The game's chances where ours still lie: by name "given_back", "changed" or "gone"."""

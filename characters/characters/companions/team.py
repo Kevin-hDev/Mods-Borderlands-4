@@ -2,9 +2,13 @@
 
 A team starts with the companions the player chose: each is called (respawn.Respawns.call), then born in front of the
 hunter one beat after another once he may have one born (on foot, alive), found by its spawner and followed. A
-companion dead comes back the same way, after the wait its mod gives. One hook for the whole team, on the animation
-update, as It Follows' heartbeat and the trials since 166: each follow keeps its own pace, rank by rank shifted so
-that the samples do not all fall on one frame. The mod's session owns the team: it starts it, stops it, and stops it
+companion dead comes back the same way, after the wait its mod gives. One beat for the whole team, on the
+package's one hook on the animation update (animation_hook.py), as It Follows' heartbeat and the trials since 166:
+each follow keeps its own pace, rank by rank shifted so that the samples do not all fall on one frame. The game
+calls that hook 447 to 1 358 times a second (trial 219), and a call with nothing to do took 3.3 to 5.7 µs with
+eight companions, each part asked in turn: the beat now knows the earliest moment one of them has work (due), and
+does nothing before it, REST_MOST_S at most (audit of 24 October 2026, C1). What it costs is written every 30 s
+(team_gauge.py). The mod's session owns the team: it starts it, stops it, and stops it
 with the mod. Those asked of a spawner and not found yet when it stops are looked for a while after, and taken out
 of the world (strays.py). A hunter is Lemmy dressed at each birth (dress.py): a Lemmy coming back is born himself.
 As he is found, he is handed to the team's wardrobe (wardrobe.py), which dresses him from the camera's update, never
@@ -18,19 +22,18 @@ only when no other mod leads, stopping first any other mod's team still running 
 another comes to lead.
 """
 
+import math
 import time
 from typing import Any, Callable
 
 import unrealsdk
-from mods_base import get_pc, hook
-from unrealsdk.hooks import Type
+from mods_base import get_pc
 
-from .. import camps, game_thread, report
+from .. import animation_hook, camps, game_thread, report
 from . import (birth, choose, dress, fight, follow, kinds, main_menu, owners, player_paint, respawn, strays,
-               tuning, wardrobe, world)
+               team_gauge, tuning, wardrobe, world)
 from .zone import zone_of
 
-HOOK = "/Script/Engine.AnimInstance:BlueprintUpdateAnimation"
 # The mod's package, first part of this one's name: it_follows in It Follows.
 OWNER = __package__.split(".")[0]
 IDENTIFIER = f"{OWNER}:companions"
@@ -43,6 +46,9 @@ RECALLS_MOST = 3
 RECALL_KEPT_S = 60.0
 # How often the team looks whether the main menu shows (main_menu.py), and whether another mod leads it.
 MENU_EVERY_S = 1.0
+# The longest a beat rests before asking its parts again, should something change outside it: the bars set by the
+# mod's session, a hunter dressed at the camera's update (Claude's choice: a tenth of a second is never seen).
+REST_MOST_S = 0.1
 
 
 def new_births() -> birth.Births:
@@ -81,6 +87,9 @@ class Team:
         # Made with the hook, on the game's thread: a beat that comes elsewhere does nothing (game_thread.py).
         self.guard: game_thread.Guard | None = None
         self.ended: str | None = None
+        # Before this moment no part of the team has anything to do (_next_due).
+        self.due = -math.inf
+        self.gauge = team_gauge.TeamGauge(clock)
         # What the mod gives a companion of that name (start), the starting values until the team starts.
         self.tuned: Callable[[str], Any] = lambda _name: tuning.STARTING
         # What stops this team when another mod's starts (owners.claim), kept from its start to its stop.
@@ -130,7 +139,8 @@ class Team:
             self.respawns.call(name, None)
         self.guard = game_thread.Guard("team")
         self.wardrobe.start()
-        self.hook = hook(HOOK, Type.POST, hook_identifier=IDENTIFIER)(self.beat)
+        self.due, self.gauge = -math.inf, team_gauge.TeamGauge(self.clock)
+        self.hook = animation_hook.beat(IDENTIFIER, self.beat)
         self.hook.enable()
         report.note("team_start", companions=chosen, unknown=len(unknown),
                     tuning={name: tuning.written(self.tuning_of(name)) for name in chosen},
@@ -183,6 +193,7 @@ class Team:
         one.on_end = lambda why, ended=one: self._ended(name, ended, why)
         one.companion = name
         one.recalls = recalls
+        one.lap = self.gauge.part
         self.follows = self.active() + [one]
         report.note("companion_start", character=one.name, companion=name, rank=rank, **dressed, **one.begin(pc))
         return {"done": "started"}
@@ -226,19 +237,42 @@ class Team:
     def beat(self, *_args: Any) -> None:
         if self.guard is not None and not self.guard.here():
             return
+        began = self.gauge.called()
+        now = self.clock()
+        if now < self.due:
+            self.gauge.idle(began)
+            return
         why = None if self.end is None or self.ended is not None else self._ending()
         if why is not None:
             # Back at the main menu, the team stops (decision 61): a new game must not find it on. Another mod
             # leading, it stops too: two teams would follow the hunter.
             self.end(why)
             return
+        self.gauge.mark()
         for one in self.active():
-            one.beat()
+            self.gauge.part(f"follow_{one.beat() or 'rest'}")
         self.wardrobe.overdue()
+        self.gauge.part("wardrobe")
         self.respawns.beat()
+        self.gauge.part("respawns")
         self.follows = self.active()
         if self.bars is not None:
             self.bars.beat(self)
+            self.gauge.part("bars")
+        self.due = min(self._next_due(), now + REST_MOST_S)
+        said = self.gauge.done(began, now)
+        if said is not None:
+            report.note("team_status", following=len(self.follows), on_their_way=len(self.respawns.waiting), **said)
+
+    def _next_due(self) -> float:
+        """The earliest moment a part of the team has something to do: a follow, those on their way, the hunters
+        waiting for their clothes, the bars, the look at the main menu."""
+        dues = [one.due() for one in self.follows] + [self.respawns.due(), self.wardrobe.due()]
+        if self.bars is not None:
+            dues.append(self.bars.due())
+        if self.end is not None and self.ended is None:
+            dues.append(self.menu_next)
+        return min(dues)
 
     def stop(self, why: str) -> int:
         """Ends every follow (each companion taken out of the world, leave.py), forgets those on their way, removes
@@ -267,7 +301,7 @@ class Team:
         report.note("team_stop", why=why, following=len(running), on_their_way=waiting, failed=failed,
                     off_thread=0 if self.guard is None else self.guard.away)
         if asked and why != "main_menu":
-            failed_watch = follow.tried(lambda: strays.watch(asked, self.clock, HOOK, STRAYS_IDENTIFIER))
+            failed_watch = follow.tried(lambda: strays.watch(asked, self.clock, STRAYS_IDENTIFIER))
             if isinstance(failed_watch, str):
                 report.note("strays_failed", why=failed_watch, companions=[one[0] for one in asked])
         return len(running)

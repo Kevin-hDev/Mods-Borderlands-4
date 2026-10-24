@@ -20,7 +20,9 @@ aimed at. A publish that fails stops the service, said; the team goes on.
 """
 
 import json
+import math
 import re
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -89,6 +91,10 @@ class Bars:
         self.published = 0
         self.done: str | None = None
 
+    def due(self) -> float:
+        """When the next publish comes; never once stopped."""
+        return math.inf if self.done is not None else self.next_at
+
     def beat(self, team: Any) -> None:
         if self.done is not None or self.clock() < self.next_at:
             return
@@ -106,9 +112,10 @@ class Bars:
         if self.done is not None:
             return
         self.done = why
+        began = time.perf_counter()
         stopped = self.service.stop()
         report.note("companion_bars_stop", why=why, published=self.published, asked=self.service.asked,
-                    stopped=stopped)
+                    stopped=stopped, stop_ms=round((time.perf_counter() - began) * 1000.0, 1))
 
 
 def _said(sentence: str) -> None:

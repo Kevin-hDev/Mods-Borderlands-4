@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.13 - 2026-10-24
+
+- Performance: Normal mode now spreads its work over several frames, for fewer small stutters during play. The Hardcore still counts every kill.
+- Performance: your companions only work when there is something to do, and stopping the team no longer freezes the game for a moment.
+- Performance: the whole mod asks less of the game at each frame.
+
 ## 1.0.12 - 2026-10-23
 
 - Your team's Vault Hunters now show their name under their health bar when you aim at them, in green like the game's allies. Update the It Follows Companions Paks file too.

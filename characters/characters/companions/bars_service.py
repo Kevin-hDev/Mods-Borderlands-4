@@ -18,7 +18,7 @@ import threading
 import time
 from typing import Any, Callable
 
-# More than a connection may last: a stop waits for the request in hand, no longer.
+# More than a connection may last: a stop waits for the request in hand, no longer (bars_wire.CONNECTION_S).
 STOP_FACTOR = 2
 # The log says once how long this many requests took: the proof of the script's rhythm in game.
 RATE_SAMPLE = 100
@@ -72,8 +72,7 @@ class CompanionBars:
             return False
         server.path, server.note, server.asked, server.answer = (self._constants["path"], self._note, self._count,
                                                                  self._answer)
-        thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.05},
-                                  name="characters-bars", daemon=True)
+        thread = threading.Thread(target=server.serve, name="characters-bars", daemon=True)
         thread.start()
         self._server, self._thread = server, thread
         return True
@@ -122,23 +121,17 @@ class CompanionBars:
         return payload if len(payload) <= self._constants["maxResponseBytes"] else None
 
     def stop(self) -> bool:
-        """Closes the port. The wait is bounded: a server that will not stop is left to its daemon thread, said."""
+        """Closes the port: the serving thread woken, ended and its port closed before this returns, at once when
+        no request is in hand. The wait is bounded: a server that will not stop is left to its daemon thread,
+        which closes the port as it ends, said."""
         server, thread = self._server, self._thread
         if server is None:
             return True
         self._server, self._thread, self._state = None, None, None
-
-        def close() -> None:
-            server.shutdown()
-            server.server_close()
-
-        closer = threading.Thread(target=close, name="characters-bars-stop", daemon=True)
-        closer.start()
-        wait = STOP_FACTOR * self._wire.CONNECTION_S
-        closer.join(wait)
-        thread.join(max(0.0, wait / 2))
+        server.stop()
+        thread.join(STOP_FACTOR * self._wire.CONNECTION_S)
         self._tell()
-        if closer.is_alive() or thread.is_alive():
+        if thread.is_alive():
             self._report("the companions' bars service did not stop in time")
             return False
         return True

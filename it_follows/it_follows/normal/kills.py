@@ -22,12 +22,15 @@ class Kills:
     def __init__(self) -> None:
         self.counted: dict[str, None] = {}
         self.first = True
+        # The player's kills the last count added, by name: where their bodies lay is measured (reserve_kills.py).
+        self.fresh: list[str] = []
 
     def count(self, sighting: Any, met: dict | set) -> tuple[int, dict[str, int], list[dict], dict[str, int]]:
         """The bodies read dead not counted yet: how many the player killed, what KillerActor/LastHitBy said of them,
         counted by what they said, for those another character killed, who, and whether each was met (met: the
         names the mode holds; one not met is no one it gave the one team, born since the last census or no enemy),
         and how many each other character killed, by its name."""
+        self.fresh = []
         for name in sighting.alive:
             self.counted.pop(name, None)
         others = dict(sighting.killed_by_other)
@@ -42,7 +45,10 @@ class Kills:
                 continue
             key = "/".join(by)
             said[key] = said.get(key, 0) + 1
-            kills += killers.by_player(by)
+            mine = killers.by_player(by)
+            kills += mine
+            if mine:
+                self.fresh.append(name)
             if name in others:
                 by_others[others[name]] = by_others.get(others[name], 0) + 1
             if name in others and len(fights) < FIGHTS_MOST:

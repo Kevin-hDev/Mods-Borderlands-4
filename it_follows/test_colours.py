@@ -19,6 +19,7 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 from it_follows import colours, colours_game as game, frame, menu, options, panel_fr, panel_zh, report  # noqa: E402
+from it_follows.characters import animation_hook  # noqa: E402
 
 fails: list[str] = []
 clock = [1000.0]
@@ -106,12 +107,17 @@ def noted(event: str) -> int:
     return sum(f'"event":"{event}"' in line for line in state["info"])
 
 
+def watching() -> bool:
+    """Whether the watch's beat is set on the package's one hook on the animation update."""
+    return colours.WATCH_ID in animation_hook.beats()
+
+
 def run_to(end: float) -> None:
     while clock[0] < end - 1e-9:
         clock[0] = round(clock[0] + 0.1, 6)
-        beat = state["hooks"].get(colours.WATCH_ID)
+        beat = animation_hook.beats().get(colours.WATCH_ID)
         if beat is not None:
-            beat.fn(None)
+            beat(None)
 
 
 check("off at first, Profile 2 at first, after the 16:10 row on the OPTIONS page",
@@ -133,7 +139,7 @@ sky, near, plain = fresh()
 colours.switched(options.colours, True)
 check("on: the time of day and the volume that sets the saturation times 1.7, the other left, said once",
       sky.value() == 1.7 and near.value() == 1.7 and plain.Settings.writes == 0 and noted("colours_written") == 1
-      and colours.WATCH_ID in state["hooks"] and world["searches"] == 2)
+      and watching() and world["searches"] == 2)
 options.colours.value = True
 colours.chosen(options.colour_profile, "Profile 3")
 check("another profile: raised from the game's own, not from what was written", sky.value() == 2.0
@@ -160,22 +166,22 @@ streamed.set(1.5)
 colours.switched(options.colours, False)
 check("off: the game's own back, a value the game changed since left as it is, the pass stopped",
       sky.value() == 0.8 and near.value() == 2.0 and streamed.value() == 1.5 and colours._held == {}
-      and colours.WATCH_ID not in state["hooks"])
+      and not watching())
 
 sky, near, plain = fresh()
 colours.switched(options.colours, False)
 check("off with nothing held: nothing written", sky.Settings.writes == 0 and near.Settings.writes == 0)
 colours.chosen(options.colour_profile, "Profile 1")
 check("a profile chosen with the switch off: nothing written, no pass", sky.Settings.writes == 0
-      and colours.WATCH_ID not in state["hooks"])
+      and not watching())
 options.colours.value = True
 colours.chosen(options.colour_profile, "Profile 9")
 check("a profile unknown, the switch on: the default's factor", sky.value() == 1.7)
 colours.stop()
-check("the mod disabled: the game's own back, no pass", sky.value() == 1.0 and colours.WATCH_ID not in state["hooks"])
+check("the mod disabled: the game's own back, no pass", sky.value() == 1.0 and not watching())
 colours.start()
 check("the mod enabled with the switch on: raised at once, then each second", sky.value() == 1.7
-      and colours.WATCH_ID in state["hooks"])
+      and watching())
 
 sky, near, plain = fresh()
 stubborn = Item("/Game/Map.Map:PersistentLevel.PostProcessVolume_Stubborn", stubborn=True)

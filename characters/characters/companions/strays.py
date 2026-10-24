@@ -8,17 +8,17 @@ Only the time the game runs counts (each beat counts at most MAX_STEP_S): a wind
 loading, would otherwise use it up before the companion could be born. A spawner a team asks again is watched no
 more (forget, called by team.py at each ask): what it bears from then on is that team's.
 
-One watch for this copy of the package, with a hook of its own named after the mod (team.py gives the name): a team
-started meanwhile keeps its own hook, and the watch, ending, removes only its own. MOST looked for at most, the
+One watch for this copy of the package, with a beat of its own on the package's one hook on the animation update
+(animation_hook.py), named after the mod (team.py gives the name): a team started meanwhile keeps its own beat, and
+the watch, ending, removes only its own. MOST looked for at most, the
 oldest dropped first. Its hook stays at most FIND_S of play after the team's stop, the mod switched off included.
 """
 
 from typing import Any, Callable
 
-from mods_base import get_pc, hook
-from unrealsdk.hooks import Type
+from mods_base import get_pc
 
-from .. import game_thread, report
+from .. import animation_hook, game_thread, report
 from . import choose, fight, kinds, leave, respawn, world
 from .zone import zone_of
 
@@ -39,8 +39,8 @@ class Strays:
         self.last: float | None = None
         self.next = 0.0
 
-    def add(self, asked: list[tuple[str, str, float]], hook_name: str, identifier: str) -> None:
-        """Those to look for, and the hook set if none is."""
+    def add(self, asked: list[tuple[str, str, float]], identifier: str) -> None:
+        """Those to look for, and its beat set if none is."""
         fresh = [{"companion": companion, "spawner": spawner, "left_s": respawn.FIND_S}
                  for companion, spawner, _asked in asked]
         self.looked = (self.looked + fresh)[-MOST:]
@@ -48,7 +48,7 @@ class Strays:
         if self.hook is None and self.looked:
             self.guard = game_thread.Guard("strays")
             self.last = None
-            self.hook = hook(hook_name, Type.POST, hook_identifier=identifier)(self.beat)
+            self.hook = animation_hook.beat(identifier, self.beat)
             self.hook.enable()
 
     def forget(self, spawner: str) -> None:
@@ -107,7 +107,7 @@ class Strays:
 _watch: dict[str, Strays | None] = {"strays": None}
 
 
-def watch(asked: list[tuple[str, str, float]], clock: Callable[[], float], hook_name: str, identifier: str) -> None:
+def watch(asked: list[tuple[str, str, float]], clock: Callable[[], float], identifier: str) -> None:
     """Those a stopped team had asked, looked for until each is found or FIND_S of play passed."""
     if not asked:
         return
@@ -115,7 +115,7 @@ def watch(asked: list[tuple[str, str, float]], clock: Callable[[], float], hook_
     if strays is None:
         strays = _watch["strays"] = Strays(clock)
     strays.clock = clock
-    strays.add(asked, hook_name, identifier)
+    strays.add(asked, identifier)
 
 
 def forget(spawner: str) -> None:

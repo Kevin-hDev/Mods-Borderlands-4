@@ -1,11 +1,12 @@
 """Tests the team's wardrobe (companions/wardrobe.py, decision 65): its own hook on the camera's modifiers' update; a
-hunter handed to it waits for that update, is started there and said, kept only when his upper body was given;
-taken further at a later update, never in the one that started him; said and forgotten when done; a step that fails
-gives him up; an update from another thread than the game's does nothing; those the update never comes for within
-START_WAIT_S said and forgotten, the others kept; MOST of each kept, the latest; the stop gives up those being
-dressed and removes the hook, even when giving one up fails."""
+hunter handed to it waits for that update, is started there and said, kept only when his upper body was given; taken
+further at a later update, never in the one that started him; said and forgotten when done; a step that fails gives him
+up; an update from another thread than the game's does nothing; those the update never comes for within START_WAIT_S
+said and forgotten, the others kept, the first one waiting giving when that comes (due); MOST of each kept, the latest;
+the stop gives up those being dressed and removes the hook, even when giving one up fails."""
 
 import json
+import math
 import pathlib
 import sys
 import threading
@@ -118,6 +119,8 @@ clock.now = 200.0
 room.add("Lemmy_4", "Vex", Dressing())
 clock.now = 200.0 + wardrobe.START_WAIT_S - 0.5
 room.add("Lemmy_5", "Amon", Dressing())
+check("due when the first one waiting has waited START_WAIT_S (audit of 24 October 2026, C1)",
+      room.due() == 200.0 + wardrobe.START_WAIT_S)
 clock.now = 200.0 + wardrobe.START_WAIT_S + 0.25
 room.overdue()
 check("the camera's update never came within START_WAIT_S: said, forgotten; the later one kept", [
@@ -125,6 +128,7 @@ check("the camera's update never came within START_WAIT_S: said, forgotten; the 
       "event": "companion_dressing", "run": 0, "character": "Lemmy_4", "companion": "Vex",
       "done": "camera_never_came", "waited_s": 5.25})
 room.waiting = []
+check("none waiting: never due", room.due() == math.inf)
 for number in range(5):
     room.add(f"Lemmy_{10 + number}", "Rafa", Dressing())
 check("waiting: most kept, the latest", [held[0] for held in room.waiting] == ["Lemmy_12", "Lemmy_13", "Lemmy_14"])

@@ -21,7 +21,7 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 from it_follows import kinds, presence, report  # noqa: E402
-from it_follows.characters import reads  # noqa: E402
+from it_follows.characters import animation_hook, reads  # noqa: E402
 from it_follows.normal import coop_messages, enemy_time, guest, guest_enemies, levels, mode, options  # noqa: E402
 
 fails: list[str] = []
@@ -87,7 +87,7 @@ try:
     looked = [line for line in notes() if line["event"] == "normal_guest_enemies"]
     check("what was done said", looked and looked[0]["sped"] == 3 and looked[0]["held"] == 3
           and looked[0]["left"]["player"] == 1)
-    check("their own time never sped: nothing looks at each image", enemy_time.IDENTIFIER not in state["hooks"]
+    check("their own time never sped: nothing looks at each image", enemy_time.IDENTIFIER not in animation_hook.beats()
           and not hasattr(play, "watch"))
     near.CharacterMovement.MaxGroundSpeedScale.Value = 1.0
     crowd.remove(unsaid)

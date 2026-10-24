@@ -20,6 +20,7 @@ state = sdk_stubs.install()
 
 import companion_fixture as fake  # noqa: E402
 from companions import report, session, settings  # noqa: E402
+from companions.characters import animation_hook  # noqa: E402
 from companions.characters.companions import owners, team as team_module  # noqa: E402
 
 fails: list[str] = []
@@ -54,9 +55,10 @@ settings.health.value = 2
 check("a setting changed while it is on: the team keeps the one it started with",
       session._state["team"].tuning_of("Crankus").times == 9.0)
 settings.health.value, settings.refill.value = 4, settings.NEVER
-check("one team at a time", session.start_team(["Abomination"]) == "already_on")
+check("one team at a time, its beat on the animation update", session.start_team(["Abomination"]) == "already_on"
+      and team_module.IDENTIFIER in animation_hook.beats())
 check("stopped, off, the hook removed", session.stop_team() == "stopped" and not session.team_on()
-      and team_module.IDENTIFIER not in state["hooks"] and notes("team_stop")[-1]["why"] == "stopped")
+      and team_module.IDENTIFIER not in animation_hook.beats() and notes("team_stop")[-1]["why"] == "stopped")
 first_births = session._state["births"]
 session.start_team(["Crankus"])
 check("one set of camps for every team of the game session (decision 59)",

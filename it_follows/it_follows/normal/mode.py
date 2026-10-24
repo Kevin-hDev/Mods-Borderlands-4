@@ -60,7 +60,7 @@ class Mode:
             return
         self.waiting_for = None
         report.note("normal_playing", level=self.settings.level.name, players=presence.players())
-        self.play = play.Play(self.settings, seat.player, self.dodges, self.fail)
+        self.play = play.Play(self.settings, seat.player, self.dodges, self.fail, self.beat)
         self.play.begin(now)
 
     def _leave(self, why: str) -> None:

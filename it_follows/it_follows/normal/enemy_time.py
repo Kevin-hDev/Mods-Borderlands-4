@@ -9,7 +9,9 @@ trial 21 (« j'ai bien vue les differences de vitesse d'esquive,, c'est bon comm
 The lever is the enemy research's (apex_probe/enemy_boost.py, vérifié en jeu at ×4, ×5 and ×6, séance 7), which trial
 21 used (docs/RUN/sondes/run_dodge_watch.py): the character's CustomTimeDilation {Value, BaseValue}, sped up while
 AIDodgeState.ActiveDodge holds an Action. A dodge lasts 68 to 401 ms: only a look at each image sees it, through the
-game's animation update (frame.HOOK) under a name of its own, one call let through every FRAME_GAP_S. A gesture lasts
+game's animation update under a name of its own on the package's one hook (characters/animation_hook.py), one call
+let through every FRAME_GAP_S; what the looks cost is counted for the status line (gauge), the enemies read for a
+dodge and for a gesture apart. A gesture lasts
 0.8 to 4.3 s (trial 63): its scripts are read every GESTURE_GAP_S only, on the GESTURE_MOST nearest, since reading six
 enemies 30 times a second cost the game some 15 ms a second there. The enemies looked at are the nearest the last
 census found (enemies.nearest). One held is looked at until its time is given back, even once out of that list: an
@@ -25,13 +27,11 @@ accelerer son desactiver, le probleme n'est plus présent »). Their gestures ar
 """
 
 from itertools import islice
+from time import perf_counter
 from typing import Any, Callable
 
-from mods_base import hook
-from unrealsdk.hooks import Type
-
 from .. import frame
-from ..characters import game_thread
+from ..characters import animation_hook, game_thread
 from . import gestures
 
 IDENTIFIER = "it_follows:normal_time"
@@ -95,11 +95,18 @@ class EnemyTime:
         self.guard: game_thread.Guard | None = None
         self.last = 0.0
         self.last_gestures = 0.0
+        # The looks since the gauge was last read: how many, the seconds they took, the longest.
+        self.looks, self.look_s, self.longest_s = 0, 0.0, 0.0
+        # Within them, the enemies read for a dodge and for a gesture: how many, the seconds they took (trial 221: a
+        # look took 79 to 155 µs with 3 to 9 enemies watched, 4 µs with none; which read weighs is not known).
+        self.reads = {DODGE: [0, 0.0], GESTURE: [0, 0.0]}
+        self.gauged_at = frame.now()
 
     def start(self) -> None:
         # On the game's thread, as the hook: a call that comes elsewhere does nothing (game_thread.py).
         self.guard = game_thread.Guard(IDENTIFIER)
-        self.hook = hook(frame.HOOK, Type.POST, hook_identifier=IDENTIFIER)(self._frame)
+        self.gauged_at = frame.now()
+        self.hook = animation_hook.beat(IDENTIFIER, self._frame)
         self.hook.enable()
 
     def follow(self, watched: dict[str, Any], plain: frozenset[str] = frozenset()) -> None:
@@ -114,10 +121,35 @@ class EnemyTime:
         if moment - self.last < FRAME_GAP_S:
             return
         self.last = moment
+        began = perf_counter()
         try:
             self.look(moment)
         except Exception as error:
             self.fail(f"time_error:{type(error).__name__}")
+        took = perf_counter() - began
+        self.looks += 1
+        self.look_s += took
+        self.longest_s = max(self.longest_s, took)
+
+    def gauge(self) -> dict:
+        """Since asked last: the looks a second, what one took on average in µs, the longest in ms; then counted
+        afresh."""
+        moment = frame.now()
+        span = moment - self.gauged_at
+        said = {"looks_s": round(self.looks / span, 1) if span > 0.0 else 0.0,
+                "look_us": round(self.look_s / self.looks * 1e6, 1) if self.looks else None,
+                "look_longest_ms": round(self.longest_s * 1000.0, 2)}
+        for what, (count, seconds) in self.reads.items():
+            said[f"{what}_reads_s"] = round(count / span, 1) if span > 0.0 else 0.0
+            said[f"{what}_read_us"] = round(seconds / count * 1e6, 1) if count else None
+        self.looks, self.look_s, self.longest_s, self.gauged_at = 0, 0.0, 0.0, moment
+        self.reads = {DODGE: [0, 0.0], GESTURE: [0, 0.0]}
+        return said
+
+    def _counted(self, what: str, enemies: int, began: float) -> None:
+        tally = self.reads[what]
+        tally[0] += enemies
+        tally[1] += perf_counter() - began
 
     def look(self, now: float) -> None:
         """One image: each enemy that begins a dodge or a gesture sped up, each that ends given back."""
@@ -145,7 +177,9 @@ class EnemyTime:
     def _doing(self, name: str, pawn: Any) -> str | None:
         """What speeds the enemy now: a dodge first, else a gesture, else None. With the dodges left to the game, for
         all or for this enemy (plain), a dodge within a gesture plays at the game's speed too (decision 121)."""
+        began = perf_counter()
         dodge = self._dodging(pawn)
+        self._counted(DODGE, 1, began)
         script = self.playing.get(name)
         stuck = self.stuck.get(name)
         if stuck == DODGE and not dodge or stuck not in (None, DODGE) and stuck != script:
@@ -175,6 +209,7 @@ class EnemyTime:
         self.stuck[name] = marker
 
     def _read_gestures(self) -> None:
+        began = perf_counter()
         looked = dict(islice(self.watched.items(), GESTURE_MOST))
         looked.update({name: held["pointer"] for name, held in self.held.items()})
         playing = {}
@@ -190,6 +225,7 @@ class EnemyTime:
             if script is not None:
                 playing[name] = script
         self.playing = playing
+        self._counted(GESTURE, len(looked), began)
 
     def _say_once(self, what: str, error: Exception) -> None:
         key = f"{what}:{type(error).__name__}"

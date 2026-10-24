@@ -15,7 +15,11 @@ boss's reinforcements (…BossAdd, whose total has no end) nor a chest (Lootable
 them. The game still lets only some 29 ordinary enemies live at once (game_camps.py): past it, a camp's enemies come
 as others die.
 
-A pass runs every EVERY_S and stops at READ_S, the rest taken at the next. A camp is held by its name, with a weak
+A pass runs every EVERY_S over the camps of the world in play (reads.search, decision 105: 0.03 to 0.06 ms where
+find_all took 9 to 13 ms, the Horde's way since trial 39), part by part: a part stops after PART_S, and the mode
+gives the next image the rest (play.py), PARTS_MOST parts at most, the rest at the next pass. Reaching a zone grew 84
+to 114 camps in one image, 36 to 46 ms (trials 171 and 110; audit of 24 October 2026, N2 and N4); only the first
+DETAILED camps grown in a game are written to the log, three lines each. A camp is held by its name, with a weak
 pointer: the game unloads the camps of a place the player left and loads them again under the same name, as new camps
 with the game's own numbers (game_camps.py), taken again then. At the stop each camp still there gets its numbers back;
 one still not born is reset again, to draw the game's own; one born keeps what it drew until the game loads the place
@@ -33,10 +37,15 @@ from .. import gbx_param, kinds
 from ..characters import camps, reads
 
 EVERY_S = 5.0
+SPAWNER_CLASS = "Spawner"
 # Farther than the 80 to 300 m at which the game wakes a camp (trial 6u): a camp is grown before the player comes near.
 RANGE_M = 1000.0
-READ_S = 0.05
+# A part of a pass holds the game this long at most; a pass makes this many parts at most.
+PART_S = 0.01
+PARTS_MOST = 30
 MAX_CAMPS = 3000
+# The camps grown written to the log, the first of each game, as the enemies' writes (speed.DETAILED).
+DETAILED = 20
 # game_camps.MAX_HELD's bound: trial 6u found 220 camps held at once, trial 31 224. The camps the game freed are
 # forgotten before this refuses: a long game meets many more (audit of 15 October 2026).
 MAX_HELD = 2000
@@ -75,6 +84,7 @@ class CampsGrown:
         self.held: dict[str, tuple[Any, dict[str, tuple[str, str]] | None]] = {}
         self.carry = 0.0
         self.read_at = -math.inf
+        self.detailed = 0
 
     def due(self, now: float) -> bool:
         return now - self.read_at >= EVERY_S
@@ -86,16 +96,18 @@ class CampsGrown:
         self.carry = wanted - made
         return made
 
-    def grow(self, places: list[tuple], now: float) -> dict:
-        """The camps within RANGE_M of any of the places (each player's, coop_guests.py) not held yet read, the
-        enemies' camps not born grown and reset; what it did."""
+    def grow(self, places: list[tuple], now: float, world: Any = None) -> dict:
+        """One part of a pass: the camps within RANGE_M of any of the places (each player's, coop_guests.py) not
+        held yet read, the enemies' camps not born grown and reset; what it did, and how the camps were searched.
+        world: an actor of the world in play, whose camps are searched (reads.search); every object without it."""
         self.read_at = now
         counts = dict.fromkeys(("grown", "same", "born", "not_enemies", "too_many", "empty", "refused", "far"), 0)
-        stopped, began = "complete", time.monotonic()
+        stopped, began = "complete", time.perf_counter()
         if not places:
-            return {**counts, "stopped": "no_place"}
-        for spawner in islice(unrealsdk.find_all("Spawner", exact=False), MAX_CAMPS):
-            if time.monotonic() - began > READ_S:
+            return {**counts, "stopped": "no_place", "search": None}
+        spawners, search = reads.search(SPAWNER_CLASS, world)
+        for spawner in islice(spawners, MAX_CAMPS):
+            if time.perf_counter() - began > PART_S:
                 stopped = "time_limit"
                 break
             name = reads.clean(getattr(spawner, "Name", ""))
@@ -110,8 +122,8 @@ class CampsGrown:
                 stopped = "held_limit"
                 break
             counts[self._take(name, spawner)] += 1
-        return {**counts, "held": len(self.held), "stopped": stopped,
-                "took_ms": round((time.monotonic() - began) * 1000.0, 1)}
+        return {**counts, "held": len(self.held), "stopped": stopped, "search": search,
+                "took_ms": round((time.perf_counter() - began) * 1000.0, 1)}
 
     def _forget_gone(self) -> bool:
         """The camps the game freed forgotten: one loaded again comes with the game's own numbers, nothing is owed to
@@ -160,15 +172,18 @@ class CampsGrown:
             return "same"
         owed: dict[str, tuple[str, str]] = {}
         self.held[name] = (pointer, owed)
-        self.announce("SpawnerStyle", camp=name, enemy=definition, factor=round(ratio, 3))
+        detailed = self.detailed < DETAILED
+        self.detailed += 1
+        self.announce("SpawnerStyle", log=detailed, camp=name, enemy=definition, factor=round(ratio, 3))
         for field in (main, *(field for field in fields if field != main)):
             result = gbx_param.change(style, field, lambda kind, value: _times(kind, value, ratio))
             if "new" in result and result["new"] != result["old"]:
                 owed[field] = (result["old"], result["new"])
-        self.announce("ResetSpawner", camp=name)
+        self.announce("ResetSpawner", log=detailed, camp=name)
         component.ResetSpawner(False)
-        self.note("normal_camp_grown", camp=name, enemy=definition, total=[total, component.GetNumTotalActors()],
-                  written=len(owed))
+        if detailed:
+            self.note("normal_camp_grown", camp=name, enemy=definition,
+                      total=[total, component.GetNumTotalActors()], written=len(owed))
         return "grown"
 
     def put_back(self) -> dict:

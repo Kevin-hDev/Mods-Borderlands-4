@@ -195,7 +195,7 @@ class Run:
         shown = self.bar.keep(pc, self._words()) if self.bar is not None else "written"
         if shown not in ("written", "shown"):
             self._once(f"bar:{shown}", "bar_failed", outcome=shown)
-        self.gauge.second((frame.now() - began) * 1000.0, len(self.horde.drawn()))
+        self.gauge.second((frame.now() - began) * 1000.0, horde=len(self.horde.drawn()))
         self.gauge.frames(reads.frame_count(), now)
         if self.gauge.status_due(now):
             self.beat.defer("status", self._status)
@@ -249,7 +249,7 @@ class Run:
         return frozenset(of.get(name) for name in self.horde.names())
 
     def _timed(self, name: str, began: float) -> None:
-        self.gauge.task(name, (frame.now() - began) * 1000.0, len(self.horde.drawn()))
+        self.gauge.task(name, (frame.now() - began) * 1000.0, horde=len(self.horde.drawn()))
 
     def end(self, reason: str) -> None:
         """Everything still lent given back, as the trials did; written down with the run's counts."""

@@ -427,12 +427,30 @@ team.join("Abomination", "OakSpawner_2", None)
 mate = team.follows[-1]
 check("a second one: its rank, its samples shifted from the first one's", mate.rank == 1
       and mate.catch.rank == 1 and mate.next == 101.0 + 1.0 / team_module.MOST)
+check("due at its next sample while it does not walk (audit of 24 October 2026, C1)", mate.due() == mate.next)
+mate.walker.walking, mate.between_at = True, 100.5
+check("walking: due at the check of its walk when it comes first", mate.due() == 100.5)
+mate.walker.walking = False
 for moment in (101.0, 101.125, 101.2):
     clock.now = moment
     team.beat()
 check("its place turned by its rank's step", abs(mate.walker.push.aim - (
       math.degrees(math.atan2(300.0, -1700.0)) + catch.SPREAD_DEG)) < 1e-6)
 team.stop("stopped")
+check("ended: never due", mate.due() == math.inf)
+
+_, _, timed, timed_team, timed_clock = begun()
+laps: list[str] = []
+timed.lap = laps.append
+timed_clock.now = timed.next - 0.5
+before = timed.beat()
+timed_clock.now = timed.next
+sampled = timed.beat()
+check("a beat says what it did for the team's gauge, a sample's steps told as each ends (trial 222)",
+      before is None and sampled == "sample"
+      and laps == ["sample_read", "sample_fight", "sample_catch", "sample_walk"])
+timed_team.stop("stopped")
+check("ended: a beat does nothing", timed.beat() is None)
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

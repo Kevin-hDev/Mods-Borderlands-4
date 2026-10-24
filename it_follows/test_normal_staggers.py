@@ -1,6 +1,7 @@
 """Tests the enemies' staggers made rarer (normal/staggers.py) on fake settings: at the game's own factor nothing found
 nor written; the loaded asset's two chances times the level's, announced before, the class's default object never
-touched; a pass that finds ours writes nothing again; an asset loaded again with the game's gets ours at the next pass;
+touched; a pass that finds ours writes nothing again; while the asset held lives no search is made again (audit of
+24 October 2026, N1), once it is gone the asset loaded again with the game's is found and gets ours at the next pass;
 the game's first read kept for the next play, which never takes ours for the game's; a play that finds ours left
 holds them and gives them back; at the end the game's given back, an asset changed since left, one gone said so;
 nothing written, "none"; the settings unfound said, not raised."""
@@ -44,6 +45,9 @@ def chances(asset: Settings) -> tuple:
 
 asset, default = Settings("HitReactionSettings"), Settings("Default__OakHitReactionSettings")
 state["all"]["OakHitReactionSettings"] = [default, asset]
+searched: list[str] = []
+finding = sys.modules["unrealsdk"].find_all
+sys.modules["unrealsdk"].find_all = lambda name, exact=True: (searched.append(name), finding(name, exact))[1]
 
 try:
     game = staggers.Staggers(1.0, announce)
@@ -54,11 +58,15 @@ try:
           and chances(default) == (0.4, 0.2) and kept == {"staggers": 0.5, "written": ["HitReactionSettings"]})
     check("announced before", calls == [("set_hit_reaction_chances", {"asset": "HitReactionSettings",
                                                                       "StaggerChance": 0.2, "LaunchChance": 0.1})])
-    check("a pass that finds ours writes nothing", play.keep() == {} and len(calls) == 1)
+    check("a pass that finds ours writes nothing, and searches nothing: the asset is held",
+          play.keep() == {} and len(calls) == 1 and searched == [staggers.ASSET_CLASS])
     reloaded = Settings("HitReactionSettings")
     state["all"]["OakHitReactionSettings"] = [default, reloaded]
-    check("an asset loaded again gets ours at the next pass", play.keep()["written"] == ["HitReactionSettings"]
-          and chances(reloaded) == (0.2, 0.1))
+    check("while the asset held lives, it is the one read", play.keep() == {} and chances(reloaded) == (0.4, 0.2)
+          and len(searched) == 1)
+    asset.freed = True
+    check("once gone, the asset loaded again is found and gets ours at the next pass",
+          play.keep()["written"] == ["HitReactionSettings"] and chances(reloaded) == (0.2, 0.1) and len(searched) == 2)
     check("at the end the game's given back", play.put_back() == {"HitReactionSettings": "given_back"}
           and chances(reloaded) == (0.4, 0.2) and calls[-1][1]["StaggerChance"] == 0.4)
     check("given back once: then none", play.put_back() == "none")

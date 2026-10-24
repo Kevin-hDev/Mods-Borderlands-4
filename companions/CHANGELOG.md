@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2 - 2026-10-24
+
+- Performance: your companions only work when there is something to do, and stopping the team no longer freezes the game for a moment.
+- Performance: the mod asks less of the game at each frame.
+- The Companions Paks file has not changed.
+- If you also have It Follows, update it to 1.0.13: with both mods enabled, It Follows is the one that brings the team.
+
 ## 1.0.1 - 2026-10-23
 
 - Your team's Vault Hunters now show their name under their health bar when you aim at them, in green like the game's allies. Update the Companions Paks file too.

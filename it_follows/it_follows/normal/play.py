@@ -18,31 +18,35 @@ to the damage taken, on top of the level's.
 
 Each second (the mode's beat) does what is due: the camps every camps_grown.EVERY_S, the census every enemies.EVERY_S
 but never in the camps' second, Predator's and God's broken shields refilled when their time comes, the damage taken
-kept.
+kept. A pass of the camps that stops at its time gives the rest to the next image (the beat's defer), part by part;
+the census's image holds its search, the kills counted and the lost, and the enemies met and kept follow part by
+part the same way (arrivals.py, trial 221).
 Both every 5 s, the camps and the census fell in the same second, which held the game 35 to 43 ms in trials 28 to 32,
 against some 25 ms for the camps alone (audit of 15 October 2026); the census
 waits a second then, and they fall a second apart from then on. The camps go first: they are grown before their
-enemies are born. A second that holds the game longer than SLOW_S is written down, and a status line every
-STATUS_EVERY_S says what the mode holds (spec, section 4, « Les traces »).
+enemies are born. A second that holds the game longer than run_gauge.SLOW_S is written down, and a status line every
+run_gauge.STATUS_EVERY_S says what the mode holds (spec, section 4, « Les traces ») and what it costs, as a run's
+does: the images a second, its beat's calls, each task's longest, the census's search and the looks at the dodges
+(audit of 24 October 2026).
 """
 
 from typing import Any, Callable
 
 import unrealsdk
 
-from .. import damage_taken, frame, report
+from .. import damage_taken, frame, report, run_gauge
 from ..characters import reads
 from . import camps_grown, coop_guests, coop_messages, enemies, enemy_time, hardcore, melee_rest, pursuit, rewards
 from . import staggers
 
-STATUS_EVERY_S = 30.0
-SLOW_S = 0.5
+SLOW_EVENTS = ("normal_slow_second", "normal_slow_task")
 
 
 class Play:
-    """settings: normal.options.Settings; dodges: dodge_rate.Dodges, the mode's; fail(reason) ends the mode."""
+    """settings: normal.options.Settings; dodges: dodge_rate.Dodges, the mode's; fail(reason) ends the mode; beat:
+    the mode's frame.Beat, which puts tasks off to later images and counts its calls."""
 
-    def __init__(self, settings: Any, player: Any, dodges: Any, fail: Callable[[str], None]) -> None:
+    def __init__(self, settings: Any, player: Any, dodges: Any, fail: Callable[[str], None], beat: Any) -> None:
         self.level = level = settings.level
         self.hard = hardcore.factor()
         self.player = unrealsdk.unreal.WeakPointer(player)
@@ -58,11 +62,14 @@ class Play:
         self.link = coop_messages.Link(host=True)
         self.watch = enemy_time.EnemyTime(report.note, level.dodge_speed if settings.fast_dodges else None,
                                           level.gestures, fail)
-        self.dodges = dodges
+        self.dodges, self.beat = dodges, beat
         self.camps_stopped = "none"
-        self.next_status = 0.0
-        self.slowest_ms = 0.0
+        self.gauge = run_gauge.Gauge(report.note, 0.0, SLOW_EVENTS)
         self.said: set[str] = set()
+        self.over = False
+        # What the census's image found, until its parts are done and its line said; the parts it took.
+        self.found: dict | None = None
+        self.parts = 0
 
     def begin(self, now: float) -> None:
         raised = self.taken.start(self.player())
@@ -74,7 +81,8 @@ class Play:
             report.note("normal_staggers", **rarer)
         self.watch.start()
         self.link.start()
-        self.next_status = now + STATUS_EVERY_S
+        self.gauge = run_gauge.Gauge(report.note, now, SLOW_EVENTS)
+        self.gauge.frames(reads.frame_count(), now)
         self.tick(now)
 
     def tick(self, now: float) -> None:
@@ -83,7 +91,6 @@ class Play:
         if player is None:
             return
         began = frame.now()
-        here = reads.point(player)
         heard = self.guests.heard(self.link.take())
         if heard:
             report.note("normal_guest_hardcore", **heard)
@@ -91,28 +98,10 @@ class Play:
             joined = self.guests.look(player, now)
             if joined:
                 report.note("normal_guests", **joined)
-        places = ([here] if here is not None else []) + self.guests.places()
         if self.camps.due(now):
-            grown = self.camps.grow(places, now)
-            self.camps_stopped = grown["stopped"]
-            if grown["grown"] or grown["refused"] or grown["too_many"]:
-                report.note("normal_camps", **grown)
+            self._camps(now)
         elif self.enemies.due(now):
-            looked = self.enemies.look(player, now)
-            if looked:
-                report.note("normal_enemies", **looked)
-                self._count(looked.get("kills", 0))
-                told = self.guests.kills(looked.get("by_others", {}))
-                if told:
-                    report.note("normal_guest_kills", told=told)
-            plain = self.enemies.nearest(self.guests.places(), coop_guests.PLAIN_M, enemies.MOST)
-            self.watch.follow(self.enemies.nearest(places), frozenset(plain))
-            rested = self.melee.keep()
-            if rested:
-                report.note("normal_melee_rest", **rested)
-            rarer = self.staggers.keep()
-            if rarer:
-                report.note("normal_staggers", **rarer)
+            self._census(player, now)
         self._harden(player)
         shields = self.enemies.keep_shields(now)
         if shields:
@@ -125,24 +114,104 @@ class Play:
             if f"guest:{name}:{done['taken']}" not in self.said:
                 self.said.add(f"guest:{name}:{done['taken']}")
                 report.note("normal_guest_taken_kept", guest=name, **done)
-        took_ms = (frame.now() - began) * 1000.0
-        self.slowest_ms = max(self.slowest_ms, took_ms)
-        if took_ms > SLOW_S * 1000.0:
-            report.note("normal_slow_second", took_ms=round(took_ms, 1), enemies=len(self.enemies.met))
-        if now >= self.next_status:
-            self.next_status = now + STATUS_EVERY_S
-            hardcore.save("status")
-            report.note("normal_status", enemies=len(self.enemies.met), guests=len(self.guests.held),
-                        watched=len(self.watch.watched),
-                        dodges_sped=self.watch.counts[enemy_time.DODGE],
-                        gestures_sped=self.watch.counts[enemy_time.GESTURE], camps_held=len(self.camps.held),
-                        camps_grown=sum(1 for _, owed in self.camps.held.values() if owed),
-                        camps_stopped=self.camps_stopped, families=len(self.dodges.files),
-                        zones=self.chase.widened(), hardcore=hardcore.state(), percent=hardcore.percent(),
-                        shields=len(self.enemies.shields.given) if self.enemies.shields is not None else None,
-                        aimed=len(self.enemies.aim.held),
-                        slowest_ms=round(self.slowest_ms, 1))
-            self.slowest_ms = 0.0
+        self.gauge.second((frame.now() - began) * 1000.0, enemies=len(self.enemies.met))
+        self.gauge.frames(reads.frame_count(), now)
+        if self.gauge.status_due(now):
+            self._status()
+
+    def _places(self, player: Any) -> list[tuple]:
+        """Each player's place: the host's, then each guest's (coop_guests.py)."""
+        here = reads.point(player)
+        return ([here] if here is not None else []) + self.guests.places()
+
+    def _camps(self, now: float, part: int = 0) -> None:
+        """One part of the camps' pass, searched in the player's world; one that stopped at its time leaves the rest
+        to the next image, camps_grown.PARTS_MOST parts at most. A part left waiting once the game played is over
+        does nothing: its camps were given back, none must be grown again with no one to give them back."""
+        player = self.player()
+        if player is None or self.over:
+            return
+        began = frame.now()
+        grown = self.camps.grow(self._places(player), now, player)
+        self.camps_stopped = grown["stopped"]
+        if grown["grown"] or grown["refused"] or grown["too_many"] or grown["search"] not in ("actors", None):
+            report.note("normal_camps", part=part, **grown)
+        self._timed("camps", began)
+        if grown["stopped"] == "time_limit" and part + 1 < camps_grown.PARTS_MOST:
+            self.beat.defer("camps", lambda later: self._camps(later, part + 1))
+
+    def _census(self, player: Any, now: float) -> None:
+        """The census's image: the enemies lost, the kills counted, the dodges and gestures looked at from now on, the
+        bandits' rest and the staggers kept; each timed. The new met and the held kept follow, part by part."""
+        began = frame.now()
+        self._tell(cut="census")
+        found = self.enemies.look(player, now)
+        self.gauge.task("census_search", self.enemies.scan_ms, enemies=len(self.enemies.met))
+        self._count(found.get("kills", 0))
+        told = self.guests.kills(found.get("by_others", {}))
+        if told:
+            report.note("normal_guest_kills", told=told)
+        self.found, self.parts = found, 0
+        self._watch(player)
+        began = self._timed("census", began)
+        rested = self.melee.keep()
+        if rested:
+            report.note("normal_melee_rest", **rested)
+        began = self._timed("melee_rest", began)
+        rarer = self.staggers.keep()
+        if rarer:
+            report.note("normal_staggers", **rarer)
+        self._timed("staggers", began)
+        self.beat.defer("census", self._arrive)
+
+    def _arrive(self, now: float) -> None:
+        """One part of what the census left (arrivals.py), timed; after the last, the census's line and the watch told
+        of the enemies met. A part left waiting once the game played is over does nothing."""
+        player = self.player()
+        if player is None or self.over or self.found is None:
+            return
+        began = frame.now()
+        self.enemies.arrivals.part()
+        self.parts += 1
+        self._timed("census_part", began)
+        if self.enemies.arrivals.pending():
+            self.beat.defer("census", self._arrive)
+            return
+        self._tell()
+        self._watch(player)
+
+    def _tell(self, cut: str | None = None) -> None:
+        """The census's line, once: cut says what came before its parts were done, the next census or the end."""
+        found, self.found = self.found, None
+        if found is None:
+            return
+        line = self.enemies.arrived(found)
+        if line:
+            report.note("normal_enemies", parts=self.parts, **line, **({"cut": cut} if cut else {}))
+
+    def _watch(self, player: Any) -> None:
+        """The dodges and gestures of the nearest enemies met looked at from now on, those near a guest left to the
+        game."""
+        plain = self.enemies.nearest(self.guests.places(), coop_guests.PLAIN_M, enemies.MOST)
+        self.watch.follow(self.enemies.nearest(self._places(player)), frozenset(plain))
+
+    def _timed(self, task: str, began: float) -> float:
+        """The task's time since began given to the gauge; the moment it ended."""
+        ended = frame.now()
+        self.gauge.task(task, (ended - began) * 1000.0, enemies=len(self.enemies.met))
+        return ended
+
+    def _status(self) -> None:
+        hardcore.save("status")
+        report.note("normal_status", enemies=len(self.enemies.met), guests=len(self.guests.held),
+                    watched=len(self.watch.watched), dodges_sped=self.watch.counts[enemy_time.DODGE],
+                    gestures_sped=self.watch.counts[enemy_time.GESTURE], camps_held=len(self.camps.held),
+                    camps_grown=sum(1 for _, owed in self.camps.held.values() if owed),
+                    camps_stopped=self.camps_stopped, families=len(self.dodges.files),
+                    zones=self.chase.widened(), hardcore=hardcore.state(), percent=hardcore.percent(),
+                    shields=len(self.enemies.shields.given) if self.enemies.shields is not None else None,
+                    aimed=len(self.enemies.aim.held), watch=self.watch.gauge(),
+                    kills_seen=self.enemies.reserve.said(), **self.beat.gauge(), **self.gauge.spent())
 
     def _count(self, dead: int) -> None:
         step = hardcore.count(dead)
@@ -160,6 +229,8 @@ class Play:
 
     def end(self, reason: str) -> None:
         """Everything the game still holds given back, written down in one line; the Hardcore's kills written."""
+        self.over = True
+        self._tell(cut="end")
         sped = self.watch.stop()
         given = {"enemies": self.enemies.end(), "zones": self.chase.narrow(),
                  "camps": self.camps.put_back(), "taken": self.taken.put_back(self.player()),

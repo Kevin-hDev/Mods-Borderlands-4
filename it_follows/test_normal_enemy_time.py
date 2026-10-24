@@ -1,4 +1,5 @@
-"""Tests the enemies' own time (normal/enemy_time.py): hooked under its own name, one look every FRAME_GAP_S at most;
+"""Tests the enemies' own time (normal/enemy_time.py): set under its own name on the package's one hook on the
+animation update, one look every FRAME_GAP_S at most, the looks counted for the status line;
 a dodge sped up by the level's factor while it lasts, its own time given back at its end; given back after LONGEST_S
 even if the state still says dodging, and not taken again until it says otherwise; an enemy out of the list still
 given back; an enemy gone forgotten; MAX_HELD at once; a time that cannot be read said once and not retried in the
@@ -24,6 +25,7 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 from it_follows import frame  # noqa: E402
+from it_follows.characters import animation_hook  # noqa: E402
 from it_follows.normal import enemy_time, gestures  # noqa: E402
 
 fails: list[str] = []
@@ -92,21 +94,30 @@ try:
     failures: list[str] = []
     speed = enemy_time.EnemyTime(lambda event, **f: lines.append((event, f)), 3.0, None, failures.append)
     speed.start()
-    check("hooked under its own name", enemy_time.IDENTIFIER in state["hooks"]
+    check("set under its own name on the package's one hook", list(animation_hook.beats()) == [enemy_time.IDENTIFIER]
+          and animation_hook.IDENTIFIER in state["hooks"]
           and enemy_time.IDENTIFIER not in ("it_follows:run", "it_follows:normal"))
     psycho, bandit = pawn("Char_Psycho"), pawn("Char_Bandit")
     speed.follow(weak(psycho, bandit))
     psycho.AIDodgeState.ActiveDodge.Action = "Dodge_Left"
-    state["hooks"][enemy_time.IDENTIFIER].fn()
+    animation_hook.beats()[enemy_time.IDENTIFIER]()
     check("a dodge sped up three times", near(time_of(psycho), (3.0, 2.4)) and time_of(bandit) == (1.0, 0.8)
           and speed.counts["dodge"] == 1)
     clock["now"] += 0.004
     psycho.AIDodgeState.ActiveDodge.Action = None
-    state["hooks"][enemy_time.IDENTIFIER].fn()
+    animation_hook.beats()[enemy_time.IDENTIFIER]()
     check("within FRAME_GAP_S no look", time_of(psycho)[0] == 3.0)
     clock["now"] += 0.01
-    state["hooks"][enemy_time.IDENTIFIER].fn()
+    animation_hook.beats()[enemy_time.IDENTIFIER]()
     check("its end: its own time given back", time_of(psycho) == (1.0, 0.8) and speed.held == {})
+    looked = speed.gauge()
+    check("the looks counted for the status line, then afresh (audit of 24 October 2026)",
+          looked["looks_s"] == round(2 / 0.014, 1) and looked["look_us"] is not None
+          and looked["look_longest_ms"] >= 0.0 and speed.looks == 0 and speed.gauge()["look_us"] is None)
+    check("within them the enemies read for a dodge and for a gesture, apart (trial 221)",
+          looked["dodge_reads_s"] == round(4 / 0.014, 1) and looked["dodge_read_us"] is not None
+          and looked["gesture_reads_s"] == 0.0 and looked["gesture_read_us"] is None
+          and speed.gauge()["dodge_read_us"] is None)
     plays(psycho, "TRAnim_Psycho_MeleeSwing_Script_Instanced_C")
     speed.look(150.0)
     check("without a gesture factor, a gesture is left to the game", time_of(psycho) == (1.0, 0.8))
@@ -155,7 +166,7 @@ try:
     stopped = speed.stop()
     check("the stop gives every time back and unhooks", stopped["hook"] == "removed" and speed.held == {}
           and all(time_of(enemy) == (1.0, 0.8) for enemy in crowd)
-          and enemy_time.IDENTIFIER not in state["hooks"] and stopped["dodges"] == speed.counts["dodge"])
+          and enemy_time.IDENTIFIER not in animation_hook.beats() and stopped["dodges"] == speed.counts["dodge"])
     check("a second stop: inactive", speed.stop()["hook"] == "inactive")
 
     lines.clear()
@@ -180,6 +191,8 @@ try:
     check("the gesture's end not seen before GESTURE_GAP_S", near(time_of(psycho), (1.2, 0.96)))
     both.look(300.03 + enemy_time.GESTURE_GAP_S)
     check("then its own time given back", time_of(psycho) == (1.0, 0.8) and both.held == {})
+    check("the enemies read for a gesture counted at each read only, for a dodge at each look",
+          both.reads["gesture"][0] == 4 and both.reads["dodge"][0] == 10)
     plays(psycho, "TLeap_Psycho_LeapAttack_Script_Instanced_C")
     plays(bandit, "TLeap_Psycho_LeapAttack_Script_Instanced_C")
     both.look(301.0)
@@ -281,7 +294,7 @@ try:
     broken.start()
     broken.watched = {"Char_Broken": None}
     clock["now"] += 1.0
-    state["hooks"][enemy_time.IDENTIFIER].fn()
+    animation_hook.beats()[enemy_time.IDENTIFIER]()
     check("a look that raises ends the mode", failures == ["time_error:TypeError"])
     broken.stop()
     away = enemy_time.EnemyTime(lambda event, **f: None, 3.0, None, failures.append)
@@ -290,12 +303,12 @@ try:
     away.follow(weak(jumper))
     jumper.AIDodgeState.ActiveDodge.Action = "Dodge_Left"
     clock["now"] += 1.0
-    worker = threading.Thread(target=state["hooks"][enemy_time.IDENTIFIER].fn)
+    worker = threading.Thread(target=animation_hook.beats()[enemy_time.IDENTIFIER])
     worker.start()
     worker.join(5)
     check("a call on another thread than the game's: no enemy touched (trial 206)",
           time_of(jumper) == (1.0, 0.8) and away.counts["dodge"] == 0)
-    state["hooks"][enemy_time.IDENTIFIER].fn()
+    animation_hook.beats()[enemy_time.IDENTIFIER]()
     check("the next on the game's thread: the dodge sped up", near(time_of(jumper), (3.0, 2.4)))
     away.stop()
 except Exception as error:

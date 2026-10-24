@@ -15,7 +15,7 @@ from .characters.companions import owners, team as companions_team
 from .normal import hardcore, options as normal_options
 from .settings_persistence import AtomicMod
 
-__version__ = "1.0.12"
+__version__ = "1.0.13"
 __author__ = "kevin-hDev"
 
 

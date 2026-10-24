@@ -18,6 +18,7 @@ of 41 read no health pool at the start (tough.py, cause unknown), and went on wi
 health is tried again at the next HARDEN_TRIES samples, and the outcome written; a write that failed, too.
 """
 
+import math
 from typing import Any, Callable
 
 import unrealsdk
@@ -86,6 +87,8 @@ class Follow:
         self.between_at = self.started
         self.samples = 0
         self.done = False
+        # Told each step of a sample as it ends, by its name: the team's gauge sets it (team_gauge.part).
+        self.lap: Callable[[str], None] = lambda name: None
 
     def begin(self, pc: Any) -> dict:
         """Its zone widened, its speed raised, its health and shield set as its mod gives them, its staggers locked:
@@ -109,18 +112,27 @@ class Follow:
         report.note("companion_tough", character=self.name, tries=HARDEN_TRIES - self.harden_left, tough=toughened)
         self.harden_left = 0
 
-    def beat(self) -> None:
+    def due(self) -> float:
+        """When its next step comes: its sample, or the check of its walk between samples while it walks."""
         if self.done:
-            return
+            return math.inf
+        return min(self.next, self.between_at) if self.walker.walking else self.next
+
+    def beat(self) -> str | None:
+        """What it did, for the team's gauge: its sample, a push, a look at its walk's arrival, or nothing."""
+        if self.done:
+            return None
         moment = self.clock()
         if moment < self.next:
             if self.walker.walking and moment >= self.between_at:
                 pushed = self.walker.push.active
                 self.between_at = moment + (push.PUSH_S if pushed else walk.ARRIVAL_EVERY_S)
                 self.guarded(self.between)
-            return
+                return "push" if pushed else "arrive"
+            return None
         self.next = moment + EVERY_S
         self.guarded(lambda: self.sample(moment))
+        return "sample"
 
     def guarded(self, step: Callable[[], None]) -> None:
         """A step of the follow; one that fails is said and ends the follow."""
@@ -161,17 +173,21 @@ class Follow:
         # His character's mode even while he drives: it says MOVE_None in the saddle, the vehicle has none to read.
         character = getattr(pc, "OakCharacter", None) or goal
         mode, yaw = world.mode(character), catch.facing(goal)
+        self.lap("sample_read")
         self.fight.keep(fight.characters(pc), character, here, at)
+        self.lap("sample_fight")
         caught = self.catch.keep(here, yaw, mode, actor_m, now, self.fight.fighting)
         if caught == "near":
             caught = self.stuck.unstick(self.walker.live(), self.fight.fighting, at, now,
                                         lambda: self.catch.unstick(here, yaw, mode, now))
         if caught.endswith("teleported"):
             actor_m = world.metres(world.place(actor), here)
+        self.lap("sample_catch")
         if self.fight.fighting and actor_m is not None and actor_m <= LEASH_M:
             self.walker.stop()
         else:
             self.walker.keep(actor_m, goal, pc, now, here, at)
+        self.lap("sample_walk")
         self.pace.keep(self.walker.walking, actor_m, self.fight.fighting)
         self.tough.keep(now)
         if self.zone.in_row >= TRIES:

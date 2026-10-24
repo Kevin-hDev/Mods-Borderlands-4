@@ -77,13 +77,13 @@ from companions.characters.companions import owners, team as team_module  # noqa
 
 mod = companions.mod
 check("a first install: switched on, as the SDK would leave a mod without settings file off, joined the owners",
-      mod.is_enabled and notes("enabled")[-1]["version"] == "1.0.1" and owners.leads() == "companions")
+      mod.is_enabled and notes("enabled")[-1]["version"] == "1.0.2" and owners.leads() == "companions")
 check("the keys the settings file gives: handed to the SDK's keybinds at load", open_key.bind.key == "F11"
       and team_key.bind.key == "F12")
 open_key.option.value, team_key.option.value = open_key.DEFAULT, team_key.DEFAULT
 open_key.align()
 team_key.align()
-check("built as Companions 1.0.1, with its settings", mod.name == "Companions" and companions.__version__ == "1.0.1"
+check("built as Companions 1.0.2, with its settings", mod.name == "Companions" and companions.__version__ == "1.0.2"
       and mod.options == [*settings.TEAM, settings.bars, *settings.HIDDEN, *panel_preferences.ALL,
                           open_key.option, team_key.option])
 check("the keys: none to open the window at first (decision 71), F8 for the team, each bound by the SDK",
@@ -97,7 +97,7 @@ game = fake.Game(state)
 owners.reset_for_tests()
 companions._on_enable()
 check("switched on: said, joined the team's owners, not first, leading alone", notes("enabled")[-1]["version"] ==
-      "1.0.1" and owners.leads() == "companions" and notes("team_owner_joined")[-1]["first"] is False)
+      "1.0.2" and owners.leads() == "companions" and notes("team_owner_joined")[-1]["first"] is False)
 check("its team starts, then stops", session.start_team(["Crankus", "Vex"]) == "started"
       and session.stop_team() == "stopped")
 session.start_team(["Crankus"])

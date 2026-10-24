@@ -23,6 +23,7 @@ import census_fixture  # noqa: E402
 import aim_fixture  # noqa: E402
 import param_fixture as fx  # noqa: E402
 from it_follows import gbx_param, report  # noqa: E402
+from it_follows.characters import animation_hook  # noqa: E402
 from it_follows.normal import enemy_time, levels, melee_rest, mode as mode_module, options, rewards  # noqa: E402
 
 fails: list[str] = []
@@ -133,7 +134,7 @@ try:
     settings = options.Settings(levels.LEVELS["Senior"], True)
     mode = mode_module.Mode(settings, failures.append)
     check("without a game, turned on: it waits", mode.begin(10.0) == "waiting" and not mode.playing())
-    check("its beat hooked under its own name", mode_module.IDENTIFIER in state["hooks"]
+    check("its beat hooked under its own name", mode_module.IDENTIFIER in animation_hook.beats()
           and mode_module.IDENTIFIER != "it_follows:run")
     for now in (11.0, 12.0, 13.0):
         mode.tick(now)
@@ -159,9 +160,14 @@ try:
           started[2]["reads"] == {"Att_CombatXP_Multiplier": 1.15, "att_pickupammo_multiplier": 1.2,
                                   "Att_PickupCash_Multiplier": 1.15})
     mode.tick(18.0)
+    in_image = [line["event"] for line in notes() if line["event"] != "call"]
+    ran = 0
+    while "census" in mode.beat.later and ran < 10:
+        mode.beat.later.pop("census")(18.01 + ran / 100.0)
+        ran += 1
     looked = notes()
-    check("the census the second after, never in the camps' second", [line["event"] for line in looked
-                                                                      if line["event"] != "call"]
+    check("the census the second after, never in the camps' second; the enemy met on the images that follow, then "
+          "the line", in_image == [] and ran == 1 and [line["event"] for line in looked if line["event"] != "call"]
           == ["normal_dodges_opened", "health_raised", "normal_enemies"])
     check("the level's shields given (Senior: always); the game's own kept", [line.get("shields") for line in looked
                                                                              if line["event"] == "normal_enemies"]
@@ -174,7 +180,7 @@ try:
           and enemy.zone.settings.CombatTerritory.Radius == 35000.0)
     check("its aim: Senior's spread x0.88, bullets x1.08", enemy.gun.values()["aiaccuracy"] == [6.6, 6.6]
           and enemy.gun.values()["aiprojectilespeed"] == [0.486, 0.486])
-    check("its dodges and gestures looked at each image", enemy_time.IDENTIFIER in state["hooks"])
+    check("its dodges and gestures looked at each image", enemy_time.IDENTIFIER in animation_hook.beats())
     mode.tick(19.0)
     check("a second while playing with nothing due writes nothing", notes() == [])
     player.freed = True
@@ -182,7 +188,7 @@ try:
     left = [line for line in notes() if line["event"] != "call"]
     check("the game left: said, given back, it waits again", not mode.playing()
           and [line["event"] for line in left] == ["normal_left", "normal_given_back"]
-          and left[1]["rewards"] == "gone" and enemy_time.IDENTIFIER not in state["hooks"]
+          and left[1]["rewards"] == "gone" and enemy_time.IDENTIFIER not in animation_hook.beats()
           and enemy.CharacterMovement.MaxGroundSpeedScale.Value == 1.0
           and gbx_param.read(enemy.AIDodgeState.DodgeBullet, "Chance")[1] == 0.15
           and enemy.gun.values()["aiaccuracy"] == [7.5, 7.5]
@@ -195,7 +201,7 @@ try:
     mode.end("stopped")
     ended = [line for line in notes() if line["event"] != "call"]
     check("turned off: the beat unhooked, the game given back, then the dodge files",
-          mode_module.IDENTIFIER not in state["hooks"] and [line["event"] for line in ended]
+          mode_module.IDENTIFIER not in animation_hook.beats() and [line["event"] for line in ended]
           == ["normal_left", "normal_given_back", "normal_off"]
           and gbx_param.read(family.DodgeBullet, "Chance")[1] == 0.15 and mode.dodges.files == {})
     check("turned off: the rewards taken back by their opposite, read back at 1",

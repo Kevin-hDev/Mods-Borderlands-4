@@ -1,10 +1,10 @@
-"""Tests the run's heartbeat: the animation update hooked after each call under the run's own name; a tick a second
-at most, the first a second after the start; an error in a tick stops the run with its kind; the hook removed at the
-stop, a second stop touching nothing, a removal that fails said; a beat given its own name (the normal mode's) hooked
-under it. Work put off: one task an image, the first once the character that gave the tick is updated again (or after
-LATER_MOST_S), in the order put off, a name never waiting twice, an error stopping the run, nothing run once stopped;
-the hook's calls a second counted, with the µs a call with nothing to do took in the beat, ticks and tasks put off
-left out (audit of 16 October 2026, A11)."""
+"""Tests the run's heartbeat: its place on the package's one hook on the animation update (animation_hook.py) under the
+run's own name; a tick a second at most, the first a second after the start; an error in a tick stops the run with its
+kind; its place given up at the stop, the SDK's hook with it, a second stop touching nothing, a removal that fails said;
+a beat given its own name (the normal mode's) set under it. Work put off: one task an image, the first once the
+character that gave the tick is updated again (or after LATER_MOST_S), in the order put off, a name never waiting twice,
+an error stopping the run, nothing run once stopped; the hook's calls a second counted, with the µs a call with nothing
+to do took in the beat, ticks and tasks put off left out (audit of 16 October 2026, A11)."""
 
 import pathlib
 import sys
@@ -19,11 +19,12 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 from it_follows import frame  # noqa: E402
+from it_follows.characters import animation_hook, beat_gauge  # noqa: E402
 
 fails: list[str] = []
 clock = [100.0]
 frame.time = types.SimpleNamespace(monotonic=lambda: clock[0])
-real_perf_counter = frame.perf_counter
+real_perf_counter = beat_gauge.perf_counter
 
 
 def check(label: str, condition: bool) -> None:
@@ -47,7 +48,7 @@ PLAYER, ENEMY = Anim(1), Anim(2)
 
 def call(at: float, obj: object = None) -> None:
     clock[0] = at
-    hooked = state["hooks"].get(frame.IDENTIFIER)
+    hooked = state["hooks"].get(animation_hook.IDENTIFIER)
     if hooked is not None:
         hooked.fn(obj, None, None, None)
 
@@ -57,8 +58,8 @@ try:
     failures: list[str] = []
     beat = frame.Beat(ticks.append, failures.append)
     beat.start()
-    check("the animation update is hooked under the run's own name", frame.IDENTIFIER in state["hooks"]
-          and state["hooks"][frame.IDENTIFIER].enabled)
+    check("its place on the animation update under the run's own name, the SDK's hook set",
+          list(animation_hook.beats()) == [frame.IDENTIFIER] and state["hooks"][animation_hook.IDENTIFIER].enabled)
     for at in (100.0, 100.5, 100.99):
         call(at)
     check("no tick before a second", ticks == [])
@@ -72,7 +73,8 @@ try:
     beat.tick = broken
     call(106.0)
     check("an error in a tick stops the run with its kind", failures == ["error:ValueError"])
-    check("the stop removes the hook", beat.stop() == "removed" and frame.IDENTIFIER not in state["hooks"])
+    check("the stop gives its place up, the SDK's hook with it", beat.stop() == "removed"
+          and not animation_hook.beats() and animation_hook.IDENTIFIER not in state["hooks"])
     call(110.0)
     check("no tick once stopped", ticks == [101.0, 102.0, 104.7])
     check("a second stop touches nothing", beat.stop() == "inactive")
@@ -82,14 +84,16 @@ try:
     def refuse() -> None:
         raise RuntimeError("cannot")
 
-    stuck.hook.disable = refuse
+    handle = stuck.hook
+    left = handle.disable
+    handle.disable = refuse
     check("a removal that fails says so", stuck.stop() == "remove_failed")
-    state["hooks"].clear()
+    left()
     other = frame.Beat(ticks.append, failures.append, "it_follows:normal")
     other.start()
-    check("a beat given its own name hooks under it, never under the run's",
-          "it_follows:normal" in state["hooks"] and frame.IDENTIFIER not in state["hooks"]
-          and other.stop() == "removed" and not state["hooks"])
+    check("a beat given its own name set under it, never under the run's",
+          list(animation_hook.beats()) == ["it_follows:normal"] and other.stop() == "removed"
+          and not animation_hook.beats() and not state["hooks"])
 
     done: list[tuple] = []
     def second_put_off(at: float) -> None:
@@ -136,14 +140,14 @@ try:
         precise[0] += 0.000002
         return precise[0]
 
-    frame.perf_counter = two_us
+    beat_gauge.perf_counter = two_us
     for step in range(90):
         call(300.0 + step / 100.0, ENEMY)
     clock[0] = 300.9
     said = counted.gauge()
     check("the hook's calls a second counted, and the µs a call with nothing to do took, then counted again from "
-          "nothing", said["hook_calls_s"] == 100.0 and said["hook_idle_us"] == 2.0 and counted.calls == 0
-          and counted.idle_calls == 0 and counted.idle_s == 0.0)
+          "nothing", said["hook_calls_s"] == 100.0 and said["hook_idle_us"] == 2.0 and counted.count.calls == 0
+          and counted.count.idle_calls == 0 and counted.count.idle_s == 0.0)
     clock[0] = 302.0
     call(302.0, ENEMY)
     counted.defer("task", lambda at: None)
@@ -151,7 +155,7 @@ try:
     said = counted.gauge()
     check("a tick and a task put off are not calls with nothing to do",
           said["hook_idle_us"] is None and said["hook_calls_s"] > 0.0)
-    frame.perf_counter = real_perf_counter
+    beat_gauge.perf_counter = real_perf_counter
     counted.stop()
     away: list[float] = []
     guarded = frame.Beat(away.append, failures.append)

@@ -116,6 +116,15 @@ class Respawns:
     def pending(self) -> bool:
         return bool(self.waiting)
 
+    def due(self) -> float:
+        """When beat has something to do next: a turn each EVERY_S while one waits, the look for those asked
+        every FIND_EVERY_S."""
+        if not self.waiting:
+            return math.inf
+        if any(one["spawner"] is not None for one in self.waiting):
+            return min(self.next, self.next_find)
+        return self.next
+
     def asked(self) -> list[tuple[str, str, float]]:
         """Those asked of a spawner and not found yet: (companion, spawner, when it was asked)."""
         return [(one["companion"], one["spawner"], one["asked"]) for one in self.waiting

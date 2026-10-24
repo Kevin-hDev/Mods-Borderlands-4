@@ -1,11 +1,11 @@
 """Tests the team with both mods' copies of this package loaded at once, as in a game with It Follows and Companions
-installed (decision 69 of docs/renforts; review of 23 October 2026: the lead was only tested piece by piece). Each
-copy under its mod's package, its own hook, one state of owners; each mod's session stood for by an owner that keeps
-one team at most and stops it when the team asks. Companions alone: its team starts. It Follows switched on and its
-team started: Companions' stopped at once, before It Follows' hook is set, one team's hook left; Companions refused
-then. Companions' team running and It Follows switched on without a team: Companions' stopped at its next beat.
-It Follows switched off: Companions starts again. Whatever order the two joined in, It Follows leads. No hunter in
-the game: the companions wait, only the lead is played."""
+installed (decision 69 of docs/renforts; review of 23 October 2026: the lead was only tested piece by piece). Each copy
+under its mod's package, its own hook on the animation update with its team's beat on it, one state of owners; each
+mod's session stood for by an owner that keeps one team at most and stops it when the team asks. Companions alone: its
+team starts. It Follows switched on and its team started: Companions' stopped at once, before It Follows' beat is set,
+one team's beat left; Companions refused then. Companions' team running and It Follows switched on without a team:
+Companions' stopped at its next beat. It Follows switched off: Companions starts again. Whatever order the two joined
+in, It Follows leads. No hunter in the game: the companions wait, only the lead is played."""
 
 import pathlib
 import sys
@@ -27,6 +27,8 @@ for mod in ("it_follows", "companions"):
 
 from it_follows.characters.companions import owners as follows_owners, team as follows_team  # noqa: E402
 from companions.characters.companions import owners as own_owners, team as own_team  # noqa: E402
+from it_follows.characters import animation_hook as follows_hook  # noqa: E402
+from companions.characters import animation_hook as own_hook  # noqa: E402
 
 fails: list[str] = []
 
@@ -66,12 +68,13 @@ class Owner:
     def stop(self, why: str = "stopped") -> None:
         team, self.team = self.team, None
         if team is not None:
-            self.order.append(("stopped", why, sorted(key for key in state["hooks"] if key.endswith(":companions"))))
+            self.order.append(("stopped", why, hooks()))
             team.stop(why)
 
 
 def hooks() -> list[str]:
-    return sorted(key for key in state["hooks"] if key.endswith(":companions"))
+    """The teams' beats set, both copies' together."""
+    return sorted(key for front in (follows_hook, own_hook) for key in front.beats() if key.endswith(":companions"))
 
 
 check("two copies, two modules, one state of owners", follows_owners is not own_owners
@@ -81,6 +84,8 @@ clock = Clock()
 follows, own = Owner(follows_team, clock), Owner(own_team, clock)
 own_owners.switched_on("companions")
 check("Companions alone: its team starts", own.start() == "started" and hooks() == ["companions:companions"])
+check("each copy its own hook on the animation update", "companions:animation" in state["hooks"]
+      and "it_follows:animation" not in state["hooks"])
 follows_owners.switched_on("it_follows", first=True)
 check("It Follows switched on and its team started", follows.start() == "started")
 check("Companions' team stopped at once, while It Follows' hook was not set yet; one team's hook left",

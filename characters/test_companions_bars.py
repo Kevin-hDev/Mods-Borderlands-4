@@ -10,6 +10,7 @@ the English for a name it lacks or a table that cannot be read; the team publish
 stopping them with itself. It Follows' option and its session starting them: its test_session_team.py."""
 
 import json
+import math
 import pathlib
 import sys
 import tempfile
@@ -130,8 +131,12 @@ check("the hunter aimed at: aimed.py's, its clock the team's", isinstance(lookin
 state["info"].clear()
 shown.stop("stopped")
 shown.stop("again")
-check("stopped once, said with what was published and asked", service.stops == 1 and notes("companion_bars_stop")
-      == [{"event": "companion_bars_stop", "run": 0, "why": "stopped", "published": 2, "asked": 7, "stopped": True}])
+said = notes("companion_bars_stop")
+check("stopped once, said with what was published and asked, and how long the stop held the game",
+      service.stops == 1 and len(said) == 1 and isinstance(said[0].pop("stop_ms"), float)
+      and said == [{"event": "companion_bars_stop", "run": 0, "why": "stopped", "published": 2, "asked": 7,
+                   "stopped": True}])
+check("due at their next publish, never once stopped", looking.due() == looking.next_at and shown.due() == math.inf)
 broken = Service(RuntimeError("no"))
 failing = bars.Bars(broken, NAMES, clock, lambda: False, lambda: None)
 failing.beat(team)
@@ -244,8 +249,13 @@ check("a language no window offers: the English, never kept", bars_names.in_wind
 
 
 class Published:
+    """Bars always due: the team asks them at each of its beats."""
+
     def __init__(self) -> None:
         self.beats, self.stopped = 0, None
+
+    def due(self) -> float:
+        return -math.inf
 
     def beat(self, team: object) -> None:
         self.beats += 1

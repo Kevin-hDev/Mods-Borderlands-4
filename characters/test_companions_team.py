@@ -8,7 +8,9 @@ at his birth, and dressed again when he comes back as himself; an ally is never 
 mod gives it, checked, the same when it comes back, said at the start; the starting values, said, when the mod's
 reading fails. The main menu read once a MENU_EVERY_S, its owner asked to stop it there; a beat on another thread
 does nothing. Another mod leading the team (owners.py): it does not start; another coming to lead: its owner
-asked to stop it. Its owner in It Follows: test_session_team.py there."""
+asked to stop it. Its beat on the package's one hook on the animation update; before its parts' earliest due time
+a call does nothing, a tenth of a second at most, and every 30 s a line says what it costs (audit of 24 October
+2026, C1). Its owner in It Follows: test_session_team.py there."""
 
 import json
 import pathlib
@@ -24,6 +26,7 @@ import sdk_stubs  # noqa: E402
 state = sdk_stubs.install()
 
 import companion_fixture as fake  # noqa: E402
+from characters import animation_hook  # noqa: E402
 from characters.companions import owners, team as team_module, tuning, wardrobe  # noqa: E402
 
 fails: list[str] = []
@@ -45,7 +48,7 @@ def notes(event: str) -> list[dict]:
 
 def beat(team: team_module.Team, clock: fake.Clock, moment: float) -> None:
     clock.now = moment
-    state["hooks"][team_module.IDENTIFIER].fn()
+    animation_hook.beats()[team_module.IDENTIFIER]()
 
 
 def camera() -> None:
@@ -55,7 +58,7 @@ def camera() -> None:
 
 check("eight at most, its own hook on the animation update", team_module.MOST == 8
       and team_module.IDENTIFIER == "characters:companions"
-      and team_module.HOOK == "/Script/Engine.AnimInstance:BlueprintUpdateAnimation")
+      and animation_hook.HOOK == "/Script/Engine.AnimInstance:BlueprintUpdateAnimation")
 check("ranks shifted by an eighth of a second each", team_module.offset(0, 1.0) == 0.0
       and team_module.offset(3, 1.0) == 0.375)
 game = fake.Game(state)
@@ -63,10 +66,10 @@ clock = fake.Clock()
 births = fake.Births(game)
 team = team_module.Team(clock, births)
 check("none chosen: nothing called, no hook", team.start([]) == "empty" and not team.respawns.pending()
-      and team_module.IDENTIFIER not in state["hooks"])
+      and team_module.IDENTIFIER not in animation_hook.beats())
 check("started: each called, the hook set, said", team.start(["Abomination", "Nobody", "Crankus"]) == "started"
       and [line["companion"] for line in notes("companion_called")] == ["Abomination", "Crankus"]
-      and state["hooks"][team_module.IDENTIFIER].enabled
+      and team_module.IDENTIFIER in animation_hook.beats()
       and notes("team_start")[-1]["companions"] == ["Abomination", "Crankus"]
       and notes("team_start")[-1]["unknown"] == 1)
 beat(team, clock, 100.0)
@@ -114,7 +117,7 @@ check("eight followed: the ninth refused", len(team.active()) == 8
       and team.join("Nobody", "OakSpawner_8", None) == {"done": "unknown"})
 team.respawns.died("Crankus", None)
 check("the stop: every follow ended, the waiting forgotten, the hook removed, said", team.stop("stopped") == 8
-      and team.active() == [] and not team.respawns.pending() and team_module.IDENTIFIER not in state["hooks"]
+      and team.active() == [] and not team.respawns.pending() and team_module.IDENTIFIER not in animation_hook.beats()
       and notes("team_stop")[-1] == {"event": "team_stop", "run": 0, "why": "stopped", "following": 8,
                                      "on_their_way": 1, "failed": 0, "off_thread": 0}
       and team.ended == "stopped"
@@ -349,8 +352,8 @@ elsewhere = team_module.Team(clock, births, end=ends.append, menu=menu_read)
 elsewhere.start(["Crankus"])
 asked_before, reads_before, ends_before = len(births.asked), menu["reads"], list(ends)
 clock.now = 800.0
-worker = threading.Thread(target=lambda: (state["hooks"][team_module.IDENTIFIER].fn(),
-                                          state["hooks"][team_module.IDENTIFIER].fn()))
+worker = threading.Thread(target=lambda: (animation_hook.beats()[team_module.IDENTIFIER](),
+                                          animation_hook.beats()[team_module.IDENTIFIER]()))
 worker.start()
 worker.join(5)
 check("a beat on another thread than the game's: nothing asked, nothing read, said once (trial 206)",
@@ -411,7 +414,7 @@ beat(asking, clock, 1000.0)
 check("one asked of its spawner, not found yet", len(asking.respawns.asked()) == 1)
 asking.stop("stopped")
 check("the stop hands it to the strays' watch, its own hook named after the mod", team_module.STRAYS_IDENTIFIER
-      == "characters:companions_strays" and state["hooks"][team_module.STRAYS_IDENTIFIER].enabled
+      == "characters:companions_strays" and team_module.STRAYS_IDENTIFIER in animation_hook.beats()
       and [one["companion"] for one in strays_module._watch["strays"].looked] == ["Crankus"])
 forgotten: list = []
 real_forget = strays_module.forget
@@ -429,7 +432,33 @@ at_menu.start(["Crankus"])
 beat(at_menu, clock, 1100.0)
 at_menu.stop("main_menu")
 check("at the main menu: none looked for, the world goes with them", team_module.STRAYS_IDENTIFIER
-      not in state["hooks"] and strays_module._watch["strays"] is None)
+      not in animation_hook.beats() and strays_module._watch["strays"] is None)
+
+rested = team_module.Team(clock, births, end=ends.append, menu=menu_read)
+rested.start(["Crankus"])
+beat(rested, clock, 2000.0)
+check("after a beat with work: due at its parts' earliest time, REST_MOST_S at most",
+      2000.0 < rested.due <= 2000.0 + team_module.REST_MOST_S
+      and rested.due == min(rested._next_due(), 2000.0 + team_module.REST_MOST_S))
+idle = rested.gauge.calls.idle_calls
+asked_before = list(births.asked)
+beat(rested, clock, rested.due - 0.001)
+check("before it, a call does nothing, counted as such", rested.gauge.calls.idle_calls == idle + 1
+      and births.asked == asked_before)
+state["info"].clear()
+for moment in range(1, 32):
+    beat(rested, clock, 2000.0 + moment)
+said = notes("team_status")
+check("every 30 s, what its beat costs", len(said) == 1 and said[0]["following"] == 1
+      and {"hook_calls_s", "hook_idle_us", "worked_s", "busy_ms_s", "longest_ms", "fps", "fps_low"} <= set(said[0]))
+parts = said[0].get("parts_ms_s", {})
+check("each of its parts apart, a second's time and the longest (trial 221)",
+      set(parts) == set(said[0].get("parts_longest_ms", {}))
+      and {"follow_sample", "sample_read", "sample_fight", "sample_catch", "sample_walk", "wardrobe",
+           "respawns"} <= set(parts)
+      and all(value >= 0.0 for value in parts.values())
+      and sum(parts.values()) <= said[0]["busy_ms_s"] + 0.01)
+rested.stop("stopped")
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

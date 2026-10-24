@@ -21,7 +21,7 @@ sys.modules["unrealsdk"].unreal.WrappedStruct = lambda fn, **fields: types.Simpl
 sys.modules["unrealsdk"].unreal.FGbxDefPtr = lambda name, kind: types.SimpleNamespace(name=name, def_type=kind)
 
 from it_follows import frame, lost_loot, lost_loot_game as game, menu, options, report  # noqa: E402
-from it_follows.characters import game_thread  # noqa: E402
+from it_follows.characters import animation_hook, game_thread  # noqa: E402
 
 fails: list[str] = []
 clock = [1000.0]
@@ -91,12 +91,17 @@ def limit() -> float | None:
     return game.limit(state["pc"])
 
 
+def watching() -> bool:
+    """Whether the watch's beat is set on the package's one hook on the animation update."""
+    return lost_loot.WATCH_ID in animation_hook.beats()
+
+
 def run_to(end: float) -> None:
     while clock[0] < end - 1e-9:
         clock[0] = round(clock[0] + 0.1, 6)
-        beat = state["hooks"].get(lost_loot.WATCH_ID)
+        beat = animation_hook.beats().get(lost_loot.WATCH_ID)
         if beat is not None:
-            beat.fn(None)
+            beat(None)
 
 
 def noted(event: str) -> list[str]:
@@ -135,27 +140,27 @@ options.lost_loot.value = True
 lost_loot.start()
 run_to(clock[0] + 1.1)
 check("enabled with the row on: the bonus added at the watch's first second, the watch then gone",
-      limit() == 400.0 and lost_loot.WATCH_ID not in state["hooks"] and lost_loot.READY_ID in state["hooks"])
+      limit() == 400.0 and not watching() and lost_loot.READY_ID in state["hooks"])
 load("OakPlayerState_2")
 state["pc"].OakCharacter = None
 state["hooks"][lost_loot.READY_ID].fn(None)
 run_to(clock[0] + 3.0)
-check("a loaded save: the watch waits for the player", lost_loot.WATCH_ID in state["hooks"] and len(library.calls) == 1)
+check("a loaded save: the watch waits for the player", watching() and len(library.calls) == 1)
 state["pc"].OakCharacter = types.SimpleNamespace(Name="BP_Hunter")
 run_to(clock[0] + 1.1)
 check("then adds the bonus to the new player state, from its own limit",
-      limit() == 400.0 and library.calls[-1].modifiervalue == 394.0 and lost_loot.WATCH_ID not in state["hooks"])
+      limit() == 400.0 and library.calls[-1].modifiervalue == 394.0 and not watching())
 load("OakPlayerState_3")
 state["pc"].OakCharacter = None
 state["hooks"][lost_loot.READY_ID].fn(None)
 run_to(clock[0] + lost_loot.WATCH_S + 2.0)
 check("a player never loaded: given up after WATCH_S, said in the log",
-      lost_loot.WATCH_ID not in state["hooks"] and len(noted("lost_loot_gave_up")) == 1 and len(library.calls) == 2)
+      not watching() and len(noted("lost_loot_gave_up")) == 1 and len(library.calls) == 2)
 options.lost_loot.value = False
 load("OakPlayerState_4")
 state["hooks"][lost_loot.READY_ID].fn(None)
 check("the row off: a loaded save is left as the game made it",
-      lost_loot.WATCH_ID not in state["hooks"] and len(library.calls) == 2)
+      not watching() and len(library.calls) == 2)
 load("OakPlayerState_2")
 lost_loot._held.update(owner="OakPlayerState_2", added=394.0)
 lost_loot.stop()
@@ -210,7 +215,7 @@ for known in (None, threading.get_native_id()):
     loader.join(5)
     run_to(clock[0] + 1.1)
     check(f"started on the mod's load thread, the game's thread {'known' if known else 'unknown'} (trial 207): "
-          "the watch adds the bonus on the game's", limit() == 400.0 and lost_loot.WATCH_ID not in state["hooks"])
+          "the watch adds the bonus on the game's", limit() == 400.0 and not watching())
 lost_loot.stop()
 options.lost_loot.value = False
 

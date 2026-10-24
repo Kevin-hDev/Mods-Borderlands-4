@@ -23,6 +23,7 @@ state = sdk_stubs.install()
 import companion_fixture as fake  # noqa: E402
 import it_follows  # noqa: E402
 from it_follows import companion_choices as choices, report, session  # noqa: E402
+from it_follows.characters import animation_hook  # noqa: E402
 from it_follows.characters.companions import owners, team as team_module  # noqa: E402
 
 fails: list[str] = []
@@ -50,9 +51,10 @@ check("session: the team started, on, its card given and It Follows' level playe
       session.start_team(["Crankus"], {"Crankus": choices.Choice(True, "Off")}) == "started"
       and session.team_live() == session.TeamLive(0, 1)
       and notes("team_start")[-1]["tuning"] == {"Crankus": [4.0, 0.3, None, 1.0, 45.0, "own", "Bandit", "off"]})
-check("session: one team at a time", session.start_team(["Abomination"]) == "already_on")
+check("session: one team at a time, its beat on the animation update", session.start_team(["Abomination"])
+      == "already_on" and team_module.IDENTIFIER in animation_hook.beats())
 check("session: stopped, off, the hook removed", session.stop_team() == "stopped" and session.team_live() is None
-      and team_module.IDENTIFIER not in state["hooks"] and notes("team_stop")[-1]["why"] == "stopped")
+      and team_module.IDENTIFIER not in animation_hook.beats() and notes("team_stop")[-1]["why"] == "stopped")
 first_births = session._state["companion_births"]
 session.start_team(["Crankus"])
 check("one set of camps for every team of the game session, as the Horde's (decision 59)",
@@ -83,7 +85,7 @@ try:
 except RuntimeError:
     stop_raised = True
 check("a stop failing midway: the hook removed all the same, no team left running unowned",
-      stop_raised and broken.hook is None and team_module.IDENTIFIER not in state["hooks"]
+      stop_raised and broken.hook is None and team_module.IDENTIFIER not in animation_hook.beats()
       and session.team_live() is None)
 
 real_showing = session.main_menu.showing
@@ -96,7 +98,7 @@ owned = session._state["team"]
 owned.end("main_menu")
 check("session: the team asking at the main menu, stopped by its owner, said",
       session.team_live() is None and notes("team_stop")[-1]["why"] == "main_menu"
-      and team_module.IDENTIFIER not in state["hooks"])
+      and team_module.IDENTIFIER not in animation_hook.beats())
 session.start_team(["Crankus"])
 stops = len(notes("team_stop"))
 owned.end("main_menu")

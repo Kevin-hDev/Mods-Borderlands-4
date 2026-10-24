@@ -14,6 +14,7 @@ A hunter is hidden from his start to his end, as dress.py does; one the camera's
 START_WAIT_S is left as he is, Lemmy, and said: never a team waiting forever, never a mesh changed elsewhere.
 """
 
+import math
 from typing import Any, Callable
 
 from mods_base import hook
@@ -79,6 +80,10 @@ class Wardrobe:
             outcome = {"done": outcome}
         self.dressing.remove(held)
         report.note("companion_dressed", character=character, companion=companion, **outcome)
+
+    def due(self) -> float:
+        """When overdue has someone to leave as he is: the first waiting one's START_WAIT_S."""
+        return min((since + START_WAIT_S for *_held, since in self.waiting), default=math.inf)
 
     def overdue(self) -> None:
         """Called from the team's beat: those the camera's update never came for within START_WAIT_S left as they

@@ -3,6 +3,28 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.13', {
+        'en': (
+            'Performance: Normal mode now spreads its work over several frames, for fewer small stutters during play. The Hardcore still counts every kill.',
+            'Performance: your companions only work when there is something to do, and stopping the team no longer freezes the game for a moment.',
+            'Performance: the whole mod asks less of the game at each frame.',
+        ),
+        'fr': (
+            'Performances : le mode Normal répartit maintenant son travail sur plusieurs images, pour moins de petits à-coups en jeu. Le Hardcore compte toujours chaque ennemi tué.',
+            "Performances : tes compagnons ne travaillent que quand il y a quelque chose à faire, et l'arrêt de l'équipe ne fige plus le jeu un instant.",
+            "Performances : l'ensemble du mod demande moins au jeu à chaque image.",
+        ),
+        'zh': (
+            '性能：普通模式现在将其工作分散到多帧中完成，游戏中的小卡顿更少。硬核模式仍会计入每一次击杀。',
+            '性能：你的同伴只在有事要做时才工作，停止队伍时游戏也不会再短暂卡住。',
+            '性能：整个模组每帧对游戏的需求更少。',
+        ),
+        'ja': (
+            'パフォーマンス：ノーマルモードの処理を複数フレームに分散し、プレイ中の小さなカクつきを減らしました。ハードコアは引き続きすべての撃破を数えます。',
+            'パフォーマンス：仲間はやることがあるときだけ動作し、チームを止めてもゲームが一瞬止まらなくなりました。',
+            'パフォーマンス：MOD全体が毎フレームゲームに求める処理が少なくなりました。',
+        ),
+    }),
     ('1.0.10', {
         'en': (
             'Added 10 companions: the 6 Vault Hunters and 4 allies, in the new COMPANIONS tab. Up to 8 follow you and fight at your side.',

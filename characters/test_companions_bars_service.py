@@ -3,11 +3,14 @@ port, with It Follows' own constants, assets/companion_bars.json; the trials' te
 show yet, a refusal; the companions published, read back as JSON, names cut and parts kept from 0 to 1, each dead
 or not, at most `most`, with whether the bars are shown and the hunter aimed at, its name cut too; another path
 refused in its own words; an answer too long refused; the first request said once, from the game's thread; a port
-held, said and refused; stopped, the port closed."""
+held, said and refused; stopped, the port closed. Asleep with nothing asked, the serving thread is woken at once by
+the stop and closes the port itself (audit of 24 October 2026, A1: the game held 30 to 48 ms at each stop)."""
 
 import json
 import socket
 import sys
+import threading
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -102,6 +105,20 @@ try:
 except RuntimeError:
     asked = False
 check("stopped: no port to give", asked is False)
+
+lone = wire.Server(("127.0.0.1", 0), wire.Handler)
+lone.path, lone.note, lone.asked, lone.answer = "/x", said.append, lambda: None, lambda: b"{}"
+serving = threading.Thread(target=lone.serve, daemon=True)
+serving.start()
+# Long enough for the thread to fall asleep in its wait, nothing being asked.
+time.sleep(0.2)
+began = time.perf_counter()
+lone.stop()
+serving.join(1.0)
+took = time.perf_counter() - began
+check("asleep, the serving thread woken at once by the stop, the port closed by it", not serving.is_alive()
+      and took < 0.03 and lone.socket.fileno() == -1)
+check("a stop once the thread has ended: nothing raised", (lone.stop(), True)[1])
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

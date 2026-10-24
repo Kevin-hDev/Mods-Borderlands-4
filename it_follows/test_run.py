@@ -35,7 +35,7 @@ game = game_fixture.Game(state)
 
 import it_follows  # noqa: E402
 from it_follows import census, copies, frame, game_camps, options, recruit, report  # noqa: E402
-from it_follows.characters import brain_walk, camps  # noqa: E402
+from it_follows.characters import animation_hook, brain_walk, camps  # noqa: E402
 from it_follows import ending, kept, levels, texts  # noqa: E402
 from it_follows import run as run_module  # noqa: E402
 from it_follows import session  # noqa: E402
@@ -78,9 +78,9 @@ def second(steps: int = 1, paused: bool = False) -> None:
         at = clock[0]
         for image in range(4):
             clock[0] = at + image * (frame.LATER_MOST_S + 0.001)
-            hooked = state["hooks"].get(frame.IDENTIFIER)
+            hooked = animation_hook.beats().get(frame.IDENTIFIER)
             if hooked is not None:
-                hooked.fn(None, None, None, None)
+                hooked(None, None, None, None)
         clock[0] = at
 
 
@@ -433,7 +433,7 @@ try:
     clock[0] += 1.0
     drawn_images[0] += 60
     game.world_clock[0] += 1.0
-    state["hooks"][frame.IDENTIFIER].fn(None, None, None, None)
+    animation_hook.beats()[frame.IDENTIFIER](None, None, None, None)
     check("the status line is not written in the second's own image, but put off to one of its own",
           len([line for line in lines() if line["event"] == "status"]) == written
           and "status" in running.beat.later)

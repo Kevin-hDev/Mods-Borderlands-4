@@ -6,6 +6,7 @@ one asked a beat at most; a beat a second at most, but one asked looked for ever
 nothing else done then; refused, lost, unasked or failing: dropped, said, the others going on; MOST waiting at
 most; cleared at once."""
 
+import math
 import pathlib
 import sys
 from importlib import util
@@ -74,20 +75,23 @@ check("a beat a second; looked for 15 s, every 0.05 s; settled 10 s; It Follows'
       1.0, 15.0, 0.05, 10.0, 200.0))
 world = World()
 respawns = world.made()
-check("none waiting: nothing pending, a beat does nothing", not respawns.pending()
-      and (world.at(respawns, 100.0), world.spawned)[1] == [])
+check("none waiting: nothing pending, a beat does nothing, never due", not respawns.pending()
+      and (world.at(respawns, 100.0), world.spawned)[1] == [] and respawns.due() == math.inf)
 respawns.died("Char_NPC_Abomination", 0.5)
 check("a death said, waiting", respawns.pending() and world.said()[-1] == {
       "event": "companion_dead", "companion": "Char_NPC_Abomination", "back_in_s": 45.0})
 world.at(respawns, 144.0)
 world.at(respawns, 144.5)
 check("not asked before 45 s, nor between beats", world.spawned == [])
+check("one waiting: due at its next turn, a second after the last (audit of 24 October 2026, C1)",
+      respawns.due() == 145.0)
 world.at(respawns, 145.0)
 check("asked at 45 s, said first", world.spawned == [("Char_NPC_Abomination", 145.0)]
       and {"event": "companion_asked", "companion": "Char_NPC_Abomination", "late_s": 0.0} in world.said()
       and world.started == [])
 world.at(respawns, 145.04)
 check("not looked for again within FIND_EVERY_S", world.started == [])
+check("asked of its spawner: due at its next look, FIND_EVERY_S after the last", respawns.due() == 145.05)
 world.start_answers = [{"done": "not_found"}]
 world.at(respawns, 145.05)
 check("looked for between beats, by its spawner, with the same health", world.started == [

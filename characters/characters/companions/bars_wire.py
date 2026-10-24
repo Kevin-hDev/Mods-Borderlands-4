@@ -9,8 +9,14 @@ that owns it (bars_service.py).
 A program on this PC that holds a connection open, or feeds it a byte at a time, stalls the bars for CONNECTION_S at
 most, never the game: one deadline for the whole connection, not a wait renewed at each byte
 (docs/candidats/HUD/ERREURS.md, 49).
+
+Its thread sleeps until a request comes or the stop wakes it (serve, stop): http.server's own loop woke every 50 ms
+for nothing, and its stop waited for the next of those wakes, the game held 30 to 48 ms at each team's stop (trial
+219; audit of 24 October 2026, A1). The thread closes the port itself as it ends, so that a mod starting its own
+team just after finds the port free.
 """
 
+import selectors
 import socket
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -25,6 +31,41 @@ DROPPED = "the companions' bars service dropped a request"
 class Server(HTTPServer):
     # Windows lets two listeners share a port unless one claims it alone (docs/candidats/HUD/ERREURS.md, 43).
     allow_reuse_address = False
+    # handle_request waits no longer: serve calls it once a request is there.
+    timeout = 0
+
+    def __init__(self, address: tuple, handler: type) -> None:
+        # Made first: a port refused closes the server at once (socketserver calls server_close), these with it.
+        self._waking, self._woken = socket.socketpair()
+        self._stopping = False
+        super().__init__(address, handler)
+
+    def serve(self) -> None:
+        """Answers each request as it comes until stop(), asleep in between; the port closed as it ends."""
+        try:
+            with selectors.DefaultSelector() as selector:
+                selector.register(self, selectors.EVENT_READ)
+                selector.register(self._woken, selectors.EVENT_READ)
+                while not self._stopping:
+                    ready = selector.select()
+                    if not self._stopping and any(key.fileobj is self for key, _events in ready):
+                        self.handle_request()
+        finally:
+            self.server_close()
+
+    def stop(self) -> None:
+        """The serving thread told to end now, woken if it sleeps."""
+        self._stopping = True
+        try:
+            self._waking.send(b"\0")
+        except OSError:
+            # Closed already: the thread has ended, the port with it.
+            return
+
+    def server_close(self) -> None:
+        super().server_close()
+        self._waking.close()
+        self._woken.close()
 
     def server_bind(self) -> None:
         if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):

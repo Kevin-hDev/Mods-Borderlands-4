@@ -3,10 +3,14 @@ grown x1.5 then reset without removing anyone, its empty numbers kept empty; a c
 reinforcements, a total without end, an empty one left to the game; two camps of one enemy at x1.5 give one, then two,
 the first neither written nor reset; a range grown whole; a camp held not read again, one the game loaded again taken
 again; a far camp not held; the stop gives the numbers back, resets a camp still not born and not one born since; a
-camp gone owes nothing; without a place, nothing; the pass stops at its time."""
+camp gone owes nothing; without a place, nothing; a part of the pass stops at its time. Given an actor of the world
+in play, only that world's camps are searched, the way said (decision 105, audit of 24 October 2026, N2); without
+one, every object. Past the first DETAILED camps of a game, a camp is grown and reset with no line, its total not
+read back (N4)."""
 
 import pathlib
 import sys
+import types
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -124,8 +128,41 @@ try:
           and number(first, "NumTotalActors") == written and len(resets("OakSpawner_Cap1")) == reset)
     camps_grown.MAX_HELD = 2000
     grown.held = {}
-    camps_grown.READ_S = -1.0
-    check("the pass stops at its time", grown.grow([HERE_CM], 50.0)["stopped"] == "time_limit")
+    asked: list[tuple] = []
+    in_world = fx.camp("OakSpawner_World", 50.0, fx.camp_style(memory, 4), calls)
+    listed_only = fx.camp("OakSpawner_Unloading", 60.0, fx.camp_style(memory, 4), calls)
+
+    def actors_of(WorldContextObject: object, ActorClass: object, OutActors: list) -> tuple:
+        asked.append((WorldContextObject, ActorClass.Name))
+        return ..., [in_world]
+
+    state["classes"]["GameplayStatics"] = types.SimpleNamespace(
+        ClassDefaultObject=types.SimpleNamespace(GetAllActorsOfClass=actors_of))
+    state["classes"][camps_grown.SPAWNER_CLASS] = types.SimpleNamespace(Name=camps_grown.SPAWNER_CLASS)
+    state["all"]["Spawner"] = [in_world, listed_only]
+    hunter = object()
+    worldly = camps_grown.CampsGrown(lambda event, **f: None, lambda call, log=True, **f: None, 1.5)
+    found = worldly.grow([HERE_CM], 60.0, hunter)
+    check("given the hunter, only the camps of his world, the way said", found["search"] == "actors"
+          and found["grown"] == 1 and asked == [(hunter, "Spawner")] and list(worldly.held) == ["OakSpawner_World"])
+    check("without him, every camp the game holds", worldly.grow([HERE_CM], 65.0)["search"] == "find_all"
+          and "OakSpawner_Unloading" in worldly.held)
+    quiet: list[str] = []
+    told: list[tuple] = []
+    capped = camps_grown.CampsGrown(lambda event, **f: quiet.append(event),
+                                    lambda call, log=True, **f: told.append((call, log)), 1.5)
+    capped.detailed = camps_grown.DETAILED
+    many = fx.camp("OakSpawner_Many", 50.0, fx.camp_style(memory, 4), calls)
+    state["all"]["Spawner"] = [many]
+    before = len(calls)
+    capped.grow([HERE_CM], 70.0)
+    check("past the first DETAILED camps of a game: grown and reset, no line, its total not read back",
+          resets("OakSpawner_Many") == [(False,)] and number(many, "NumTotalActors") == 6 and quiet == []
+          and told == [("SpawnerStyle", False), ("ResetSpawner", False)]
+          and not [made for made, _ in calls[before:] if made == "OakSpawner_Many.total"])
+    camps_grown.PART_S = -1.0
+    state["all"]["Spawner"] = [first]
+    check("a part of the pass stops at its time", grown.grow([HERE_CM], 80.0)["stopped"] == "time_limit")
 except Exception as error:
     fails.append(f"exception {type(error).__name__}: {error}")
     print(f"ECHEC | exception {type(error).__name__}: {error}")
