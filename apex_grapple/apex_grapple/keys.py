@@ -139,12 +139,13 @@ def is_bound() -> bool:
 
 
 def matches(mappings: list[Any]) -> bool:
-    """The keys bound are still the ones the game lists."""
-    return _wanted(mappings) == _keys and control_config.groups(mappings) == _groups
+    """The keys bound are still the ones the game lists. `mappings` as game.input_mappings gives them, read once."""
+    groups = control_config.groups(mappings)
+    return _wanted(mappings, groups) == _keys and groups == _groups
 
 
-def _wanted(mappings: list[Any]) -> tuple[frozenset[str], frozenset[str]]:
-    grapple = frozenset(key for group in control_config.groups(mappings) for key in group)
+def _wanted(mappings: list[Any], groups: tuple[tuple[str, ...], ...]) -> tuple[frozenset[str], frozenset[str]]:
+    grapple = frozenset(key for group in groups for key in group)
     # A key that does both is the grapple's: blocking a jump on it would swallow the grapple press.
     return grapple, frozenset(input_list.jump_keys(mappings)) - grapple
 
@@ -152,7 +153,8 @@ def _wanted(mappings: list[Any]) -> tuple[frozenset[str], frozenset[str]]:
 def bind(mappings: list[Any], rope: Any) -> bool:
     """Binds every grapple and jump key; False when the game lists no grapple key."""
     global _keys, _rope, _epoch, _active, _groups, _chords
-    grapple_keys, jump_keys = _wanted(mappings)
+    groups = control_config.groups(mappings)
+    grapple_keys, jump_keys = _wanted(mappings, groups)
     if _binds:
         unbind()
         if _binds:
@@ -160,7 +162,7 @@ def bind(mappings: list[Any], rope: Any) -> bool:
     if not grapple_keys:
         return False
     _rope = rope
-    _groups = control_config.groups(mappings)
+    _groups = groups
     _chords = Chords(_groups)
     native_keys = input_list.grapple_keys(mappings)
     _epoch = object()

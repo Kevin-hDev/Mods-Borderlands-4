@@ -4,8 +4,8 @@ from mods_base import SpinnerOption
 from .panel_scroll import last_scroll
 from .panel_theme import PAGES, SIZES, THEMES
 
-# Chinese only in a window whose every text exists in it, as outils/menu_languages.py decides.
-LANGUAGES = ("EN", "FR", "ZH")
+# A language only in a window whose every text exists in it, as outils/menu_languages.py decides.
+LANGUAGES = ("EN", "FR", "ZH", "JA")
 language = SpinnerOption("menu_language", "EN", list(LANGUAGES), is_hidden=True)
 CONTROLLER_ICONS = ("PS5", "XSX")
 # Kevin chose PlayStation when the game's reported family is inconclusive (2026-09-21).

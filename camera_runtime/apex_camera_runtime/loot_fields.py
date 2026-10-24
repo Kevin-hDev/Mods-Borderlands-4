@@ -83,6 +83,11 @@ class LootFields:
             if not self.valid(before):
                 continue
             owned = self.saved.get(key)
+            if owned is not None and owned.pointer() is None:
+                # Destroyed and replaced at the same path and address since the last refresh: a new container whose
+                # value is the game's, extended like any other (Kevin, 2026-10-24).
+                del self.saved[key]
+                owned = None
             if owned is not None:
                 if owned.last is None or before != owned.last:
                     self.saved[key] = owned._replace(last=None)

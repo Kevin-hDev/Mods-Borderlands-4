@@ -14,12 +14,13 @@ from mods_base import hook
 from unrealsdk.hooks import Type
 
 from . import (control_window, coop_host, coop_link, coop_moves, coop_relay, game, game_grapple, grapple, input_list,
-               key_hold, keys, remote_ropes, report, rope_effects, session, settings)
+               key_hold, keys, played_body, remote_ropes, report, rope_effects, session, settings)
 
 KEYS_NS = 1_000_000_000
 
 rope = grapple.Rope()
 _next_keys_ns = 0
+_played = played_body.PlayedBody()
 
 
 def _keep_keys(now_ns: int) -> None:
@@ -41,9 +42,18 @@ def _keep_keys(now_ns: int) -> None:
 
 def on_frame(obj: Any, now_ns: int) -> None:
     try:
-        character = session.refresh(now_ns, rope)
-        if character is None or obj != game.anim():
+        # Another character's update while the player's body is recent: nothing to ask the game (played_body.py).
+        if not _played.must_ask(obj, now_ns):
             return
+        character = session.refresh(now_ns, rope)
+        if character is None:
+            _played.forget()
+            return
+        if obj != game.anim():
+            if played_body.address(obj) == _played.body:
+                _played.forget()
+            return
+        _played.remember(played_body.address(obj), played_body.address(obj.Outer), now_ns)
         keys.observe(now_ns)
         _keep_keys(now_ns)
         if not rope.busy:
@@ -51,9 +61,10 @@ def on_frame(obj: Any, now_ns: int) -> None:
         for line in settings.keep_in_bounds():
             report.warning(line)
         key_hold.tick(rope, character, now_ns)
-        rope.update(character, now_ns)
+        rope.update(character, now_ns, settings_checked=True)
         rope_effects.tick(character, now_ns)
     except Exception:
+        _played.forget()
         session.reset(rope)
         report.error_once("frame:pull", "the pull stopped after an error")
         return
@@ -67,13 +78,17 @@ def _others(character: Any, now_ns: int) -> None:
     except Exception:
         coop_host.reset()
         report.error_once("frame:guests", "the co-op guests' ropes stopped after an error")
+    # Asked once a frame for both steps below (review of 2026-10-24). Unread, the moves are left alone, as before when
+    # the second question raised in its turn.
+    guest = None
     try:
-        coop_link.tick(character, now_ns)
+        guest = coop_link.is_guest(character)
+        coop_link.tick(character, now_ns, guest)
         coop_relay.tick(now_ns)
     except Exception as exc:
         report.error_once("frame:coop", f"the other players could not be told of this grapple: {exc!r}")
     try:
-        if coop_link.is_guest(character):
+        if guest:
             coop_moves.step(character, rope.busy, now_ns)
     except Exception as exc:
         report.error_once("frame:moves", f"the moves sent to the host during a rope could not be set: {exc!r}")
@@ -90,7 +105,8 @@ def stop() -> None:
     global _next_keys_ns
     # coop_moves before game.forget: it puts the game's variable back through the character while it is still known.
     session.cleanup(control_window.cancel_for_gameplay, keys.unbind, lambda: session.reset(rope), input_list.reset,
-                    coop_moves.reset, game.forget, coop_host.reset, coop_link.reset, coop_relay.reset, remote_ropes.reset)
+                    coop_moves.reset, game.forget, coop_host.reset, coop_link.reset, coop_relay.reset, remote_ropes.reset,
+                    _played.forget)
     _next_keys_ns = 0
 
 

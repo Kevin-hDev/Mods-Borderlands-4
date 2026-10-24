@@ -28,8 +28,8 @@ MAX_KEYS = 64
 
 class FreeLook:
     def __init__(self, load: Callable) -> None:
-        """load() gives (sdk, memory, hooks, get_pc, clock, log, address_of), asked when the clock is first needed:
-        the runtime exists before the game's modules can be read, as in the camera mods' tests."""
+        """load() gives (sdk, memory, hooks, get_pc, clock, log, address_of, weak_ref), asked when the clock is first
+        needed: the runtime exists before the game's modules can be read, as in the camera mods' tests."""
         self.load = load
         self.game = None
         self.values = None
@@ -50,7 +50,7 @@ class FreeLook:
         if self.values is not None and not self.installed:
             if self.game is None:
                 self.game = self.load()
-                sdk, memory, hooks, _get_pc, _clock, log, _address = self.game
+                sdk, memory, hooks, _get_pc, _clock, log, _address, _weak = self.game
                 self.foot, self.wheel = Foot(sdk, memory, hooks, log), Wheel(sdk, log)
             hooks = self.game[2]
             hooks.add_hook(FRAME, hooks.Type.POST, IDENTIFIER, self.on_frame)
@@ -67,7 +67,7 @@ class FreeLook:
         return key
 
     def on_frame(self, _obj: Any, _args: Any, _ret: Any, _func: Any) -> None:
-        _sdk, _memory, _hooks, get_pc, clock, log, address_of = self.game
+        _sdk, _memory, _hooks, get_pc, clock, log, address_of, _weak = self.game
         now_ns = clock()
         if now_ns - self.last_ns < MIN_STEP_NS:
             return
@@ -95,7 +95,7 @@ class FreeLook:
         values = self.values
         downs = tuple(name is not None and bool(pc.IsInputKeyDown(self._key(name))) for name in values.keys)
         if self.vehicle_field is None:
-            self.vehicle_field = VehicleField(self.game[6])
+            self.vehicle_field = VehicleField(self.game[6], self.game[7])
         at_wheel = self.vehicle_field.movement(pawn) is not None
         if not at_wheel and free_look_swap.aiming(pc):
             self.trigger.cancel()
@@ -157,6 +157,8 @@ def game_modules() -> tuple:
     import unrealsdk
     from mods_base import get_pc
     from unrealsdk import hooks, logging
+    from unrealsdk.unreal import WeakPointer
     from . import process_memory
     return (unrealsdk, process_memory, front(hooks), get_pc, time.perf_counter_ns,
-            lambda message: logging.info(f"[Camera Runtime] {message}"), lambda item: int(item._get_address()))
+            lambda message: logging.info(f"[Camera Runtime] {message}"), lambda item: int(item._get_address()),
+            WeakPointer)

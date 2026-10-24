@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.33 - 2026-10-24
+
+- Fix: a loot container replaced at the same spot gets the longer pickup reach again.
+- Fix: after loading another save, the camera recognizes vehicles reliably.
+- Fix: in a rare case, a dash could keep the game's length for a few seconds.
+- These changes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
 ## 1.2.32 - 2026-10-24
 
 - Performance: the mod does less work on the game's main thread each frame. In third person, the camera reads less from the game and hooks it in fewer places; on the test PC, 10 to 20 more frames per second at the same spots.

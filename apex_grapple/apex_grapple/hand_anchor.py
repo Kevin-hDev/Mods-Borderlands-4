@@ -45,8 +45,8 @@ def position(character):
         if _character is None or _character() != character:
             reset()
             _character = WeakPointer(character)
-            # The arms module caches its instance; a new pawn must never inherit the old mesh.
-            arms.forget()
+            # arms.find checks the arms it keeps (alive, this character's, its mesh's own): emptying its memory here
+            # made every classic shot walk every object of the game (review of 2026-10-24).
         if _failed:
             return None
         if _mesh is None:

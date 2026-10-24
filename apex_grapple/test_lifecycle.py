@@ -7,7 +7,7 @@ import sdk_stubs
 
 state = sdk_stubs.install()
 
-from apex_grapple import frame, game, keys, settings
+from apex_grapple import frame, game, keys, played_body, settings
 from unrealsdk.hooks import Block
 
 SECOND = 1_000_000_000
@@ -36,7 +36,7 @@ class LifecycleTests(unittest.TestCase):
     def test_missing_animation_recovers_on_same_character(self):
         animation = self.player.anim
         self.player.anim = None
-        frame.on_frame(object(), SECOND)
+        frame.on_frame(sdk_stubs.other_anim(), SECOND)
         self.player.anim = animation
         frame.on_frame(animation, 2 * SECOND)
         self.assertIs(game.anim(), animation)
@@ -46,7 +46,7 @@ class LifecycleTests(unittest.TestCase):
         def unavailable():
             raise RuntimeError("transient animation failure")
         self.player.Mesh.GetAnimInstance = unavailable
-        frame.on_frame(object(), SECOND)
+        frame.on_frame(sdk_stubs.other_anim(), SECOND)
         self.player.Mesh.GetAnimInstance = lambda: self.player.anim
         frame.on_frame(self.player.anim, 2 * SECOND)
         self.assertIs(game.anim(), self.player.anim)
@@ -54,7 +54,7 @@ class LifecycleTests(unittest.TestCase):
 
     def test_replaced_animation_cancels_old_rope(self):
         self.attach()
-        self.player.anim = object()
+        self.player.anim = sdk_stubs.FakeAnim(self.player.Mesh)
         frame.on_frame(self.player.anim, 3 * SECOND)
         self.assertIs(game.anim(), self.player.anim)
         self.assertFalse(frame.rope.busy)
@@ -63,7 +63,11 @@ class LifecycleTests(unittest.TestCase):
         self.attach()
         self.player.destroyed = True
         state["pc"] = None
-        frame.on_frame(object(), 2 * SECOND + 1)
+        # Kevin's decision of 2026-10-24 (played_body.py): another character's update asks nothing while the player's
+        # body updated in the last 50 ms; the rope is put down by the first update after that, well before the poll.
+        frame.on_frame(sdk_stubs.other_anim(), 2 * SECOND + 1)
+        self.assertTrue(frame.rope.busy)
+        frame.on_frame(sdk_stubs.other_anim(), 2 * SECOND + played_body.RECENT_NS)
         self.assertFalse(frame.rope.busy)
         self.assertIsNone(self.press("SpaceBar"))
 
@@ -104,7 +108,8 @@ class LifecycleTests(unittest.TestCase):
         replacement = sdk_stubs.FakeCharacter()
         state["pc"] = sdk_stubs.player(replacement, state["mappings"])
         game.refresh(2 * SECOND + 1, at_once=True)
-        frame.on_frame(replacement.anim, 2 * SECOND + 16_000_000)
+        # The new character's first update the frame asks about: 50 ms after the old body's last (played_body.py).
+        frame.on_frame(replacement.anim, 2 * SECOND + played_body.RECENT_NS)
         self.assertFalse(frame.rope.busy)
         self.assertEqual(game.velocity(replacement.CharacterMovement), (0.0, 0.0, 0.0))
 
@@ -119,7 +124,7 @@ class LifecycleTests(unittest.TestCase):
         frame.rope.reset = counted
         try:
             for offset in range(1, 5):
-                frame.on_frame(object(), (2 * SECOND) + offset * 16_000_000)
+                frame.on_frame(sdk_stubs.other_anim(), (2 * SECOND) + offset * 16_000_000)
         finally:
             frame.rope.reset = original
         self.assertEqual(len(calls), 1)
@@ -142,7 +147,7 @@ class LifecycleTests(unittest.TestCase):
         frame.rope.reset = counted
         try:
             for offset in range(4):
-                frame.on_frame(object(), SECOND + offset * 16_000_000)
+                frame.on_frame(sdk_stubs.other_anim(), SECOND + offset * 16_000_000)
             self.assertEqual(len(calls), 1)
             state["pc"] = sdk_stubs.player(self.player, state["mappings"])
             for offset in range(4):

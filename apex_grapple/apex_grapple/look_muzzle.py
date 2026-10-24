@@ -33,9 +33,10 @@ def fields(pc: Any) -> tuple[float, float]:
     return world, arms
 
 
-def from_arms(pc: Any, spot: Spot) -> Spot:
-    """The spot of the world that shows where the arms show `spot`."""
-    eye, (ahead, _left, _up) = look_eye.camera(pc)
+def from_arms(pc: Any, spot: Spot, seen: tuple | None = None) -> Spot:
+    """The spot of the world that shows where the arms show `spot`. `seen` is look_eye.camera's answer when the caller
+    has it for this frame: read again, it was the same (review of 2026-10-24)."""
+    eye, (ahead, _left, _up) = seen if seen is not None else look_eye.camera(pc)
     world, arms = fields(pc)
     spread = math.tan(math.radians(world) / 2) / math.tan(math.radians(arms) / 2)
     along = sum((spot[axis] - eye[axis]) * ahead[axis] for axis in range(3))
@@ -43,11 +44,13 @@ def from_arms(pc: Any, spot: Spot) -> Spot:
     return tuple(on_axis[axis] + (spot[axis] - on_axis[axis]) * spread for axis in range(3))
 
 
-def waiting(pc: Any, offset_cm: tuple) -> Spot:
-    """The muzzle of the hidden arms' pistol: `offset_cm` (ahead, left, up) from the eye, as the arms show it."""
-    eye, axes = look_eye.camera(pc)
+def waiting(pc: Any, offset_cm: tuple, seen: tuple | None = None) -> Spot:
+    """The muzzle of the hidden arms' pistol: `offset_cm` (ahead, left, up) from the eye, as the arms show it. `seen`
+    as for from_arms."""
+    seen = seen if seen is not None else look_eye.camera(pc)
+    eye, axes = seen
     spot = tuple(eye[axis] + sum(offset * way[axis] for offset, way in zip(offset_cm, axes)) for axis in range(3))
-    return from_arms(pc, spot)
+    return from_arms(pc, spot, seen)
 
 
 def on_piece(made: Any, muzzle_cm: tuple) -> Spot:

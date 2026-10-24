@@ -3,6 +3,32 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.2.33', {
+        'en': (
+            'Fix: a loot container replaced at the same spot gets the longer pickup reach again.',
+            'Fix: after loading another save, the camera recognizes vehicles reliably.',
+            "Fix: in a rare case, a dash could keep the game's length for a few seconds.",
+            'These changes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.',
+        ),
+        'fr': (
+            'Correction : un conteneur de butin remplacé au même endroit retrouve la portée de ramassage allongée.',
+            "Correction : après le chargement d'une autre sauvegarde, la caméra reconnaît toujours les véhicules.",
+            'Correction : dans un cas rare, un dash pouvait garder la longueur du jeu pendant quelques secondes.',
+            'Ces changements sont dans la partie caméra commune à Third Person & FOV, Apex Movement et Omni Sprint : si tu en utilises plusieurs, mets-les tous à jour.',
+        ),
+        'zh': (
+            '修复：在同一位置被替换的战利品容器重新获得更远的拾取距离。',
+            '修复：读取另一个存档后，镜头能可靠地识别载具。',
+            '修复：在少数情况下，冲刺可能会在几秒内保持游戏原本的距离。',
+            '这些改动位于 Third Person & FOV、Apex Movement 和 Omni Sprint 共用的镜头部分：如果你同时使用其中多个模组，请全部更新。',
+        ),
+        'ja': (
+            '修正：同じ場所で置き換えられた戦利品コンテナに、拡大された拾得距離が再び適用されます。',
+            '修正：別のセーブデータを読み込んだ後も、カメラが乗り物を確実に認識します。',
+            '修正：まれなケースで、ダッシュが数秒間ゲーム本来の距離のままになることがありました。',
+            'これらの変更は Third Person & FOV、Apex Movement、Omni Sprint が共有するカメラ部分にあります：複数を使っている場合は、すべて更新してください。',
+        ),
+    }),
     ('1.2.32', {
         'en': (
             "Performance: the mod does less work on the game's main thread each frame. In third person, the camera reads less from the game and hooks it in fewer places; on the test PC, 10 to 20 more frames per second at the same spots.",

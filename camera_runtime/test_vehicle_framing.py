@@ -2,11 +2,13 @@
 written only while Vehicle Driving does not write, given back on foot, and a failure stopping it for that vehicle."""
 
 import sys
+import types
 import unittest
 from types import SimpleNamespace as NS
+from unittest.mock import patch
 
 from camera_test_fixtures import Hooks
-from apex_camera_runtime import vehicle_share
+from apex_camera_runtime import frame_hooks, vehicle_framing, vehicle_share
 from apex_camera_runtime.vehicle_framing import FRAME, IDENTIFIER, VehicleFraming
 
 FRAME_NS = 16_666_667
@@ -22,6 +24,19 @@ class Settings:
 
 def car(speed):
     return NS(OakVehicleMovement=object(), Mesh=NS(GetPhysicsLinearVelocity=lambda _bone: NS(X=speed, Y=0.0, Z=0.0)))
+
+
+class OnFoot:
+    """A character: no vehicle field, each question raising inside the SDK, and counted."""
+
+    def __init__(self):
+        self.Class = NS()
+        self.asked = 0
+
+    def __getattr__(self, name):
+        if name == "OakVehicleMovement":
+            self.__dict__["asked"] += 1
+        raise AttributeError(name)
 
 
 class VehicleFramingTests(unittest.TestCase):
@@ -104,6 +119,23 @@ class VehicleFramingTests(unittest.TestCase):
         self.pc.Pawn = car(3000.0)
         self.frames(5)
         self.assertLess(self.offset.X, 0.0)
+
+    def test_on_foot_the_character_is_asked_for_a_vehicle_field_once(self):
+        # The question raised inside the SDK at every frame (2026-10-24).
+        self.pc.Pawn = hunter = OnFoot()
+        self.frames(10)
+        self.assertEqual(hunter.asked, 1)
+        self.assertIsNone(self.unit.written)
+
+    def test_its_clock_goes_through_the_copy_s_shared_hook(self):
+        sdk = types.ModuleType("unrealsdk")
+        sdk.hooks, sdk.logging = Hooks(), NS(info=print, error=print)
+        unreal = types.ModuleType("unrealsdk.unreal")
+        unreal.WeakPointer = lambda item: (lambda: item)
+        mods = types.ModuleType("mods_base")
+        mods.get_pc = lambda possibly_loading=False: None
+        with patch.dict(sys.modules, {"unrealsdk": sdk, "unrealsdk.unreal": unreal, "mods_base": mods}):
+            self.assertIs(vehicle_framing.game_modules()[0], frame_hooks.front(sdk.hooks))
 
     def test_stop_removes_the_clock_and_gives_back_the_offset(self):
         self.frames(30)

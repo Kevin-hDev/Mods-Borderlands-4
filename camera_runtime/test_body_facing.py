@@ -304,5 +304,57 @@ check("a new body: the old hold forgotten, the channel given back",
       not facing.holding and facing.kept_yaw is None and channel.calls[-1] == ("give_back",))
 check("without a channel the turn works as before", body_facing.BodyFacing(rotator).channel is None)
 
+
+
+class CountedZoom:
+    """The game's ZoomState: each field read asks the game, and is counted."""
+
+    def __init__(self, wants: bool, state) -> None:
+        self.wants, self.state, self.reads = wants, state, []
+
+    @property
+    def bWantsToZoom(self) -> bool:
+        self.reads.append("bWantsToZoom")
+        return self.wants
+
+    @property
+    def State(self):
+        self.reads.append("State")
+        return self.state
+
+
+class CountedVector:
+    """A velocity whose X and Y count their reads."""
+
+    def __init__(self, x: float, y: float) -> None:
+        self.x, self.y, self.reads = x, y, 0
+
+    @property
+    def X(self) -> float:
+        self.reads += 1
+        return self.x
+
+    @property
+    def Y(self) -> float:
+        self.reads += 1
+        return self.y
+
+
+# Optimisation pass of 2026-10-24: each field read once, the answer unchanged.
+zoom = CountedZoom(False, types.SimpleNamespace(name="NotZoomed"))
+check("not aiming: no aim, the zoom state read once",
+      body_facing.aiming(types.SimpleNamespace(ZoomState=zoom)) is False and zoom.reads == ["bWantsToZoom", "State"])
+zoom = CountedZoom(True, types.SimpleNamespace(name="NotZoomed"))
+check("the aim asked for: aiming, the zoom state not read",
+      body_facing.aiming(types.SimpleNamespace(ZoomState=zoom)) is True and zoom.reads == ["bWantsToZoom"])
+check("a zoom state without a name is read as text",
+      body_facing.aiming(types.SimpleNamespace(ZoomState=CountedZoom(False, "NotZoomed"))) is False
+      and body_facing.aiming(types.SimpleNamespace(ZoomState=CountedZoom(False, "ZoomedIn"))) is True)
+runner = Player()
+runner.CharacterMovement.Velocity = CountedVector(0.0, 621.0)
+gap = body_facing.BodyFacing(rotator).run_gap(runner, types.SimpleNamespace(bIsGliding=False), 0.0, True)
+check("running: the speed's two fields each read once, the run seen where it goes",
+      runner.CharacterMovement.Velocity.reads == 2 and abs(abs(gap) - 90.0) < 0.01)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

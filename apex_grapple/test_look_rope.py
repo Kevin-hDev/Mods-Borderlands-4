@@ -117,6 +117,23 @@ check("the glow laid on the rope's own places, as wide as the rope there",
       all(near(look_fixture.put_at(a), look_fixture.put_at(b)) for a, b in zip(rope_c[:2], glow[:2]))
       and glow[0].called("SetWorldScale3D")[-1][0].X == rope_c[0].called("SetWorldScale3D")[-1][0].X)
 
+# 2026-10-24 review: each piece laid took a new HitResult, an output the game fills only on a sweep, which the pose
+# never asks for; and each piece built looked up its class and made its start transform twice.
+import unrealsdk  # noqa: E402  (the test's own game, from sdk_stubs)
+
+made_structs: list[str] = []
+looked_up: list[str] = []
+real_struct, real_class = unrealsdk.make_struct, unrealsdk.find_class
+unrealsdk.make_struct = lambda name, **fields: (made_structs.append(name), real_struct(name, **fields))[1]
+unrealsdk.find_class = lambda name: (looked_up.append(name), real_class(name))[1]
+twenty = look_rope.Rope(character, "A", "L", 20, objects, "ORANGE")
+check("a rope of twenty pieces looks up its pieces' class once and makes their start once",
+      looked_up.count(look_rope.look_pieces.COMPONENT) == 1 and made_structs.count("Transform") == 1)
+made_structs.clear()
+laid = twenty.lay([(float(step * 50), 0.0, 0.0) for step in range(21)])
+check("laid, it makes one HitResult for all its pieces", laid > 1 and made_structs.count("HitResult") == 1)
+unrealsdk.make_struct, unrealsdk.find_class = real_struct, real_class
+
 refusing = pieces[2]
 refusing.answers["K2_DestroyComponent"] = lambda owner: (_ for _ in ()).throw(RuntimeError("refused"))
 try:

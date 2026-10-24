@@ -42,8 +42,16 @@ def reset() -> None:
     _game_point, _game_code, _sending, _told, _look_sent, _next_look_ns = None, 0, False, None, None, 0
 
 
+_authority: Any = None
+
+
 def is_guest(character: Any) -> bool:
-    return character.GetLocalRole() != unrealsdk.find_enum("ENetRole").ROLE_Authority
+    global _authority
+    if _authority is None:
+        # The engine's own enum, the same for the whole game: looked up once rather than at every frame (review of
+        # 2026-10-24).
+        _authority = unrealsdk.find_enum("ENetRole").ROLE_Authority
+    return character.GetLocalRole() != _authority
 
 
 def tell_start(character: Any, anchor: tuple[float, float, float], flight_s: float) -> None:
@@ -76,10 +84,11 @@ def tell_end() -> None:
         report.error_once("coop:tell", f"the other players could not be told of a rope: {exc!r}")
 
 
-def tick(character: Any, now_ns: int) -> None:
-    """Every frame: a guest's look told to the host when it changes and every LOOK_EVERY_S."""
+def tick(character: Any, now_ns: int, guest: bool) -> None:
+    """Every frame: a guest's look told to the host when it changes and every LOOK_EVERY_S. `guest` is is_guest's
+    answer for this frame, asked once by the frame for every co-op step that needs it."""
     global _look_sent, _next_look_ns
-    if not is_guest(character):
+    if not guest:
         return
     number = look_code.mine()
     if number == _look_sent and now_ns < _next_look_ns:

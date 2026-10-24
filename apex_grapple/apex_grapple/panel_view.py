@@ -72,6 +72,7 @@ def build_view(pc, model, _return_to_menu=True):
     root.SetStretch(w.enum("EStretch", "ScaleToFit"))
     # A spare key selector lends its solid button brush to every other style: the one brush proven in BL4.
     template = w.new("InputKeySelector", root).WidgetStyle.Normal
+    fonts.use(model.language)  # Japanese draws from its own faces (panel_fonts.py)
     loaded = fonts.build(root)
     tx.use(loaded)
     try:

@@ -19,7 +19,7 @@ from . import control_console_menu, control_menu, coop_link, coop_messages, fram
 from . import updates
 
 # Research observers are archived: their synchronous scans caused first-shot stalls.
-__version__ = "1.0.12"
+__version__ = "1.0.13"
 __author__ = "kevin-hDev"
 
 
@@ -37,16 +37,18 @@ def _on_disable() -> None:
     report.note("disabled")
 
 
+class _GrappleMod(settings_moved.AdoptsMovedSettings, AtomicMod):
+    moved = menu.MOVED
+
+
 mod = build_mod(
-    cls=AtomicMod,
+    cls=_GrappleMod,
     name="Apex Grapple",
     options=[*menu.MENU, updates.seen],
     hooks=[frame.tick, coop_link.on_send, coop_messages.on_message],
     on_enable=_on_enable,
     on_disable=_on_disable,
 )
-# build_mod has loaded the settings file by now (mods_base, mod_list.register_mod, read on 2026-10-14).
-settings_moved.adopt(mod, menu.MOVED)
 control_console_menu.install(mod, control_menu.MENU)
 
 # mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.

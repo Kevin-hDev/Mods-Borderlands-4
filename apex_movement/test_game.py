@@ -77,6 +77,26 @@ second.ZoomState.State = "NotZoomed"
 check("a zoom state without a name is read by its text", not game.is_aiming(second))
 second.ZoomState.State = types.SimpleNamespace(name="NotZoomed")
 
+
+class CountedZoom:
+    """A zoom state that counts the reads of State: each one crosses into the game."""
+
+    bWantsToZoom = False
+
+    def __init__(self) -> None:
+        self.reads = 0
+
+    @property
+    def State(self) -> str:
+        self.reads += 1
+        return "NotZoomed"
+
+
+counted = CountedZoom()
+kept_zoom, second.ZoomState = second.ZoomState, counted
+check("the zoom state is read once (review, 2026-10-24)", not game.is_aiming(second) and counted.reads == 1)
+second.ZoomState = kept_zoom
+
 second.input = sdk_stubs.vector(0.6, 0.8)
 check("the stick reads its length", abs(game.stick(second) - 1.0) < 1e-9)
 

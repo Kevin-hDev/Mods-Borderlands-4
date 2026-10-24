@@ -14,7 +14,7 @@ the next surprise will be.
 """
 
 import re
-from typing import Any
+from typing import Any, NamedTuple
 
 from . import report
 
@@ -36,6 +36,15 @@ NAME_PATTERN = re.compile(r"[A-Za-z0-9_]+")
 _told = False
 
 
+class Line(NamedTuple):
+    """One line of the game's key list, read and checked once: every read of a game line is a call into the game, and
+    the check of every second walked the list about eight times (review of 2026-10-24). `game_line` is kept for
+    melee_press alone, which hands the game back its own action."""
+    action: str | None
+    key: str | None
+    game_line: Any
+
+
 def reset() -> None:
     global _told
     _told = False
@@ -48,44 +57,44 @@ def _name(value: Any) -> str:
     return name
 
 
-def snapshot(mappings: Any) -> list[Any]:
-    """Validate at most one bounded input snapshot before using or logging any part of it."""
-    found: list[Any] = []
+def snapshot(mappings: Any) -> list[Line]:
+    """Validate at most one bounded input snapshot before using or logging any part of it. Lines already read pass
+    as they are, so a list read from the game once can go through every function below without a second read."""
+    found: list[Line] = []
     for mapping in mappings:
         if len(found) >= MAX_MAPPINGS:
             raise ValueError("too many input mappings")
+        if isinstance(mapping, Line):
+            found.append(mapping)
+            continue
         action = getattr(mapping, "Action", None)
-        if action is not None:
-            _name(action.Name)
-            _name(mapping.Key.KeyName)
-        found.append(mapping)
+        if action is None:
+            found.append(Line(None, None, mapping))
+        else:
+            found.append(Line(_name(action.Name), _name(mapping.Key.KeyName), mapping))
     return found
 
 
 def action_names(mappings: list[Any]) -> list[str]:
     """Every action named in the list, once each, in the order the game gives them."""
     found: list[str] = []
-    for mapping in snapshot(mappings):
-        action = getattr(mapping, "Action", None)
-        if action is None:
-            continue
-        name = str(action.Name)
-        if name not in found:
-            found.append(name)
+    for line in snapshot(mappings):
+        if line.action is not None and line.action not in found:
+            found.append(line.action)
     return found
 
 
 def keys_for(mappings: list[Any], wanted: tuple[str, ...]) -> set[str]:
-    return {str(mapping.Key.KeyName) for mapping in snapshot(mappings)
-            if getattr(mapping, "Action", None) is not None and str(mapping.Action.Name) in wanted}
+    return {line.key for line in snapshot(mappings) if line.action is not None and line.action in wanted}
 
 
 def grapple_actions(mappings: list[Any]) -> tuple[str, ...]:
     """The actions the mod takes over: a real grapple action if the game ever names one, melee otherwise."""
-    named = tuple(name for name in action_names(mappings) if GRAPPLE_WORD in name.lower())
+    names = action_names(mappings)
+    named = tuple(name for name in names if GRAPPLE_WORD in name.lower())
     if named:
         return named
-    return tuple(name for name in action_names(mappings) if name in GRAPPLE_ACTIONS)
+    return tuple(name for name in names if name in GRAPPLE_ACTIONS)
 
 
 def grapple_keys(mappings: list[Any]) -> set[str]:

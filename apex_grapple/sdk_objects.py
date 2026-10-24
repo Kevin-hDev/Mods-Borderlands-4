@@ -1,11 +1,37 @@
 """Test doubles for characters, traces, and animation assets."""
 
+import itertools
 import types
 from typing import Any
+
+# Each object of the game has its own address, which the frame hook compares (played_body.py).
+_addresses = itertools.count(0x10000, 0x100)
 
 
 def vector(x: float, y: float, z: float = 0.0) -> Any:
     return types.SimpleNamespace(X=x, Y=y, Z=z)
+
+
+def mesh(**fields: Any) -> Any:
+    """A mesh of the game: its fields, and an address of its own."""
+    where = next(_addresses)
+    return types.SimpleNamespace(_get_address=lambda: where, **fields)
+
+
+class FakeAnim:
+    """An animation instance as the frame hook receives it: the mesh holding it (Outer), and its address."""
+
+    def __init__(self, outer: Any = None) -> None:
+        self.Outer = outer if outer is not None else mesh()
+        self._where = next(_addresses)
+
+    def _get_address(self) -> int:
+        return self._where
+
+
+def other_anim() -> FakeAnim:
+    """Another character's animation update, on a mesh of its own."""
+    return FakeAnim()
 
 
 def event(name: str) -> Any:
@@ -80,8 +106,8 @@ class FakeCharacter:
         self.role = role
         self.RootComponent = None
         self.CharacterMovement = FakeMovement()
-        self.anim = object()
-        self.Mesh = types.SimpleNamespace(GetAnimInstance=lambda: self.anim)
+        self.Mesh = mesh(GetAnimInstance=lambda: self.anim)
+        self.anim = FakeAnim(self.Mesh)
         self.location = vector(0.0, 0.0, 100.0)
         self.input = vector(0.0, 0.0, 0.0)
         self.pitch, self.yaw = 0.0, 0.0

@@ -91,6 +91,28 @@ check("each frame, shot or not, notes where Vex is: the next frame's camera, fil
 character.location = sdk_objects.vector(0.0, 0.0, 0.0)
 pc.PlayerCameraManager.CameraCachePrivate.Timestamp = -1.0
 
+# 2026-10-24 review: through the eyes, a frame of a shot read the whole camera again for the muzzle, twice while the arm
+# came in, though the frame had just noted where Vex was.
+reads = {"camera": 0, "clock": 0}
+manager = pc.PlayerCameraManager
+real_where = manager.GetCameraLocation
+manager.GetCameraLocation = lambda: (reads.__setitem__("camera", reads["camera"] + 1), real_where())[1]
+statics = state["extra_classes"]["GameplayStatics"].ClassDefaultObject
+real_clock = statics.GetTimeSeconds
+statics.GetTimeSeconds = lambda who: (reads.__setitem__("clock", reads["clock"] + 1), real_clock(who))[1]
+look_play.start(character, ANCHOR, 30 * S, 0.4)
+reads.update(camera=0, clock=0)
+look_play.tick(character, 30 * S + S // 60)
+check("while the arm comes in, a frame reads the camera once for the view and once for the muzzle, the clock once",
+      reads == {"camera": 2, "clock": 1})
+run(30.0 + 2.0 / 60.0, 30.29)
+reads.update(camera=0, clock=0)
+look_play.tick(character, 30 * S + 3 * S // 10)
+check("from the arms' pistol, the clock once too", seen(gun) == {look_gun.ARMS_PISTOL} and reads["clock"] == 1)
+run(30.3 + 1.0 / 60.0, 32.5, end_s=31.0, catch_s=30.4)
+manager.GetCameraLocation, statics.GetTimeSeconds = real_where, real_clock
+check("and the shot ends as before", not look_play.busy())
+
 vex_fixture.camera(state, character, yaw=90.0)
 pc = state["pc"]
 look_play.start(character, ANCHOR, 4 * S, 0.4)
@@ -158,6 +180,15 @@ said = sum("outfit:" in line for line in state["misc"])
 look_play.tick(newcomer, 13 * S)
 check("after a reset, the outfit is said again in the log, though unchanged",
       sum("outfit:" in line for line in state["misc"]) == said + 1)
+
+# 2026-10-24 review: through the eyes, rope away, every frame read the character's place twice: once for the camera of
+# the next frame, once to tell the first person from the third.
+vex_fixture.camera(state, newcomer)
+places: list[int] = []
+newcomer.K2_GetActorLocation = lambda: (places.append(1), newcomer.location)[1]
+look_play.tick(newcomer, 14 * S)
+check("through the eyes with the rope away, a frame reads the character's place once", len(places) == 1)
+del newcomer.K2_GetActorLocation
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

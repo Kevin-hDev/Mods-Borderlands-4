@@ -4,11 +4,11 @@ Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borde
 
 | Mod | What it does | Version |
 |---|---|---|
-| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing, slow walk, plus an optional third-person and orbit camera, third-person aiming, field of view and loot reach | 1.2.32 |
-| [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.12 |
+| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing, slow walk, plus an optional third-person and orbit camera, third-person aiming, field of view and loot reach | 1.2.33 |
+| [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.13 |
 | [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns, faster reverse, a longer boost that pushes in the air, a tougher vehicle, stronger weapons and vehicle unlocks | 1.0.11 |
-| [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, third-person aiming, FOV and loot reach | 1.2.14 |
-| [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, selectable third-person or first-person aiming, adjustable FOV and loot reach | 1.2.15 |
+| [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, third-person aiming, FOV and loot reach | 1.2.15 |
+| [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, selectable third-person or first-person aiming, adjustable FOV and loot reach | 1.2.16 |
 | [Apex Heirloom](apex_heirloom/) | An Apex Legends style heirloom: the Jakobs knife or the axe in your hand when your weapon is put away, and a key to put it away | 1.0.6 |
 | [Hunter Change](hunter_change/) | Become another Vault Hunter in your game, keeping its level, backpack and story, each hunter with their own skill tree; or only wear another hunter's look | 1.0.7 |
 | [Benefix Ohm Attack](benefix_ohm_attack/) | Fire an attack beam from your hand that locks onto enemies, with six elements to choose from, its own energy bar and damage that scales with your level | 1.0.4 |
@@ -50,7 +50,7 @@ Run each test script separately. A failing test exits with a non-zero code; opti
 
 The original code in this repository is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Kevin-hDev.
 
-The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Apex Movement, Omni Sprint, Third Person & FOV, Apex Grapple, Vehicle Driving, Hunter Change, Co-op Duel, It Follows and Companions also bundle a subset of Noto Sans SC for their Chinese window, under the same license (`OFL-NotoSansSC.txt` in their `assets` directory). Apex Movement, Third Person & FOV, It Follows and Companions also bundle a subset of Noto Sans JP for their Japanese window, under the same license (`OFL-NotoSansJP.txt`). Game assets and the Borderlands 4 SDK are not relicensed by this repository. Apex Heirloom's models and animations, Benefix Ohm Attack's hand poses and energy bar, and Apex Grapple's grapple gun gestures are built from the game's own files: they are not in this repository, only in each mod's Nexus archive.
+The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Apex Movement, Omni Sprint, Third Person & FOV, Apex Grapple, Vehicle Driving, Hunter Change, Co-op Duel, It Follows and Companions also bundle a subset of Noto Sans SC for their Chinese window, under the same license (`OFL-NotoSansSC.txt` in their `assets` directory). Apex Movement, Third Person & FOV, Apex Grapple, It Follows and Companions also bundle a subset of Noto Sans JP for their Japanese window, under the same license (`OFL-NotoSansJP.txt`). Game assets and the Borderlands 4 SDK are not relicensed by this repository. Apex Heirloom's models and animations, Benefix Ohm Attack's hand poses and energy bar, and Apex Grapple's grapple gun gestures are built from the game's own files: they are not in this repository, only in each mod's Nexus archive.
 
 ## Credits
 

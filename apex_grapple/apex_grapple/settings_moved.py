@@ -42,3 +42,16 @@ def adopt(mod: Any, moved: tuple) -> list[str]:
     if taken:
         report.note(f"settings kept from their former menu line: {', '.join(taken)}")
     return taken
+
+
+class AdoptsMovedSettings:
+    """Mixed in before the SDK's Mod, it takes the `moved` settings from their old line before mods_base loads the file.
+    For a mod switched on, mods_base enables it while loading and saves the file at once, which wrote each moved setting
+    at its new line with its default and erased its old line before the package's own code ran (review of 2026-10-24,
+    mods_base/settings.py read in the installed SDK)."""
+
+    moved: tuple = ()
+
+    def load_settings(self) -> None:
+        adopt(self, self.moved)
+        super().load_settings()

@@ -92,7 +92,8 @@ vehicle = VehicleFraming(lambda: (shared, lambda possibly_loading: pc, lambda it
                                   lambda: 0, lines.append))
 vehicle.sync(types.SimpleNamespace(dynamic_camera=lambda: (1.0, 1.0)))
 Values = namedtuple("Values", "keys holds hold_s")
-look = FreeLook(lambda: (None, None, shared, lambda possibly_loading=False: pc, lambda: 0, lines.append, id))
+look = FreeLook(lambda: (None, None, shared, lambda possibly_loading=False: pc, lambda: 0, lines.append, id,
+                          lambda item: (lambda: item)))
 look.sync(types.SimpleNamespace(free_look=lambda: Values(("A",), (True,), 0.2)))
 check("Free Look and the framing at the wheel, both on: the SDK holds one hook after the update",
       list(shared_sdk.items) == [(FRAME, "POST", IDENTIFIER)] and set(shared.callbacks) == {

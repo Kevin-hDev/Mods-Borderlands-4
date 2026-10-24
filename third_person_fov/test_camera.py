@@ -79,7 +79,11 @@ runtime = Runtime()
 camera.shared = lambda: runtime
 camera.start()
 state["pc"] = object()
-camera.on_frame(42)
+# The controller the frame hook already read is the one ticked: the camera never asks the game for it again.
+controller = object()
+camera.on_frame(42, controller)
+camera.on_frame(43, None)
+camera.on_frame(44)
 settings.third_person.mod = sdk_stubs.FakeMod(state)
 toggle = camera.toggle_third_person()
 settings.shoulder_left.mod = sdk_stubs.FakeMod(state)
@@ -90,7 +94,9 @@ orbit = camera.toggle_orbit()
 ok = runtime.calls[0][0:2] == ("register", "third_person_fov")
 ok = ok and runtime.calls[0][2] == 150
 ok = ok and runtime.calls[1][0:3] == ("prepare", "third_person_fov", False)
-ok = ok and runtime.calls[2] == ("tick", state["pc"], 42)
+ok = ok and runtime.calls[2] == ("tick", controller, 42)
+# No controller in play is passed on as is; without one given, the game is asked, as before.
+ok = ok and runtime.calls[4] == ("tick", None, 43) and runtime.calls[6] == ("tick", state["pc"], 44)
 ok = ok and toggle is True and settings.third_person.value is True
 ok = ok and shoulder is True and settings.shoulder_left.value is True
 ok = ok and orbit is True and settings.orbit.value is True

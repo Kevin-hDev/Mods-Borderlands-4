@@ -203,13 +203,11 @@ check("two dashes loaded at once tell nothing on their own: neither is written u
       near(before_any.Duration.constant, 0.33) and near(other_one.Duration.constant, 0.33))
 SECOND = 1_000_000_000
 scans = state["move_scans"]
-dash.update(arrival, 50 + 2 * SECOND)
-dash.update(arrival, 50 + 9 * SECOND)
-check("two dashes found are not searched again every second: a search walks every object of the game",
-      state["move_scans"] == scans)
 state["controlled_moves"] = [before_any]
-dash.update(arrival, 50 + 10 * SECOND)
-check("they are searched again 10 s later, and one dash left is known and lengthened",
+dash.update(arrival, 50 + SECOND)
+# Searched again a second later, not ten: a wait of ten let a dash use the game's length after the other one was
+# unloaded (review of 2026-10-24); the search only runs until a dash is known.
+check("two dashes found are searched again a second later, and one dash left is known and lengthened at once",
       state["move_scans"] == scans + 1 and near(before_any.Duration.constant, 0.33 + extra))
 dash.stop(arrival)
 state["controlled_moves"] = []

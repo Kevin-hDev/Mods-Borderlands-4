@@ -154,6 +154,21 @@ check("a failure stops that player's drawing, said once", remote_ropes._remotes[
 check("the others go on", remote_ropes._remotes[9].grapple is not None)
 check("the player's own rope still answers", rope.fire(player, 24 * SECOND) and rope.busy)
 
+# 8b. Kevin's decision 2 of 2026-10-24: each look a player told built that player's grapple again, 24 to 55 ms on
+# every other game and as often as told, so a modified game telling one at every frame froze every other game. A look
+# changed is built at most once a second for each player; a new character or a return on foot is not held back.
+built: list[int] = []
+real_make = remote_ropes.make
+remote_ropes.make = lambda character, number: (built.append(number), real_make(character, number))[1]
+told = [look_with(look=look_settings.CLASSIC, hook_size=size) for size in ("A", "B") * 15]
+for step, number in enumerate(told):
+    remote_ropes.look(9, number)
+    remote_ropes.tick(25 * SECOND + step * 16 * MS)
+check("thirty looks told in half a second build that player's grapple once", len(built) == 1)
+remote_ropes.tick(26 * SECOND)
+check("a second after that build, the last look told is built", len(built) == 2 and built[-1] == told[-1])
+remote_ropes.make = real_make
+
 # 9. Bounded, and everything removed at switch-off.
 for number in range(100, 100 + remote_ropes.MAX_PLAYERS + 5):
     remote_ropes.look(number, 0)

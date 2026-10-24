@@ -83,20 +83,31 @@ def shape(hand, hook, slack: str, shown: float, clock_s: float) -> list[tuple[fl
     below, beside, hang = _across(along)
     share, most = SLACKS[slack]
     depth = min(share * distance, most) * shown
+    # Written out rather than through _add and _scale, the same operations in the same order, so the same numbers to the
+    # last bit: this runs at every frame of a shot, and the helpers cost some 300 calls a frame (review of 2026-10-24).
+    hand_x, hand_y, hand_z = hand
+    span_x, span_y, span_z = span
+    below_x, below_y, below_z = below
+    beside_x, beside_y, beside_z = beside
     points = []
     for number in range(POINTS):
         part = number / (POINTS - 1)
         envelope = math.sin(math.pi * part)
         wave = WAVE_SHARE * depth * envelope * math.sin(2.0 * math.pi * (WAVE_TURNS * part - WAVE_RATE * clock_s))
-        off = _add(_scale(below, depth * hang * envelope), _scale(beside, wave))
-        points.append(_add(_add(hand, _scale(span, part)), off))
+        bow = depth * hang * envelope
+        points.append((hand_x + span_x * part + (below_x * bow + beside_x * wave),
+                       hand_y + span_y * part + (below_y * bow + beside_y * wave),
+                       hand_z + span_z * part + (below_z * bow + beside_z * wave)))
     return points
 
 
 def laid(points, piece_cm: float) -> list[tuple[tuple[float, ...], tuple[float, ...]]]:
     """Where each piece lies along the points: as many pieces as fit best along the curve, each running straight from
     one place on it to the next, the places spread evenly along it; at least one."""
-    lengths = [_length(_sub(b, a)) for a, b in zip(points, points[1:])]
+    # Written out as in shape(), the same numbers to the last bit. sum() and not +: since Python 3.12 it adds floats
+    # compensated, which a chain of + does not, and _length went through sum().
+    lengths = [math.sqrt(sum(((bx - ax) * (bx - ax), (by - ay) * (by - ay), (bz - az) * (bz - az))))
+               for (ax, ay, az), (bx, by, bz) in zip(points, points[1:])]
     total = sum(lengths)
     count = max(1, round(total / piece_cm))
     places, segment, walked = [points[0]], 0, 0.0
@@ -106,6 +117,7 @@ def laid(points, piece_cm: float) -> list[tuple[tuple[float, ...], tuple[float, 
             walked += lengths[segment]
             segment += 1
         share = (mark - walked) / lengths[segment] if lengths[segment] > 0.0 else 0.0
-        places.append(_add(points[segment], _scale(_sub(points[segment + 1], points[segment]), share)))
+        (ax, ay, az), (bx, by, bz) = points[segment], points[segment + 1]
+        places.append((ax + (bx - ax) * share, ay + (by - ay) * share, az + (bz - az) * share))
     places.append(points[-1])
     return list(zip(places, places[1:]))

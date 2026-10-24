@@ -1,11 +1,15 @@
 """The Free Look unit against a fake game: its own clock while a key is set, the hold time, aiming, a vehicle taken
 during the hold, a mistake that stops it until the next character, and everything back when stopped."""
 
+import sys
+import types
 import unittest
 from collections import namedtuple
+from unittest.mock import patch
 
 from camera_test_fixtures import Hooks
-from free_look_test_fixtures import MODES, Controller, Memory, Sdk
+from free_look_test_fixtures import MODES, Controller, Memory, Pawn, Sdk
+from apex_camera_runtime import free_look, frame_hooks
 from apex_camera_runtime.free_look import FRAME, IDENTIFIER, FreeLook
 
 # free_look_options.Values, without the SDK's option classes it is made of.
@@ -21,7 +25,7 @@ class Game:
 
     def load(self):
         return (Sdk(), self.memory, self.hooks, lambda possibly_loading=False: self.pc, lambda: self.now,
-                self.said.append, id)
+                self.said.append, id, lambda item: (lambda: item))
 
     def frames(self, unit, count):
         for _ in range(count):
@@ -35,6 +39,20 @@ def started(pc, values=HOLD):
     unit.sync(type("Settings", (), {"free_look": staticmethod(lambda: values)})())
     unit.foot.modes = MODES
     return unit, game
+
+
+class OnFoot(Pawn):
+    """A character: no vehicle field, each question raising inside the SDK, and counted."""
+
+    def __init__(self):
+        super().__init__(600.0)
+        self.Class = types.SimpleNamespace()
+        self.asked = 0
+
+    def __getattr__(self, name):
+        if name == "OakVehicleMovement":
+            self.__dict__["asked"] += 1
+        raise AttributeError(name)
 
 
 class UnitTests(unittest.TestCase):
@@ -99,6 +117,28 @@ class UnitTests(unittest.TestCase):
         count = len(game.said)
         game.frames(unit, 5)
         self.assertEqual(len(game.said), count)
+
+    def test_on_foot_the_character_is_asked_for_a_vehicle_field_once(self):
+        # The question raised inside the SDK at every frame (2026-10-24).
+        pc = Controller("ThirdPerson")
+        pc.Pawn = pc.OakCharacter = OnFoot()
+        unit, game = started(pc)
+        pc.held["A"] = 1.0
+        game.frames(unit, 20)
+        self.assertEqual(game.said, ["free look on foot"])
+        self.assertEqual(pc.Pawn.asked, 1)
+
+    def test_its_clock_goes_through_the_copy_s_shared_hook(self):
+        sdk = types.ModuleType("unrealsdk")
+        sdk.hooks, sdk.logging = Hooks(), types.SimpleNamespace(info=print, error=print)
+        unreal = types.ModuleType("unrealsdk.unreal")
+        unreal.WeakPointer = lambda item: (lambda: item)
+        mods = types.ModuleType("mods_base")
+        mods.get_pc = lambda possibly_loading=False: None
+        with patch.dict(sys.modules, {"unrealsdk": sdk, "unrealsdk.unreal": unreal, "mods_base": mods}):
+            game = free_look.game_modules()
+            self.assertIs(game[2], frame_hooks.front(sdk.hooks))
+        self.assertIs(game[7], unreal.WeakPointer)
 
     def test_stop_puts_everything_back(self):
         pc = Controller("Default", speed=600.0)

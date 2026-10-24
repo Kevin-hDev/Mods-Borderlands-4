@@ -84,11 +84,14 @@ class Rope:
         if self.holds and lets_go and release.held_key(self._pressed_ns, now_ns):
             self.let_go("key released", now_ns)
 
-    def update(self, character: Any, now_ns: int) -> None:
+    def update(self, character: Any, now_ns: int, settings_checked: bool = False) -> None:
+        """No invalid setting reaches the velocity: the settings are kept in bounds here, unless the caller has just
+        done it this same frame, as frame.on_frame does (checked twice a frame before the review of 2026-10-24)."""
         if not self.busy:
             return
-        for line in settings.keep_in_bounds():
-            report.warning(line)
+        if not settings_checked:
+            for line in settings.keep_in_bounds():
+                report.warning(line)
         reason = coordination.takeover(character)
         if reason is not None:
             self.let_go(reason, now_ns)

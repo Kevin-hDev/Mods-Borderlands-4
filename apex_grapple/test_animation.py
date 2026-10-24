@@ -70,6 +70,34 @@ hands.raises = False
 animation.start()
 check("and it stays off until the next character or switch-on", len(hands.played) == 3)
 
+# 2026-10-24 review: each shot emptied the arms' memory, and each classic shot walked every object of the game for them
+# (9 to 13 ms in its frame), when arms.find already checks the arms it keeps: alive, the character's, the mesh's own.
+from apex_grapple import hand_anchor  # noqa: E402
+
+hands.Outer.DoesSocketExist = lambda name: True
+hands.Outer.GetSocketLocation = lambda name: sdk_stubs.vector(1.0, 2.0, 3.0)
+state["find_all_calls"].clear()
+for _ in range(3):
+    hand_anchor.reset()
+    game.hand_spot(player)
+check("shot after shot, the arms kept are checked rather than searched for again",
+      state["find_all_calls"].count(arms.ANIM_INSTANCE) <= 1)
+searched = state["find_all_calls"].count(arms.ANIM_INSTANCE)
+animation.reset()
+hand_anchor.reset()
+check("a reset of the visuals keeps them too while they hold", game.hand_spot(player) == (1.0, 2.0, 3.0)
+      and state["find_all_calls"].count(arms.ANIM_INSTANCE) == searched)
+other = sdk_stubs.FakeCharacter()
+other_hands = sdk_stubs.FakeArms(other)
+other_hands.Outer.DoesSocketExist = lambda name: True
+other_hands.Outer.GetSocketLocation = lambda name: sdk_stubs.vector(7.0, 8.0, 9.0)
+state["anim_instances"] = [hands, other_hands]
+hand_anchor.reset()
+check("a new character's arms are searched for and found", game.hand_spot(other) == (7.0, 8.0, 9.0)
+      and state["find_all_calls"].count(arms.ANIM_INSTANCE) == searched + 1)
+
+# Arms that are gone: their weak pointer answers nothing, as the game's does for a destroyed object.
+hands.destroyed = other_hands.destroyed = True
 animation.reset()
 state["anim_instances"] = []
 animation.start()

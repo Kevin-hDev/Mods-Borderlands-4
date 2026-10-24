@@ -127,17 +127,17 @@ state["pc"] = local_pc
 character.role = "ROLE_AutonomousProxy"
 local_pc.sent = []
 local_pc.ServerSetBestGrappleable = lambda target, code: local_pc.sent.append((target, code))
-coop_link.tick(character, 0)
+coop_link.tick(character, 0, coop_link.is_guest(character))
 check("a guest tells the host its look", local_pc.sent[0] == (None, coop_code.encode_look(look_code.mine())))
-coop_link.tick(character, SECOND)
+coop_link.tick(character, SECOND, coop_link.is_guest(character))
 check("not again while it holds, within a few seconds", len(local_pc.sent) == 2)
 look_settings.rope_colour.value = "RED"
-coop_link.tick(character, 2 * SECOND)
+coop_link.tick(character, 2 * SECOND, coop_link.is_guest(character))
 check("again as soon as it changes", local_pc.sent[-2] == (None, coop_code.encode_look(look_code.mine())))
-coop_link.tick(character, 8 * SECOND)
+coop_link.tick(character, 8 * SECOND, coop_link.is_guest(character))
 check("and again every few seconds", len(local_pc.sent) == 6)
 character.role = "ROLE_Authority"
-coop_link.tick(character, 20 * SECOND)
+coop_link.tick(character, 20 * SECOND, coop_link.is_guest(character))
 check("the host tells nobody its look this way", len(local_pc.sent) == 6)
 
 received: list[tuple] = []

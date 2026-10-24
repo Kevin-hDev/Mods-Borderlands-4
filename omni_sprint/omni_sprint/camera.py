@@ -27,6 +27,7 @@ PRIORITY = 100
 _runtime: Any = None
 _registered = False
 _refusal = None
+_ASK = object()
 
 
 class Settings:
@@ -122,14 +123,16 @@ def start() -> IncompatibleState | None:
     _registered = True
 
 
-def on_frame(now_ns: int) -> None:
+def on_frame(now_ns: int, pc: Any = _ASK) -> None:
+    """pc: the player controller the frame hook has just read, or None, so the game is asked once a frame. Without
+    it the game is asked here: the shared camera protocol test calls every mod's adapter with the time only."""
     if not _registered:
         start()
     if not _registered:
         return
     setup_error = _runtime.prepare_third_person(
         OWNER, settings.third_person_enabled(), ensure)
-    _runtime.tick(get_pc(possibly_loading=True), now_ns)
+    _runtime.tick(get_pc(possibly_loading=True) if pc is _ASK else pc, now_ns)
     if setup_error is not None:
         raise setup_error
 

@@ -106,6 +106,22 @@ class FieldsTests(unittest.TestCase):
         self.assertEqual(self.memory.writes, [])
         self.assertFalse(self.patch.pending)
 
+    def test_container_replaced_at_the_same_place_is_extended(self):
+        """Destroyed, then replaced by a new one at the same path and address between two refreshes: the new one,
+        holding the game's value, is extended and given back like any other (Kevin, 2026-10-24: « le vieux defaut on
+        peut le corriger aussi »)."""
+        self.patch.apply(660, WORLD)
+        self.objects[0].gone = True
+        replacement = actor()
+        self.objects = [replacement, self.objects[1]]
+        self.memory.data[0x106D3] = self.original
+        self.patch.apply(660, WORLD)
+        self.assertEqual(self.memory.data[0x106D3], struct.pack('<Bf', 1, 660))
+        self.assertIs(self.patch.saved[('Chest', 0x106D3)].pointer(), replacement)
+        self.patch.restore()
+        self.assertEqual(self.memory.data[0x106D3], self.original)
+        self.assertFalse(self.patch.pending)
+
     def test_destroyed_actor_out_of_the_list_is_forgotten(self):
         self.patch.apply(660, WORLD)
         self.objects[0].gone = True
@@ -116,8 +132,17 @@ class FieldsTests(unittest.TestCase):
 
     def test_world_list_is_bounded(self):
         self.objects = [actor(f'Chest{n}', 0x100000 + n * 0x1000) for n in range(MAX_SCAN + 1)]
+        # The first chests could be written: the budget is checked before any write, not once they are written
+        # (review of 2026-10-24: with no writable chest, a check made late passed too).
+        for obj in self.objects[:3]:
+            self.memory.data[obj._get_address() + 0x6D3] = self.original
         with self.assertRaisesRegex(RuntimeError, 'scan budget'):
             self.patch.apply(660, WORLD)
+        self.assertEqual(self.memory.writes, [])
+
+    def test_world_list_of_exactly_the_budget_is_taken(self):
+        self.objects = [actor(f'Chest{n}', 0x100000 + n * 0x1000) for n in range(MAX_SCAN)]
+        self.patch.apply(660, WORLD)
         self.assertEqual(self.memory.writes, [])
 
     def test_other_mod_value_is_not_overwritten(self):

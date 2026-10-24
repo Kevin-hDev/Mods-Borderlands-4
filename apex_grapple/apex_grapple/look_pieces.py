@@ -31,10 +31,17 @@ def held() -> Any:
                                  Scale3D=rope_ends.vector((1.0, 1.0, 1.0)))
 
 
-def new_piece(character: Any, mesh: Any, drawn_as: Any = None) -> Any:
+def tools() -> tuple[Any, Any]:
+    """What every new piece is made with, the component's class and its start: looked up once for a whole rope, not
+    twice for each of its hundreds of pieces (review of 2026-10-24). The game copies the start at each call."""
+    return unrealsdk.find_class(COMPONENT), held()
+
+
+def new_piece(character: Any, mesh: Any, drawn_as: Any = None, made_with: tuple[Any, Any] | None = None) -> Any:
     """`mesh` added to the character, hidden; drawn as `drawn_as` is, when given (the first-person arms), its flags
-    copied before the piece is finished, as the trials did."""
-    made = character.AddComponentByClass(unrealsdk.find_class(COMPONENT), True, held(), True)
+    copied before the piece is finished, as the trials did. `made_with` is tools(), when the caller builds many."""
+    kind, start = made_with if made_with is not None else tools()
+    made = character.AddComponentByClass(kind, True, start, True)
     if isinstance(made, tuple):
         made = made[0] if made else None
     if made is None:
@@ -44,7 +51,7 @@ def new_piece(character: Any, mesh: Any, drawn_as: Any = None) -> Any:
     if drawn_as is not None:
         for flag in DRAW_FLAGS:
             setattr(made, flag, getattr(drawn_as, flag))
-    character.FinishAddComponent(made, True, held())
+    character.FinishAddComponent(made, True, start)
     made.SetVisibility(False, False)
     return made
 
@@ -70,10 +77,19 @@ def dressed(made: Any, key: str, parent: Any, objects: dict) -> tuple[int, Any]:
     return slot, material
 
 
-def put(made: Any, start: tuple, pitch: float, yaw: float, scale: tuple) -> None:
+def put(made: Any, start: tuple, pitch: float, yaw: float, scale: tuple, hit: Any = None) -> None:
+    place(made, start, pitch, yaw, hit)
+    size(made, scale)
+
+
+def place(made: Any, start: tuple, pitch: float, yaw: float, hit: Any = None) -> None:
+    """`hit` is the game's sweep result, filled only on a sweep, which this never asks for: one serves a whole rope."""
     made.K2_SetWorldLocationAndRotation(
         rope_ends.vector(start), unrealsdk.make_struct("Rotator", Pitch=pitch, Yaw=yaw, Roll=0.0),
-        False, unrealsdk.make_struct("HitResult"), True)
+        False, hit if hit is not None else unrealsdk.make_struct("HitResult"), True)
+
+
+def size(made: Any, scale: tuple) -> None:
     made.SetWorldScale3D(rope_ends.vector(scale))
 
 

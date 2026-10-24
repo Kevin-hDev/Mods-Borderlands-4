@@ -59,6 +59,36 @@ try:
     check("a file whose options are not a table takes nothing", settings_moved.adopt(mod, menu.MOVED) == [])
     mod.settings_file.unlink()
     check("no file, nothing to take", settings_moved.adopt(mod, menu.MOVED) == [])
+
+    # 2026-10-24 review: mods_base enables a mod switched on while it loads its settings, and saves the file at once
+    # (mods_base/settings.py, default_load_mod_settings, then Mod.enable with auto_enable; read in the installed SDK).
+    # The rope's switch was written at its new line with its default and its old line erased, before the package's own
+    # code could take it. This stand-in keeps that order: options loaded, then the mod enabled and its file saved.
+    class StartupMod:
+        def __init__(self, settings_file):
+            self.settings_file = settings_file
+
+        def load_settings(self):
+            saved = json.loads(self.settings_file.read_text(encoding="utf-8"))
+            if "show_rope" in saved["options"].get("look_menu", {}):
+                settings.show_rope.value = saved["options"]["look_menu"]["show_rope"]
+            if saved.get("enabled"):
+                saved["options"]["look_menu"] = {"show_rope": settings.show_rope.value}
+                saved["options"]["shot_menu"].pop("show_rope", None)
+                self.settings_file.write_text(json.dumps(saved), encoding="utf-8")
+
+    class Started(settings_moved.AdoptsMovedSettings, StartupMod):
+        moved = menu.MOVED
+
+    shutil.copyfile(HERE / "fixtures" / "settings_1_0_9.json", mod.settings_file)
+    switched_on = json.loads(mod.settings_file.read_text(encoding="utf-8"))
+    switched_on["enabled"] = True
+    mod.settings_file.write_text(json.dumps(switched_on), encoding="utf-8")
+    settings.show_rope.value = True
+    Started(mod.settings_file).load_settings()
+    check("switched on at launch, the rope stays off, and is saved off at its new place",
+          settings.show_rope.value is False and json.loads(mod.settings_file.read_text(encoding="utf-8"))
+          ["options"]["look_menu"]["show_rope"] is False)
 finally:
     shutil.rmtree(folder)
     settings.show_rope.value = settings.show_rope.default_value

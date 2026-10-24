@@ -3,6 +3,28 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.13', {
+        'en': (
+            'The settings window is now in Japanese too, with the 日本語 button at the top.',
+            'Performance: the grapple asks less of the game, during a shot, with the rope put away and in co-op. It looks and feels the same.',
+            'Fix: when updating from version 1.0.9 or older, a rope hidden with "Show the rope" stays hidden.',
+        ),
+        'fr': (
+            'La fenêtre de réglages existe maintenant aussi en japonais, avec le bouton 日本語 en haut.',
+            'Performance : le grappin demande moins de travail au jeu, pendant un tir, corde rangée et en coop. Il garde le même aspect et le même ressenti.',
+            'Correction : en mettant à jour depuis la version 1.0.9 ou plus ancienne, une corde cachée avec « Afficher la corde » reste cachée.',
+        ),
+        'zh': (
+            '设置窗口现在也支持日语，点击顶部的“日本語”按钮即可切换。',
+            '性能：抓钩对游戏的负担更小，无论是发射时、收起绳索时还是合作模式中。外观和手感不变。',
+            '修复：从 1.0.9 或更早版本更新时，用“显示绳索”隐藏的绳索会保持隐藏。',
+        ),
+        'ja': (
+            '設定ウィンドウが日本語にも対応しました。上部の「日本語」ボタンで切り替えられます。',
+            'パフォーマンス：発射中、ロープ収納中、協力プレイ中のいずれも、グラップルがゲームにかける負荷が軽くなりました。見た目と操作感は変わりません。',
+            '修正：バージョン1.0.9以前からアップデートした場合、「ロープを表示」で非表示にしたロープは非表示のまま保たれます。',
+        ),
+    }),
     ('1.0.12', {
         'en': (
             'Co-op: smoother grapple paths for the players who join a game: no more elastic pull, and no more trembling body during a grapple.',

@@ -35,18 +35,23 @@ def _location(character: Any) -> Spot:
     return float(spot.X), float(spot.Y), float(spot.Z)
 
 
-def note(pc: Any) -> None:
+def note(pc: Any) -> tuple[Any, Spot]:
     """Remembers where the character is in this frame: the camera filled at its end is the one the next frame reads.
-    Called every frame the look is ours, shot or not."""
+    Called every frame the look is ours, shot or not. Returns that character and its place, which look_view needs in
+    the same frame: read once rather than twice (review of 2026-10-24)."""
     character = pc.OakCharacter
-    _seen[_clock(character)] = _location(character)
+    spot = _location(character)
+    _seen[_clock(character)] = spot
     for old in sorted(_seen)[:-KEPT_FRAMES]:
         del _seen[old]
+    return character, spot
 
 
-def camera(pc: Any) -> tuple[Spot, tuple[Spot, Spot, Spot]]:
-    """The camera's place in the frame being drawn, and its axes ahead, left and up; its roll is left out."""
-    note(pc)
+def camera(pc: Any, noted: bool = False) -> tuple[Spot, tuple[Spot, Spot, Spot]]:
+    """The camera's place in the frame being drawn, and its axes ahead, left and up; its roll is left out. `noted`: the
+    caller has called note in this same frame, which a second note would only write again (review of 2026-10-24)."""
+    if not noted:
+        note(pc)
     manager = pc.PlayerCameraManager
     where = manager.GetCameraLocation()
     eye = (float(where.X), float(where.Y), float(where.Z))

@@ -16,10 +16,14 @@ THIRD_PERSON = "ThirdPerson"
 AWAY_CM = 100.0
 
 
-def of(pc: Any, character: Any) -> str:
+def of(pc: Any, character: Any, here: tuple[float, float, float] | None = None) -> str:
+    """`here` is the character's place when the caller has just read it in this frame."""
     manager = pc.PlayerCameraManager
     if THIRD_PERSON in str(manager.GetActorCameraMode(character)):
         return THIRD
-    eye, here = manager.GetCameraLocation(), character.K2_GetActorLocation()
-    gap = math.hypot(float(eye.X) - float(here.X), float(eye.Y) - float(here.Y))
+    eye = manager.GetCameraLocation()
+    if here is None:
+        spot = character.K2_GetActorLocation()
+        here = (float(spot.X), float(spot.Y), float(spot.Z))
+    gap = math.hypot(float(eye.X) - here[0], float(eye.Y) - here[1])
     return THIRD if gap >= AWAY_CM else FIRST

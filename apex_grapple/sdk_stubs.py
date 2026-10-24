@@ -7,7 +7,7 @@ from typing import Any
 
 from sdk_mods import FakeOption, FakeSpinner, FakeNested, FakeButton, FakeHook, FakeMod, FakeKeybind
 from sdk_objects import (vector, event, Mode, mapping, FakeMovement, FakeComponent, FakeCharacter,
-                         FakeKismet, FakePoint, FakeSequence, FakeArms, player)
+                         FakeKismet, FakePoint, FakeSequence, FakeArms, FakeAnim, other_anim, player)
 from sdk_niagara import FakeNiagara
 
 

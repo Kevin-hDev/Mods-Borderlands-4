@@ -31,6 +31,17 @@ check("the component follows the hand", getattr(component, "world_spot", None) =
 turn = getattr(component, "world_turn", None)
 check("the local X axis points along the 3-4-5 rope", turn is not None and abs(turn[1] - 53.130102) < 0.00001)
 
+# 2026-10-24 review: each frame of a classic rope looked the effect library up twice.
+import unrealsdk  # noqa: E402  (the test's own game, from sdk_stubs)
+
+looked_up = []
+real_class = unrealsdk.find_class
+unrealsdk.find_class = lambda name: (looked_up.append(name), real_class(name))[1]
+for step in range(10):
+    beam.follow((-198000.0, 326000.0 + step, 300.0), (-197700.0, 326400.0, 300.0))
+unrealsdk.find_class = real_class
+check("each frame of the rope looks the effect library up once", looked_up.count(beam.LIBRARY) == 10)
+
 beam.follow((0.0, 1000.0, 0.0), (0.0, 0.0, 0.0))
 turn = getattr(component, "world_turn", None)
 check("rotation also changes after the first frame", turn is not None and turn == (0.0, -90.0, 0.0))

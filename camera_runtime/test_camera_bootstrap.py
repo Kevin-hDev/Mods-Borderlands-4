@@ -9,7 +9,7 @@ from unittest.mock import patch
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from apex_camera_runtime import bootstrap  # noqa: E402
+from apex_camera_runtime import bootstrap, frame_hooks  # noqa: E402
 from apex_camera_runtime.bootstrap import attach  # noqa: E402
 from camera_test_fixtures import Hooks, Manager, Settings
 
@@ -135,6 +135,16 @@ class BootstrapTests(unittest.TestCase):
             self.assert_camera_works(controller)
             self.assertIs(bootstrap.ensure(self.runtime), controller)
             self.assertEqual(load.call_count, 1)
+
+    def test_the_camera_goes_through_the_copy_s_shared_hook(self):
+        # Its units after the animation update share the one SDK hook of Free Look and the framing at the wheel.
+        modules = self.modules()
+        with patch.dict(sys.modules, modules), \
+                patch.object(bootstrap, 'load_packaged_library', return_value=library), \
+                patch.object(bootstrap, 'load_interaction_library', return_value=interaction_library), \
+                patch.object(bootstrap, 'attach', side_effect=lambda *args: args[3]):
+            given = bootstrap.ensure(self.runtime)
+            self.assertIs(given, frame_hooks.front(modules['unrealsdk'].hooks))
 
     def test_framing_library_failure_still_blocks_camera(self):
         with patch.dict(sys.modules, self.modules()), \

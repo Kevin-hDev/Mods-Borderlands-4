@@ -215,5 +215,46 @@ check("the walk key's speed, not a number in a hand-edited file, goes back to it
 walk_key.speed.value = 100
 frame.on_frame(fresh.anim, 600 * S)
 check("and under the slider's bottom, back to it", walk_key.speed.value == 150)
+
+
+class Asking:
+    """A movement that asks for the controller twice in its update."""
+
+    def __init__(self) -> None:
+        self.seen: list[object] = []
+
+    def update(self, character: object, now_ns: int) -> None:
+        self.seen.extend(game.controller() for _ in range(2))
+
+    def stop(self, character: object) -> None:
+        pass
+
+    def reset(self) -> None:
+        pass
+
+
+class AskingCamera:
+    def __init__(self) -> None:
+        self.seen: list[object] = []
+
+    def on_frame(self, now_ns: int) -> None:
+        self.seen.append(game.controller())
+
+
+asking, asking_camera = Asking(), AskingCamera()
+frame.register("asking", asking)
+frame.set_camera(asking_camera)
+frame.on_frame(fresh.anim, 700 * S)
+lookups: list[int] = []
+looked_up = game.get_pc
+game.get_pc = lambda **kwargs: (lookups.append(1), state["pc"])[1]
+try:
+    frame.on_frame(fresh.anim, 700 * S + 1)
+finally:
+    game.get_pc = looked_up
+    frame.set_camera(None)
+check("the player's frame asks the game for the controller once, for the camera and every movement (review, "
+      "2026-10-24)", lookups == [1] and asking_camera.seen[-1] is state["pc"]
+      and asking.seen[-2:] == [state["pc"]] * 2)
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.13 - 2026-10-24
+
+- The settings window is now in Japanese too, with the 日本語 button at the top.
+- Performance: the grapple asks less of the game, during a shot, with the rope put away and in co-op. It looks and feels the same.
+- Fix: when updating from version 1.0.9 or older, a rope hidden with "Show the rope" stays hidden.
+
 ## 1.0.12 - 2026-10-18
 
 - Co-op: smoother grapple paths for the players who join a game: no more elastic pull, and no more trembling body during a grapple.

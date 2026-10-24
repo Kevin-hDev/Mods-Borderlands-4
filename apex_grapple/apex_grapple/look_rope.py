@@ -87,9 +87,10 @@ class Rope:
         self.strands: list[tuple[list[Any], float]] = []
         self.material: Any = None
         self.shown = 0
+        tools = look_pieces.tools()
         for key, parent in _keys(look):
             mesh = objects[_PIECES[key]["mesh"]]
-            first = look_pieces.new_piece(character, mesh)
+            first = look_pieces.new_piece(character, mesh, made_with=tools)
             slot, material = look_pieces.dressed(first, key, objects[parent], objects)
             if key == _ROPE["halo"]["piece"]:
                 image = _PIECES[key]["textures"][0]
@@ -98,7 +99,7 @@ class Rope:
                     objects[_ROPE["halo"]["images"][colour]])
             pieces = [first]
             for _ in range(1, count):
-                made = look_pieces.new_piece(character, mesh)
+                made = look_pieces.new_piece(character, mesh, made_with=tools)
                 made.SetMaterial(slot, material)
                 pieces.append(made)
             self.strands.append((pieces, _length(key)))
@@ -125,9 +126,10 @@ class Rope:
         places = rope_motion.laid(points, max(piece_cm(self.look, self.thickness), total / self.count))
         thin = _ROPE["thicknesses_cm"][self.thickness] / _ROPE["across_cm"]
         turns = [z_toward(start, end) for start, end in places]
+        hit = unrealsdk.make_struct("HitResult")
         for pieces, model_length in self.strands:
             for made, (start, end), (pitch, yaw) in zip(pieces, places, turns):
-                look_pieces.put(made, start, pitch, yaw, (thin, thin, math.dist(start, end) / model_length))
+                look_pieces.put(made, start, pitch, yaw, (thin, thin, math.dist(start, end) / model_length), hit)
         self.show(len(places))
         return len(places)
 

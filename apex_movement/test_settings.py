@@ -56,5 +56,15 @@ check("each value brought back is told once", len(lines) == 3 and any("dash_dist
 check("the switches are left alone", settings.dash.value is True and settings.axle_slide.value is False)
 check("nothing left to bring back, nothing told", settings.keep_in_bounds() == [])
 
+# keep_in_bounds runs at every frame of the player: the file's sliders are gathered once, not at each call.
+walks: list[int] = []
+settings.globals = lambda: (walks.append(1), vars(settings))[1]
+try:
+    for _ in range(3):
+        settings.keep_in_bounds()
+finally:
+    del settings.globals
+check("the file's sliders are gathered once, not at every frame (review, 2026-10-24)", len(walks) <= 1)
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

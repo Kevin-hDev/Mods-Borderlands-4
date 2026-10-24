@@ -79,7 +79,7 @@ class VehicleFraming:
         pc = self.get_pc(possibly_loading=True)
         vehicle = getattr(pc, "Pawn", None) if pc is not None else None
         if self.vehicle_field is None:
-            self.vehicle_field = VehicleField(self.address_of)
+            self.vehicle_field = VehicleField(self.address_of, self.weak_ref)
         if vehicle is None or self.vehicle_field.movement(vehicle) is None or self.settings is None:
             self._leave()
             return

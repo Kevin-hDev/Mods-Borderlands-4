@@ -21,6 +21,11 @@ from . import look_code, look_hunter, look_settings, remote_beam, remote_look, r
 # Four players at most in Borderlands 4; the players named here come from other games, so the list is bounded anyway.
 MAX_PLAYERS = 8
 UNKNOWN_LOOK = look_code.COUNT
+# A look told is built at most once a second for each player (Kevin, 2026-10-24): a build costs every other game 24 to
+# 55 ms in one frame, and the looks come from other games, which a modified one could send at every frame. Its price:
+# a look changed shows up to a second later. A new character, or a return on foot, is built at once, unless a look told
+# within a second of the last one is waiting: it is then built with that look, up to a second later.
+REBUILD_NS = 1_000_000_000
 
 
 class _Remote:
@@ -31,6 +36,7 @@ class _Remote:
         self.grapple: Any = None
         self.waiting: tuple | None = None
         self.broken = False
+        self.next_look_build_ns = 0
 
 
 _remotes: dict[int, _Remote] = {}
@@ -119,9 +125,14 @@ def _drop(remote: _Remote) -> None:
 
 def _follow(remote: _Remote, character: Any, now_ns: int) -> None:
     grapple = remote.grapple
-    if grapple is not None and (grapple.character() != character or (remote.rebuild and not grapple.busy())):
+    look_may_build = not remote.rebuild or now_ns >= remote.next_look_build_ns
+    if grapple is not None and (grapple.character() != character
+                                or (remote.rebuild and look_may_build and not grapple.busy())):
         _drop(remote)
-    if remote.grapple is None and not remote.broken:
+    if remote.grapple is None and not remote.broken and look_may_build:
+        if remote.rebuild:
+            # Set before the build, so that a build that fails is not tried again at the next look told.
+            remote.next_look_build_ns = now_ns + REBUILD_NS
         remote.grapple = make(character, remote.look_number)
         remote.rebuild = False
         if remote.grapple is not None and remote.waiting is not None:
@@ -132,6 +143,10 @@ def _follow(remote: _Remote, character: Any, now_ns: int) -> None:
 
 
 def tick(now_ns: int) -> None:
+    if not _remotes:
+        # No other player's grapple to draw: the list of players would be read for nothing at every frame, alone above
+        # all (review of 2026-10-24). A message from a player adds its entry, and the next frame reads the list.
+        return
     present, players = _players()
     for remote in list(_remotes.values()):
         character = players.get(remote.player)

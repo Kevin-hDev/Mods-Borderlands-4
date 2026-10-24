@@ -37,10 +37,11 @@ def press(key: str) -> list[str]:
         _look_up(pc)
     if _inject is None:
         return []
-    mappings = game.input_mappings()
-    wanted = input_list.grapple_actions(mappings)
-    actions = {str(mapping.Action.Name): mapping.Action for mapping in mappings
-               if mapping.Action is not None and str(mapping.Key.KeyName) == key and str(mapping.Action.Name) in wanted}
+    lines = game.input_mappings()
+    wanted = input_list.grapple_actions(lines)
+    # The game's action object is read only on the lines kept: every other read is already in `lines`.
+    actions = {line.action: line.game_line.Action for line in lines
+               if line.action is not None and line.key == key and line.action in wanted}
     inject, value = _inject
     for action in actions.values():
         inject(Action=action, Value=value, Modifiers=[], Triggers=[])

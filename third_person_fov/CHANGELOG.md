@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.16 - 2026-10-24
+
+- Performance: lighter in fights with many enemies; the camera no longer checks each enemy every frame.
+- Fix: a loot container replaced at the same spot gets the longer pickup reach again.
+- Fix: after loading another save, the camera recognizes vehicles reliably.
+- These changes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
 ## 1.2.15 - 2026-10-24
 
 - Performance: the mod does less work on the game's main thread each frame. In third person, the camera reads less from the game and hooks it in fewer places; on the test PC, 10 to 20 more frames per second at the same spots.

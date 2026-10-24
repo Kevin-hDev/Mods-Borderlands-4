@@ -31,7 +31,12 @@ class Character:
         raise AttributeError(name)
 
 
-field = VehicleField(lambda item: item.address)
+def weak(item):
+    """The SDK's weak pointer: the object while it lives, None once the game has destroyed it."""
+    return lambda: None if getattr(item, "gone", False) else item
+
+
+field = VehicleField(lambda item: item.address, weak)
 hunter = Character(0x100)
 for _ in range(5):
     check_value = field.movement(hunter)
@@ -46,6 +51,15 @@ car = types.SimpleNamespace(Class=types.SimpleNamespace(address=0x200), OakVehic
 check("a vehicle being built has no movement yet", field.movement(car) is None)
 car.OakVehicleMovement = movement
 check("its movement is read once built: a vehicle's field is never kept as missing", field.movement(car) is movement)
+
+# Review of 2026-10-24: a character's class unloaded (another save, the title screen), a vehicle's class built at
+# its address. The same address is not the same class.
+unloaded = Character(0x300)
+field.movement(unloaded)
+unloaded.Class.gone = True
+rebuilt = types.SimpleNamespace(Class=types.SimpleNamespace(address=0x300), OakVehicleMovement=movement)
+check("a vehicle whose class took an unloaded character class's place is still a vehicle",
+      field.movement(rebuilt) is movement)
 
 no_class = types.SimpleNamespace(OakVehicleMovement=movement)
 check("a pawn whose class cannot be read is asked directly", field.movement(no_class) is movement)

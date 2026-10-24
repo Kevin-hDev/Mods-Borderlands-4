@@ -11,7 +11,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_movement import camera, camera_settings, pack  # noqa: E402
+from apex_movement import camera, camera_settings, game, pack  # noqa: E402
 
 
 class Runtime:
@@ -71,6 +71,18 @@ try:
 except RuntimeError:
     pass
 ok = ok and ensured == [runtime] and runtime.ticks[-1] == (state["pc"], 456)
+# Within the player's frame the camera ticks the controller the frame looked up, never asking the game again.
+looked_up, lookups, frame_pc = game.get_pc, [], object()
+game.get_pc = lambda **kwargs: (lookups.append(1), frame_pc)[1]
+try:
+    with game.player_frame():
+        try:
+            camera.on_frame(789)
+        except RuntimeError:
+            pass
+finally:
+    game.get_pc = looked_up
+ok = ok and runtime.ticks[-1] == (frame_pc, 789) and lookups == [1]
 camera.stop()
 ok = ok and runtime.unregistered == ["apex_movement"]
 

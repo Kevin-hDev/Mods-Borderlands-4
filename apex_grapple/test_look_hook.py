@@ -62,5 +62,26 @@ check("hidden once", made.called("SetVisibility")[-1] == (False, False) and len(
 hook.destroy()
 check("removed from its character", made.called("K2_DestroyComponent") == [(character,)])
 
+# 2026-10-24 review: a planted hook was put again at every frame of the pull, two calls into the game for nothing.
+# Nothing else moves the piece (built with its own attachment, look_pieces.new_piece), so what the game was last given
+# is where it still is.
+planted = look_hook.Hook(character, look_load.fetch(look_hook.wanted()))
+spot = planted.made
+for _ in range(5):
+    planted.put((300.0, 10.0, 40.0), (1.0, 0.0, 0.0), "B")
+check("a hook put five times in the same place is put once",
+      len(spot.called("K2_SetWorldLocationAndRotation")) == 1 and len(spot.called("SetWorldScale3D")) == 1)
+planted.put((310.0, 10.0, 40.0), (1.0, 0.0, 0.0), "B")
+check("moved, it is put again, its size left as it is",
+      len(spot.called("K2_SetWorldLocationAndRotation")) == 2 and len(spot.called("SetWorldScale3D")) == 1)
+planted.put((310.0, 10.0, 40.0), (1.0, 0.0, 0.0), "C")
+check("a new size alone is set alone", len(spot.called("K2_SetWorldLocationAndRotation")) == 2
+      and abs(spot.called("SetWorldScale3D")[-1][0].X - 1.8) < 1e-9)
+planted.hide()
+planted.put((310.0, 10.0, 40.0), (1.0, 0.0, 0.0), "C")
+check("hidden then shown in the same place, it is put again in full",
+      len(spot.called("K2_SetWorldLocationAndRotation")) == 3 and len(spot.called("SetWorldScale3D")) == 3
+      and spot.called("SetVisibility")[-1] == (True, False))
+
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -66,6 +66,14 @@ try:
 except RuntimeError:
     pass
 ok = ok and ensured == [runtime] and runtime.ticks[-1] == (state["pc"], 456)
+# The controller the frame hook already read is the one ticked, None included: the game is not asked twice a frame.
+controller = object()
+for now, given in ((789, controller), (790, None)):
+    try:
+        camera.on_frame(now, given)
+    except RuntimeError:
+        pass
+ok = ok and runtime.ticks[-2:] == [(controller, 789), (None, 790)]
 camera.stop()
 ok = ok and runtime.unregistered == ["omni_sprint"]
 

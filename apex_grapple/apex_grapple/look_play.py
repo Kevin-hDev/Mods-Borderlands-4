@@ -134,8 +134,8 @@ def tick(character: Any, now_ns: int) -> None:
         return
     pc = game.controller()
     # Every frame, shot or not: the next frame's camera, filled at the end of this one, is moved from here.
-    look_eye.note(pc)
-    view = look_view.of(pc, character)
+    seen, spot = look_eye.note(pc)
+    view = look_view.of(pc, character, spot if seen == character else None)
     # Read only where the holster shows: the outfit is read again at each frame, never kept.
     holster = (look_settings.holster.value == look_settings.WITH and view == look_view.THIRD
                and not look_outfit.covers_hip(character))
@@ -150,7 +150,7 @@ def tick(character: Any, now_ns: int) -> None:
     gone = pose.left[0] == look_moves.GONE
     if shot.leaving and gone:
         shot.leaving = False
-        if _rope_shows(pc, shot.rope, now_ns):
+        if _rope_shows(pc, shot.rope, now_ns, noted=True):
             look_shots.let_go(shot.rope, now_ns)
         else:
             look_shots.drop(shot.rope)
@@ -169,23 +169,28 @@ def _arms_pistol(pose: look_moves.Pose, since_s: float) -> bool:
 
 
 def _muzzle(pc: Any, view: str, pose: look_moves.Pose, since_s: float) -> tuple:
+    """Called by tick, which has noted the eye in this frame."""
     if view == look_view.THIRD:
         return look_muzzle.on_piece(_gun.pieces[look_gun.BODY_PISTOL],
                                     look_assets.PIECES[look_gun.BODY_PISTOL]["muzzle_cm"])
+    seen = look_eye.camera(pc, noted=True)
     if _arms_pistol(pose, since_s):
         return look_muzzle.from_arms(pc, look_muzzle.on_piece(_gun.pieces[look_gun.ARMS_PISTOL],
-                                                              look_assets.PIECES[look_gun.ARMS_PISTOL]["muzzle_cm"]))
+                                                              look_assets.PIECES[look_gun.ARMS_PISTOL]["muzzle_cm"]),
+                                     seen)
     out = pose.left[0] == look_moves.GONE
-    return look_muzzle.waiting(pc, look_assets.MUZZLE_OUT_CM if out else look_assets.MUZZLE_IN_CM)
+    return look_muzzle.waiting(pc, look_assets.MUZZLE_OUT_CM if out else look_assets.MUZZLE_IN_CM, seen)
 
 
-def _rope_shows(pc: Any, rope: look_timing.Shot, now_ns: int) -> bool:
-    """Whether the rope from the muzzle's place once the arm is out to its hook would cross the screen."""
-    out = look_muzzle.waiting(pc, look_assets.MUZZLE_OUT_CM)
+def _rope_shows(pc: Any, rope: look_timing.Shot, now_ns: int, noted: bool = False) -> bool:
+    """Whether the rope from the muzzle's place once the arm is out to its hook would cross the screen. `noted`: called
+    by tick, which has noted the eye in this frame."""
+    seen = look_eye.camera(pc, noted)
+    out = look_muzzle.waiting(pc, look_assets.MUZZLE_OUT_CM, seen)
     found = look_timing.where(rope, out, now_ns)
     if found is None:
         return False
-    eye, axes = look_eye.camera(pc)
+    eye, axes = seen
     world, _arms = look_muzzle.fields(pc)
     across = math.tan(math.radians(world) / 2)
     return look_sight.shows(eye, axes, across, across * SCREEN, [out, found[0]])

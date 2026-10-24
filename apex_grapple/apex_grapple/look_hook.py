@@ -37,16 +37,27 @@ class Hook:
         self.made = look_pieces.new_piece(character, objects[_PIECE["mesh"]])
         look_pieces.dressed(self.made, KEY, objects[look_assets.MATERIAL], objects)
         self.visible = False
+        # What the game was last given. Nothing else moves the piece (look_pieces.new_piece attaches it to nothing), so
+        # a planted hook asks nothing more of the game until it moves (review of 2026-10-24); hidden, it is put in full.
+        self._placed: tuple | None = None
+        self._size: str | None = None
 
     def put(self, base: tuple, way: tuple, size: str) -> None:
         """Its base hole on `base`, its point along `way`, shown."""
-        scale = look_assets.HOOK_SIZES[size]
-        look_pieces.put(self.made, base, *facing(way), (scale, scale, scale))
+        placed = (tuple(base), tuple(way))
+        if placed != self._placed:
+            look_pieces.place(self.made, base, *facing(way))
+            self._placed = placed
+        if size != self._size:
+            scale = look_assets.HOOK_SIZES[size]
+            look_pieces.size(self.made, (scale, scale, scale))
+            self._size = size
         if not self.visible:
             self.made.SetVisibility(True, False)
             self.visible = True
 
     def hide(self) -> None:
+        self._placed = self._size = None
         if self.visible:
             self.made.SetVisibility(False, False)
             self.visible = False

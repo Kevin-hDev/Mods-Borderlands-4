@@ -39,8 +39,3 @@ def find(character: Any) -> Any:
                 break
     _arms = unreal.WeakPointer(cached) if cached is not None else None
     return cached
-
-
-def forget() -> None:
-    global _arms
-    _arms = None

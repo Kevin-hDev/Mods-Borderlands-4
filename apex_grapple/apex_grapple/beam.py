@@ -144,18 +144,20 @@ def follow(hand: tuple[float, float, float], anchor: tuple[float, float, float])
         return
     try:
         target = rope_pose.follow(_component, hand, anchor)
+        # Once a frame: it was looked up for each end (review of 2026-10-24).
+        library = _library()
         if _end_name is not None:
-            rope_ends.write(_component, _library(), _end_name, target)
+            rope_ends.write(_component, library, _end_name, target)
             if _source_name is not None:
-                rope_ends.write(_component, _library(), _source_name, rope_pose.ORIGIN)
+                rope_ends.write(_component, library, _source_name, rope_pose.ORIGIN)
             return
-        _end_name = rope_ends.find(_component, _library(), rope_ends.TARGET_WORDS, target, "far end")
+        _end_name = rope_ends.find(_component, library, rope_ends.TARGET_WORDS, target, "far end")
         if _end_name is None:
             report.error_once("beam:end",
                               f"nothing sets the grapple beam far end. Refusals: {rope_ends.refusals()}")
-            rope_ends.tell_writers(_component, _library())
+            rope_ends.tell_writers(_component, library)
             return
-        _source_name = rope_ends.find(_component, _library(), rope_ends.SOURCE_WORDS,
+        _source_name = rope_ends.find(_component, library, rope_ends.SOURCE_WORDS,
                                      rope_pose.ORIGIN, "near end")
     except Exception as exc:
         _fail(exc)

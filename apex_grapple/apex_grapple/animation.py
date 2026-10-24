@@ -43,7 +43,6 @@ def reset() -> None:
     global _playing, _holding, _broken, _announced
     stop()
     _broken = _announced = False
-    arms.forget()
 
 
 def start() -> None:

@@ -50,8 +50,10 @@ def press(widgets, form, name):
 
 try:
     shipped = release_notes.NOTES[0]
-    check("the notes shipped open on this version, in three languages",
-          shipped[0] == apex_grapple.__version__ and set(shipped[1]) == {"en", "fr", "zh"})
+    # Every language the window offers, Japanese since 2026-10-21: a player who chose one never reads English.
+    check("the notes shipped open on this version, in every language the window offers",
+          shipped[0] == apex_grapple.__version__
+          and set(shipped[1]) == {code.lower() for code in panel_preferences.LANGUAGES})
 
     release_notes.NOTES = (
         (apex_grapple.__version__, {"en": ("Co-op works.", "Ropes are seen."), "fr": ("Le coop marche.", "Pareil.")}),

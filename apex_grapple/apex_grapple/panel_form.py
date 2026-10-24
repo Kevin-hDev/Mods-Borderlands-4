@@ -7,9 +7,8 @@ from .control_bindings import RESERVED
 from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t, panel_theme_choice
 from . import panel_choices, panel_key_display
 from .menu import ACTIVE_WHEN, DEPENDS_ON
-from . import panel_size_choice
+from . import panel_language_choice, panel_size_choice
 from . import panel_popup, panel_updates
-from .panel_preferences import LANGUAGES
 
 
 class PanelForm(Form):
@@ -159,13 +158,8 @@ class PanelForm(Form):
         if self.take(widgets["window_size"]):
             panel_size_choice.choose(self, widgets)
             return False
-        for language in LANGUAGES:
-            if self.take(widgets[language]):
-                if self.flush(widgets) and self.model.change_language(language):
-                    self.refresh_labels(widgets)
-                else:
-                    self.report(widgets, "failed")
-                return False
+        if panel_language_choice.choose(self, widgets):
+            return False
         for family in ("PS5", "XSX"):
             if self.take(widgets[f"icons:{family}"]):
                 if self.model.change_controller_icons(family):

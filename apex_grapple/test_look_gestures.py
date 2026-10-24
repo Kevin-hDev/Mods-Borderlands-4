@@ -13,7 +13,7 @@ import sdk_stubs  # noqa: E402
 
 state = sdk_stubs.install()
 
-from apex_grapple import arms as arms_finder, look_gestures, look_load, look_moves  # noqa: E402
+from apex_grapple import look_gestures, look_load, look_moves  # noqa: E402
 import vex_fixture  # noqa: E402
 
 fails: list[str] = []
@@ -105,12 +105,14 @@ check("no weapon in hand: no right arm's gesture",
       == ["Offhand", "Offhand"])
 G.stop()
 state["anim_instances"] = []
-arms_finder.forget()
+# The arms gone, as the game's weak pointer then says.
+arms.destroyed = True
 body.played.clear()
 frame(0.1)
 check("the arms not found: said once, the body's gestures still played",
       sum("first-person arms were not found" in line for line in state["errors"]) == 1 and len(body.played) == 2)
 G.stop()
+arms.destroyed = False
 state["anim_instances"] = [arms]
 arms.PlaySlotAnimationAsDynamicMontage = lambda **kwargs: None
 try:
