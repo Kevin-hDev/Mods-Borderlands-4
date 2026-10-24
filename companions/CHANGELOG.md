@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3 - 2026-10-24
+
+- New companions on the ALLIES page: Lilith, Lilith Phoenix and Moxxi.
+- Update the Companions Paks file too: it now holds their names, shown when you aim at them.
+- If you also have It Follows, update it to 1.0.14: with both mods enabled, It Follows is the one that brings the team.
+
 ## 1.0.2 - 2026-10-24
 
 - Performance: your companions only work when there is something to do, and stopping the team no longer freezes the game for a moment.

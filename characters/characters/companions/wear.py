@@ -18,6 +18,8 @@ import unrealsdk
 
 # The hunters' parts are of one of these two classes (hunter change, essai 16).
 MODEL_CLASSES = ("SkeletalMesh", "GestaltSkeletalMesh")
+# The phoenix's materials, put over Lilith's (hunters.GUESTS): instances of her own, in the game files.
+MATERIAL_CLASSES = ("MaterialInstanceConstant",)
 # SkeletalMeshAsset alone reads nothing in this game (hunter change, essai 22): the model is in one of these.
 MODEL_FIELDS = ("SkeletalMeshAsset", "SkinnedAsset", "SkeletalMesh")
 COMPONENT = "SkeletalMeshComponent"
@@ -92,14 +94,15 @@ def _found(class_name: str, path: str) -> Any:
         return None
 
 
-def load(path: str) -> Any:
-    """A model by its path, loaded from the game's archives if nothing has loaded it yet; None if it cannot be. The
-    loader's answer is not relied on: the model is found again by its path (heirloom, 2026-09-23)."""
-    for class_name in MODEL_CLASSES:
+def load(path: str, classes: tuple = MODEL_CLASSES) -> Any:
+    """A model (or, given MATERIAL_CLASSES, a material) by its path, loaded from the game's archives if nothing has
+    loaded it yet; None if it cannot be. The loader's answer is not relied on: the model is found again by its path
+    (heirloom, 2026-09-23)."""
+    for class_name in classes:
         found = _found(class_name, path)
         if found is not None:
             return found
-    for class_name in MODEL_CLASSES:
+    for class_name in classes:
         try:
             unrealsdk.find_class(LOADER).ClassDefaultObject.GetAsset(asset_data(class_name, path))
         except Exception:
@@ -147,3 +150,16 @@ def repaint(mesh: Any, model: Any, limit: int) -> int:
     for index, slot in enumerate(given):
         mesh.SetMaterial(index, slot.MaterialInterface)
     return len(given)
+
+
+def overpaint(mesh: Any, model: Any, swaps: dict, limit: int) -> int:
+    """Each of the model's slots, limit at most, whose own material is a key of swaps (its full path, lower case)
+    given the material it maps to; how many."""
+    count = 0
+    for index, slot in enumerate(islice(model.Materials, limit)):
+        own = slot.MaterialInterface
+        put = None if own is None else swaps.get(own._path_name().lower())
+        if put is not None:
+            mesh.SetMaterial(index, put)
+            count += 1
+    return count

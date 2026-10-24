@@ -182,6 +182,12 @@ try:
     check("ALLIES: its cards, named as the game names them in English", shown("companions_grid:allies")
           and not shown("companions_grid:hunters") and text("mate_add:Decrepit Frame_label") == "DECREPIT FRAME"
           and text("mate_add:Brine Type M_label") == "BRINE TYPE M")
+    check("ALLIES: Lilith, Lilith Phoenix and Moxxi after the allies, named their own way, no outfit on their cards",
+          [kind.name for kind in panel_companions.TABS["allies"]] == [
+              "Decrepit Frame", "Crankus", "Brine Type M", "Abomination", "Lilith", "Lilith Phoenix", "Moxxi"]
+          and text("mate_add:Lilith Phoenix_label") == "LILITH PHOENIX" and text("mate_add:Moxxi_label") == "MOXXI"
+          and not any(f"mate_outfit_line:{name}" in widgets for name in ("Lilith", "Lilith Phoenix", "Moxxi"))
+          and "mate_outfit:Lilith:own" not in panel_companions.buttons("Lilith"))
     for _ in range(6):
         press("mate_add:Crankus")
     check("eight in the team", len(choices.team.value) == 8 and text("companions_count") == "TEAM 8 / 8")
@@ -291,6 +297,9 @@ try:
           and text("mate_speed:Vex:Off_label") == "COUPÉE" and text("mate_add:Decrepit Frame_label")
           == "CHÂSSIS VÉTUSTE" and text("mate_add:Vex_label") == "VEX"
           and text("companions_count") == "ÉQUIPE 8 / 8" and text("companions_launch_label") == "LANCER L'ÉQUIPE")
+    check("in French: the phoenix « Lilith Phénix », Lilith and Moxxi their own",
+          text("mate_add:Lilith Phoenix_label") == "LILITH PHÉNIX" and text("mate_add:Lilith_label") == "LILITH"
+          and text("mate_add:Moxxi_label") == "MOXXI")
     check("Chinese chosen", press("ZH") is False and model.language == "ZH")
     check("in Chinese: the allies as the game's zh-Hans names them", text("mate_add:Crankus_label") == "克兰库斯"
           and text("companions_tab:allies_label") == "盟友" and text("mate_add:Vex_label") == "VEX")

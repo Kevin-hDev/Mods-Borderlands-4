@@ -121,6 +121,10 @@ check("no companion: the launch refused, said, the team never asked", not sessio
       and text("notice").startswith("Add at least") and notes("companions_launch_pressed") == [])
 go("allies")
 check("the allies' page", text("heading:allies") == "ALLIES" and "mate:Crankus" in widgets)
+check("Lilith, Lilith Phoenix and Moxxi after the allies, no outfit on their cards (decision 78)",
+      [kind.name for kind in panel_cards.PAGES["allies"]][4:] == ["Lilith", "Lilith Phoenix", "Moxxi"]
+      and all(f"mate:{name}" in widgets and f"mate_outfit_line:{name}" not in widgets
+              for name in ("Lilith", "Lilith Phoenix", "Moxxi")))
 press("mate_add:Crankus")
 settings.health.value = 7
 check("LAUNCH THE TEAM: started with the settings, the window closing without the mods list",

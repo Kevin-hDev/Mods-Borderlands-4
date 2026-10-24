@@ -1,6 +1,6 @@
 # Companions
 
-A team of up to 8 companions, among the game's 6 Vault Hunters and 4 allies, who follow you and fight at your side.
+A team of up to 8 companions, among the game's 6 Vault Hunters and 7 allies, who follow you and fight at your side.
 They are [It Follows](../it_follows/)' companions in a mod of their own: you do not need It Follows to have them.
 
 Tested on the game version of 22 October 2026 (build **4906557**) on Windows, in single player on Steam.

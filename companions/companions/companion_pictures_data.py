@@ -17,5 +17,8 @@ PICTURES = {
     "Crankus": "companion_crankus.png",
     "Brine Type M": "companion_brine_type_m.png",
     "Abomination": "companion_abomination.png",
+    "Lilith": "companion_lilith.png",
+    "Lilith Phoenix": "companion_lilith_phoenix.png",
+    "Moxxi": "companion_moxxi.png",
 }
 FILES = tuple(PICTURES.values())

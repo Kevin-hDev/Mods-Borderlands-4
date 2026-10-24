@@ -24,7 +24,8 @@ from mods_base import get_pc
 
 from .characters.companions import bars, bars_names, kinds, owners, player_paint
 
-TABS = {"hunters": kinds.HUNTERS, "allies": kinds.ALLIES}
+# Lilith, Lilith Phoenix and Moxxi after the allies (decision 78 of docs/renforts/README.md): allies of the story.
+TABS = {"hunters": kinds.HUNTERS, "allies": kinds.ALLIES + kinds.GUESTS}
 SPEEDS = tuple(choices.SPEEDS)
 OUTFITS = choices.OUTFITS
 HUNTERS = tuple(kind.name for kind in kinds.HUNTERS)

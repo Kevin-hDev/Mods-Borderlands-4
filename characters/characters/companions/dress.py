@@ -23,6 +23,8 @@ put over the hunter's own materials last, on the slots they fit; none fitting (t
 the hunter's own.
 His head, read with them before anything is done, takes the base head's place (player_paint.headed); a head that
 cannot be loaded leaves the base one rather than no dressing at all.
+A guest's look (hunters.GUESTS, decision 77) is put on the same way; one with paints (Lilith as the phoenix) has them
+put over its models' own materials, loaded with the parts before anything is done.
 """
 
 from typing import Any, Callable
@@ -61,6 +63,7 @@ def ready(actor: Any, name: str, head: str | None = None) -> tuple[Any, Any, dic
     if differ:
         return {"done": "calls_differ", "calls": differ}
     models = {path: wear.load(path) for path in (look.upper, *look.followers)}
+    models.update({put: wear.load(put, wear.MATERIAL_CLASSES) for _own, put in look.paints})
     missing = [path.rsplit(".", 1)[-1] for path, found in models.items() if found is None]
     if missing:
         return {"done": "not_loaded", "parts": missing}
@@ -129,11 +132,15 @@ class Dressing:
                 drawn.append((wear.wear(actor, body, models[path], placed), path))
             except Exception as error:
                 return _failed("wear", error)
+        swaps = {own.lower(): models[put] for own, put in look.paints}
         try:
             slots = sum(wear.repaint(mesh, models[path], MAX_SLOTS) for mesh, path in drawn)
+            over = sum(wear.overpaint(mesh, models[path], swaps, MAX_SLOTS) for mesh, path in drawn) if swaps else 0
         except Exception as error:
             return _failed("paint", error)
         worn = {"done": "worn", "hunter": look.name, "hung": len(look.followers), "slots": slots}
+        if swaps:
+            worn["painted_over"] = over
         if self.own is None:
             return worn
         if self.player is None:

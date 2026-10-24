@@ -9,7 +9,8 @@ shows in English.
 
 The six hunters are Lemmy dressed (decision 18): one definition, a look each (hunters.py), so a companion is known
 by its name, never its definition. Lemmy, a gunner of Rush's hub, fights (trial 134); dressed, he followed and fought
-in It Follows' team (trial 189).
+in It Follows' team (trial 189). So are the guests, Lilith under her two forms and Moxxi, whose records give them
+nothing to fight with (decision 77, trial 224).
 """
 
 from typing import NamedTuple
@@ -36,5 +37,8 @@ ALLIES = (
     Kind("Char_NPC_Abomination", "Abomination"),
 )
 HUNTERS = tuple(Kind(LEMMY, look.name, look.name) for look in hunters.LOOKS)
-ALL = HUNTERS + ALLIES
+# Lemmy in the look of the game's other characters (decisions 77 and 78), on the ALLIES tab after the allies. Not in
+# ALLIES: the probes and the aimed bar's package read ALLIES as the real characters whose bars the game hides.
+GUESTS = tuple(Kind(LEMMY, look.name, look.name) for look in hunters.GUESTS)
+ALL = HUNTERS + ALLIES + GUESTS
 BY_NAME = {kind.name: kind for kind in ALL}

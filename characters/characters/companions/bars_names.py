@@ -7,7 +7,9 @@ function is never called with guessed parameters. The names come from assets/com
 own files of texts by docs/renforts/sondes/companion_bars/build_bar_names.py, its one copy: the language's own, else
 the language without its country (fr for fr-FR); the English one for a name it lacks, as the game does, and for all
 when the language or the table cannot be read. The six hunters keep their own names, the table having none of them;
-the game's other names for them are not read (non vérifié: whether it has any).
+the game's other names for them are not read (non vérifié: whether it has any). So do the guests (hunters.GUESTS),
+but for a name of ours in that language (hunters.NAMES: « Lilith Phénix » in French), so that the aimed bar, whose
+package writes the same, shows the name the cards and the bars show.
 """
 
 import json
@@ -18,7 +20,7 @@ from typing import Any, Callable
 
 import unrealsdk
 
-from . import kinds
+from . import hunters, kinds
 
 TABLE = "companion_names.json"
 VERSION = 1
@@ -76,8 +78,10 @@ def shown(language: str | None, read: Callable[[str], str] = read_asset) -> tupl
         if table["version"] != VERSION:
             return english, "english:table_version"
         names = table["names"]
-        own = names.get(language, names.get(language.split("-")[0], {}))
-        found = {name: own.get(name, name) for name in english}
+        base = language.split("-")[0]
+        own = names.get(language, names.get(base, {}))
+        ours = {name: texts.get(language, texts.get(base)) for name, texts in hunters.NAMES.items()}
+        found = {name: own.get(name) or ours.get(name) or name for name in english}
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return english, "english:table_unread"
     if not all(isinstance(name, str) for name in found.values()):

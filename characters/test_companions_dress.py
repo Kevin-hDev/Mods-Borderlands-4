@@ -6,7 +6,10 @@ game never drawing it: given up after WAIT_S, shown, nothing hung. Nothing done,
 unknown, he wears a hunter already, his mesh is not his own, a call's parameters differ or a part cannot be loaded;
 hiding refused: nothing more; a swap refused: shown again; a part that cannot be hung, a painting that fails: stopped
 there, shown again; gone: said; the team stopping: shown again; showing refused: said. What the player wears (colours
-and head) read once, before; his head in place of the base one when it is that hunter's and loads."""
+and head) read once, before; his head in place of the base one when it is that hunter's and loads. A guest (decision
+77): Lilith's parts hung as a hunter's; as the phoenix, her materials put over each slot's own, by that own material,
+once every part has its own back, the mouth left; Moxxi's one model, nothing hung; a phoenix material that cannot be
+loaded: nothing done."""
 
 import pathlib
 import sys
@@ -317,6 +320,90 @@ check("his head not loadable: dressed with the base head rather than not at all"
       and outcome["done"] == "worn" and outcome["player_head"] is None
       and unloaded.parts[-1].SkinnedAsset.Name == short(VEX.followers[-1]))
 dress.player_paint.paint = real_paint
+
+
+def material(path: str) -> types.SimpleNamespace:
+    return ns(Name=path.rsplit(".", 1)[-1], _path_name=lambda: path)
+
+
+LILITH_MATERIALS = "/Game/AI/NPC/_Unique/Lilith/Model/Materials/"
+MOUTH = "/Game/Common/MaterialTemplateLibrary/Character/MI_Template_Char_Mouth.MI_Template_Char_Mouth"
+# Each part's slots as the game files list them (docs/renforts/releves/2026-10-24-lilith-et-moxxi/pieces/).
+OWN = {"Body": ["MI_Lilith_Skin", "MI_Lilith_Lowerbody_Normal"], "Head": ["MI_Lilith_Head"],
+       "Hair": ["MI_Lilith_Hair_Top", "MI_Lilith_Hair_Bottom"], "Outfit_01": ["MI_Lilith_Upperbody"],
+       "Eyes": ["MI_Lilith_Eye"], "Teeth": ["MI_Lilith_Head", None], "Wings": ["MI_Lilith_Wings"]}
+
+
+def guest_parts(missing: str = "") -> None:
+    """The guests' models, their slots holding Lilith's own materials (the mouth's a template of the game's), and the
+    phoenix's materials, all loadable but the one named missing."""
+    for part, owns in OWN.items():
+        path = f"/Game/AI/NPC/_Unique/Lilith/Model/Rig/SKPart_Lilith_{part}.SKPart_Lilith_{part}"
+        slots = [material(MOUTH if own is None else f"{LILITH_MATERIALS}{own}.{own}") for own in owns]
+        state["objects"][("SkeletalMesh", path)] = ns(Name=path.rsplit(".", 1)[-1], _path_name=lambda p=path: p,
+                                                      Skeleton=ns(Name="SK_Lilith_Skeleton"),
+                                                      Materials=[ns(MaterialInterface=slot) for slot in slots])
+    moxxi = hunters.BY_NAME["Moxxi"].upper
+    state["objects"][("SkeletalMesh", moxxi)] = model(moxxi, "SK_Moxxi_Skeleton", 12)
+    for _own, put in hunters.BY_NAME["Lilith Phoenix"].paints:
+        state["objects"].pop(("MaterialInstanceConstant", put), None)
+        if not (missing and put.endswith(missing)):
+            state["objects"][("MaterialInstanceConstant", put)] = material(put)
+
+
+state["classes"]["MaterialInstanceConstant"] = ns(_path_name=lambda: "/S.MIC")
+guest_parts()
+PHOENIX = hunters.BY_NAME["Lilith Phoenix"]
+phoenix = Lemmy(late=False)
+one = dressing(phoenix, "Lilith Phoenix")
+check("the phoenix: started as a hunter is, his mesh given Lilith's body", one.start() == {
+      "done": "swapped", "hunter": "Lilith Phoenix"} and phoenix.Mesh.SkinnedAsset.Name == "SKPart_Lilith_Body")
+events.clear()
+outcome = one.step()
+check("the phoenix worn: her six other parts hung, ten slots given their own, nine painted over, shown",
+      outcome == {"done": "worn", "hunter": "Lilith Phoenix", "hung": 6, "slots": 10, "painted_over": 9,
+                  "waited_s": 0.0} and not phoenix.hidden
+      and [part.SkinnedAsset.Name for part in phoenix.parts] == [short(path) for path in PHOENIX.followers])
+paints = [event for event in events if event[0] == "paint"]
+over = paints[10:]
+check("the phoenix's materials put after every part has its own back", len(paints) == 19
+      and all("hoenix" not in event[3].Name for event in paints[:10]))
+bare = Mesh("Bare", None)
+events.clear()
+check("a slot holding no material: never painted over", wear.overpaint(bare, ns(Materials=[
+      ns(MaterialInterface=None), ns(MaterialInterface=material(f"{LILITH_MATERIALS}MI_Lilith_Eye.MI_Lilith_Eye"))]),
+      {f"{LILITH_MATERIALS}MI_Lilith_Eye.MI_Lilith_Eye".lower(): "PUT"}, dress.MAX_SLOTS) == 1
+      and events == [("paint", "Bare", 1, "PUT")])
+check("each slot of Lilith's own given its phoenix one, by its own material; the mouth left as it is",
+      [(event[1], event[2], event[3].Name) for event in over] == [
+          ("CharacterMesh", 0, "MI_Lilith_Skin_Phoenix"), ("CharacterMesh", 1, "MI_Lilith_Lowerbody_Phoenix"),
+          ("SkeletalMeshComponent_1", 0, "MI_Lilith_Head__Phoenix"),
+          ("SkeletalMeshComponent_2", 0, "MI_Lilith_Hair_Top_Phoenix"),
+          ("SkeletalMeshComponent_2", 1, "MI_Lilith_Hair_Bottom_Phoenix"),
+          ("SkeletalMeshComponent_3", 0, "MI_Lilith_Upperbody_Phoenix"),
+          ("SkeletalMeshComponent_4", 0, "MI_Lilith_Eye_PHoenix"),
+          ("SkeletalMeshComponent_5", 0, "MI_Lilith_Head__Phoenix"),
+          ("SkeletalMeshComponent_6", 0, "MI_Lilith_Wings_Phoenix_Full")])
+lilith = Lemmy(late=False)
+one = dressing(lilith, "Lilith")
+one.start()
+events.clear()
+check("Lilith: her five other parts hung, her own materials only, nothing said painted over", one.step() == {
+      "done": "worn", "hunter": "Lilith", "hung": 5, "slots": 9, "waited_s": 0.0}
+      and not any(str(getattr(event[3], "Name", "")).endswith("hoenix") for event in events if event[0] == "paint"))
+moxxi = Lemmy(late=False)
+one = dressing(moxxi, "Moxxi")
+one.start()
+check("Moxxi: her one model drawn by his mesh, nothing hung, its twelve slots its own", one.step() == {
+      "done": "worn", "hunter": "Moxxi", "hung": 0, "slots": 12, "waited_s": 0.0} and moxxi.parts == []
+      and moxxi.Mesh.SkinnedAsset.Name == "SK_Moxxi")
+check("a guest dressed already: nothing done", dressing(moxxi, "Lilith").start() == {"done": "dressed_already"})
+guest_parts(missing="MI_Lilith_Wings_Phoenix_Full")
+events.clear()
+check("a phoenix material that cannot be loaded: nothing done, the material said", dressing(
+      Lemmy(), "Lilith Phoenix").start() == {"done": "not_loaded", "parts": ["MI_Lilith_Wings_Phoenix_Full"]}
+      and events == [])
+guest_parts()
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

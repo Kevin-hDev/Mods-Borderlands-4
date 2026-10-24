@@ -1,6 +1,8 @@
 """Tests the hunters' looks (companions/hunters.py): the six hunters in order, each with the parts the game built for it
 on Harlowe (hunter change, 2026-09-28), jetpack and hook left out, by full path; each known by its name; a path known
-without regard to capitals; the hunter an upper body belongs to, none for any other model."""
+without regard to capitals; the hunter an upper body belongs to, none for any other model. The guests (decision 77):
+Lilith's six parts, the phoenix's with her wings and her eight materials put over, Moxxi's one model; known by name
+and by upper body, never among the hunters of the menu."""
 
 import pathlib
 import sys
@@ -46,7 +48,38 @@ check("full paths, as in the game files", LOOKS[2].upper == "/Game/PlayerCharact
       "SKPart_CorpoHacker_UpperBody.SKPart_CorpoHacker_UpperBody"
       and all(path.startswith("/Game/") and path.count(".") == 1 for look in LOOKS
               for path in (look.upper, *look.followers)))
-check("each known by its name", list(hunters.BY_NAME) == list(BUILT) and hunters.BY_NAME["Amon"] is LOOKS[3])
+check("each known by its name, the hunters then the guests", list(hunters.BY_NAME) == [*BUILT, "Lilith",
+      "Lilith Phoenix", "Moxxi"] and hunters.BY_NAME["Amon"] is LOOKS[3]
+      and hunters.BY_NAME["Moxxi"] is hunters.GUESTS[2])
+check("the hunters wear no paints over their own materials", all(look.paints == () for look in LOOKS))
+
+GUESTS = hunters.GUESTS
+LILITH_RIG = "/Game/AI/NPC/_Unique/Lilith/Model/Rig/"
+# GPartList_NPC_Lilith's parts, body first (docs/renforts/releves/2026-10-24-lilith-et-moxxi/pieces/).
+LILITH = ["SKPart_Lilith_Body", "SKPart_Lilith_Head", "SKPart_Lilith_Hair", "SKPart_Lilith_Outfit_01",
+          "SKPart_Lilith_Eyes", "SKPart_Lilith_Teeth"]
+check("the guests: Lilith, Lilith as the phoenix, Moxxi; none of them a companion of the menu",
+      [look.name for look in GUESTS] == ["Lilith", "Lilith Phoenix", "Moxxi"]
+      and not set(GUESTS) & set(LOOKS))
+check("Lilith: her part list's six parts, the body first, by full path", names(GUESTS[0]) == LILITH
+      and GUESTS[0].upper == f"{LILITH_RIG}SKPart_Lilith_Body.SKPart_Lilith_Body" and GUESTS[0].paints == ())
+check("the phoenix: the same parts and her wings", names(GUESTS[1]) == [*LILITH, "SKPart_Lilith_Wings"]
+      and GUESTS[1].upper == GUESTS[0].upper)
+PHOENIX = dict(GUESTS[1].paints)
+MATERIALS = "/Game/AI/NPC/_Unique/Lilith/Model/Materials/"
+check("the phoenix's paints: each of Lilith's own materials to its phoenix one, by full path",
+      len(PHOENIX) == 8 and PHOENIX[f"{MATERIALS}MI_Lilith_Skin.MI_Lilith_Skin"]
+      == f"{MATERIALS}LilithPhoenix/MI_Lilith_Skin_Phoenix.MI_Lilith_Skin_Phoenix"
+      and PHOENIX[f"{MATERIALS}MI_Lilith_Eye.MI_Lilith_Eye"]
+      == f"{MATERIALS}LilithPhoenix/MI_Lilith_Eye_PHoenix.MI_Lilith_Eye_PHoenix"
+      and PHOENIX[f"{MATERIALS}MI_Lilith_Wings.MI_Lilith_Wings"].endswith("MI_Lilith_Wings_Phoenix_Full")
+      and PHOENIX[f"{MATERIALS}MI_Lilith_Lowerbody_Normal.MI_Lilith_Lowerbody_Normal"].endswith("_Lowerbody_Phoenix")
+      and all(own.startswith(MATERIALS) and own.count("/") == put.count("/") - 1
+              and put.startswith(f"{MATERIALS}LilithPhoenix/") for own, put in PHOENIX.items()))
+check("Moxxi: one model, nothing to hang", GUESTS[2].upper == "/Game/AI/NPC/_Unique/Moxxi/Model/Rig/SK_Moxxi.SK_Moxxi"
+      and GUESTS[2].followers == () and GUESTS[2].paints == ())
+check("a guest's upper body known as hers; Lilith's for her two forms the first", hunters.wearing(
+      GUESTS[2].upper.lower()) is GUESTS[2] and hunters.wearing(GUESTS[1].upper) is GUESTS[0])
 check("a path known without regard to capitals", hunters.same(LOOKS[2].upper.lower(), LOOKS[2].upper)
       and not hunters.same(None, LOOKS[2].upper) and not hunters.same(LOOKS[1].upper, LOOKS[2].upper)
       and not hunters.same(LOOKS[2].upper[:-1], LOOKS[2].upper))

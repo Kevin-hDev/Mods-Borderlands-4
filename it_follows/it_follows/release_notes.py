@@ -3,6 +3,20 @@
 """The update notes the window shows after an update, the newest first, each line a point."""
 
 NOTES = (
+    ('1.0.14', {
+        'en': (
+            'New companions on the ALLIES tab: Lilith, Lilith Phoenix and Moxxi.',
+        ),
+        'fr': (
+            "Nouveaux compagnons dans l'onglet ALLIÉS : Lilith, Lilith Phénix et Moxxi.",
+        ),
+        'zh': (
+            '盟友标签页新增同伴：Lilith、Lilith Phoenix 和 Moxxi。',
+        ),
+        'ja': (
+            '「味方」タブに新しい仲間：Lilith、Lilith Phoenix、Moxxi を追加しました。',
+        ),
+    }),
     ('1.0.13', {
         'en': (
             'Performance: Normal mode now spreads its work over several frames, for fewer small stutters during play. The Hardcore still counts every kill.',

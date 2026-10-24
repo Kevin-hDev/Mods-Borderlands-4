@@ -214,11 +214,18 @@ check("an answer that is no language: none", bars_names.culture() == (None, "no_
 del state["classes"]["KismetInternationalizationLibrary"]
 check("the library missing: none, said", bars_names.culture()[1].startswith("failed:"))
 
-check("the language's own names, the English for one it lacks, the hunters their own", bars_names.shown(
-      "fr", FILES.get)[0] == {**{kind.name: kind.name for kind in bars_names.kinds.ALL},
-                              "Decrepit Frame": "Châssis vétuste"})
-check("a language with its country: the one without", bars_names.shown("zh-Hans-CN", FILES.get)[1] == "table"
-      and bars_names.shown("fr-FR", FILES.get)[0]["Decrepit Frame"] == "Châssis vétuste")
+check("the language's own names, the English for one it lacks, the hunters and guests their own, ours in that "
+      "language", bars_names.shown("fr", FILES.get)[0] == {**{kind.name: kind.name for kind in bars_names.kinds.ALL},
+                                                           "Decrepit Frame": "Châssis vétuste",
+                                                           "Lilith Phoenix": "Lilith Phénix"})
+check("a language with its country: the one without, ours too", bars_names.shown("zh-Hans-CN", FILES.get)[1] == "table"
+      and bars_names.shown("fr-FR", FILES.get)[0]["Decrepit Frame"] == "Châssis vétuste"
+      and bars_names.shown("fr-FR", FILES.get)[0]["Lilith Phoenix"] == "Lilith Phénix")
+check("ours in no other language: the name the team knows", bars_names.shown("zh-Hans", FILES.get)[0][
+      "Lilith Phoenix"] == "Lilith Phoenix" and bars_names.shown(None, FILES.get)[0]["Lilith Phoenix"]
+      == "Lilith Phoenix" and bars_names.shown("fr", FILES.get)[0]["Moxxi"] == "Moxxi")
+check("the game's table before ours when it names one", bars_names.shown("fr", {bars_names.TABLE: json.dumps({
+      "version": 1, "names": {"fr": {"Lilith Phoenix": "Phénix"}}})}.get)[0]["Lilith Phoenix"] == "Phénix")
 check("a language the table lacks: the English", bars_names.shown("xx", FILES.get)[0]["Decrepit Frame"]
       == "Decrepit Frame")
 check("no language: the English, said", bars_names.shown(None, FILES.get)[1] == "english:no_culture")
@@ -238,9 +245,10 @@ def counted(name: str) -> str:
     return FILES[name]
 
 
-check("a window in French: the allies' names in French, the hunters their own",
+check("a window in French: the allies' names in French, the hunters their own, the phoenix ours",
       bars_names.in_window("FR", counted)["Decrepit Frame"] == "Châssis vétuste"
-      and bars_names.in_window("FR", counted)["Vex"] == "Vex")
+      and bars_names.in_window("FR", counted)["Vex"] == "Vex"
+      and bars_names.in_window("FR", counted)["Lilith Phoenix"] == "Lilith Phénix")
 check("read once per language", reads == [bars_names.TABLE])
 check("a window in English: the names the team knows them by, nothing read",
       bars_names.in_window("EN", counted)["Decrepit Frame"] == "Decrepit Frame" and reads == [bars_names.TABLE])

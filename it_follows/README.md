@@ -36,7 +36,7 @@ a time.
 - **Hardcore**, an option of the normal mode: the enemies grow 1% stronger every 100 enemies you kill, all game long.
   Only your Vault Hunter's kills count, not your companions'.
   You can pause the progress, and it is kept while the option is off.
-- **COMPANIONS.** Choose up to 8 companions among 10, the 6 Vault Hunters and 4 allies, then launch the team, from
+- **COMPANIONS.** Choose up to 8 companions among 13, the 6 Vault Hunters and 7 allies, then launch the team, from
   the page or with its key, F8 at first: they follow you and fight at your side. The Vault Hunters fight with their
   weapons only, without their skills. Each one's card sets its shield, its speed and, for a Vault Hunter, its own
   outfit or your colors. A dead companion comes back near you 45 seconds later; the team finds you again after a

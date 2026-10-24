@@ -23,7 +23,8 @@ from . import panel_pages as p, panel_text as tx, panel_theme as t, panel_widget
 from . import team_choices as choices
 from .characters.companions import bars_names, kinds, player_paint
 
-PAGES = {"hunters": kinds.HUNTERS, "allies": kinds.ALLIES}
+# Lilith, Lilith Phoenix and Moxxi after the allies (decision 78 of docs/renforts/README.md): allies of the story.
+PAGES = {"hunters": kinds.HUNTERS, "allies": kinds.ALLIES + kinds.GUESTS}
 HUNTERS = tuple(kind.name for kind in kinds.HUNTERS)
 OUTFITS = choices.OUTFITS
 

@@ -1,6 +1,7 @@
 """Tests the companions a team is made of (companions/kinds.py): the six hunters first, each Lemmy wearing the look of
-that name (hunters.py), then the four allies, each born as itself; every companion known by its name, the names
-unique; a hunter's look one hunters.py knows."""
+that name (hunters.py), then the four allies, each born as itself, then the three guests, Lemmy in Lilith's, the
+phoenix's and Moxxi's looks, never among the allies; every companion known by its name, the names unique; a
+hunter's or a guest's look one hunters.py knows."""
 
 import pathlib
 import sys
@@ -32,8 +33,13 @@ check("the four allies, each born as itself, never dressed", [(kind.name, kind.l
       ("Decrepit Frame", None), ("Crankus", None), ("Brine Type M", None), ("Abomination", None)]
       and len({kind.definition for kind in kinds.ALLIES}) == 4
       and LEMMY not in {kind.definition for kind in kinds.ALLIES})
-check("all of them, hunters first, each known by a name of its own", kinds.ALL == kinds.HUNTERS + kinds.ALLIES
-      and len(kinds.BY_NAME) == len(kinds.ALL) == 10 and all(kinds.BY_NAME[kind.name] is kind for kind in kinds.ALL))
+check("the guests: Lemmy, each in a guest's look, by its name, never among the allies", [
+      (kind.definition, kind.name, kind.look) for kind in kinds.GUESTS] == [
+      (LEMMY, name, name) for name in ("Lilith", "Lilith Phoenix", "Moxxi")]
+      and all(kind.look in hunters.BY_NAME for kind in kinds.GUESTS) and not set(kinds.GUESTS) & set(kinds.ALLIES))
+check("all of them, hunters first, then the allies, then the guests, each known by a name of its own",
+      kinds.ALL == kinds.HUNTERS + kinds.ALLIES + kinds.GUESTS
+      and len(kinds.BY_NAME) == len(kinds.ALL) == 13 and all(kinds.BY_NAME[kind.name] is kind for kind in kinds.ALL))
 
 print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
 sys.exit(1 if fails else 0)

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.14 - 2026-10-24
+
+- New companions on the ALLIES tab: Lilith, Lilith Phoenix and Moxxi.
+
 ## 1.0.13 - 2026-10-24
 
 - Performance: Normal mode now spreads its work over several frames, for fewer small stutters during play. The Hardcore still counts every kill.
