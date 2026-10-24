@@ -18,6 +18,8 @@ NODE_CLASS = 'GbxAnimNode_Locomotion'
 PLAYER_CLASS = 'GbxAnimNode_BlendSpacePlayer'
 GROUND_MODE = 1
 RETRY_NS = 5_000_000_000
+# Put-backs said one by one, then no more: a game that empties the slot every frame must not flood the log.
+MAX_SAID = 5
 
 
 def players(anim):
@@ -48,6 +50,27 @@ class BackwardCarrier:
         self.blocked_id = 0
         self.blocked_owner_id = 0
         self.layout_blocked_id = 0
+        # The body's last forward sprint, held weakly, and that body: see _source.
+        self.last_source = None
+        self.last_owner_id = 0
+        self.put_back = 0
+
+    def _source(self, forward, owner_id):
+        """The forward sprint, or this body's last one while the game leaves it empty.
+
+        A weapon change empties both players, and the game fills only the one it plays: sprinting backward, the
+        backward one, which has no resource of its own, so the forward one stays empty until the sprint starts
+        again (watch of 2026-10-24, docs/investigations/omni_sprint/2026-10-24-fige-amon-harlow-c4sh.md).
+        """
+        if owner_id != self.last_owner_id:
+            self.last_source, self.last_owner_id = None, owner_id
+        source = forward.BlendSpace
+        last = self.last_source() if self.last_source is not None else None
+        if source is None:
+            return last
+        if not animation_assets.same(source, last):
+            self.last_source = self.weak(source)
+        return source
 
     def _clear(self):
         self.owner = self.target = None
@@ -104,12 +127,22 @@ class BackwardCarrier:
             self.layout_blocked_id = owner_id
             self.emit('backward carrier unavailable: animation layout changed')
             return
-        source = forward.BlendSpace
+        source = self._source(forward, owner_id)
         source_id = int(source._get_address()) if source is not None else 0
         if self.owner is not None:
             target = self.target()
             if source_id != self.source_id:
                 self.stop()
+            elif target is not None and backward.BlendSpace is None:
+                # The game emptied the slot on a weapon change: an empty slot is nobody's, the run goes back.
+                backward.BlendSpace = target
+                if not animation_assets.same(backward.BlendSpace, target):
+                    self.stop()
+                    raise ValueError('Backward carrier assignment failed')
+                self.put_back += 1
+                if self.put_back <= MAX_SAID:
+                    self.emit(f'backward carrier put back after the game emptied the slot, {self.put_back}')
+                return
             elif target is None or not animation_assets.same(backward.BlendSpace, target):
                 self.blocked_id = source_id
                 self.blocked_owner_id = owner_id

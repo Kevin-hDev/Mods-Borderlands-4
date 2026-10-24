@@ -98,6 +98,50 @@ class AnimationTests(unittest.TestCase):
         self.assertIs(new_back.BlendSpace, self.targets[-1])
         self.assertEqual(len(self.builds), 2)
 
+    def empty_both(self):
+        # A weapon change (watch of 2026-10-24): the game empties both players and, sprinting backward, fills only
+        # the backward one it plays, with nothing.
+        self.forward.BlendSpace = self.backward.BlendSpace = None
+
+    def test_weapon_change_while_sprinting_backward_keeps_the_run(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.empty_both()
+        self.runtime.update(self.character, self.anim, 1)
+        self.runtime.update(self.character, self.anim, 2)
+        self.assertIs(self.backward.BlendSpace, self.targets[0])
+        self.assertEqual(self.builds, [self.source])
+
+    def test_new_weapon_sprint_rebuilds_the_run(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.empty_both()
+        self.runtime.update(self.character, self.anim, 1)
+        second = self.make_source(21)
+        self.forward.BlendSpace = second
+        self.runtime.update(self.character, self.anim, 2)
+        self.assertIs(self.backward.BlendSpace, self.targets[-1])
+        self.assertEqual(self.builds, [self.source, second])
+
+    def test_weapon_changed_between_two_sprints_still_runs(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.movement.bIsSprinting = self.anim.bIsSprinting = False
+        self.runtime.update(self.character, self.anim, 1)
+        self.empty_both()
+        self.movement.bIsSprinting = self.anim.bIsSprinting = True
+        self.runtime.update(self.character, self.anim, 2)
+        self.assertIs(self.backward.BlendSpace, self.targets[-1])
+        self.assertEqual(self.builds, [self.source, self.source])
+
+    def test_a_new_body_never_gets_the_old_body_sprint(self):
+        self.runtime.update(self.character, self.anim, 0)
+        new_forward = obj(130, _type=self.forward._type, AnimAssetKey=self.forward.AnimAssetKey, BlendSpace=None)
+        new_back = obj(140, _type=self.backward._type, AnimAssetKey=self.backward.AnimAssetKey, BlendSpace=None)
+        new_node = obj(150, _type=self.node._type, BlendSpacePlayers=[new_forward, new_back])
+        new_anim = obj(110, Class=self.anim.Class, GbxAnimGraphNode_Locomotion_2=new_node,
+                       bIsSprinting=True, bIsBackward=True)
+        self.runtime.update(self.character, new_anim, 1)
+        self.assertIsNone(new_back.BlendSpace)
+        self.assertEqual(self.builds, [self.source])
+
     def test_character_change_clears_previous_body(self):
         self.runtime.update(self.character, self.anim, 0)
         self.runtime.update(None, None, 1)

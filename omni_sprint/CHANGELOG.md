@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.13 - 2026-10-24
+
+- Fix: changing weapons while sprinting backward no longer freezes the body when it faces the camera (OMNI DIRECTION Angle at 180, or Body Orientation off), with every Vault Hunter.
+- This fix is in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
 ## 1.2.12 - 2026-10-24
 
 - Fix: in third person, Amon, Harlow and C4sh no longer freeze stiff and glide when sprinting toward the camera or to the left.
