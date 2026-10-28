@@ -40,9 +40,10 @@ part of the site comes from its folder: the root (home page), mod_settings, reco
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
 <title>{% if site_home or page.title == site.title %}{{ site.title }}{% else %}{{ page.title }} · {{ site.title }}{% endif %}</title>
 {%- comment -%} The titles' font is found only once site.css is read: asked for at once. Without an icon of its
-own, a browser asks for /favicon.ico at the root of github.io, which is not the site's. {%- endcomment %}
+own, a browser asks for /favicon.ico at the root of github.io, which is not the site's. Browsers keep a tab icon by
+its address, apart from their cache: raise v whenever the picture changes, or visitors keep the old one. {%- endcomment %}
 <link rel="preload" href="{{ '/assets/fonts/saira-latin.woff2' | relative_url }}" as="font" type="font/woff2" crossorigin>
-<link rel="icon" href="{{ '/assets/icons/site-icon.png' | relative_url }}" type="image/png" sizes="64x64">
+<link rel="icon" href="{{ '/assets/icons/site-icon.png' | relative_url }}?v=2" type="image/png" sizes="64x64">
 <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
 <link rel="stylesheet" href="{{ '/assets/recommended.css' | relative_url }}">
 <link rel="stylesheet" href="{{ '/assets/catalog_filters.css' | relative_url }}">
