@@ -4,7 +4,7 @@ Look for what you see. Each entry says why it happens and what to do.
 
 Mod Settings' lines in the SDK log start with `[ModSettings]`. The log is
 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`, and it is rewritten at each launch of the game:
-copy it before relaunching. If nothing here helps, open an issue on GitHub with that file.
+copy it before relaunching. If nothing here helps, report it in the [Bugs tab of the Nexus page](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs) with that file.
 
 ## For players
 
@@ -100,7 +100,7 @@ makes them outdated (see [How it works](HOW_IT_WORKS.md)).
 **Why:** MODS' texts exist in English, French and Simplified Chinese. For other languages, they stay in English. The
 settings' names and descriptions are the ones each mod gives, often in English.
 
-**What to do:** no setting changes this. If you want MODS in your language, ask for it in an issue.
+**What to do:** no setting changes this. If you want MODS in your language, ask for it in the [Posts tab of the Nexus page](https://www.nexusmods.com/borderlands4/mods/388?tab=posts).
 
 ## For mod authors
 

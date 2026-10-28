@@ -48,7 +48,7 @@ Settings does nothing.
   not change.
 - Another mod that also replaces the pause menu or the main menu conflicts with Mod Settings: only one of the two can
   win.
-- These copies belong to Gearbox Software and 2K. That is why the pak is only on Nexus, and not in this repository.
+- These copies belong to Gearbox Software and 2K. That is why the pak is only on Nexus, and not in the GitHub repository.
 
 ## The local service, and why web pages are refused
 

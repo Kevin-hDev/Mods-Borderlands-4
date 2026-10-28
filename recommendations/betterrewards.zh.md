@@ -2,7 +2,7 @@
 
 BetterRewards 整合了单人困难与终极秘藏猎人（UVH）模式的奖励调整、实验性的 100 级上限，以及“返回原版并停用”功能。作者制作它，是为了获得更长的角色成长、更少的重复刷取，以及继续寻找更好装备的理由。目前为公开测试版。
 
-![贩卖机中出售的 100 级护盾](images/betterrewards/vending-level-100.jpg){: width="1600" height="902" loading="lazy"}
+![贩卖机中出售的 100 级护盾](images/betterrewards/vending-level-100.jpg){: width="1600" height="902"}
 
 ## 经验与金钱
 

@@ -4,9 +4,9 @@
 
 **ALPHA版**：最初のバージョンで、100%完成してはいません。現状で動作しますが、まだ十分にテストされておらず、すべてのMODで動くとは限りません。
 
-ゲームのバージョン **1.11.0-4906557**（Steam版）で、ソロ、キーボード、マウス、コントローラーを使い、MODを22〜29個インストールした状態でテストしました。協力プレイやEpic Games版では一度も試していません。うまくいかない場合は、まず[トラブルシューティング](TROUBLESHOOTING.ja.md)と[よくある質問](FAQ.ja.md)を確認し、それからログファイル `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log` を、ゲームを再起動する前にコピーして（起動のたびに上書きされます）、そのファイルを添えてissueを作成してください。
+ゲームのバージョン **1.11.0-4906557**（Steam版）で、ソロ、キーボード、マウス、コントローラーを使い、MODを22〜29個インストールした状態でテストしました。協力プレイやEpic Games版では一度も試していません。うまくいかない場合は、まず[トラブルシューティング](TROUBLESHOOTING.ja.md)と[よくある質問](FAQ.ja.md)を確認し、それからログファイル `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log` を、ゲームを再起動する前にコピーして（起動のたびに上書きされます）、そのファイルを添えて[NexusページのBugsタブ](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs)で報告してください。
 
-**このリポジトリのほかの部分と異なり、Mod Settingsは[Mozilla Public License 2.0](LICENSE)で提供されています。**
+**[GitHubリポジトリ](https://github.com/Kevin-hDev/Mods-Borderlands-4)のほかの部分と異なり、Mod Settingsは[Mozilla Public License 2.0](LICENSE)で提供されています。**
 
 ## できること
 
@@ -22,10 +22,10 @@
 
 ## 構成
 
-設定を変えたときに何が起きるか、Mod Settingsが何に触れるかは、[仕組み](HOW_IT_WORKS.ja.md)を参照してください。2つの部分からなり、どちらもこのフォルダーにあります。
+設定を変えたときに何が起きるか、Mod Settingsが何に触れるかは、[仕組み](HOW_IT_WORKS.ja.md)を参照してください。2つの部分からなり、どちらも[ソースコード](https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/mod_settings)にあります。
 
 - `mod_settings/`：Pythonパッケージで、`mod_settings.sdkmod` として配布されます。SDKのMODとオプションを読み取り、`127.0.0.1` 上のローカルサービスでページに渡します。このサービスはWebページからの要求を拒否します。変更はすべてゲーム自身のスレッドで適用されます。
-- `page/`：ページのスクリプトとスタイルシートで、それらを読み込むゲームのポーズメニューとメインメニューのコピーとともに、`mod-settings_999_P.pak` に入れて配布されます。`build_pak.py` はゲームの最新のメニューからこのパックを作り、`install_pak.py` はゲームを閉じた状態でパックをインストールまたは削除し、確認はいつでもできます。`build_pak.py` には、ゲームのパックを読み書きする2つの外部ツールが必要です。`install_pak.py` には、ゲームのフォルダーを教える `deploy_sdkmods.py` が必要で、Windowsでしか動きません。この3つは `game_tools.py` に作者の作業環境での場所で書かれているので、自分のコピーを指すように変更してください。パックにはゲームのファイルが含まれるため、このリポジトリにはなく、Nexusにだけあります。
+- `page/`：ページのスクリプトとスタイルシートで、それらを読み込むゲームのポーズメニューとメインメニューのコピーとともに、`mod-settings_999_P.pak` に入れて配布されます。`build_pak.py` はゲームの最新のメニューからこのパックを作り、`install_pak.py` はゲームを閉じた状態でパックをインストールまたは削除し、確認はいつでもできます。`build_pak.py` には、ゲームのパックを読み書きする2つの外部ツールが必要です。`install_pak.py` には、ゲームのフォルダーを教える `deploy_sdkmods.py` が必要で、Windowsでしか動きません。この3つは `game_tools.py` に作者の作業環境での場所で書かれているので、自分のコピーを指すように変更してください。パックにはゲームのファイルが含まれるため、GitHubリポジトリにはなく、Nexusにだけあります。
 
 ## インストール
 
@@ -38,7 +38,7 @@
 
 ## テスト
 
-各テストはこのフォルダーから個別に実行します：`python test_bridge.py`、ページには `node test_logic.js` と `node test_layout.js`。テストはゲームのSDKを偽のオブジェクト（`fixture_sdk.py`、`fixture_world.py`、`fixture_test_mod.py`）に置き換えます。各テストは `RESULTAT:` の行を表示し、失敗すると0以外のコードで終了します。オプションのクラスと保存処理は、インストールされた `mods_base.sdkmod` から読み込むSDK本来のものです。`BL4_SDK_MODS` に `...\Borderlands 4\sdk_mods` フォルダーのパスを設定してください。設定しないと、それを必要とするテストは `SKIP` と表示します。`test_page_browser.py` は、ゲームのインターフェースファイルを使い、ウィンドウなしのChromeでページを動かします。ChromeがWindowsの通常の場所にない場合、またはゲームのパックからそれらのファイルを読み取るツールがない場合は `SKIP` と表示します。
+各テストはソースコードのフォルダーから個別に実行します：`python test_bridge.py`、ページには `node test_logic.js` と `node test_layout.js`。テストはゲームのSDKを偽のオブジェクト（`fixture_sdk.py`、`fixture_world.py`、`fixture_test_mod.py`）に置き換えます。各テストは `RESULTAT:` の行を表示し、失敗すると0以外のコードで終了します。オプションのクラスと保存処理は、インストールされた `mods_base.sdkmod` から読み込むSDK本来のものです。`BL4_SDK_MODS` に `...\Borderlands 4\sdk_mods` フォルダーのパスを設定してください。設定しないと、それを必要とするテストは `SKIP` と表示します。`test_page_browser.py` は、ゲームのインターフェースファイルを使い、ウィンドウなしのChromeでページを動かします。ChromeがWindowsの通常の場所にない場合、またはゲームのパックからそれらのファイルを読み取るツールがない場合は `SKIP` と表示します。
 
 ## 既知の制限
 

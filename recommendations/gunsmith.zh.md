@@ -2,7 +2,7 @@
 
 Gunsmith 把武器改装带进你的物品栏。分解不需要的枪械，发现它们的部件，再按你的玩法改装兼容的武器。
 
-![物品栏中的 Gunsmith 标签页，显示武器预览及其部件](images/gunsmith/menu-1.jpg){: width="1600" height="906" loading="lazy"}
+![物品栏中的 Gunsmith 标签页，显示武器预览及其部件](images/gunsmith/menu-1.jpg){: width="1600" height="906"}
 
 ## 功能
 

@@ -3,7 +3,7 @@
 ## Est-ce que Mod Settings marche sur la version Epic Games ?
 
 Il n'a jamais été essayé sur la version Epic Games, seulement sur la version Steam 1.11.0-4906557. Si tu l'essaies,
-dis-nous ce que ça donne dans une issue, avec le journal du SDK.
+dis-nous ce que ça donne dans l'[onglet Bugs de la page Nexus](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs), avec le journal du SDK.
 
 ## Et en coopération ?
 

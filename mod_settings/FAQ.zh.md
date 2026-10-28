@@ -2,7 +2,7 @@
 
 ## Mod Settings 能在 Epic Games 版上运行吗？
 
-它从未在 Epic Games 版上试过，只在 Steam 版 1.11.0-4906557 上测试过。如果你试了，请在 issue 中告诉我们结果，并附上 SDK 日志。
+它从未在 Epic Games 版上试过，只在 Steam 版 1.11.0-4906557 上测试过。如果你试了，请在[Nexus 页面的 Bugs 标签页](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs)告诉我们结果，并附上 SDK 日志。
 
 ## 合作模式呢？
 

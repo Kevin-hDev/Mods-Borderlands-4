@@ -20,6 +20,17 @@ part of the site comes from its folder: the root (home page), mod_settings, reco
 {%- if section == "mod_settings" and base == "README" -%}{%- assign mod_settings_home = true -%}{%- endif -%}
 {%- assign mod = nil -%}
 {%- if section == "recommendations" and base != "README" -%}{%- assign mod = site.data.recommended[base] -%}{%- endif -%}
+{%- comment -%} This page in each language it exists in, for the language menu and the search engines. {%- endcomment -%}
+{%- assign version_codes = "" | split: "" -%}
+{%- assign version_pages = "" | split: "" -%}
+{%- for l in site.data.nav.languages -%}
+  {%- capture path -%}{{ folder }}{{ base }}{% if l != "en" %}.{{ l }}{% endif %}.md{%- endcapture -%}
+  {%- assign other = site.pages | where: "path", path | first -%}
+  {%- if other -%}
+    {%- assign version_codes = version_codes | push: l -%}
+    {%- assign version_pages = version_pages | push: other -%}
+  {%- endif -%}
+{%- endfor -%}
 <!doctype html>
 <html lang="{{ words.lang }}">
 <head>
@@ -27,15 +38,19 @@ part of the site comes from its folder: the root (home page), mod_settings, reco
 <meta name="viewport" content="width=device-width, initial-scale=1">
 {%- comment -%} No script, no outside file: the site is only text, pictures and its own style sheets. {%- endcomment %}
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
-<title>{% if site_home %}{{ site.title }}{% else %}{{ page.title }} · {{ site.title }}{% endif %}</title>
+<title>{% if site_home or page.title == site.title %}{{ site.title }}{% else %}{{ page.title }} · {{ site.title }}{% endif %}</title>
+{%- comment -%} The titles' font is found only once site.css is read: asked for at once. Without an icon of its
+own, a browser asks for /favicon.ico at the root of github.io, which is not the site's. {%- endcomment %}
+<link rel="preload" href="{{ '/assets/fonts/saira-latin.woff2' | relative_url }}" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="{{ '/assets/icons/site-icon.png' | relative_url }}" type="image/png" sizes="64x64">
 <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
 <link rel="stylesheet" href="{{ '/assets/recommended.css' | relative_url }}">
 <link rel="stylesheet" href="{{ '/assets/catalog_filters.css' | relative_url }}">
-{%- for l in site.data.nav.languages %}
-{%- capture path -%}{{ folder }}{{ base }}{% if l != "en" %}.{{ l }}{% endif %}.md{%- endcapture -%}
-{%- assign other = site.pages | where: "path", path | first -%}
-{%- if other %}
+{%- for l in version_codes %}
+{%- assign other = version_pages[forloop.index0] %}
 <link rel="alternate" hreflang="{{ site.data.nav[l].lang }}" href="{{ other.url | absolute_url }}">
+{%- if l == "en" %}
+<link rel="alternate" hreflang="x-default" href="{{ other.url | absolute_url }}">
 {%- endif -%}
 {%- endfor %}
 </head>
@@ -44,30 +59,26 @@ part of the site comes from its folder: the root (home page), mod_settings, reco
 <a class="skip" href="#content">{{ words.skip }}</a>
 <header class="hero{% if mod_settings_home %} hero-home{% endif %}">
   <div class="top">
-    {%- capture path -%}index{{ suffix }}.md{%- endcapture -%}
-    {%- assign start = site.pages | where: "path", path | first -%}
-    {%- unless start -%}{%- assign start = site.pages | where: "path", "index.md" | first -%}{%- endunless %}
-    <a class="logo" href="{{ start.url | relative_url }}">{{ site.title }}</a>
+    {%- include page_in_language.html base="index" %}
+    {%- comment -%} The logo bears the site's name, as does the menu's first part: its own name tells them apart for a
+    screen reader. {%- endcomment %}
+    <a class="logo" href="{{ found_page.url | relative_url }}" aria-label="{{ words.logo_label }}">{{ site.title }}</a>
     <nav class="menu" aria-label="{{ words.menu_label }}">
       <ul>
       {%- for entry in site.data.nav.menu -%}
-        {%- capture path -%}{{ entry.folder }}/README{{ suffix }}.md{%- endcapture -%}
-        {%- assign target = site.pages | where: "path", path | first -%}
-        {%- unless target -%}{%- capture path -%}{{ entry.folder }}/README.md{%- endcapture -%}{%- assign target = site.pages | where: "path", path | first -%}{%- endunless -%}
-        {%- if target %}
-        <li><a href="{{ target.url | relative_url }}"{% if section == entry.folder %} aria-current="true"{% endif %}>{{ words[entry.label] }}</a></li>
+        {%- capture menu_base -%}{{ entry.folder }}/README{%- endcapture -%}
+        {%- include page_in_language.html base=menu_base -%}
+        {%- if found_page %}
+        <li><a href="{{ found_page.url | relative_url }}"{% if section == entry.folder %} aria-current="{% if found_page.url == page.url %}page{% else %}true{% endif %}"{% endif %}>{{ words[entry.label] }}</a></li>
         {%- endif -%}
       {%- endfor %}
       </ul>
     </nav>
     <nav class="langs" aria-label="{{ words.languages_label }}">
       <ul>
-      {%- for l in site.data.nav.languages -%}
-        {%- capture path -%}{{ folder }}{{ base }}{% if l != "en" %}.{{ l }}{% endif %}.md{%- endcapture -%}
-        {%- assign other = site.pages | where: "path", path | first -%}
-        {%- if other %}
+      {%- for l in version_codes -%}
+        {%- assign other = version_pages[forloop.index0] %}
         <li><a href="{{ other.url | relative_url }}" hreflang="{{ site.data.nav[l].lang }}" lang="{{ site.data.nav[l].lang }}"{% if l == code %} aria-current="page"{% endif %}>{{ site.data.nav[l].label }}</a></li>
-        {%- endif -%}
       {%- endfor %}
       </ul>
     </nav>
@@ -88,16 +99,10 @@ part of the site comes from its folder: the root (home page), mod_settings, reco
   <nav class="pages" aria-label="{{ words.pages_label }}">
     <ul>
     {%- for p in site.data.nav.mod_settings_pages -%}
-      {%- capture path -%}{{ folder }}{{ p }}{{ suffix }}.md{%- endcapture -%}
-      {%- assign target = site.pages | where: "path", path | first -%}
-      {%- assign fallback = false -%}
-      {%- unless target -%}
-        {%- assign path = folder | append: p | append: ".md" -%}
-        {%- assign target = site.pages | where: "path", path | first -%}
-        {%- assign fallback = true -%}
-      {%- endunless -%}
-      {%- if target %}
-      <li><a href="{{ target.url | relative_url }}"{% if fallback %} hreflang="en"{% endif %}{% if p == base %} aria-current="page"{% endif %}>{{ words[p] }}</a></li>
+      {%- capture page_base -%}{{ folder }}{{ p }}{%- endcapture -%}
+      {%- include page_in_language.html base=page_base -%}
+      {%- if found_page %}
+      <li><a href="{{ found_page.url | relative_url }}"{% if found_in_english %} hreflang="en"{% endif %}{% if p == base %} aria-current="page"{% endif %}>{{ words[p] }}</a></li>
       {%- endif -%}
     {%- endfor %}
     </ul>
@@ -108,12 +113,17 @@ part of the site comes from its folder: the root (home page), mod_settings, reco
   pages' link to it opens it on GitHub.
   {%- endcomment -%}
   {%- assign license_github = site.license_url | prepend: 'href="' | append: '"' -%}
+  {%- assign picture_place = "text" -%}
+  {%- if section == "mod_settings" -%}{%- assign picture_place = "beside-pages" -%}{%- endif -%}
+  {%- capture page_text %}{% include picture_srcsets.html text=content folder=folder place=picture_place %}{% endcapture -%}
   {%- capture text -%}
-  {{ content | replace: 'href="LICENSE"', license_github }}
+  {{ page_text | replace: 'href="LICENSE"', license_github }}
   {%- if site_home %}{% include home.html %}{% endif -%}
   {%- if section == "recommendations" and base == "README" %}{% include catalog.html %}{% endif -%}
   {%- if mod %}<h2>{{ words.mod_news }}</h2>{% include news_list.html mod=base %}{% endif -%}
-  {%- if section == "news" %}{% include news_list.html %}{% endif -%}
+  {%- comment -%} The updates page grows with every update of every mod: it shows the latest 30, and each mod's
+  page keeps all of its own (audit of 2026-10-28). {%- endcomment -%}
+  {%- if section == "news" %}{% include news_list.html limit=30 older=words.older_news %}{% endif -%}
   {%- endcapture %}
   <main id="content">
 {% include french_spaces.html lang=code text=text %}

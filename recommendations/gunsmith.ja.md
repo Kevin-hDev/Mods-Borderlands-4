@@ -2,7 +2,7 @@
 
 Gunsmith は、武器のカスタマイズをインベントリに持ち込むMODです。不要な銃を分解してパーツを見つけ、自分のプレイスタイルに合わせて互換性のある武器を組み替えられます。
 
-![インベントリの Gunsmith タブ。武器のプレビューとそのパーツ](images/gunsmith/menu-1.jpg){: width="1600" height="906" loading="lazy"}
+![インベントリの Gunsmith タブ。武器のプレビューとそのパーツ](images/gunsmith/menu-1.jpg){: width="1600" height="906"}
 
 ## できること
 

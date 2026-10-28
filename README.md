@@ -34,7 +34,7 @@ See each mod's README for distribution and build instructions. A `.sdkmod` is a 
 
 ## Reporting a problem
 
-Open an issue, and say what you were doing when it happened, where you were, and which version of the game and of the mod you are on. A movement bug that only happens on one surface is almost impossible to find without those.
+Report it in the Bugs tab of the mod's Nexus page, and say what you were doing when it happened, where you were, and which version of the game and of the mod you are on. A movement bug that only happens on one surface is almost impossible to find without those.
 
 ## Running the tests
 

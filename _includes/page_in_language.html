@@ -1,0 +1,13 @@
+{%- comment -%}
+The only place that finds a page in the page's language, or in English when it has none in that language: include.base
+is its path without its language and ".md" (mod_settings/FAQ). Sets found_page (nil if it exists in neither) and
+found_in_english, true when the English page stands in for a missing translation.
+{%- endcomment -%}
+{%- capture found_path -%}{{ include.base }}{{ suffix }}.md{%- endcapture -%}
+{%- assign found_page = site.pages | where: "path", found_path | first -%}
+{%- assign found_in_english = false -%}
+{%- unless found_page -%}
+  {%- capture found_path -%}{{ include.base }}.md{%- endcapture -%}
+  {%- assign found_page = site.pages | where: "path", found_path | first -%}
+  {%- assign found_in_english = true -%}
+{%- endunless -%}

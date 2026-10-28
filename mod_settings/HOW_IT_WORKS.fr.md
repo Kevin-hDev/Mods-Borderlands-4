@@ -49,8 +49,8 @@ Menus fermés, Mod Settings ne fait rien.
   propres menus, et tes réglages ne bougent pas.
 - Un autre mod qui remplace aussi le menu pause ou le menu principal entre en conflit avec Mod Settings : un seul des
   deux peut l'emporter.
-- Ces copies appartiennent à Gearbox Software et 2K. C'est pour ça que le paquet n'est que sur Nexus, et pas dans ce
-  dépôt.
+- Ces copies appartiennent à Gearbox Software et 2K. C'est pour ça que le paquet n'est que sur Nexus, et pas dans le
+  dépôt GitHub.
 
 ## Le service local, et pourquoi les pages web sont refusées
 

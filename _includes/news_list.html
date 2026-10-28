@@ -1,7 +1,8 @@
 {%- comment -%}
 The updates of the recommended mods, newest first: those of one mod (include.mod), or of all of them, at most
 include.limit. Each mod's file lists its notes newest first; a key "date|mod|rank" sorts all of them together, the
-rank keeping that order between two notes of the same day.
+rank keeping that order between two notes of the same day. When the limit leaves notes out, include.older says where
+they are. The version is shown as "v2": a number alone in its badge did not read as a version (audit of 2026-10-28).
 {%- endcomment -%}
 {%- assign keys = "" | split: "" -%}
 {%- for entry in site.data.recommended -%}
@@ -27,12 +28,16 @@ rank keeping that order between two notes of the same day.
   {%- assign note = data.news[index] %}
   <li class="note">
     <p class="note-head"><time datetime="{{ note.date }}">{{ note.date }}</time>
-    {%- unless include.mod %} <a href="{% include mod_url.html id=mod_id %}">{{ data.name | escape }}</a>{% endunless %} <span class="note-version">{{ note.version | escape }}</span></p>
+    {%- unless include.mod %} <a href="{% include mod_url.html id=mod_id %}">{{ data.name | escape }}</a>{% endunless %} <span class="note-version">v{{ note.version | escape }}</span></p>
     <p>{{ note.text[code] | escape }}</p>
     {%- if note.image %}
-    <img src="{{ '/recommendations/images/' | append: bits[1] | append: '/' | append: note.image.file | relative_url }}" width="{{ note.image.width }}" height="{{ note.image.height }}" alt="{{ note.image.alt[code] | escape }}" loading="lazy">
+    {%- capture note_file %}recommendations/images/{{ bits[1] }}/{{ note.image.file }}{% endcapture %}
+    <img src="{{ '/' | append: note_file | relative_url }}" width="{{ note.image.width }}" height="{{ note.image.height }}" alt="{{ note.image.alt[code] | escape }}"{% include picture_sizes.html file=note_file place="text" %} loading="lazy">
     {%- endif %}
   </li>
 {%- endfor %}
 </ol>
+{%- if include.older and keys.size > count %}
+<p>{{ include.older }}</p>
+{%- endif %}
 {%- endif %}

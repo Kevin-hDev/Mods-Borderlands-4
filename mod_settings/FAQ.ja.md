@@ -2,7 +2,7 @@
 
 ## Mod SettingsはEpic Games版で動きますか？
 
-Epic Games版では一度も試しておらず、試したのはSteam版1.11.0-4906557だけです。試した場合は、SDKのログを添えて、結果をissueで教えてください。
+Epic Games版では一度も試しておらず、試したのはSteam版1.11.0-4906557だけです。試した場合は、SDKのログを添えて、結果を[NexusページのBugsタブ](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs)で教えてください。
 
 ## 協力プレイではどうですか？
 

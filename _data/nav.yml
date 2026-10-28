@@ -24,6 +24,7 @@ en:
   pages_label: Pages
   languages_label: Languages
   menu_label: Site
+  logo_label: Mod Settings, site home
   menu_mod_settings: Mod Settings
   menu_recommended: Recommended mods
   menu_news: Updates
@@ -40,6 +41,7 @@ en:
   mod_news: Updates of this mod
   empty_catalog: No recommended mod yet.
   empty_news: No update yet.
+  older_news: Older updates are on each mod's page.
   footer_mod_settings: Mod Settings is under the Mozilla Public License 2.0. Not affiliated with Gearbox Software or 2K.
   footer_site: Fan-made site. Not affiliated with Gearbox Software or 2K.
 
@@ -58,6 +60,7 @@ fr:
   pages_label: Pages
   languages_label: Langues
   menu_label: Site
+  logo_label: Mod Settings, accueil du site
   menu_mod_settings: Mod Settings
   menu_recommended: Mods recommandés
   menu_news: Mises à jour
@@ -74,6 +77,7 @@ fr:
   mod_news: Mises à jour de ce mod
   empty_catalog: Aucun mod recommandé pour l'instant.
   empty_news: Aucune mise à jour pour l'instant.
+  older_news: Les mises à jour plus anciennes sont sur la page de chaque mod.
   footer_mod_settings: Mod Settings est sous licence Mozilla Public License 2.0. Sans lien avec Gearbox Software ni 2K.
   footer_site: Site de fan. Sans lien avec Gearbox Software ni 2K.
 
@@ -92,6 +96,7 @@ zh:
   pages_label: 页面
   languages_label: 语言
   menu_label: 网站
+  logo_label: Mod Settings 网站首页
   menu_mod_settings: Mod Settings
   menu_recommended: 推荐模组
   menu_news: 模组动态
@@ -108,6 +113,7 @@ zh:
   mod_news: 本模组的动态
   empty_catalog: 暂无推荐模组。
   empty_news: 暂无动态。
+  older_news: 更早的动态见各模组的页面。
   footer_mod_settings: Mod Settings 采用 Mozilla Public License 2.0 许可。与 Gearbox Software 和 2K 无关。
   footer_site: 粉丝制作的网站。与 Gearbox Software 和 2K 无关。
 
@@ -126,6 +132,7 @@ ja:
   pages_label: ページ
   languages_label: 言語
   menu_label: サイト
+  logo_label: Mod Settings サイトのトップページ
   menu_mod_settings: Mod Settings
   menu_recommended: おすすめMOD
   menu_news: MODの更新情報
@@ -142,5 +149,6 @@ ja:
   mod_news: このMODの更新情報
   empty_catalog: おすすめMODはまだありません。
   empty_news: 更新情報はまだありません。
+  older_news: それより前の更新情報は、各MODのページにあります。
   footer_mod_settings: Mod SettingsはMozilla Public License 2.0で公開されています。Gearbox Software および 2K とは関係ありません。
   footer_site: ファンが制作したサイトです。Gearbox Software および 2K とは関係ありません。

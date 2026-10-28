@@ -2,7 +2,7 @@
 
 Jetpack Ascend lets you actually go up with the glide pack, the game's jetpack, instead of only gliding. Look up to climb; look straight ahead or down and you glide as usual. It is not overpowered: just a more comfortable way of getting around.
 
-![A Vault Hunter climbing in the air with the glide pack, its gauge at the bottom of the screen](images/jetpackascend/climbing.jpg){: width="1600" height="1296" loading="lazy"}
+![A Vault Hunter climbing in the air with the glide pack, its gauge at the bottom of the screen](images/jetpackascend/climbing.jpg){: width="1600" height="1296"}
 
 ## What it does
 

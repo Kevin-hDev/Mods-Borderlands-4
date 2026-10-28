@@ -1,25 +1,21 @@
 {%- comment -%}
 The home page under its text: Mod Settings' card on its own, the recommended mods' card, and the latest updates.
-Mod Settings' card stands alone, under no plural heading (Kevin, 2026-10-27).
+Mod Settings' card stands alone, under no plural heading (Kevin, 2026-10-27). The two cards show at the first look,
+so their pictures load at once instead of waiting to be scrolled to (audit of 2026-10-28).
 {%- endcomment -%}
-{%- capture path -%}mod_settings/README{{ suffix }}.md{%- endcapture -%}
-{%- assign mod_settings_page = site.pages | where: "path", path | first -%}
-{%- unless mod_settings_page -%}{%- assign mod_settings_page = site.pages | where: "path", "mod_settings/README.md" | first -%}{%- endunless -%}
-{%- capture path -%}recommendations/README{{ suffix }}.md{%- endcapture -%}
-{%- assign catalog_page = site.pages | where: "path", path | first -%}
-{%- unless catalog_page -%}{%- assign catalog_page = site.pages | where: "path", "recommendations/README.md" | first -%}{%- endunless -%}
-{%- capture path -%}news/README{{ suffix }}.md{%- endcapture -%}
-{%- assign news_page = site.pages | where: "path", path | first -%}
-{%- unless news_page -%}{%- assign news_page = site.pages | where: "path", "news/README.md" | first -%}{%- endunless %}
+{%- include page_in_language.html base="mod_settings/README" -%}{%- assign mod_settings_page = found_page -%}
+{%- include page_in_language.html base="recommendations/README" -%}{%- assign catalog_page = found_page -%}
+{%- include page_in_language.html base="news/README" -%}{%- assign news_page = found_page %}
 <div class="cards home-cards">
   <a class="card" href="{{ mod_settings_page.url | relative_url }}">
-    <img src="{{ '/mod_settings/site/images/home.jpg' | relative_url }}" width="1600" height="1231" alt="" loading="lazy">
+    <img src="{{ '/mod_settings/site/images/home.jpg' | relative_url }}" width="1600" height="1231" alt=""{% include picture_sizes.html file="mod_settings/site/images/home.jpg" place="card" %}>
     <span class="card-text"><span class="card-title">{{ words.menu_mod_settings }}</span><span class="card-pitch">{{ words.card_mod_settings }}</span></span>
   </a>
   <a class="card" href="{{ catalog_page.url | relative_url }}">
     <span class="card-thumbs">
     {%- for entry in site.data.recommended limit: 3 %}
-      <img src="{{ '/recommendations/images/' | append: entry[0] | append: '/' | append: entry[1].card_image.file | relative_url }}" width="{{ entry[1].card_image.width }}" height="{{ entry[1].card_image.height }}" alt="" loading="lazy">
+      {%- capture thumb_file %}recommendations/images/{{ entry[0] }}/{{ entry[1].card_image.file }}{% endcapture %}
+      <img src="{{ '/' | append: thumb_file | relative_url }}" width="{{ entry[1].card_image.width }}" height="{{ entry[1].card_image.height }}" alt=""{% include picture_sizes.html file=thumb_file place="thumb" %}>
     {%- endfor -%}
     </span>
     <span class="card-text"><span class="card-title">{{ words.menu_recommended }}</span><span class="card-pitch">{{ words.card_recommended }}</span></span>

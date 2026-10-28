@@ -1,7 +1,5 @@
 # Mod Settings : guide pour les créateurs de mods
 
-[English](MOD_AUTHORS.md) · [中文](MOD_AUTHORS.zh.md) · [日本語](MOD_AUTHORS.ja.md)
-
 Mod Settings ajoute une entrée MODS au menu pause et au menu principal de Borderlands 4. Elle montre et règle les
 options de tous les mods du SDK Python, avec les pièces de l'écran Options du jeu.
 
@@ -149,7 +147,7 @@ langues. Les noms et les descriptions de tes options s'affichent tels que ton mo
 
 ## Vérifier ton mod
 
-1. Installe Mod Settings : ses deux fichiers, `mod_settings.sdkmod` et `mod-settings_999_P.pak` (voir le README).
+1. Installe Mod Settings : ses deux fichiers, `mod_settings.sdkmod` et `mod-settings_999_P.pak` (voir le [README](README.fr.md)).
 2. Lance le jeu, ouvre le menu pause, choisis MODS, puis ton mod.
 3. Compare avec le menu des mods de la console du SDK : tu dois y retrouver les mêmes options.
 4. S'il manque quelque chose, cherche dans `unrealsdk.log` la ligne `[ModSettings] MODEL_BUILT`. Elle donne des

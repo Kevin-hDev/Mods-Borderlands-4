@@ -1,0 +1,22 @@
+{%- comment -%}
+Gives the pictures of a page's text their WebP copies (picture_sizes.html). A page holds no Liquid (the site check
+refuses it), so its pictures are found in its HTML, in the two forms they take there: a Markdown picture with its
+address in full (/Mods-Borderlands-4/recommendations/images/...), an <img> written in the page with its address as
+written, from the page's folder (site/images/...).
+include.text, include.folder (the page's folder from the root, ending with /, or "" for the root), include.place.
+{%- endcomment -%}
+{%- assign pss_text = include.text -%}
+{%- for pss_picture in site.data.picture_sizes.pictures -%}
+  {%- assign pss_file = pss_picture[0] -%}
+  {%- capture pss_attributes %}{% include picture_sizes.html file=pss_file place=include.place %}{% endcapture -%}
+  {%- assign pss_full = "/" | append: pss_file | relative_url | prepend: '<img src="' | append: '"' -%}
+  {%- assign pss_with = pss_full | append: pss_attributes -%}
+  {%- assign pss_text = pss_text | replace: pss_full, pss_with -%}
+  {%- assign pss_head = pss_file | slice: 0, include.folder.size -%}
+  {%- if include.folder != "" and pss_head == include.folder -%}
+    {%- assign pss_short = pss_file | remove_first: include.folder | prepend: '<img src="' | append: '"' -%}
+    {%- assign pss_with = pss_short | append: pss_attributes -%}
+    {%- assign pss_text = pss_text | replace: pss_short, pss_with -%}
+  {%- endif -%}
+{%- endfor -%}
+{{- pss_text -}}

@@ -2,7 +2,7 @@
 
 表示された症状を探してください。各項目に、原因と対処法があります。
 
-Mod SettingsがSDKのログに書く行は `[ModSettings]` で始まります。ログは `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log` で、ゲームを起動するたびに上書きされます。再起動する前にコピーしてください。ここで解決しない場合は、このファイルを添えてGitHubでissueを作成してください。
+Mod SettingsがSDKのログに書く行は `[ModSettings]` で始まります。ログは `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log` で、ゲームを起動するたびに上書きされます。再起動する前にコピーしてください。ここで解決しない場合は、このファイルを添えて[NexusページのBugsタブ](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs)で報告してください。
 
 ## プレイヤー向け
 
@@ -81,7 +81,7 @@ Mod SettingsがSDKのログに書く行は `[ModSettings]` で始まります。
 
 **原因：** MODSのテキストは英語、フランス語、簡体字中国語で用意されています。それ以外の言語（日本語を含む）では英語のままです。設定の名前と説明は各MODが付けたもので、英語のことが多いです。
 
-**対処法：** これを変える設定はありません。MODSを自分の言語で使いたい場合は、issueで要望してください。
+**対処法：** これを変える設定はありません。MODSを自分の言語で使いたい場合は、[NexusページのPostsタブ](https://www.nexusmods.com/borderlands4/mods/388?tab=posts)で要望してください。
 
 ## MOD作者向け
 

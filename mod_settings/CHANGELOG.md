@@ -7,4 +7,4 @@
 - Switches, sliders, arrow choices, lists, keys and buttons, saved by the SDK.
 - Texts in English, French and Simplified Chinese, following the game's language.
 - Keyboard, mouse and gamepad.
-- Under the Mozilla Public License 2.0, unlike the rest of this repository.
+- Under the Mozilla Public License 2.0, unlike the rest of its GitHub repository.

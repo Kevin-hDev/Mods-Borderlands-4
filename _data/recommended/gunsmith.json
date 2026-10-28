@@ -10,13 +10,7 @@
     {"platform": "youtube", "url": "https://www.youtube.com/@ipur3z-mods"}
   ],
   "card_image": {
-    "file": "card.jpg", "width": 960, "height": 539,
-    "alt": {
-      "en": "Gunsmith promotional artwork",
-      "fr": "Illustration promotionnelle de Gunsmith",
-      "zh": "Gunsmith 宣传图",
-      "ja": "Gunsmith のプロモーション画像"
-    }
+    "file": "card.jpg", "width": 960, "height": 539
   },
   "pitch": {
     "en": "Break down the guns you don't need, unlock their parts, and rebuild compatible weapons right in your inventory.",

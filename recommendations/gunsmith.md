@@ -2,7 +2,7 @@
 
 Gunsmith brings weapon customization into your inventory. Break down the guns you don't need, discover their parts, and rebuild compatible weapons around the way you play.
 
-![The Gunsmith tab in the inventory, with the weapon preview and its parts](images/gunsmith/menu-1.jpg){: width="1600" height="906" loading="lazy"}
+![The Gunsmith tab in the inventory, with the weapon preview and its parts](images/gunsmith/menu-1.jpg){: width="1600" height="906"}
 
 ## What it does
 

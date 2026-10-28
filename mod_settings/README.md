@@ -8,11 +8,11 @@ enough yet, and it may not work with every mod.
 
 Tested on game version **1.11.0-4906557**, Steam version, in single player, with keyboard, mouse and gamepad and 22
 to 29 mods installed. Never tried in co-op, nor on the Epic Games version. If it goes wrong for you, first look at
-[troubleshooting](TROUBLESHOOTING.md) and the [FAQ](FAQ.md), then open an issue with the log file,
+[troubleshooting](TROUBLESHOOTING.md) and the [FAQ](FAQ.md), then report it in the [Bugs tab of the Nexus page](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs) with the log file,
 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`, copied before relaunching the game (it is
 rewritten at each launch).
 
-**Unlike the rest of this repository, Mod Settings is under the [Mozilla Public License 2.0](LICENSE).**
+**Unlike the rest of its [GitHub repository](https://github.com/Kevin-hDev/Mods-Borderlands-4), Mod Settings is under the [Mozilla Public License 2.0](LICENSE).**
 
 ## What it does
 
@@ -37,7 +37,7 @@ menu does. How each option type is shown, how to lay out your options in tabs, a
 ## How it is made
 
 What happens when you change a setting, and what Mod Settings touches: see [How it works](HOW_IT_WORKS.md). Two
-parts, both from this folder:
+parts, both in its [source code](https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/mod_settings):
 
 - `mod_settings/`, the Python package, shipped as `mod_settings.sdkmod`. It reads the SDK's mods and options, and
   serves them to the page from a local service on `127.0.0.1` that refuses requests from web pages. Every change is
@@ -48,7 +48,7 @@ parts, both from this folder:
   read and write the game's paks; `install_pak.py` needs `deploy_sdkmods.py`, which gives it the game's folder, and
   only works on Windows. All three are named in `game_tools.py`, where they sit in the author's workshop: point them
   to your own copies. The pak holds
-  the game's own files, so it is not in this repository: it ships on Nexus only.
+  the game's own files, so it is not in the GitHub repository: it ships on Nexus only.
 
 ## Installing
 
@@ -63,7 +63,7 @@ do not change.
 
 ## Tests
 
-Run each test separately from this folder: `python test_bridge.py`, and `node test_logic.js` and `node test_layout.js` for the page.
+Run each test separately from the source code's folder: `python test_bridge.py`, and `node test_logic.js` and `node test_layout.js` for the page.
 The tests replace the game's SDK with stand-ins (`fixture_sdk.py`, `fixture_world.py`, `fixture_test_mod.py`). Each
 prints a `RESULTAT:` line and exits with a non-zero code on failure. The option classes and the settings save are
 the SDK's own, read from an installed `mods_base.sdkmod`: set `BL4_SDK_MODS` to your `...\Borderlands 4\sdk_mods`

@@ -1,7 +1,5 @@
 # Mod Settings: a guide for mod authors
 
-[Français](MOD_AUTHORS.fr.md) · [中文](MOD_AUTHORS.zh.md) · [日本語](MOD_AUTHORS.ja.md)
-
 Mod Settings adds a MODS entry to the pause menu and the main menu of Borderlands 4. It shows and changes the options
 of every mod of the Python SDK, with the pieces of the game's Options screen.
 

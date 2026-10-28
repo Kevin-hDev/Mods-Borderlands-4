@@ -1,0 +1,114 @@
+{
+ "format": 1,
+ "pictures": {
+  "mod_settings/site/images/home.jpg": {
+   "sha256": "679dc8e8d79e64d71abc35fd9511872b6ea71b3bbff0bf01ed9d025f87ddbefc",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
+  "mod_settings/site/images/mod-page.jpg": {
+   "sha256": "29e90f4902943ae411f711adc36107e1b60cf3b505d81a5cc5e4346d0b6c7e84",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
+  "mod_settings/site/images/mods-list.jpg": {
+   "sha256": "6b762a20d1e4c30b2a455354557045d200e16a2a314e05920eb9bc80c6fe3115",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
+  "mod_settings/site/images/option-types.jpg": {
+   "sha256": "1a03883a247944c19bf407fedec21437452efc590e7dabdc9382ddabef1ca93e",
+   "widths": [
+    480,
+    960,
+    1116
+   ]
+  },
+  "mod_settings/site/images/pause-menu.jpg": {
+   "sha256": "d2d9103cabb21feb954817303d81182a0a71d0b119a5d0670eadf31fc336817e",
+   "widths": [
+    480,
+    960,
+    1200
+   ]
+  },
+  "mod_settings/site/images/tabs.jpg": {
+   "sha256": "9a8293086ab6935a9a1f928b4d1b4fc3b47f9244a34d909688dadfcf8063b100",
+   "widths": [
+    480,
+    960,
+    1200
+   ]
+  },
+  "recommendations/images/betterrewards/card.jpg": {
+   "sha256": "91194758a9acbcc7054b8bd7ac95a280aa7a92715e2644946fe91375629925d1",
+   "widths": [
+    480,
+    960
+   ]
+  },
+  "recommendations/images/betterrewards/skills-level-100.jpg": {
+   "sha256": "13260f31dd756be2c9d5ea1ee6feb7e6466777f8815779bb19ffe759b1828d63",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
+  "recommendations/images/betterrewards/vending-level-100.jpg": {
+   "sha256": "8c997877f012d09703299ec701c615e7510c72c34a227d61d310af0f4a9a40a0",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
+  "recommendations/images/gunsmith/card.jpg": {
+   "sha256": "3de8c783caa4c98a9911320e811aa03e659f8306b0e38798cd6c80f9eb93e266",
+   "widths": [
+    480,
+    960
+   ]
+  },
+  "recommendations/images/gunsmith/menu-1.jpg": {
+   "sha256": "a070ea65fb0f933a73991349f36fa18c3f9dfe8decb50b2293af0327cb3196d3",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
+  "recommendations/images/gunsmith/menu-2.jpg": {
+   "sha256": "69f6148c104fc9650262645a2c4bf16006e02a5128a5bbf55900c3dba4577cc8",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
+  "recommendations/images/jetpackascend/card.jpg": {
+   "sha256": "cfb163240c3f4ec7cec7f5040d03d5d8ff56a2e8e932c8d8e0963aa073b00dec",
+   "widths": [
+    480,
+    960
+   ]
+  },
+  "recommendations/images/jetpackascend/climbing.jpg": {
+   "sha256": "f3405e7bd151bca813a7139d53ff2df63a8199bd0671af57df5c969f01fc2f61",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  }
+ }
+}

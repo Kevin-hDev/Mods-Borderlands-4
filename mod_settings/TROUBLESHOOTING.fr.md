@@ -4,7 +4,7 @@ Cherche ce que tu vois. Chaque entrée dit pourquoi ça arrive et quoi faire.
 
 Les lignes de Mod Settings dans le journal du SDK commencent par `[ModSettings]`. Le journal est
 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`, et il est réécrit à chaque lancement du jeu :
-copie-le avant de relancer. Si rien ici ne t'aide, ouvre une issue sur GitHub avec ce fichier.
+copie-le avant de relancer. Si rien ici ne t'aide, signale-le dans l'[onglet Bugs de la page Nexus](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs) avec ce fichier.
 
 ## Pour les joueurs
 
@@ -106,7 +106,7 @@ bougent pas.
 **Pourquoi :** les textes de MODS existent en anglais, en français et en chinois simplifié. Pour les autres langues,
 ils restent en anglais. Les noms et les descriptions des réglages sont ceux que chaque mod donne, souvent en anglais.
 
-**Quoi faire :** aucun réglage ne change cela. Si tu veux MODS dans ta langue, demande-le dans une issue.
+**Quoi faire :** aucun réglage ne change cela. Si tu veux MODS dans ta langue, demande-le dans l'[onglet Posts de la page Nexus](https://www.nexusmods.com/borderlands4/mods/388?tab=posts).
 
 ## Pour les créateurs de mods
 

@@ -2,7 +2,7 @@
 
 BetterRewards réunit des récompenses ajustées pour le jeu en solo en Difficile et en Chasseur de l'Arche ultime (UVH), un niveau maximum porté à 100, encore expérimental, et une fonction de retour au jeu d'origine (Return to vanilla and disable). Son créateur l'a conçu pour une progression du personnage plus longue, moins de farm répétitif, et une raison de continuer à chercher un meilleur équipement. C'est une bêta publique.
 
-![Un distributeur qui propose un bouclier de niveau 100](images/betterrewards/vending-level-100.jpg){: width="1600" height="902" loading="lazy"}
+![Un distributeur qui propose un bouclier de niveau 100](images/betterrewards/vending-level-100.jpg){: width="1600" height="902"}
 
 ## Expérience et argent
 

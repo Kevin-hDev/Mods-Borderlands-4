@@ -2,7 +2,7 @@
 
 Jetpack Ascend te permet de vraiment monter avec le jetpack du jeu, au lieu de seulement planer. Regarde vers le haut pour monter ; regarde droit devant ou vers le bas, et tu planes comme d'habitude. Ce n'est pas trop puissant : juste une façon plus confortable de te déplacer.
 
-![Un Chasseur de l'Arche qui monte dans les airs avec son jetpack, sa jauge en bas de l'écran](images/jetpackascend/climbing.jpg){: width="1600" height="1296" loading="lazy"}
+![Un Chasseur de l'Arche qui monte dans les airs avec son jetpack, sa jauge en bas de l'écran](images/jetpackascend/climbing.jpg){: width="1600" height="1296"}
 
 ## Ce qu'il fait
 

@@ -2,7 +2,7 @@
 
 BetterRewards combines reward adjustments for solo Hard and Ultimate Vault Hunter (UVH) play, an experimental level 100 cap, and a Return to vanilla and disable feature. The creator made it for a longer character progression, less repetitive grinding, and a reason to keep looking for better equipment. It is a public beta.
 
-![A vending machine offering a level 100 shield](images/betterrewards/vending-level-100.jpg){: width="1600" height="902" loading="lazy"}
+![A vending machine offering a level 100 shield](images/betterrewards/vending-level-100.jpg){: width="1600" height="902"}
 
 ## XP and cash
 

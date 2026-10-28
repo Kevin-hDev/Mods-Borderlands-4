@@ -3,7 +3,7 @@
 ## Does Mod Settings work on the Epic Games version?
 
 It has never been tried on the Epic Games version, only on the Steam version 1.11.0-4906557. If you try it, tell us
-how it goes in an issue, with the SDK log.
+how it goes in the [Bugs tab of the Nexus page](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs), with the SDK log.
 
 ## And in co-op?
 

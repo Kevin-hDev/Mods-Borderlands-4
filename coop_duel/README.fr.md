@@ -5,7 +5,7 @@ n'importe où dans le monde : des manches sans fin, puis on se relève sur place
 
 Testé sur la version du jeu **1.10.2-4845623**, sous Windows : l'hôte sur la version Steam, l'invité sur la version Epic
 Games, avec et sans mods chez l'invité. **Testé à deux joueurs seulement** : le duel à 3 ou 4 joueurs n'a pas encore été
-essayé. Si quelque chose ne marche pas chez toi, ouvre une issue avec le fichier de log de l'hôte,
+essayé. Si quelque chose ne marche pas chez toi, signale-le dans l'onglet Bugs de sa page Nexus avec le fichier de log de l'hôte,
 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`, copié avant de relancer le jeu (il est réécrit à
 chaque lancement).
 

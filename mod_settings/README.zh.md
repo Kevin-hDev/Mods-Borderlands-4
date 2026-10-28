@@ -4,9 +4,9 @@
 
 **ALPHA 版本**：这是第一个版本，尚未 100% 完成。它目前可以使用，但测试还不够充分，可能无法与所有模组配合。
 
-已在游戏版本 **1.11.0-4906557**（Steam 版）上测试：单人模式，键盘、鼠标和手柄，安装了 22 到 29 个模组。从未在合作模式下或 Epic Games 版上试过。如果你遇到问题，请先查看[故障排除](TROUBLESHOOTING.zh.md)和[常见问题](FAQ.zh.md)，然后提交一个 issue，附上在重新启动游戏之前复制的日志文件 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`（每次启动都会重写该文件）。
+已在游戏版本 **1.11.0-4906557**（Steam 版）上测试：单人模式，键盘、鼠标和手柄，安装了 22 到 29 个模组。从未在合作模式下或 Epic Games 版上试过。如果你遇到问题，请先查看[故障排除](TROUBLESHOOTING.zh.md)和[常见问题](FAQ.zh.md)，然后在[Nexus 页面的 Bugs 标签页](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs)提交报告，附上在重新启动游戏之前复制的日志文件 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`（每次启动都会重写该文件）。
 
-**与本仓库的其他内容不同，Mod Settings 采用 [Mozilla Public License 2.0 许可证](LICENSE)。**
+**与其 [GitHub 仓库](https://github.com/Kevin-hDev/Mods-Borderlands-4)的其他内容不同，Mod Settings 采用 [Mozilla Public License 2.0 许可证](LICENSE)。**
 
 ## 功能
 
@@ -22,10 +22,10 @@
 
 ## 实现方式
 
-更改设置时发生了什么，以及 Mod Settings 会改动哪些东西：见[工作原理](HOW_IT_WORKS.zh.md)。它分为两部分，都在这个文件夹中：
+更改设置时发生了什么，以及 Mod Settings 会改动哪些东西：见[工作原理](HOW_IT_WORKS.zh.md)。它分为两部分，都在它的[源代码](https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/mod_settings)中：
 
 - `mod_settings/`：Python 包，以 `mod_settings.sdkmod` 发布。它读取 SDK 的模组和选项，并通过 `127.0.0.1` 上的本地服务提供给页面，该服务会拒绝来自网页的请求。每次更改都在游戏线程上执行。
-- `page/`：页面的脚本和样式表，打包在 `mod-settings_999_P.pak` 中发布，同时附带加载它们的游戏暂停菜单和主菜单副本。`build_pak.py` 根据游戏最新的菜单生成这个资源包；`install_pak.py` 在游戏关闭时安装或移除它，并可随时检查它。`build_pak.py` 需要两个读写游戏资源包的外部工具；`install_pak.py` 需要 `deploy_sdkmods.py` 来获取游戏文件夹，并且只能在 Windows 上运行。这三个工具在 `game_tools.py` 中按作者工作环境中的位置指定：请把它们指向你自己的副本。该资源包含有游戏文件：它不在本仓库中，只在 Nexus 上提供。
+- `page/`：页面的脚本和样式表，打包在 `mod-settings_999_P.pak` 中发布，同时附带加载它们的游戏暂停菜单和主菜单副本。`build_pak.py` 根据游戏最新的菜单生成这个资源包；`install_pak.py` 在游戏关闭时安装或移除它，并可随时检查它。`build_pak.py` 需要两个读写游戏资源包的外部工具；`install_pak.py` 需要 `deploy_sdkmods.py` 来获取游戏文件夹，并且只能在 Windows 上运行。这三个工具在 `game_tools.py` 中按作者工作环境中的位置指定：请把它们指向你自己的副本。该资源包含有游戏文件：它不在 GitHub 仓库中，只在 Nexus 上提供。
 
 ## 安装
 
@@ -38,7 +38,7 @@
 
 ## 测试
 
-在这个文件夹中分别运行每个测试：`python test_bridge.py`，页面则用 `node test_logic.js` 和 `node test_layout.js`。测试用假对象（`fixture_sdk.py`、`fixture_world.py`、`fixture_test_mod.py`）代替游戏的 SDK。每个测试输出一行 `RESULTAT:`，失败时以非零代码退出。选项类和保存功能来自 SDK，从已安装的 `mods_base.sdkmod` 中读取：把 `BL4_SDK_MODS` 设为你的 `...\Borderlands 4\sdk_mods` 文件夹路径，否则需要它的测试会显示 `SKIP`。`test_page_browser.py` 在无窗口的 Chrome 中，基于游戏的界面文件运行页面；如果 Chrome 不在 Windows 上的常用位置，或者没有从游戏资源包中读取这些文件的工具，它会显示 `SKIP`。
+在源代码文件夹中分别运行每个测试：`python test_bridge.py`，页面则用 `node test_logic.js` 和 `node test_layout.js`。测试用假对象（`fixture_sdk.py`、`fixture_world.py`、`fixture_test_mod.py`）代替游戏的 SDK。每个测试输出一行 `RESULTAT:`，失败时以非零代码退出。选项类和保存功能来自 SDK，从已安装的 `mods_base.sdkmod` 中读取：把 `BL4_SDK_MODS` 设为你的 `...\Borderlands 4\sdk_mods` 文件夹路径，否则需要它的测试会显示 `SKIP`。`test_page_browser.py` 在无窗口的 Chrome 中，基于游戏的界面文件运行页面；如果 Chrome 不在 Windows 上的常用位置，或者没有从游戏资源包中读取这些文件的工具，它会显示 `SKIP`。
 
 ## 已知限制
 

@@ -2,7 +2,7 @@
 
 找到你看到的情况。每一条都说明原因和解决办法。
 
-Mod Settings 在 SDK 日志中的行以 `[ModSettings]` 开头。日志文件是 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`，每次启动游戏都会重写：请在重新启动前复制它。如果这里的内容都帮不了你，请在 GitHub 上提交 issue 并附上这个文件。
+Mod Settings 在 SDK 日志中的行以 `[ModSettings]` 开头。日志文件是 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`，每次启动游戏都会重写：请在重新启动前复制它。如果这里的内容都帮不了你，请在[Nexus 页面的 Bugs 标签页](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs)提交报告，并附上这个文件。
 
 ## 致玩家
 
@@ -81,7 +81,7 @@ Mod Settings 在 SDK 日志中的行以 `[ModSettings]` 开头。日志文件是
 
 **原因**：「模组」的文字有英语、法语和简体中文版本。其他语言下仍显示英语。设置的名称和说明由各模组提供，通常是英语。
 
-**解决办法**：没有能改变这一点的设置。如果你希望「模组」使用你的语言，请在 issue 中提出。
+**解决办法**：没有能改变这一点的设置。如果你希望「模组」使用你的语言，请在[Nexus 页面的 Posts 标签页](https://www.nexusmods.com/borderlands4/mods/388?tab=posts)中提出。
 
 ## 致模组作者
 

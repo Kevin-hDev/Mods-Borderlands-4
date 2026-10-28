@@ -2,6 +2,9 @@
 All the recommended mods in one grid, with a filter per category (Kevin, 2026-10-27): several filters can be on at
 once, a second click turns one off, and with none on every mod shows. The filters are checkboxes and the hiding is
 done by recommended.css and catalog_filters.css, as the site runs no script. A category without any mod has no filter.
+The first row of cards (three on a computer) shows at the first look: their pictures load at once, the others when
+scrolled to. A card's picture has no text of its own: the card's title names the mod, and a screen reader would read
+the name twice (audit of 2026-10-28).
 {%- endcomment -%}
 {%- assign shown = "" | split: "" -%}
 {%- for category in site.data.categories -%}
@@ -13,7 +16,8 @@ done by recommended.css and catalog_filters.css, as the site runs no script. A c
 <p class="empty">{{ words.empty_catalog }}</p>
 {%- else %}
 <div class="catalog">
-<ul class="filters" role="group" aria-label="{{ words.categories_label }}">
+<p class="filters-title" id="filters-title">{{ words.categories_label }}</p>
+<ul class="filters" role="group" aria-labelledby="filters-title">
   {%- for category in shown %}
   <li><input class="filter-box" type="checkbox" id="filter-{{ category.id }}"><label for="filter-{{ category.id }}">{{ category.name[code] | escape }}</label></li>
   {%- endfor %}
@@ -22,7 +26,8 @@ done by recommended.css and catalog_filters.css, as the site runs no script. A c
   {%- for entry in site.data.recommended -%}
   {%- assign data = entry[1] %}
   <a class="card category-{{ data.category }}" href="{% assign mod_id = entry[0] %}{% include mod_url.html id=mod_id %}">
-    <img src="{{ '/recommendations/images/' | append: entry[0] | append: '/' | append: data.card_image.file | relative_url }}" width="{{ data.card_image.width }}" height="{{ data.card_image.height }}" alt="{{ data.card_image.alt[code] | escape }}" loading="lazy">
+    {%- capture card_file %}recommendations/images/{{ entry[0] }}/{{ data.card_image.file }}{% endcapture %}
+    <img src="{{ '/' | append: card_file | relative_url }}" width="{{ data.card_image.width }}" height="{{ data.card_image.height }}" alt=""{% include picture_sizes.html file=card_file place="card" %}{% if forloop.index > 3 %} loading="lazy"{% endif %}>
     <span class="card-text">
       <span class="card-title">{{ data.name | escape }}</span>
       {%- assign creator = data.creator -%}

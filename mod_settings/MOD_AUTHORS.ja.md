@@ -1,7 +1,5 @@
 # Mod Settings：MOD作者向けガイド
 
-[English](MOD_AUTHORS.md) · [Français](MOD_AUTHORS.fr.md) · [中文](MOD_AUTHORS.zh.md)
-
 Mod Settingsは、『ボーダーランズ4』のポーズメニューとメインメニューにMODS項目を追加します。この項目では、ゲームの「オプション」画面の部品を使って、Python SDKのすべてのMODのオプションを表示・設定できます。
 
 このガイドでは、MODがMODSにどう表示されるか、そしてオプションがきちんと表示されるようにどう書けばよいかを説明します。
@@ -119,7 +117,7 @@ MODSのテキストはゲームの言語に合わせて、英語、フランス�
 
 ## MODを確認する
 
-1. Mod Settingsをインストールします。2つのファイル、`mod_settings.sdkmod` と `mod-settings_999_P.pak` が必要です（READMEを参照）。
+1. Mod Settingsをインストールします。2つのファイル、`mod_settings.sdkmod` と `mod-settings_999_P.pak` が必要です（[README](README.ja.md)を参照）。
 2. ゲームを起動し、ポーズメニューを開き、MODSを選び、自分のMODを選びます。
 3. SDKのコンソールのMODメニューと比べます。同じオプションがあるはずです。
 4. 何か足りない場合は、`unrealsdk.log` で `[ModSettings] MODEL_BUILT` の行を探します。この行はすべてのMODの合計を示し、どのMODかは示しません：`unsupported`（不明な型、無効な値、または64個を超える選択肢）、`truncated`（制限で切り詰められた行、タブ、MOD。1回の切り詰めを1と数える）、`failed_mods`（オプションの列挙に失敗したMODの数）。非表示のオプションは数えません。

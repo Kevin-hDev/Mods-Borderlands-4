@@ -1,9 +1,10 @@
 /* The cards of the home page and of the recommended mods, the top of a mod's page, and the list of updates. The
-   colours and sizes come from site.css's tokens. */
+   colours come from site.css's tokens. */
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  /* min(): a card is never wider than the page, even on a phone zoomed in. */
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
   gap: 18px;
   margin: 0 0 1.6em;
 }
@@ -30,13 +31,15 @@ main .card img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: co
 main .card-thumbs img { flex: 1 1 0; min-width: 0; height: 100%; aspect-ratio: auto; }
 
 /* The catalog's filters: a checkbox kept for the keyboard and screen readers, shown as the chip of its label. */
+.filters-title { margin: 0 0 6px; color: var(--text-dim); font-size: 14px; }
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 1.2em; padding: 0; list-style: none; }
 .filters li { position: relative; margin: 0; }
 .filter-box { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .filters label {
   display: inline-block;
   padding: 4px 12px;
-  border: 1px solid var(--ghost-line);
+  /* --text-dim, not --ghost-line: a filter turned off must still be seen as a control (3.9:1 on the page). */
+  border: 1px solid var(--text-dim);
   border-radius: 999px;
   color: var(--text);
   font-size: 14px;
@@ -59,7 +62,7 @@ main .card-thumbs img { flex: 1 1 0; min-width: 0; height: 100%; aspect-ratio: a
 .news { margin: 0 0 1.4em; padding: 0; list-style: none; }
 .note { margin: 0 0 14px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--tip-bg); }
 .note p { margin: 0; }
-.note-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 6px !important; }
+.note .note-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 6px; }
 .note-head time { color: var(--text-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
 .note-head a { font-weight: 600; }
 .note-version { padding: 1px 8px; border: 1px solid var(--ghost-line); border-radius: 999px; font-size: 13px; color: var(--text); }

@@ -11,13 +11,7 @@
     {"platform": "nexus", "url": "https://www.nexusmods.com/borderlands4/mods/381"}
   ],
   "card_image": {
-    "file": "card.jpg", "width": 960, "height": 538,
-    "alt": {
-      "en": "BetterRewards promotional artwork",
-      "fr": "Illustration promotionnelle de BetterRewards",
-      "zh": "BetterRewards 宣传图",
-      "ja": "BetterRewards のプロモーション画像"
-    }
+    "file": "card.jpg", "width": 960, "height": 538
   },
   "pitch": {
     "en": "Better solo rewards in Hard and UVH, a choice of four loot presets, and an experimental level 100 cap.",

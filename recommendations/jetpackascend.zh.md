@@ -2,7 +2,7 @@
 
 Jetpack Ascend 让你可以真正借助滑翔背包（游戏里的喷气背包）向上飞，而不只是滑翔。抬头看即可上升；平视或向下看，则照常滑翔。它并不超模，只是一种更方便的移动方式。
 
-![秘藏猎人使用滑翔背包在空中上升，屏幕底部显示其能量条](images/jetpackascend/climbing.jpg){: width="1600" height="1296" loading="lazy"}
+![秘藏猎人使用滑翔背包在空中上升，屏幕底部显示其能量条](images/jetpackascend/climbing.jpg){: width="1600" height="1296"}
 
 ## 功能
 

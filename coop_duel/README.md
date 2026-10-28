@@ -5,7 +5,7 @@ world: endless rounds, then back up on the spot. Only the host needs the mod.
 
 Tested on game version **1.10.2-4845623**, on Windows: the host on the Steam version, the guest on the Epic Games
 version, with and without mods on the guest's side. **Tested with two players only**: the duel with 3 or 4 players has
-not been tried yet. If it goes wrong for you, open an issue with the host's log file,
+not been tried yet. If it goes wrong for you, report it in the Bugs tab of its Nexus page with the host's log file,
 `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`, copied before relaunching the game (it is rewritten
 at each launch).
 

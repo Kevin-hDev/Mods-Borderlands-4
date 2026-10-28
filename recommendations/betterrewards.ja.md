@@ -2,7 +2,7 @@
 
 BetterRewards は、ソロの困難と究極のヴォルト・ハンター（UVH）での報酬調整、試験的なレベル上限 100、そして「Return to vanilla and disable」（バニラに戻して無効化）機能をまとめたMODです。制作者は、より長いキャラクターの成長、繰り返しの少ない周回、そしてより良い装備を探し続ける理由のためにこのMODを作りました。現在は公開ベータ版です。
 
-![レベル100のシールドを販売している自動販売機](images/betterrewards/vending-level-100.jpg){: width="1600" height="902" loading="lazy"}
+![レベル100のシールドを販売している自動販売機](images/betterrewards/vending-level-100.jpg){: width="1600" height="902"}
 
 ## 経験値と現金
 

@@ -2,7 +2,7 @@
 
 Gunsmith apporte la personnalisation des armes dans ton inventaire. Démonte les armes dont tu ne veux plus, découvre leurs pièces et remonte des armes compatibles selon ta façon de jouer.
 
-![L'onglet Gunsmith dans l'inventaire, avec l'aperçu de l'arme et ses pièces](images/gunsmith/menu-1.jpg){: width="1600" height="906" loading="lazy"}
+![L'onglet Gunsmith dans l'inventaire, avec l'aperçu de l'arme et ses pièces](images/gunsmith/menu-1.jpg){: width="1600" height="906"}
 
 ## Ce qu'il fait
 

@@ -7,4 +7,4 @@
 - Interrupteurs, curseurs, choix à flèches, listes, touches et boutons, enregistrés par le SDK.
 - Textes en anglais, en français et en chinois simplifié, selon la langue du jeu.
 - Clavier, souris et manette.
-- Sous licence Mozilla Public License 2.0, contrairement au reste de ce dépôt.
+- Sous licence Mozilla Public License 2.0, contrairement au reste de son dépôt GitHub.

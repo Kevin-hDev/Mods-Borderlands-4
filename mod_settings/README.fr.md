@@ -8,11 +8,11 @@ voir et régler tous les mods du SDK Python de Borderlands 4.
 
 Testé sur la version du jeu **1.11.0-4906557**, version Steam, en solo, au clavier, à la souris et à la manette, avec
 22 à 29 mods installés. Jamais essayé en coopération, ni sur la version Epic Games. Si ça se passe mal chez toi, regarde
-d'abord le [dépannage](TROUBLESHOOTING.fr.md) et les [questions fréquentes](FAQ.fr.md), puis ouvre une issue avec le
+d'abord le [dépannage](TROUBLESHOOTING.fr.md) et les [questions fréquentes](FAQ.fr.md), puis signale-le dans l'[onglet Bugs de la page Nexus](https://www.nexusmods.com/borderlands4/mods/388?tab=bugs) avec le
 fichier de log, `...\Borderlands 4\OakGame\Binaries\Win64\Plugins\unrealsdk.log`, copié avant de
 relancer le jeu (il est réécrit à chaque lancement).
 
-**Contrairement au reste de ce dépôt, Mod Settings est sous [licence Mozilla Public License 2.0](LICENSE).**
+**Contrairement au reste de son [dépôt GitHub](https://github.com/Kevin-hDev/Mods-Borderlands-4), Mod Settings est sous [licence Mozilla Public License 2.0](LICENSE).**
 
 ## Ce qu'il fait
 
@@ -38,7 +38,7 @@ voir le [guide pour les créateurs de mods](MOD_AUTHORS.fr.md), aussi en [anglai
 ## Comment il est fait
 
 Ce qui se passe quand tu changes un réglage, et ce que Mod Settings touche : voir
-[Comment ça marche](HOW_IT_WORKS.fr.md). Deux parties, toutes deux dans ce dossier :
+[Comment ça marche](HOW_IT_WORKS.fr.md). Deux parties, toutes deux dans son [code source](https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/mod_settings) :
 
 - `mod_settings/`, le paquet Python, livré en `mod_settings.sdkmod`. Il lit les mods et les options du SDK et les
   sert à la page par un service local sur `127.0.0.1`, qui refuse les demandes des pages web. Chaque changement
@@ -49,7 +49,7 @@ Ce qui se passe quand tu changes un réglage, et ce que Mod Settings touche : vo
   `build_pak.py` a besoin de deux outils extérieurs qui lisent et écrivent les paquets du jeu ; `install_pak.py`
   a besoin de `deploy_sdkmods.py`, qui lui donne le dossier du jeu, et ne marche que sous Windows. Les trois sont
   nommés dans `game_tools.py` à leur place dans l'atelier de l'auteur : fais-les pointer vers tes propres copies. Le paquet contient des fichiers du jeu : il n'est
-  pas dans ce dépôt, seulement sur Nexus.
+  pas dans le dépôt GitHub, seulement sur Nexus.
 
 ## Installation
 
@@ -64,7 +64,7 @@ réglages de tes autres mods ne bougent pas.
 
 ## Tests
 
-Lance chaque test séparément depuis ce dossier : `python test_bridge.py`, et `node test_logic.js` et `node test_layout.js`
+Lance chaque test séparément depuis le dossier du code source : `python test_bridge.py`, et `node test_logic.js` et `node test_layout.js`
 pour la page. Les tests remplacent le SDK du jeu par des faux objets (`fixture_sdk.py`, `fixture_world.py`,
 `fixture_test_mod.py`). Chacun affiche une ligne `RESULTAT:` et se termine par un code non nul en cas d'échec. Les
 classes d'options et l'enregistrement sont ceux du SDK, lus dans un `mods_base.sdkmod` installé : donne à

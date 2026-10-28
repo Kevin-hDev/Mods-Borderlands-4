@@ -1,7 +1,5 @@
 # Mod Settings：模组作者指南
 
-[English](MOD_AUTHORS.md) · [Français](MOD_AUTHORS.fr.md) · [日本語](MOD_AUTHORS.ja.md)
-
 Mod Settings 在《无主之地 4》的暂停菜单和主菜单中加入「模组」（MODS）入口。它使用游戏「选项」界面的组件，显示并修改 Python SDK 所有模组的选项。
 
 本指南说明你的模组如何出现在「模组」中，以及如何编写选项，让它们正确显示。
