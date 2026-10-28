@@ -1,0 +1,5 @@
+{
+  "nexus": {"name": "Nexus Mods", "icon": "nexusmods.svg"},
+  "discord": {"name": "Discord", "icon": "discord.svg"},
+  "youtube": {"name": "YouTube", "icon": "youtube.svg"}
+}

@@ -1,0 +1,5 @@
+{%- comment -%}
+Every link that leaves the site opens in a new tab (Kevin, 2026-10-27), so the reader keeps the page they came from.
+The site's own links are relative, so only links to other sites start with https://.
+{%- endcomment -%}
+{{- include.text | replace: ' href="https://', ' target="_blank" rel="noopener" href="https://' -}}

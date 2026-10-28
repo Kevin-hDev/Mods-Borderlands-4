@@ -1,0 +1,189 @@
+/* The site's base style sheet: the "hybrid" look Kevin chose on 2026-10-27, the game's mood on Mod Settings' home
+   page and plain dark pages for reading. Saira is subset to Latin letters (OFL, see fonts/OFL.txt); Chinese and
+   Japanese use the system's fonts. The recommended mods' cards and updates are in recommended.css. */
+
+@font-face {
+  font-family: "Saira";
+  src: url("fonts/saira-latin.woff2") format("woff2");
+  font-weight: 500 700;
+  font-stretch: 75% 100%;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  --bg: #12161a;
+  --bg-hero: #0f1b25;
+  --line: #23292f;
+  --text: #d7dde2;
+  --text-body: #c3ccd3;
+  --text-dim: #9aa7b1;
+  --title: #fff;
+  --blue: #4fa3cf;
+  --orange: #f3a43a;
+  --on-orange: #1a1206;
+  --ghost-line: #3a4650;
+  --tip-bg: #18222b;
+  --code-bg: #0c1116;
+  --code-text: #f3c27a;
+  /* The platforms' own colours: Discord's from discord.com/branding, YouTube's the red its guides give. */
+  --discord: #5865f2;
+  --youtube: #ff0000;
+  --on-platform: #fff;
+  --font-text: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-title: "Saira", var(--font-text);
+  --font-code: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --gutter: 28px;
+  --nav-width: 224px;
+  --text-width: 780px;
+  /* The reading column: the title band, the text and the footer's text, centred under the full-width menu bar. */
+  --page-width: calc(var(--nav-width) + var(--text-width) + 2 * var(--gutter));
+}
+
+/* lang="zh-Hans" and lang="ja" give the same characters their Chinese or Japanese shapes. */
+:lang(zh-Hans) {
+  --font-text: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Source Han Sans SC", system-ui, sans-serif;
+}
+:lang(ja) {
+  --font-text: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", YuGothic, Meiryo, "Noto Sans CJK JP", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.65 var(--font-text);
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: var(--blue); text-underline-offset: 2px; }
+a:hover { color: #7cc0e4; }
+:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.skip { position: absolute; left: 8px; top: -60px; z-index: 10; padding: 8px 14px; background: var(--orange); color: var(--on-orange); }
+.skip:focus { top: 8px; }
+
+/* Header: the main menu picture on the home page, a plain band elsewhere. */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 150px;
+  background: linear-gradient(180deg, var(--bg-hero) 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--line);
+}
+.hero-home {
+  min-height: clamp(300px, 34vw, 440px);
+  background:
+    linear-gradient(180deg, rgba(10, 20, 30, .35) 0%, rgba(18, 22, 26, 1) 100%),
+    linear-gradient(90deg, rgba(10, 20, 30, .95) 0%, rgba(10, 20, 30, .75) 40%, rgba(10, 20, 30, 0) 75%),
+    url("../mod_settings/site/images/home.jpg") 100% 22% / cover no-repeat,
+    var(--bg);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 22px;
+  padding: 12px var(--gutter);
+}
+.logo {
+  font: 700 19px/1 var(--font-title);
+  font-stretch: 75%;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--title);
+  text-decoration: none;
+}
+.menu ul { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; padding: 0; list-style: none; font-size: 15px; }
+.menu a { color: #c9d6df; text-decoration: none; padding-bottom: 3px; }
+.menu a:hover { color: var(--title); }
+.menu a[aria-current] { color: var(--title); border-bottom: 2px solid var(--blue); }
+.langs { margin-left: auto; }
+.langs ul { display: flex; gap: 14px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.langs a { color: #c9d6df; text-decoration: none; padding-bottom: 3px; }
+.langs a[aria-current="page"] { color: var(--title); border-bottom: 2px solid var(--orange); }
+
+.hero-text { width: 100%; max-width: var(--page-width); margin: 0 auto; padding: 16px var(--gutter) 24px; }
+.hero h1 {
+  margin: 0;
+  font: 700 40px/1.05 var(--font-title);
+  font-stretch: 75%;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--title);
+}
+.buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 0; }
+.button {
+  display: inline-block;
+  padding: 9px 20px;
+  border: 1px solid var(--orange);
+  border-radius: 3px;
+  background: var(--orange);
+  color: var(--on-orange);
+  font: 600 14px/1.2 var(--font-title);
+  font-stretch: 75%;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.button:hover { color: var(--on-orange); background: #f7b862; }
+.button.ghost { background: transparent; color: var(--text); border-color: var(--ghost-line); }
+.button.ghost:hover { color: var(--title); border-color: var(--text-dim); }
+
+/* Pages: the list of pages on the left, the text beside it. */
+.doc { display: grid; grid-template-columns: var(--nav-width) minmax(0, 1fr); max-width: var(--page-width); margin: 0 auto; }
+.doc.single { grid-template-columns: minmax(0, 1fr); }
+.doc.single main { max-width: var(--page-width); }
+.pages { padding: 22px var(--gutter); border-right: 1px solid var(--line); }
+.pages ul { margin: 0; padding: 0; list-style: none; position: sticky; top: 16px; }
+.pages a { display: block; padding: 5px 0; color: var(--text-dim); text-decoration: none; font-size: 15px; }
+.pages a:hover { color: var(--title); }
+.pages a[aria-current="page"] { color: var(--title); border-left: 3px solid var(--blue); padding-left: 9px; margin-left: -12px; }
+
+main { padding: 22px var(--gutter) 48px; max-width: calc(var(--text-width) + 2 * var(--gutter)); color: var(--text-body); }
+main > :first-child { margin-top: 0; }
+main h2 { margin: 2em 0 .5em; font: 600 24px/1.25 var(--font-title); color: var(--title); }
+main h3 { margin: 1.6em 0 .4em; font: 600 19px/1.3 var(--font-title); color: var(--title); }
+main p, main ul, main ol { margin: 0 0 1em; }
+main li { margin: .25em 0; }
+main strong { color: var(--text); }
+
+main img { display: block; max-width: 100%; height: auto; margin: 1.2em 0 .4em; border: 1px solid var(--line); border-radius: 4px; }
+
+main blockquote { margin: 0 0 1em; padding: 10px 14px; border-left: 3px solid var(--blue); background: var(--tip-bg); }
+main blockquote > :last-child { margin-bottom: 0; }
+
+main code { font: .88em var(--font-code); color: var(--code-text); overflow-wrap: anywhere; }
+main pre { margin: 0 0 1em; padding: 14px 16px; overflow-x: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; }
+main pre code { color: var(--text); overflow-wrap: normal; }
+
+/* A wide table scrolls by itself, so the page never scrolls sideways. */
+main table { display: block; overflow-x: auto; margin: 0 0 1.2em; border-collapse: collapse; font-size: 15px; }
+main th, main td { padding: 8px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+main th { background: var(--tip-bg); color: var(--title); font-weight: 600; }
+/* An option name such as BoolOption stays whole in a table's first column; the other cells may break their code. */
+main td:first-child code { overflow-wrap: normal; }
+
+footer { padding: 18px max(var(--gutter), calc((100% - var(--page-width)) / 2 + var(--gutter))) 28px; border-top: 1px solid var(--line); color: var(--text-dim); font-size: 13px; }
+
+@media (max-width: 760px) {
+  :root { --gutter: 16px; }
+  .hero h1 { font-size: 32px; }
+  /* Logo and languages share the first line, the menu takes the second: two lines instead of three. */
+  .langs { order: 1; }
+  .menu { order: 2; flex-basis: 100%; }
+  .hero-home { min-height: 300px; background-position: 0 0, 0 0, 78% 20%, 0 0; }
+  .doc { grid-template-columns: minmax(0, 1fr); }
+  .pages { padding: 12px var(--gutter); border-right: 0; border-bottom: 1px solid var(--line); }
+  .pages ul { position: static; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+  .pages a[aria-current="page"] { border-left: 0; margin-left: 0; padding-left: 0; box-shadow: inset 0 -2px var(--blue); }
+  main table { font-size: 14px; }
+  main th, main td { padding: 6px 7px; }
+}

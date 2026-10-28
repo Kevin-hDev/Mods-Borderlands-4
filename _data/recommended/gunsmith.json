@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "name": "Gunsmith",
+  "creator": {"name": "iPuR3z", "profile": "https://www.nexusmods.com/profile/iPuR3z?gameId=8148"},
+  "category": "weapons",
+  "described_version": "1.0.8",
+  "links": [
+    {"platform": "nexus", "url": "https://www.nexusmods.com/borderlands4/mods/373"},
+    {"platform": "discord", "url": "https://discord.gg/huTSrNRcEN"},
+    {"platform": "youtube", "url": "https://www.youtube.com/@ipur3z-mods"}
+  ],
+  "card_image": {
+    "file": "card.jpg", "width": 960, "height": 539,
+    "alt": {
+      "en": "Gunsmith promotional artwork",
+      "fr": "Illustration promotionnelle de Gunsmith",
+      "zh": "Gunsmith 宣传图",
+      "ja": "Gunsmith のプロモーション画像"
+    }
+  },
+  "pitch": {
+    "en": "Break down the guns you don't need, unlock their parts, and rebuild compatible weapons right in your inventory.",
+    "fr": "Démonte les armes dont tu ne veux plus, débloque leurs pièces et remonte des armes compatibles, directement dans ton inventaire.",
+    "zh": "在物品栏中分解不需要的枪械，解锁它们的部件，并改装兼容的武器。",
+    "ja": "不要な銃を分解してパーツをアンロックし、互換性のある武器をインベントリで組み替えましょう。"
+  },
+  "news": [
+    {
+      "version": "1.0.8",
+      "date": "2026-10-27",
+      "text": {
+        "en": "Version 1.0.8 adds Share Discoveries: turn it on to merge the parts unlocked by all your characters and share the ones they discover next.",
+        "fr": "La version 1.0.8 ajoute Share Discoveries : active-la pour réunir les pièces débloquées par tous tes personnages et partager celles qu'ils découvriront ensuite.",
+        "zh": "1.0.8 版新增 Share Discoveries：开启后，所有角色已解锁的部件会合并在一起，之后的新发现也会共享。",
+        "ja": "1.0.8 では Share Discoveries が追加されました。有効にすると、すべてのキャラクターがアンロックしたパーツがまとめられ、今後の発見も共有されます。"
+      }
+    }
+  ]
+}

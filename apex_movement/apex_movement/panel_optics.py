@@ -1,0 +1,130 @@
+"""AIMING's optic rows (Kevin, 2026-10-09): one per weapon type, "BDL4" then its zooms side by side on one line, each
+ticked or not. Ticking a zoom unticks BDL4, unticking the last zoom ticks BDL4 again, and BDL4 unticks every zoom.
+
+The boxes are the language buttons' (EN, FR): lit when ticked, the window's own look for a choice among words. Each
+row stands for one setting, a number with one bit per zoom of the row (weapon_optic_options.py), held by a collapsed
+slider: the form reads, saves and restores it as any other number of the window, and a click on a box only moves
+that slider.
+
+A « ? » after the first row opens a help pop-up (Kevin, 2026-10-09): what BDL4, x1 and the zooms do, how several
+ticked zooms take turns, and the zoom key, read from the COMMANDS page each time it opens so a key just changed
+shows. It stays clickable on greyed rows: the help says why the rows change nothing.
+"""
+
+from . import camera_control_config as config, panel_buttons as b, panel_camera_commands as commands
+from . import panel_glyphs, panel_i18n as i18n, panel_pages as p, panel_popup, panel_text as tx, panel_theme as t
+from . import panel_widgets as w
+
+try:
+    from .apex_camera_runtime.weapon_optic_options import CHOICES_OF, ticked, toggled
+except ModuleNotFoundError as error:
+    if error.name != f"{__package__}.apex_camera_runtime":
+        raise
+    from apex_camera_runtime.weapon_optic_options import CHOICES_OF, ticked, toggled
+
+HELP, POPUP = "optic:help", "optics"
+
+
+def boxes(identifier):
+    """None is the BDL4 box: the game's own aim in first person."""
+    return (None, *CHOICES_OF[identifier])
+
+
+def box_name(identifier, zoom):
+    return f"optic:{identifier}:{'bdl4' if zoom is None else zoom}"
+
+
+def split(options):
+    """The page's ordinary rows, then the optic settings drawn here, in their order."""
+    options = tuple(options)
+    optics = [option for option in options if option.identifier in CHOICES_OF]
+    return [option for option in options if option not in optics], optics
+
+
+def build(rows, optics, widgets, template):
+    for index, option in enumerate(optics):
+        _row(rows, option, widgets, template, index == 0)
+    _help(widgets, template)
+
+
+def _row(rows, option, widgets, template, with_help):
+    name = option.identifier
+    widgets[f"label:{name}"] = tx.text(rows, "", "label", wrap=True)
+    line = w.new("HorizontalBox", rows)
+    for index, zoom in enumerate(boxes(name)):
+        w.row(line, b.button(line, widgets, box_name(name, zoom), "lang", template, "off"),
+              padding=w.pad(0, 0, 0, t.SPACE_2 if index else 0), valign="Center")
+    if with_help:
+        w.row(line, b.button(line, widgets, HELP, "lang", template, "secondary"), padding=w.pad(0, 0, 0, t.SPACE_4),
+              valign="Center")
+    value = w.new("Slider", line)
+    value.SetMinValue(float(option.min_value))
+    value.SetMaxValue(float(option.max_value))
+    value.SetStepSize(float(option.step))
+    value.SetValue(float(option.value))
+    value.SetVisibility(w.enum("ESlateVisibility", "Collapsed"))
+    w.row(line, value)
+    widgets[f"setting:{name}"] = value
+    widgets[f"row:{name}"] = p._row(rows, widgets[f"label:{name}"], line)
+    widgets[f"description:{name}"] = tx.text(rows, "", "hint", wrap=True)
+    w.column(rows, widgets[f"description:{name}"], padding=w.pad(t.SPACE_2, 0, t.SPACE_3))
+
+
+def _help(widgets, template):
+    content = panel_popup.build(widgets, POPUP, template)
+    widgets["optics_help:text"] = tx.text(content, "", "desc", wrap=True)
+    w.column(content, widgets["optics_help:text"], padding=w.pad(t.SPACE_2, 0, t.SPACE_4))
+    line = w.new("HorizontalBox", content)
+    widgets["optics_help:key"] = tx.text(line, "", "label")
+    w.row(line, widgets["optics_help:key"], valign="Center")
+    for device in ("keyboard", "controller"):
+        w.row(line, commands._value(line, widgets, f"optics_help:{device}"), padding=w.pad(0, 0, 0, t.SPACE_5),
+              valign="Center")
+    w.column(content, line)
+    widgets["optics_help:commands"] = tx.text(content, "", "hint", wrap=True)
+    w.column(content, widgets["optics_help:commands"], padding=w.pad(t.SPACE_2, 0, 0))
+
+
+def open_help(form, widgets):
+    language = form.model.language
+    for name, key in (("heading:popup_optics", "popup_optics"), ("group:popup_optics", "popup_optics_desc"),
+                      ("optics_help:text", "optics_help_text"), ("optics_help:key", "optics_help_key"),
+                      ("optics_help:commands", "optics_help_commands")):
+        widgets[name].SetText(i18n.text(key, language))
+    zoom = next(command for command in config.COMMANDS if command.name == "sniper_zoom")
+    catalogue = form.command_catalogue or panel_glyphs.Catalogue()
+    for device, option in (("keyboard", zoom.keyboard), ("controller", zoom.controller)):
+        # The COMMANDS page's own drawing of a key: its name, or the controller button's icon.
+        commands._show_value(widgets, f"optics_help:{device}", option.value, form.model.controller_icons, language,
+                             catalogue)
+    panel_popup.show(form, widgets, POPUP)
+
+
+def refresh(form, widgets):
+    """Each frame: a click on a box moves its row's value, and the rows grey with the aim view and while aiming stays
+    in first person, when an optic would change nothing; a click on a greyed row is dropped."""
+    if form.take(widgets[HELP]):
+        open_help(form, widgets)
+    blocked = getattr(form, "ads_blocked", False) or form.shown.get("third_person_ads") is not True
+    for name in CHOICES_OF:
+        if f"setting:{name}" not in widgets:
+            continue
+        value = widgets[f"setting:{name}"]
+        for zoom in boxes(name):
+            check = widgets[box_name(name, zoom)]
+            check.SetIsEnabled(not blocked)
+            if check.IsChecked():
+                check.SetIsChecked(False)
+                if not blocked:
+                    value.SetValue(float(toggled(int(value.GetValue()), zoom, CHOICES_OF[name])))
+        for part in ("row", "description"):
+            widgets[f"{part}:{name}"].SetRenderOpacity(t.OPACITY_DISABLED if blocked else 1.0)
+
+
+def paint(widgets, name, value):
+    widgets[f"{HELP}_label"].SetText("?")
+    chosen = ticked(value, CHOICES_OF[name])
+    for zoom in boxes(name):
+        lit = not chosen if zoom is None else zoom in chosen
+        widgets[f"{box_name(name, zoom)}_label"].SetText("BDL4" if zoom is None else f"x{zoom}")
+        b.paint(widgets, box_name(name, zoom), "on" if lit else "off")

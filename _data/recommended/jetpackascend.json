@@ -1,0 +1,37 @@
+{
+  "format": 1,
+  "name": "Jetpack Ascend",
+  "creator": {"name": "ItJustTwerks", "profile": "https://www.nexusmods.com/profile/ItJustTwerks?gameId=8148"},
+  "category": "movement",
+  "described_version": "2",
+  "links": [
+    {"platform": "nexus", "url": "https://www.nexusmods.com/borderlands4/mods/322"}
+  ],
+  "card_image": {
+    "file": "card.jpg", "width": 960, "height": 540,
+    "alt": {
+      "en": "A Vault Hunter climbing in the air with the glide pack",
+      "fr": "Un Chasseur de l'Arche qui monte dans les airs avec son jetpack",
+      "zh": "秘藏猎人使用滑翔背包在空中上升",
+      "ja": "グライドパックで空中を上昇するヴォルト・ハンター"
+    }
+  },
+  "pitch": {
+    "en": "Look up while gliding and your glide pack climbs, instead of only gliding down.",
+    "fr": "Regarde vers le haut en planant, et ton jetpack te fait monter au lieu de seulement planer.",
+    "zh": "滑翔时抬头看，滑翔背包就会带你上升，而不只是向下滑翔。",
+    "ja": "グライド中に上を向くと、グライドパックで上昇できます。下へグライドするだけではありません。"
+  },
+  "news": [
+    {
+      "version": "2",
+      "date": "2026-09-22",
+      "text": {
+        "en": "Current version: look up while gliding to climb with your glide pack, and look straight ahead or down to glide as usual.",
+        "fr": "Version actuelle : regarde vers le haut en planant pour monter avec ton jetpack, et regarde droit devant ou vers le bas pour planer comme d'habitude.",
+        "zh": "当前版本：滑翔时抬头看即可借助滑翔背包上升，平视或向下看则照常滑翔。",
+        "ja": "最新版：グライド中に上を向くとグライドパックで上昇し、正面や下を向くといつもどおりグライドします。"
+      }
+    }
+  ]
+}

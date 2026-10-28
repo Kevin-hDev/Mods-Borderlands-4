@@ -1,0 +1,475 @@
+{
+  "version": 1,
+  "marker": "MOD_SETTINGS_1",
+  "logPrefix": "[ModSettings]",
+  "events": [
+    "script_loaded",
+    "language",
+    "entry_ready",
+    "entry_clicked",
+    "page_opened",
+    "page_built",
+    "screen_opened",
+    "template",
+    "model",
+    "capture",
+    "js_input",
+    "sound",
+    "gamepad",
+    "input_action",
+    "dropdown",
+    "scroll",
+    "glyph",
+    "tab",
+    "timings",
+    "page_closed",
+    "error"
+  ],
+  "eventFields": [
+    "label",
+    "source",
+    "component",
+    "code",
+    "name",
+    "reason",
+    "ident",
+    "host",
+    "state",
+    "screen",
+    "device",
+    "keyboard",
+    "gamepad"
+  ],
+  "codePattern": "^[a-z0-9_]{1,48}$",
+  "timingNames": [
+    "template",
+    "css",
+    "model",
+    "build",
+    "shown",
+    "screen"
+  ],
+  "http": {
+    "host": "127.0.0.1",
+    "port": 38791,
+    "modelPath": "/mod-settings/v1/model",
+    "eventPath": "/mod-settings/v1/event",
+    "capturePath": "/mod-settings/v1/capture",
+    "nativeOrigins": [
+      "null",
+      "coui://uiresources"
+    ],
+    "fetchSites": [
+      "none",
+      "same-origin"
+    ],
+    "timeoutMs": 2000,
+    "maxRequestBytes": 512,
+    "maxResponseBytes": 1024,
+    "maxHeaderLength": 256,
+    "maxValueLogs": 120,
+    "maxSoundLogs": 20,
+    "maxInputLogs": 12,
+    "maxRejectedLogs": 20,
+    "maxTimingMs": 60000,
+    "valueIntervalMs": 100,
+    "changePath": "/mod-settings/v1/change",
+    "maxModelBytes": 524288,
+    "modelWaitMs": 250,
+    "maxChangeLogs": 120,
+    "maxEventLogs": 40,
+    "maxQueuedTasks": 64,
+    "stopConnectTimeoutS": 1,
+    "clientTimeoutS": 2
+  },
+  "start": {
+    "timeoutS": 120
+  },
+  "page": {
+    "components": {
+      "slider": [
+        "slider_alt"
+      ],
+      "toggle": [
+        "toggle"
+      ],
+      "stepper": [
+        "stepper_alt"
+      ],
+      "dropdown": [
+        "dropdown_options_alt"
+      ],
+      "keybind": [
+        "rebind_entry"
+      ],
+      "button": [
+        "oak_option_button"
+      ],
+      "link": [
+        "oak_option_button"
+      ]
+    },
+    "componentClasses": {
+      "slider": "menu_options_entry_slider",
+      "stepper": "menu_options_entry_stepper",
+      "dropdown": "menu_options_entry_dropdown",
+      "keybind": "menu_options_entry_rebind",
+      "button": "menu_options_entry_button",
+      "link": "menu_options_entry_button"
+    },
+    "optionsHtml": "coui://uiresources/menu_options/menu_options.html",
+    "stylesheets": [
+      "coui://uiresources/menu_options/css/menu_options.css",
+      "coui://uiresources/components/category_divider/css/category_divider.css",
+      "coui://uiresources/_shared/css/oakscroll.css",
+      "coui://uiresources/navigationbar/css/navigationbar.css"
+    ],
+    "regularMarker": "<div name=\"Regular Entry Template\"",
+    "titleMarker": "<div name=\"Title Entry Template\"",
+    "entryTextSelectors": [
+      ".button_txt",
+      ".mm_button_txt"
+    ],
+    "hosts": {
+      "pause": {
+        "widget": "widget-menu-pause",
+        "layers": [
+          ".menu_pause",
+          ".temp_bg_color"
+        ],
+        "otherWidgets": []
+      },
+      "main": {
+        "widget": "widget-menu-main",
+        "layers": [
+          ".menu_screen_boundaries",
+          ".mm_campaign_progress_cntr",
+          ".mm_tooltip_cntr"
+        ],
+        "escapeAction": "Input.Action.Menu.Escape",
+        "otherWidgets": [
+          "widget-lobby-info",
+          "widget-news"
+        ]
+      }
+    },
+    "inactiveClass": "inactive",
+    "input": {
+      "event": "Event_OnInputAction",
+      "pressed": 1,
+      "up": "Input.Action.Menu.NavUp",
+      "down": "Input.Action.Menu.NavDown",
+      "left": "Input.Action.Menu.NavLeft",
+      "right": "Input.Action.Menu.NavRight",
+      "select": "Input.Action.Menu.NavSelect",
+      "lockedNavigation": [
+        "inputNavLeftDisabled",
+        "inputNavRightDisabled",
+        "inputNavUpDisabled",
+        "inputNavDownDisabled"
+      ],
+      "maxOtherActions": 8,
+      "devices": {
+        "0": "keyboard",
+        "1": "gamepad"
+      },
+      "tabs": {
+        "top": {
+          "left": [
+            "Input.Action.Menu.TabLeft",
+            "Input.Action.UI.Lobby.TabLeft"
+          ],
+          "right": [
+            "Input.Action.Menu.TabRight",
+            "Input.Action.UI.Lobby.TabRight"
+          ]
+        },
+        "sub": {
+          "left": [
+            "Input.Action.Menu.SubTabLeft"
+          ],
+          "right": [
+            "Input.Action.Menu.SubTabRight"
+          ]
+        }
+      }
+    },
+    "escape": {
+      "ident": "ModSettings",
+      "event": "Event_CohEscapeInput",
+      "added": "Event_OnCohEscapeInputHandlerAdded",
+      "removed": "Event_OnCohEscapeInputHandlerRemoved"
+    },
+    "capture": {
+      "pollMs": 100
+    },
+    "limits": {
+      "maxPendingMessages": 32,
+      "maxSoundReports": 3,
+      "maxInputReports": 6
+    },
+    "model": {
+      "retryMs": 300,
+      "retries": 2
+    },
+    "scroll": {
+      "updateDelayMs": 100
+    },
+    "tabs": {
+      "samePressMs": 50,
+      "glyphs": {
+        "top": [
+          {
+            "source": "menu",
+            "actions": [
+              "action_ui_menu_tab_left",
+              "action_ui_menu_tab_right"
+            ]
+          },
+          {
+            "source": "lobby",
+            "actions": [
+              "action_ui_lobby_tab_left",
+              "action_ui_lobby_tab_right"
+            ]
+          }
+        ],
+        "sub": [
+          {
+            "source": "menu",
+            "actions": [
+              "action_ui_menu_sub_tab_left",
+              "action_ui_menu_sub_tab_right"
+            ]
+          }
+        ]
+      },
+      "sounds": {
+        "top": {
+          "enter": "NavEntered",
+          "leave": "NavExited",
+          "forward": "NavForward",
+          "backward": "NavBackward"
+        },
+        "sub": {
+          "enter": "SubNavEntered",
+          "leave": "SubNavExited",
+          "forward": "SubNavForward",
+          "backward": "SubNavBackward"
+        }
+      }
+    },
+    "metaSeparator": "  ·  ",
+    "crumbSeparator": "  ›  "
+  },
+  "capture": {
+    "pollMs": 15,
+    "maxSeconds": 10,
+    "cancelKey": "Escape",
+    "keys": {
+      "A": 65,
+      "B": 66,
+      "C": 67,
+      "D": 68,
+      "E": 69,
+      "F": 70,
+      "G": 71,
+      "H": 72,
+      "I": 73,
+      "J": 74,
+      "K": 75,
+      "L": 76,
+      "M": 77,
+      "N": 78,
+      "O": 79,
+      "P": 80,
+      "Q": 81,
+      "R": 82,
+      "S": 83,
+      "T": 84,
+      "U": 85,
+      "V": 86,
+      "W": 87,
+      "X": 88,
+      "Y": 89,
+      "Z": 90,
+      "Zero": 48,
+      "One": 49,
+      "Two": 50,
+      "Three": 51,
+      "Four": 52,
+      "Five": 53,
+      "Six": 54,
+      "Seven": 55,
+      "Eight": 56,
+      "Nine": 57,
+      "F1": 112,
+      "F2": 113,
+      "F3": 114,
+      "F4": 115,
+      "F5": 116,
+      "F6": 117,
+      "F7": 118,
+      "F8": 119,
+      "F9": 120,
+      "F10": 121,
+      "F11": 122,
+      "F12": 123,
+      "Escape": 27,
+      "Tab": 9,
+      "CapsLock": 20,
+      "SpaceBar": 32,
+      "Enter": 13,
+      "BackSpace": 8,
+      "LeftShift": 160,
+      "RightShift": 161,
+      "LeftControl": 162,
+      "RightControl": 163,
+      "LeftAlt": 164,
+      "RightAlt": 165,
+      "Insert": 45,
+      "Delete": 46,
+      "Home": 36,
+      "End": 35,
+      "PageUp": 33,
+      "PageDown": 34,
+      "Left": 37,
+      "Up": 38,
+      "Right": 39,
+      "Down": 40,
+      "NumPadZero": 96,
+      "NumPadOne": 97,
+      "NumPadTwo": 98,
+      "NumPadThree": 99,
+      "NumPadFour": 100,
+      "NumPadFive": 101,
+      "NumPadSix": 102,
+      "NumPadSeven": 103,
+      "NumPadEight": 104,
+      "NumPadNine": 105,
+      "RightMouseButton": 2,
+      "MiddleMouseButton": 4,
+      "ThumbMouseButton": 5,
+      "ThumbMouseButton2": 6
+    }
+  },
+  "pak": {
+    "name": "mod-settings_999_P.pak",
+    "paksFolder": "OakGame/Content/Paks",
+    "scriptPath": "OakGame/Content/uiresources/mod_settings/js/mod_settings.js",
+    "cssPath": "OakGame/Content/uiresources/mod_settings/css/mod_settings.css",
+    "menus": [
+      {
+        "path": "OakGame/Content/uiresources/menu_pause/menu_pause.html",
+        "entry": "entry_pause.html.inc",
+        "entryNeedle": "<!-- Shift -->",
+        "scriptNeedle": "<script src=\"coui://uiresources/menu_pause/js/menu_pause.js\"></script>"
+      },
+      {
+        "path": "OakGame/Content/uiresources/menu_main/menu_main.html",
+        "entry": "entry_main.html.inc",
+        "entryNeedle": "<!-- Shift -->",
+        "scriptNeedle": "<script src=\"coui://uiresources/menu_main/js/menu_main.js\"></script>"
+      }
+    ],
+    "mountPoint": "../../../",
+    "pakVersion": "V11",
+    "pathHashSeed": "4016168639"
+  },
+  "catalog": {
+    "maxMods": 64,
+    "maxEntries": 3000,
+    "maxEntriesPerPage": 100,
+    "maxDepth": 4,
+    "maxChoices": 64,
+    "maxLabel": 80,
+    "maxDecimals": 3,
+    "idPattern": "^m[0-9]{1,2}(_on|_[0-9]{1,4})?$",
+    "maxDescription": 600
+  },
+  "languages": {
+    "default": "en",
+    "sample": {
+      "key": "QuitGameEntry",
+      "english": "Quit Game",
+      "texts": {
+        "fr": "Quitter le jeu",
+        "zh": "退出游戏"
+      }
+    }
+  },
+  "texts": {
+    "en": {
+      "entryLabel": "MODS",
+      "title": "MODS",
+      "closeLabel": "CLOSE",
+      "backLabel": "BACK",
+      "openLabel": "OPEN",
+      "buttonLabel": "CONFIRM",
+      "enabledLabel": "Enabled",
+      "generalLabel": "General",
+      "noSettingsLabel": "No settings",
+      "versionPrefix": "Version ",
+      "captureLabel": "Press any key. Press Esc to cancel.",
+      "lockedLabel": "Turn Mod Settings on or off from the SDK's console menu.",
+      "statusTexts": {
+        "pythonOk": "",
+        "pythonAbsent": "MOD SETTINGS DOES NOT ANSWER: TURN IT ON IN THE SDK'S MODS MENU (~, THEN MODS), OR SEE THE SDK LOG",
+        "notReady": "THE MOD LIST IS NOT READY: REOPEN MODS, OR REPORT IT WITH THE SDK LOG",
+        "loading": "PLEASE WAIT",
+        "buttonPressed": "COMPLETED",
+        "captureNeedsPython": "KEY CAPTURE NEEDS MOD SETTINGS",
+        "noMods": "NO MOD LIST",
+        "refused": "CHANGE REFUSED"
+      }
+    },
+    "fr": {
+      "entryLabel": "MODS",
+      "title": "MODS",
+      "closeLabel": "FERMER",
+      "backLabel": "RETOUR",
+      "openLabel": "OUVRIR",
+      "buttonLabel": "CONFIRMER",
+      "enabledLabel": "Activé",
+      "generalLabel": "Général",
+      "noSettingsLabel": "Aucun réglage",
+      "versionPrefix": "Version ",
+      "captureLabel": "Appuyez sur une touche. Appuyez sur Échap pour annuler.",
+      "lockedLabel": "Activez ou désactivez Mod Settings depuis le menu des mods de la console du SDK.",
+      "statusTexts": {
+        "pythonOk": "",
+        "pythonAbsent": "MOD SETTINGS NE RÉPOND PAS : ACTIVEZ-LE DANS LE MENU DES MODS DU SDK (~, PUIS MODS), OU VOYEZ LE JOURNAL DU SDK",
+        "notReady": "LA LISTE DES MODS N'EST PAS PRÊTE : ROUVREZ MODS, OU SIGNALEZ-LE AVEC LE JOURNAL DU SDK",
+        "loading": "VEUILLEZ PATIENTER",
+        "buttonPressed": "TERMINÉ",
+        "captureNeedsPython": "LA CAPTURE DE TOUCHE DEMANDE MOD SETTINGS",
+        "noMods": "AUCUNE LISTE DE MODS",
+        "refused": "CHANGEMENT REFUSÉ"
+      }
+    },
+    "zh": {
+      "entryLabel": "模组",
+      "title": "模组",
+      "closeLabel": "关闭",
+      "backLabel": "返回",
+      "openLabel": "打开",
+      "buttonLabel": "确认",
+      "enabledLabel": "已启用",
+      "generalLabel": "通用",
+      "noSettingsLabel": "无设置",
+      "versionPrefix": "版本 ",
+      "captureLabel": "按任意键。按Esc取消。",
+      "lockedLabel": "请在 SDK 控制台的模组菜单中启用或停用 Mod Settings。",
+      "statusTexts": {
+        "pythonOk": "",
+        "pythonAbsent": "MOD SETTINGS 无响应：请在 SDK 的模组菜单中启用（按 ~，再输入 mods），或查看 SDK 日志",
+        "notReady": "模组列表尚未就绪：请重新打开 MODS，或附上 SDK 日志报告此问题",
+        "loading": "请稍候",
+        "buttonPressed": "已完成",
+        "captureNeedsPython": "按键捕获需要 MOD SETTINGS",
+        "noMods": "没有模组列表",
+        "refused": "更改被拒绝"
+      }
+    }
+  }
+}

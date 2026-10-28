@@ -1,0 +1,91 @@
+# Changelog
+
+## 1.0.13 - 2026-10-24
+
+- The settings window is now in Japanese too, with the 日本語 button at the top.
+- Performance: the grapple asks less of the game, during a shot, with the rope put away and in co-op. It looks and feels the same.
+- Fix: when updating from version 1.0.9 or older, a rope hidden with "Show the rope" stays hidden.
+
+## 1.0.12 - 2026-10-18
+
+- Co-op: smoother grapple paths for the players who join a game: no more elastic pull, and no more trembling body during a grapple.
+
+## 1.0.11 - 2026-10-17
+
+- Apex Grapple now works in co-op.
+
+## 1.0.10 - 2026-10-15
+
+- New: the grapple gun. When you fire, your hunter shoots the grapple from a pistol in the left hand, with our own rope and hook that fly out, bite and come back. For all six hunters, in first and third person.
+- In third person, the pistol sits in a holster on the hip between shots. C4SH has none: his coat covers the hip.
+- New LOOK page in the window: grapple gun or classic look, three ropes, their thickness, their light and its colour (nine colours), the rope's movement, the hook's size, the holster on or off, and the colour of the game's rope for the classic look.
+- Show the rope moves from THE SHOT to LOOK, and keeps your setting.
+- The grapple gun needs a second file from this page, Apex Grapple Paks, copied into the game's Paks folder. Without it, the grapple keeps the classic look.
+
+## 1.0.9 - 2026-10-13
+
+- The menu now reopens where you left it: same page and same place in the page, even after restarting the game.
+- New: the mod's window is now also in Simplified Chinese. Choose 中文 at the top of the window.
+
+## 1.0.8 - 2026-10-06
+
+- New WINDOW button at the top of the menu, beside THEME: three sizes, LARGE (default), FULL SCREEN and NORMAL (the previous size). More room, same text size. Each mod keeps its own.
+
+## 1.0.7 - 2026-10-06
+
+- New: hold the key to grapple, on the CONTROLS page. A quick tap on the melee key still punches, and a grapple fired by a hold pulls all the way. One switch for keyboard and one for controller, both off by default; adjustable hold time, 0.4 s by default.
+- Fixed: the menu now opens whatever your console key is. With some keys, such as +, it did not open at all; with those, you reopen the console yourself after closing the menu.
+- New THEME button at the top of the menu: four colour themes, EMBER, DARK, LIGHT and BL4. Each mod keeps its own.
+- Escape closes the menu, like the CLOSE button.
+- The game is slightly blurred behind the menu, and the menu keeps control: a click beside it no longer goes to the game.
+- Card descriptions now sit beside their title.
+- Improved settings: confirmation after saving, rollback to the previous value on failure, and clearer messages.
+
+## 1.0.6 - 2026-09-25
+
+- Fix a possible crash on very long grapple shots: the game no longer removes the rope while the grapple still
+  uses it.
+
+## 1.0.5 — 2026-09-23
+
+- Preserve melee activation at purple boss shrines instead of firing the grapple.
+- Keep custom grapple bindings independent: a custom key still grapples while the game's melee input remains available for the shrine.
+- Leave ordinary lootable surfaces, movement, rope visuals, stamina and existing settings unchanged.
+
+## 1.0.4 — 2026-09-23
+
+- Keep the settings window responsive when the game is paused. Console handoff and Close now proceed without waiting for player animation updates.
+- Close the previous Apex window before opening another one, and avoid returning to a console page that has already changed.
+- Shorten the setting descriptions in English and French; names, values and limits stay the same.
+- Preserve the existing controls, settings and grapple behavior.
+
+## 1.0.3 — 2026-09-22
+
+- Use the game's stamina bar for Apex grapple shots, sharing the reserve and native regeneration with dash and glide.
+- Add an adjustable stamina cost in The shot: 0–100%, default 33%; 0% disables consumption.
+- Refuse shots with insufficient stamina without triggering melee, including when the first shot encounters an empty bar.
+- Cancel the shot if stamina cannot be deducted, before movement, animation or sound starts. If the reserve cannot be read, keep the existing fallback that allows grappling.
+- Keep native contextual interactions and missed shots free of the Apex stamina cost, and preserve rope visuals, sounds and movement settings.
+
+## 1.0.2 — 2026-09-22
+
+- Preserve the game's valid contextual grapple interactions, including carryable objects, instead of replacing them with an Apex shot. Keep the native targeting area aligned with the game's indicator.
+- Restore the grapple's launch, connection and pulling sounds, with cleanup when a shot is released or cancelled.
+- Keep the existing hand animation, rope visuals, movement tuning and saved settings.
+
+## 1.0.1 — 2026-09-22
+
+- Remember the last settings tab when closing and reopening the menu, including after a game restart.
+- Restore navigation focus to the selected tab for controller use.
+- Keep the selected tab when restoring or undoing gameplay settings; fall back to the first tab if a saved tab is invalid.
+
+## 1.0.0 — 2026-09-22
+
+- Grapple toward surfaces with adjustable range, pulling force, steering, speed and release behavior.
+- Support short pulls close to surfaces, releasing with jump, and nearby-enemy melee priority.
+- Add the custom settings window with English and French, reset controls and keyboard/controller navigation.
+- Capture keyboard, mouse and controller bindings, including two-button combinations.
+- Display PlayStation or Xbox button icons and reserve console-opening inputs.
+- Handle session changes and interrupted window cleanup, and fall back to button names if icon rendering fails.
+
+Development-only investigation modes and command-line probes are not included in this source distribution.

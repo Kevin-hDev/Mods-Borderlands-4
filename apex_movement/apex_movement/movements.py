@@ -1,0 +1,115 @@
+"""Which modules and which menu lines make up each movement, so a movement can be turned off or shipped on its own.
+
+Kevin's rule, 2026-09-18: one mod is one movement. Two movements were sharing a module without anyone seeing it — the
+ground speeds rode on the auto sprint's switch, so turning the auto sprint off quietly gave the game's own speeds
+back. Nothing in the code stated the rule, so nothing caught the breach; it was found twice, both times by accident.
+
+This file states it. test_movement_rules.py checks the code against it, and the separate file per movement
+(conception, decision 2) is built from it. Every exception carries its reason here, so none can be added in silence.
+"""
+
+from dataclasses import dataclass
+
+# Read by every movement and owned by none: the game's fields, the settings, the frame loop, the menu.
+# speed_order ties sliders of several movements together on purpose (design decision 9), and every file needs it.
+# arms only serves the wall climb, but game drops it whenever the player changes, and game is shared. dash_lookup
+# only serves the dash, and is shared for the same reason: game forgets it when the character changes (2026-09-21).
+UI_SHARED = (
+    "control_timer_native", "control_window_clock", "control_escape", "control_window_focus", "panel_modal",
+    "control_console_handoff", "control_console_keys", "control_reserved", "control_window",
+    "control_window_cleanup", "control_window_hooks", "control_window_redraw", "panel_assets", "panel_buttons",
+    "panel_common_en", "panel_common_fr", "panel_en", "panel_entry", "panel_factory", "panel_fonts",
+    "panel_form", "panel_fr", "panel_header", "panel_i18n", "panel_labels", "panel_model", "panel_transaction",
+    "panel_transaction_config", "panel_transaction_recovery", "panel_restore", "panel_form_lifecycle",
+    "control_window_config", "control_window_transaction_close", "panel_persistence",
+    "panel_glyphs", "panel_key_view", "panel_open", "panel_options", "panel_options_tabs", "panel_pages",
+    "panel_preferences", "panel_shortcut", "panel_slider", "panel_text", "panel_theme", "panel_theme_choice",
+    "panel_toggle", "panel_view", "panel_widgets", "panel_size_choice", "panel_window_size", "panel_scroll", "panel_dynamic",
+    "panel_popup", "panel_language_choice",
+    # Apex Grapple's choice rows and page sentence, which its pages draw in every window (2026-10-14); no menu line
+    # of this mod names a choice or a sentence yet, so they wait unused.
+    "panel_choices", "panel_notice",
+    # The header draws the camera profiles' floppy in every file, collapsed where there is no camera (2026-10-12).
+    "panel_profile_floppy",
+    # The Chinese and Japanese words the camera mods share are translated here once (2026-10-12, 2026-10-21).
+    "panel_common_zh", "panel_zh", "panel_common_ja", "panel_ja",
+)
+# Every separate movement must configure itself without another mod installed; hence the window is shared by
+# all movement archives. Its visual modules are generated from Apex Grapple's approved design source.
+# walk_key is read by two movements, the auto sprint and the ground speed, so it is in every file; its key, its menu
+# lines and the slow_walk module that ends the sprint ship in the full pack only (Kevin, 2026-09-26), and a separate
+# file never walks slowly. shortcut_key serves its option and the menu's key capture in every file.
+SHARED = ("__init__", "arms", "dash_lookup", "family", "frame", "game", "guest_trust", "guests", "menu", "movements",
+          "ownership",
+          "pack",
+          "report", "settings", "settings_persistence", "settings_upgrade", "shortcut_key", "speed_order", "walk_key") + UI_SHARED
+# Camera is a feature of Apex Movement as a whole. Separate movement downloads neither expose its options nor ship
+# its shared native runtime, so these modules belong only to the full pack.
+FULL_ONLY = ("camera", "camera_settings", "panel_ads", "panel_camera_ownership", "panel_framing", "panel_framing_form", "panel_framing_text",
+             "camera_control_actions", "camera_control_config",
+             "camera_control_form", "panel_camera_commands", "panel_weapon_sensitivity", "panel_optics",
+             "panel_omni_direction", "panel_profile_form", "panel_profile_paint", "panel_profile_text",
+             "panel_profile_window", "panel_profile_grey", "panel_profile_list", "panel_profile_page",
+             "slow_walk",
+             # The key that opens the window, with the camera's COMMANDS page (Kevin, 2026-10-18).
+             "open_key", "panel_open_key",
+             # The update notes' pop-up, in the full pack only (Kevin, 2026-10-17).
+             "updates", "release_notes", "panel_updates")
+
+# Settings any movement may read: LONGEST_SLIDE_S is read by the slides and by the landing slide's safety net,
+# which belong to two movements. The speeds every movement reads come from speed_order, not from settings.
+SHARED_SETTINGS = ("LONGEST_SLIDE_S",)
+
+
+@dataclass(frozen=True)
+class Movement:
+    name: str
+    modules: tuple[str, ...]
+    menu_groups: tuple[str, ...]
+    # The separate file this movement ships as: the package name inside it, and the name it wears in the mod list.
+    # None of them is "apex_movement", which belongs to the full pack: two files sharing a package name would fight
+    # over the same import, and only one would load.
+    file: str = ""
+    mod_name: str = ""
+    # Why it cannot be switched off. Empty means it has a switch, which is what the rule expects.
+    always_on_because: str = ""
+    # Why it takes more than one menu line. Empty means it takes exactly one, which is what the rule expects.
+    two_lines_because: str = ""
+
+
+MOVEMENTS = (
+    Movement("Movement", ("ground_speed",), ("movement_menu",), "apex_speed", "Apex Speed",
+             always_on_because="a walking speed has no off state; the game's own values are named in the sliders, so "
+                               "a player who wants them back types them in"),
+    Movement("Auto sprint", ("sprint",), ("auto_sprint_menu",), "apex_auto_sprint", "Apex Auto Sprint"),
+    Movement("Slides", ("slide", "slide_physics", "slide_model", "slide_direction", "slide_steering", "axle_slide"),
+             ("slides_menu", "axle_slide_menu"), "apex_slides", "Apex Slides",
+             two_lines_because="the Axle slide is a slide, and the one exception Kevin named to one movement per mod "
+                               "(2026-09-18): it keeps its own line because it is off by default and has five "
+                               "settings of its own"),
+    Movement("Dash", ("dash",), ("dash_menu",), "apex_dash", "Apex Dash"),
+    Movement("Glide", ("glide",), ("glide_menu",), "apex_glide", "Apex Glide"),
+    # Two moves under one switch: both need the crouch key blocked, and that block is what removes the game's own slam
+    # on a held crouch; two switches would allow a state where the block stays on while the player asked for neither,
+    # losing them the held-crouch slam with no way to tell why (Kevin, 2026-09-18). A comment rather than a field: no
+    # test can tell one movement from two, and a field nothing read looked like a checked rule (review, 2026-09-19).
+    Movement("Ground slam and landing slide", ("air_crouch", "air_actions", "air_bindings", "air_keys", "slam_hold"),
+             ("air_crouch_menu",), "apex_ground_slam", "Apex Ground Slam"),
+    Movement("Air / tap strafe", ("air_strafe",), ("air_strafe_menu",), "apex_air_strafe", "Apex Air Strafe"),
+    # jump_report writes the jumps this movement shapes: under its switch it runs in one installed file, not in each.
+    Movement("Heavier fall", ("heavier_fall", "jump_goals", "jump_report"), ("heavier_fall_menu",),
+             "apex_heavier_fall", "Apex Heavier Fall"),
+    Movement("Wall climb", ("wall_climb", "climber", "wall_sense", "climb_aim", "wall_choice", "climb_rules", "climb_refusal",
+                            "climb_animation", "climb_body", "climb_loops", "climb_progress", "jump_press", "air_jumps",
+                            "move_watch"),
+             ("wall_climb_menu",),
+             "apex_wall_climb", "Apex Wall Climb"),
+)
+
+
+def owner(module: str) -> Movement | None:
+    """The movement a module belongs to, or None when it is shared."""
+    for movement in MOVEMENTS:
+        if module in movement.modules:
+            return movement
+    return None

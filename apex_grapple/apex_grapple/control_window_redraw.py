@@ -1,0 +1,58 @@
+"""Draws the open settings window again after a theme or size change: the same settings, in the new look.
+
+Kevin, 2026-10-06: the colours change on the click, not at the next opening. The window cannot be repainted in
+place, because Unreal does not redraw a style once built (panel_buttons): a new window takes its place.
+"""
+
+import unrealsdk
+
+from .control_window_hooks import note
+
+
+def redraw(session):
+    """Puts the new window on screen before the old one leaves, so no frame shows the game without its menu.
+
+    The new window is built around the old one's model, so its undo, page and transactions carry over. If it cannot
+    be drawn, the old one stays as it was and says the change shows at the next opening; the change is saved
+    either way. Returns whether the new window took the old one's place.
+    """
+    # Imported here: the session module loads before the mod's menu, which the theme and the factory read.
+    from . import panel_factory, panel_modal, panel_scroll, panel_theme, panel_window_size
+    old_form, old_root = session.form, session.root()
+    # What the old window says if the new one cannot be drawn: the THEME button leaves the theme's line.
+    notice = getattr(old_form, "redraw_notice", None) or "theme_later"
+    old_form.redraw, old_form.redraw_notice = False, None
+    drawn = panel_theme.current()
+    # The new window opens scrolled where the old one is now, not where the last closing left it.
+    try:
+        carried = panel_scroll.offset(old_form.resolve())
+    except Exception:
+        carried = None
+    try:
+        root, form = panel_factory.build(session.pc(), session.bindings, session.return_to_menu, old_form.model)
+        if not session.viewport().AddWidget(root, panel_modal.viewport_slot()):
+            raise RuntimeError("Viewport rejected widget")
+    except Exception as error:
+        return _keep_old(session, drawn, notice, "build", error)
+    try:
+        if old_root is not None:
+            old_root.RemoveFromParent()
+    except Exception as error:
+        # Two windows must never stay on screen: the cleanup only knows the session's one.
+        root.RemoveFromParent()
+        return _keep_old(session, drawn, notice, "swap", error)
+    session.root, session.form, session.selector = unrealsdk.unreal.WeakPointer(root), form, form.focus
+    if session.scroll is not None:
+        session.scroll = panel_scroll.Memory(form.model, carried)
+    session.focus()
+    note(f"redrawn=true theme={panel_theme.current()} size={panel_window_size.current()}")
+    return True
+
+
+def _keep_old(session, drawn, notice, stage, error):
+    from . import panel_theme
+    note(f"redraw_error={type(error).__name__} stage={stage}")
+    # The old window repaints its buttons as it is used: they must keep the colours it was drawn in.
+    panel_theme.use(drawn)
+    session.form.report(session.form.resolve(), notice)
+    return False

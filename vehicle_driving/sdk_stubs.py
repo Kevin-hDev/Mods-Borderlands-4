@@ -1,0 +1,253 @@
+"""Fake SDK modules so Vehicle Driving's logic can be tested outside the game.
+
+Installed into sys.modules before importing vehicle_driving. Cut down from Apex Movement's to what this mod calls:
+options, keys, the frame hook, the mod, weak pointers, the log, one trace, the player controller and its camera
+manager. The vehicle and its
+driver carry the values sessions 1 to 9 read on Kevin's vehicle (2026-09-18), and the boost and the damage sessions
+11 and 12 read (2026-10-03); the guns' damage formula is sdk_stubs_formula's (2026-10-14).
+"""
+
+import sys
+import types
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Any
+
+import sdk_stubs_formula
+from sdk_stubs_camera import CameraManager  # noqa: F401  (the tests reach it as sdk_stubs.CameraManager)
+from sdk_stubs_pointers import WeakPointer, destroy
+from sdk_stubs_options import (FakeOption, FakeNestedOption, FakeHook, FakeKeybind, FakeKeybindOption,
+                               FakeSpinnerOption)
+from sdk_mod_fixture import FakeMod
+
+# Tests run in both the private source tree and the public sibling-package layout.
+_shared_source = Path(__file__).resolve().parents[2] / 'vehicle_unlocks' / 'source'
+if not _shared_source.is_dir():
+    _shared_source = Path(__file__).resolve().parents[1] / 'vehicle_unlocks'
+sys.path.insert(0, str(_shared_source))
+
+
+
+
+class Ground:
+    """KismetSystemLibrary's class default object: the trace meets the ground `below` under its start, or nothing
+    when below is None or beyond the trace's end."""
+
+    def __init__(self) -> None:
+        self.below: float | None = 60.0
+        self.calls: list[tuple] = []
+
+    def LineTraceSingle(self, context: Any, start: Any, end: Any, channel: int, complex_trace: bool, ignored: list,
+                        draw: int, out: Any, ignore_self: bool, *tail: Any) -> tuple:
+        self.calls.append((context, start, end, channel, ignore_self, len(tail)))
+        if self.below is None or self.below > start.Z - end.Z:
+            return False, [], types.SimpleNamespace(Distance=0.0)
+        return True, [], types.SimpleNamespace(Distance=self.below)
+
+
+class FakeClass:
+    """A game class: the SDK's _get_address gives its identity."""
+
+    def __init__(self, name: str) -> None:
+        self.Name = name
+
+    def _get_address(self) -> int:
+        return id(self)
+
+
+VEHICLE_CLASS = FakeClass("OakVehicle")
+CHARACTER_CLASS = FakeClass("OakCharacter")
+
+
+def character(name: str = "OakCharacter_1", cls: Any = None) -> Any:
+    """A character on foot: no OakVehicleMovement field at all, as the game's own."""
+    return types.SimpleNamespace(Name=name, Class=cls if cls is not None else CHARACTER_CLASS)
+
+
+def vector(x: float, y: float, z: float = 0.0) -> Any:
+    return types.SimpleNamespace(X=x, Y=y, Z=z)
+
+
+class CountedVector:
+    """A vector counting how often each of its components is read."""
+
+    def __init__(self, x: float, y: float, z: float = 0.0) -> None:
+        self.values = {"X": x, "Y": y, "Z": z}
+        self.reads = {"X": 0, "Y": 0, "Z": 0}
+
+    def __getattr__(self, name: str) -> float:
+        if name not in ("X", "Y", "Z"):
+            raise AttributeError(name)
+        self.reads[name] += 1
+        return self.values[name]
+
+
+def rotator(yaw: float) -> Any:
+    return types.SimpleNamespace(Pitch=0.0, Yaw=yaw, Roll=0.0)
+
+
+class Mesh:
+    """The vehicle's physics body: a velocity set is what the next frame reads."""
+
+    def __init__(self, x: float = 0.0, y: float = 0.0, z: float = 0.0) -> None:
+        self.velocity = vector(x, y, z)
+        self.sets: list[tuple] = []
+        self.impulses: list[tuple] = []
+
+    def GetPhysicsLinearVelocity(self, bone: str) -> Any:
+        return self.velocity
+
+    def SetPhysicsLinearVelocity(self, velocity: Any, add: bool, bone: str) -> None:
+        self.sets.append((velocity, add, bone))
+        self.velocity = velocity
+
+    def GetMass(self) -> float:
+        return 2500.0
+
+    def AddImpulse(self, impulse: Any, bone: str, velocity_change: bool) -> None:
+        """Recorded only: the game spreads an impulse over 4 to 5 frames (session 6), which no test relies on."""
+        self.impulses.append((impulse, bone, velocity_change))
+
+
+def springs(*stiffness: float) -> Any:
+    return types.SimpleNamespace(Springs=[types.SimpleNamespace(Stiffness=value) for value in stiffness])
+
+
+def pair(value: float, base: float) -> Any:
+    return types.SimpleNamespace(Value=value, BaseValue=base)
+
+
+class Driver:
+    """The player's character at the wheel: its driving attributes, base and value with Kevin's Hover Drive."""
+
+    def __init__(self) -> None:
+        self.Name = "OakCharacter_1"
+        # Seated on the vehicle; the top of its capsule is the camera views' target (spec section 3.8).
+        self.location = vector(100.0, 200.0, 170.0)
+        self.CapsuleComponent = types.SimpleNamespace(GetScaledCapsuleHalfHeight=lambda: 80.0)
+        attributes =types.SimpleNamespace(maxspeed=pair(51.3194, 50.0), BoostMaxSpeed=pair(66.3425, 65.0),
+                                           MaxAccel=pair(1286.48, 1000.0), BoostMaxAccel=pair(1615.08, 1200.0),
+                                           ReverseSpeed=pair(26.23, 25.0), BoostConsumptionRateScalar=pair(0.906, 1.0))
+        self.VehicleDriverComponent = types.SimpleNamespace(VehicleAttributesState=attributes)
+
+    def K2_GetActorLocation(self) -> Any:
+        return self.location
+
+
+class Vehicle:
+    """A vehicle: springs and jump on its movement's HoverSetup, the game's boost, a physics body, the damage it takes
+    and a driver."""
+
+    def __init__(self, name: str = "OakVehicle_1", driver: Any = None, yaw: float = 0.0, slide: str = "None") -> None:
+        self.Name = name
+        self.Class = VEHICLE_CLASS
+        self.yaw = yaw
+        self.location = vector(100.0, 200.0, 22.0)
+        self.Mesh = Mesh()
+        self.boosting = False
+        hover = types.SimpleNamespace(YawSpring_Idle=springs(5.0), YawSpring_Hovering=springs(3.0, 3.5, 4.0),
+                                      YawSpring_Boosting=springs(1.0, 1.7, 2.4),
+                                      PowerslideJumpHeight=types.SimpleNamespace(constant=165.0))
+        self.OakVehicleMovement = types.SimpleNamespace(HoverSetup=hover,
+                                                        PowerslideInput=types.SimpleNamespace(name=slide),
+                                                        IsBoosting=lambda: self.boosting)
+        self.DamageState = types.SimpleNamespace(DamageTakenMultiplier=pair(1.0, 1.0))
+        self.DriverPawn = driver if driver is not None else Driver()
+        # Solo, or the host's own: this game drives it and has the authority on it.
+        self.local, self.role = True, "ROLE_Authority"
+
+    def IsLocallyControlled(self) -> bool:
+        return self.local
+
+    def GetLocalRole(self) -> str:
+        return self.role
+
+    def K2_GetActorRotation(self) -> Any:
+        return rotator(self.yaw)
+
+    def K2_GetActorLocation(self) -> Any:
+        return self.location
+
+
+def install() -> dict:
+    """Registers the fake modules and returns the state the tests read and drive."""
+    state: dict = {"misc": [], "warnings": [], "errors": [], "pc": None, "settings_exists": True,
+                   "settings_enabled": False, "mods": [], "keybinds": [], "ground": Ground(), "class_finds": 0,
+                   "formula": sdk_stubs_formula.Library(),
+                   # The game's players, each a player state whose PawnPrivate is a character or a vehicle (guests.py).
+                   "players": []}
+
+    def find_class(name: str) -> Any:
+        if name == "InputSettings":
+            # The game's console keys, which the CAMERA page's key card refuses (command_keys.py).
+            keys = [types.SimpleNamespace(KeyName="Tilde")]
+            return types.SimpleNamespace(ClassDefaultObject=types.SimpleNamespace(ConsoleKeys=keys))
+        if name == sdk_stubs_formula.LIBRARY:
+            return state["formula"].cls
+        state["class_finds"] += 1
+        if name != "KismetSystemLibrary":
+            raise ValueError(f"no class {name}")
+        return types.SimpleNamespace(ClassDefaultObject=state["ground"])
+
+    logging_module = types.ModuleType("unrealsdk.logging")
+    logging_module.misc = lambda text: state["misc"].append(text)
+    logging_module.info = lambda text: state["misc"].append(text)
+    logging_module.warning = lambda text: state["warnings"].append(text)
+    logging_module.error = lambda text: state["errors"].append(text)
+
+    unreal_module = types.ModuleType("unrealsdk.unreal")
+    unreal_module.WeakPointer = WeakPointer
+    unreal_module.FGbxDefPtr = sdk_stubs_formula.DefPtr
+
+    hooks_module = types.ModuleType("unrealsdk.hooks")
+    hooks_module.Type = types.SimpleNamespace(POST="POST", PRE="PRE")
+
+    unrealsdk_module = types.ModuleType("unrealsdk")
+    unrealsdk_module.logging = logging_module
+    unrealsdk_module.hooks = hooks_module
+    unrealsdk_module.unreal = unreal_module
+    unrealsdk_module.find_class = find_class
+    net_role = types.SimpleNamespace(ROLE_Authority="ROLE_Authority", ROLE_SimulatedProxy="ROLE_SimulatedProxy")
+    unrealsdk_module.find_enum = lambda name: net_role if name == "ENetRole" else sdk_stubs_formula.enums(name)
+    unrealsdk_module.make_struct = lambda name, **fields: types.SimpleNamespace(**fields)
+
+    mods_base = types.ModuleType("mods_base")
+    state['temporary_settings'] = TemporaryDirectory()
+    mods_base.SETTINGS_DIR = Path(state['temporary_settings'].name)
+    mods_base.BoolOption = FakeOption
+    mods_base.SliderOption = FakeOption
+    mods_base.SpinnerOption = FakeSpinnerOption
+    mods_base.HiddenOption = FakeOption
+    mods_base.KeybindOption = FakeKeybindOption
+    mods_base.NestedOption = FakeNestedOption
+    mods_base.get_pc = lambda **kwargs: state["pc"]
+    mods_base.ENGINE = types.SimpleNamespace(GameViewport=types.SimpleNamespace(World=types.SimpleNamespace(
+        GameState=types.SimpleNamespace(PlayerArray=state["players"]))))
+    mods_base.hook = lambda path, kind, hook_identifier="": (lambda fn: FakeHook.stack(fn, path, kind, hook_identifier))
+    def keybind(identifier: str, key: str | None = None, callback: Any = None, **kwargs: Any) -> FakeKeybind:
+        made = FakeKeybind(identifier, key, callback, **kwargs)
+        state["keybinds"].append(made)
+        return made
+
+    mods_base.keybind = keybind
+
+    def build_mod(cls: type = FakeMod, **kwargs: Any) -> FakeMod:
+        # As mods_base: registered, then its settings loaded, and a file that says enabled enables it right here.
+        made = cls(state, **kwargs)
+        state["mods"].append(made)
+        if state["settings_exists"] and state["settings_enabled"]:
+            made.enable()
+        return made
+
+    mods_base.Mod = FakeMod
+    mods_base.build_mod = build_mod
+
+    for name, module in {
+        "unrealsdk": unrealsdk_module,
+        "unrealsdk.logging": logging_module,
+        "unrealsdk.hooks": hooks_module,
+        "unrealsdk.unreal": unreal_module,
+        "mods_base": mods_base,
+    }.items():
+        sys.modules[name] = module
+    return state

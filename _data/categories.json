@@ -1,0 +1,5 @@
+[
+  {"id": "weapons", "name": {"en": "Weapons", "fr": "Armes", "zh": "武器", "ja": "武器"}},
+  {"id": "loot", "name": {"en": "Loot & progression", "fr": "Butin et progression", "zh": "战利品与成长", "ja": "戦利品と成長"}},
+  {"id": "movement", "name": {"en": "Movement", "fr": "Déplacements", "zh": "移动", "ja": "移動"}}
+]

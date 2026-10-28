@@ -1,0 +1,177 @@
+"""Camera commands: identifiers, defaults, validation and bind alignment."""
+
+from typing import Any, Callable, NamedTuple
+
+from mods_base import EInputEvent, keybind
+
+from .camera_key_options import CameraControllerOption, CameraKeyboardOption, normalize_camera_key
+from .key_option import normalize_controller_key
+from .keyboard_layout import RIGHT_OF_TAB, TOP_ROW_EIGHT, TOP_ROW_SEVEN, TOP_ROW_SIX, key_at
+
+KEYBOARD, CONTROLLER = "keyboard", "controller"
+# The SDK's text menu lists both entries of an action: under one name, a player could not tell the keyboard's from the
+# controller's (review, 2026-09-26).
+DEVICE_NAMES = {KEYBOARD: "Keyboard", CONTROLLER: "Controller"}
+
+
+class Action(NamedTuple):
+    name: str
+    keyboard_id: str
+    controller_id: str
+    keyboard_default: str | None
+    display_name: str
+    description: str
+    controller_default: str | None = None
+    # Read each frame on the game's key states rather than called at a press: it needs the release too.
+    polled: bool = False
+
+
+ACTIONS = (
+    Action("third_person", "third_person_key", "third_person_controller", "P",
+           "Toggle Third Person", "Turn the third-person camera on or off."),
+    # The 6 and 7 keys of the top row, named as the game names them on this keyboard (keyboard_layout.py).
+    Action("shoulder", "shoulder_key", "shoulder_controller", key_at(TOP_ROW_SIX, "Six"),
+           "Switch Camera Shoulder", "Move the third-person camera to the other shoulder."),
+    Action("orbit", "orbit_key", "orbit_controller", key_at(TOP_ROW_SEVEN, "Seven"),
+           "Toggle Orbit Camera", "Switch between shoulder and Orbit Camera views."),
+    Action("zoom_in", "zoom_in_key", "zoom_in_controller", None,
+           "Orbit Camera Zoom In", "Move the Orbit Camera closer, one step per press."),
+    Action("zoom_out", "zoom_out_key", "zoom_out_controller", None,
+           "Orbit Camera Zoom Out", "Move the Orbit Camera farther away, one step per press."),
+    # The key right of Tab (A on Kevin's AZERTY, Q on QWERTY: keyboard_layout.py) and L3 by default (Kevin,
+    # 2026-10-06), the only camera action with a controller button by default: he asked for it with the action.
+    # Read by free_look.py.
+    Action("free_look", "free_look_key", "free_look_controller", key_at(RIGHT_OF_TAB, "Q"),
+           "Free Look", "Hold to turn the camera while the character or the vehicle keeps going.",
+           controller_default="Gamepad_LeftThumbstick", polled=True),
+    # The 8 key of the top row, beside the shoulder's and the Orbit Camera's (Kevin, 2026-10-07). Last, so the
+    # mods' settings that unpack the first six options by position keep theirs.
+    Action("camera_distance", "camera_distance_key", "camera_distance_controller", key_at(TOP_ROW_EIGHT, "Eight"),
+           "Camera Distance", "Switch the third-person camera between close, normal and far."),
+    # Free Look's keys by default (Kevin, 2026-10-09: « A » zooms while aiming, is Free Look otherwise; « A est
+    # accessible direct là où les doigts sont toujours »). Read by sniper_zoom.py.
+    Action("sniper_zoom", "sniper_zoom_key", "sniper_zoom_controller", key_at(RIGHT_OF_TAB, "Q"),
+           "Optic Zoom", "While aiming with two or more optic zooms, switch to the next one.",
+           controller_default="Gamepad_LeftThumbstick", polled=True),
+)
+# The only commands that may share a key: Free Look stops while aiming on foot (free_look.py), the zoom acts only
+# while aiming.
+SHARED = frozenset({("free_look", "sniper_zoom")})
+
+
+class CameraCommands:
+    """One owner-specific set built from the shared, immutable camera command table."""
+
+    def __init__(self, **callbacks: Callable[[], None]) -> None:
+        if set(callbacks) != {action.name for action in ACTIONS if not action.polled}:
+            raise ValueError("invalid camera callbacks")
+        self.applying = True
+        self.binds, self.options = self._build(callbacks)
+        self._options = {option.identifier: option for option in self.options}
+        for option in self.options:
+            option.attach(self)
+        self.applying = False
+        self.align()
+
+    @staticmethod
+    def _build(callbacks: dict[str, Callable[[], None]]) -> tuple[tuple, tuple]:
+        binds, options = [], []
+        for action in ACTIONS:
+            for device, identifier, default, option_type in (
+                    (KEYBOARD, action.keyboard_id, action.keyboard_default, CameraKeyboardOption),
+                    (CONTROLLER, action.controller_id, action.controller_default, CameraControllerOption)):
+                callback = (lambda: None) if action.polled else callbacks[action.name]
+                # A toggle changes once per physical press; repeats and releases would immediately undo it.
+                bind = keybind(identifier, default,
+                               lambda callback=callback: callback(),
+                               display_name=f"{DEVICE_NAMES[device]}: {action.display_name}",
+                               description=action.description,
+                               is_hidden=True, event_filter=EInputEvent.IE_Pressed)
+                binds.append(bind)
+                options.append(option_type.sole_entry(bind))
+        return tuple(binds), tuple(options)
+
+    def option(self, identifier: str) -> Any:
+        return self._options[identifier]
+
+    @staticmethod
+    def slots() -> tuple[tuple[str, str, str], ...]:
+        return tuple(slot for action in ACTIONS for slot in (
+            (action.name, KEYBOARD, action.keyboard_id),
+            (action.name, CONTROLLER, action.controller_id),
+        ))
+
+    def identifier(self, action: str, device: str) -> str:
+        try:
+            return next(identifier for name, kind, identifier in self.slots()
+                        if name == action and kind == device)
+        except StopIteration as error:
+            raise ValueError("invalid camera command") from error
+
+    def defaults(self) -> dict[str, str | None]:
+        return {action.keyboard_id: action.keyboard_default for action in ACTIONS} | {
+            action.controller_id: action.controller_default for action in ACTIONS
+        }
+
+    @staticmethod
+    def _normalizer(identifier: str) -> Callable[[Any], str | None]:
+        return normalize_controller_key if identifier.endswith("_controller") else normalize_camera_key
+
+    def validate(self, changes: Any) -> dict[str, str | None]:
+        if type(changes) is not dict or not 0 < len(changes) <= len(self.options):
+            raise ValueError("invalid camera command changes")
+        if any(type(identifier) is not str or identifier not in self._options for identifier in changes):
+            raise ValueError("unknown camera command")
+        normalized = {identifier: self._normalizer(identifier)(value)
+                      for identifier, value in changes.items()}
+        final = {identifier: option.value for identifier, option in self._options.items()}
+        final.update(normalized)
+        for identifiers in (
+                {action.name: action.keyboard_id for action in ACTIONS},
+                {action.name: action.controller_id for action in ACTIONS}):
+            values = [final[identifier] for name, identifier in identifiers.items() if final[identifier] is not None
+                      and not any(name == second and final[identifier] == final[identifiers[first]]
+                                  for first, second in SHARED)]
+            if len(values) != len(set(values)):
+                raise ValueError("duplicate camera command")
+        return normalized
+
+    def set_values(self, changes: Any) -> dict[str, str | None]:
+        normalized = self.validate(changes)
+        self.applying = True
+        try:
+            for identifier, value in normalized.items():
+                self._options[identifier].value = value
+        finally:
+            self.applying = False
+        return normalized
+
+    def _drop_duplicates(self) -> None:
+        """A saved file edited by hand can still give one key to two commands: the later one loses it, rather than
+        the earlier one going back to its default."""
+        self.applying = True
+        try:
+            for identifiers in ({action.name: action.keyboard_id for action in ACTIONS},
+                                {action.name: action.controller_id for action in ACTIONS}):
+                holders: dict[str, str] = {}
+                for name, identifier in identifiers.items():
+                    option = self._options[identifier]
+                    if option.value is None:
+                        continue
+                    holder = holders.get(option.value)
+                    if holder is None:
+                        holders[option.value] = name
+                    elif (holder, name) not in SHARED:
+                        option.value = None
+        finally:
+            self.applying = False
+
+    def apply(self, changes: Any) -> dict[str, str | None]:
+        normalized = self.set_values(changes)
+        self.align()
+        return normalized
+
+    def align(self) -> None:
+        self._drop_duplicates()
+        for bind, option in zip(self.binds, self.options):
+            bind.key = option.value

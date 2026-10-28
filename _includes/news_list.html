@@ -1,0 +1,38 @@
+{%- comment -%}
+The updates of the recommended mods, newest first: those of one mod (include.mod), or of all of them, at most
+include.limit. Each mod's file lists its notes newest first; a key "date|mod|rank" sorts all of them together, the
+rank keeping that order between two notes of the same day.
+{%- endcomment -%}
+{%- assign keys = "" | split: "" -%}
+{%- for entry in site.data.recommended -%}
+  {%- if include.mod == nil or include.mod == entry[0] -%}
+    {%- for note in entry[1].news -%}
+      {%- assign rank = 999 | minus: forloop.index0 -%}
+      {%- capture key -%}{{ note.date }}|{{ entry[0] }}|{{ rank }}{%- endcapture -%}
+      {%- assign keys = keys | push: key -%}
+    {%- endfor -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign keys = keys | sort | reverse -%}
+{%- assign count = include.limit | default: keys.size -%}
+{%- if keys.size == 0 %}
+<p class="empty">{{ words.empty_news }}</p>
+{%- else %}
+<ol class="news">
+{%- for key in keys limit: count -%}
+  {%- assign bits = key | split: "|" -%}
+  {%- assign mod_id = bits[1] -%}
+  {%- assign data = site.data.recommended[mod_id] -%}
+  {%- assign index = 999 | minus: bits[2] -%}
+  {%- assign note = data.news[index] %}
+  <li class="note">
+    <p class="note-head"><time datetime="{{ note.date }}">{{ note.date }}</time>
+    {%- unless include.mod %} <a href="{% include mod_url.html id=mod_id %}">{{ data.name | escape }}</a>{% endunless %} <span class="note-version">{{ note.version | escape }}</span></p>
+    <p>{{ note.text[code] | escape }}</p>
+    {%- if note.image %}
+    <img src="{{ '/recommendations/images/' | append: bits[1] | append: '/' | append: note.image.file | relative_url }}" width="{{ note.image.width }}" height="{{ note.image.height }}" alt="{{ note.image.alt[code] | escape }}" loading="lazy">
+    {%- endif %}
+  </li>
+{%- endfor %}
+</ol>
+{%- endif %}

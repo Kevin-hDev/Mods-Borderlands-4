@@ -1,0 +1,151 @@
+# Generated: the window Kevin's mods share, taken from Hunter Change's plain window, under It Follows'
+# names. Its comments may speak of other mods. Never edited by hand: docs/RUN/outils/menu_window.py
+# writes this file.
+"""Poll Movement's menu controls and save validated option changes."""
+
+import time
+
+from . import panel_i18n as i18n, panel_labels as labels, panel_theme as t
+from . import panel_choices, panel_follows, panel_theme_choice
+from . import panel_language_choice, panel_size_choice
+from .panel_form_lifecycle import Lifecycle
+
+
+class PanelForm(Lifecycle):
+    keep_when_disabled = True
+
+    def __init__(self, widgets, model):
+        self.widgets, self.model = widgets, model
+        self.page = model.pages.index(model.page)
+        self.notice = "ready"
+        self.pending, self.shown = {}, {}
+        self.changed_at = 0
+        self.redraw = False  # set by a theme change; the window's session then draws it again
+        self.focus = widgets["focus"]
+        panel_follows.start(self)
+        self.sync(self.resolve())
+        self.open_updates(self.resolve())
+
+    def sync(self, widgets):
+        self.pending.clear()
+        widgets["pages"].SetActiveWidgetIndex(self.page)
+        for key, option in self.model.options.items():
+            self.shown[key] = option.value
+            widget = widgets[f"setting:{key}"]
+            if type(option.default_value) is bool:
+                widget.SetIsChecked(False)
+            elif panel_choices.is_choice(option):
+                panel_choices.release(widgets, option)
+            else:
+                widget.SetValue(float(option.value))
+        self.refresh_labels(widgets)
+
+    def refresh_labels(self, widgets):
+        labels.apply(self, widgets)
+        for key, option in self.model.options.items():
+            labels.value(widgets, option, self.shown[key], self.model.language)
+
+    @staticmethod
+    def take(widget):
+        if not widget.IsChecked():
+            return False
+        widget.SetIsChecked(False)
+        return True
+
+    def report(self, widgets, key):
+        self.notice = key
+        widgets["notice"].SetText(i18n.text(key, self.model.language))
+
+    def flush(self, widgets):
+        if self.model.transaction.pending:
+            return False
+        if not self.pending:
+            return True
+        success = self.model.write(self.pending)
+        waiting = success is None and not self.model.transaction.rolling_back
+        self.notice = "saved" if success else "ready" if waiting else self.failure_notice()
+        self.sync(widgets)
+        return success is True
+
+    def read_changes(self, widgets, now):
+        for key, option in self.model.options.items():
+            widget = widgets[f"setting:{key}"]
+            if type(option.default_value) is bool:
+                if not self.take(widget):
+                    continue
+                value = not self.shown[key]
+            elif panel_choices.is_choice(option):
+                value = panel_choices.taken(self.take, widgets, option, self.shown[key])
+                if value is None or value == self.shown[key]:
+                    continue
+            else:
+                raw = widget.GetValue()
+                if abs(raw - self.shown[key]) < max(1e-6, option.step * 0.01):
+                    continue
+                try:
+                    value = self.model.normalize(option, raw)
+                except (TypeError, ValueError, OverflowError):
+                    self.report(widgets, "failed")
+                    self.sync(widgets)
+                    return
+                if value == self.shown[key]:
+                    continue
+            self.shown[key] = value
+            if value == option.value:
+                self.pending.pop(key, None)
+            else:
+                self.pending[key] = value
+            self.changed_at = now
+            labels.value(widgets, option, value, self.model.language)
+
+    def poll(self):
+        widgets, now = self.resolve(), time.perf_counter_ns()
+        outcome = self.model.advance()
+        if outcome is not None:
+            self.notice = self.failure_notice() if outcome == "failed" else outcome
+            self.sync(widgets)
+        if panel_follows.poll_over(self, widgets):
+            return False
+        if self.poll_popup(widgets):
+            return False
+        self.read_changes(widgets, now)
+        polled = panel_follows.poll(self, widgets)
+        if polled:
+            return polled if polled in (panel_follows.LEAVE, panel_follows.CLOSE) else False
+        if self.take(widgets["close"]):
+            return self.flush(widgets)
+        if self.take(widgets["theme"]):
+            panel_theme_choice.choose(self, widgets)
+            return False
+        if self.take(widgets["window_size"]):
+            panel_size_choice.choose(self, widgets)
+            return False
+        if panel_language_choice.choose(self, widgets):
+            return False
+        for index, key in enumerate(self.model.pages):
+            if self.take(widgets[f"nav:{key}"]):
+                if self.flush(widgets) and self.model.change_page(key):
+                    self.page = index
+                    widgets["pages"].SetActiveWidgetIndex(index)
+                    self.refresh_labels(widgets)
+                else:
+                    self.report(widgets, "failed")
+                return False
+        for name in ("enabled",):
+            if self.take(widgets[name]):
+                if not self.flush(widgets):
+                    return False
+                success = (self.model.toggle_enabled if name == "enabled"
+                           else getattr(self.model, name))()
+                self.notice = ({"restore": self.model.success_notice, "undo": self.model.success_notice,
+                                "enabled": "saved"}[name] if success else
+                               "ready" if success is None else
+                               self.model.toggle_notice if name == "enabled" else self.failure_notice())
+                self.sync(widgets)
+                return False
+        if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
+            self.flush(widgets)
+        return False
+
+    def selecting(self):
+        return panel_follows.selecting(self)

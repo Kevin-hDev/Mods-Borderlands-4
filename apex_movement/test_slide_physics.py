@@ -1,0 +1,261 @@
+"""Tests Apex-style slides: slide data prepared once, speed from friction and slope, stop, air, end, restore."""
+
+import pathlib
+import sys
+
+HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+import sdk_stubs  # noqa: E402
+
+state = sdk_stubs.install()
+
+from apex_movement import axle_slide, game, ownership, settings, slide_model, slide_physics, speed_order  # noqa: E402
+
+fails: list[str] = []
+
+
+def check(label: str, condition: bool) -> None:
+    print(("OK   " if condition else "ECHEC") + " | " + label)
+    if not condition:
+        fails.append(label)
+
+
+def near(a: float, b: float, tolerance: float = 1e-6) -> bool:
+    return abs(a - b) < tolerance
+
+
+def notes(text: str) -> int:
+    return sum(text in line for line in state["misc"])
+
+
+MS = 1_000_000
+P = slide_physics
+M = slide_model
+at = sdk_stubs.vector
+player = sdk_stubs.FakeCharacter()
+movement = player.CharacterMovement
+asset = sdk_stubs.slide_asset(state)
+data = movement.ControlledMoveReplicationData
+keys = asset.SpeedScaleCurve.EditorCurveData.keys
+
+
+def curve_values() -> list[float]:
+    return [key.Value for key in keys]
+
+
+def model() -> float:
+    """The speed the game gives the slide: the constant, times the character's scale, times the flat curve."""
+    return movement.MaxGroundSpeedScale.Value * asset.speed.constant * 1.1017
+
+
+def frames(start_ms: int, end_ms: int, step_ms: int = 50) -> None:
+    for now_ms in range(start_ms, end_ms + 1, step_ms):
+        P.update(player, now_ms * MS)
+
+
+slowdown = M.friction(1130.0, 1300.0)
+check("friction takes the slide speed to the stop speed over the flat distance",
+      near(slowdown, (1130.0 ** 2 - 350.0 ** 2) / 2600.0) and near(slowdown, 444.0, 0.01))
+check("a floor falling away ahead reads downhill", near(M.downhill(at(0.2, 0.0, 0.98), at(1000.0, 0.0)), 0.2))
+check("the same floor climbed reads uphill", near(M.downhill(at(0.2, 0.0, 0.98), at(-500.0, 0.0)), -0.2))
+check("a floor sloping sideways reads flat", near(M.downhill(at(0.0, 0.2, 0.98), at(1000.0, 0.0)), 0.0))
+check("no speed, no slope", M.downhill(at(0.2, 0.0, 0.98), at(0.0, 0.0)) == 0.0)
+check("flat ground slows by the friction", near(M.next_speed(1130.0, 0.5, 0.0, 444.0, 2200.0, 2000.0), 908.0))
+check("a slope of about 12 degrees keeps the speed", near(M.next_speed(1130.0, 0.5, 444.0 / 2200.0, 444.0, 2200.0, 2000.0), 1130.0))
+check("a steeper slope speeds up, up to the top speed", M.next_speed(1990.0, 1.0, 0.5, 444.0, 2200.0, 2000.0) == 2000.0)
+check("uphill slows faster", near(M.next_speed(1130.0, 0.5, -0.2, 444.0, 2200.0, 2000.0), 688.0))
+check("speed never goes below zero", M.next_speed(100.0, 1.0, -1.0, 444.0, 2200.0, 2000.0) == 0.0)
+check("a scale makes the same slope slow down or speed up that many times harder",
+      near(M.next_speed(1130.0, 0.5, 0.0, 444.0, 2200.0, 2000.0, 2.0), 686.0)
+      and near(M.next_speed(1130.0, 0.5, 0.5, 444.0, 2200.0, 5000.0, 2.0), 1130.0 + 2.0 * (1100.0 - 444.0) * 0.5))
+check("no boost, no gain", near(M.speed_gain(1130.0, axle_slide.NONE), 1.0))
+check("starting 25 % faster goes further by the ratio of squares above the stop speed",
+      near(M.speed_gain(1130.0, axle_slide.Boost(1.25, 1.0, 1.0)), (1412.5 ** 2 - 350.0 ** 2) / (1130.0 ** 2 - 350.0 ** 2)))
+
+P.update(player, 0)
+check("the slide timer is made long", asset.Duration.constant == settings.LONGEST_SLIDE_S)
+slope_keys = asset.SpeedSlopeScaleCurve.EditorCurveData.keys
+check("the game's slope effect stays switched on, since off it ended every slide", asset.bUseSlopeCurve is True)
+check("but its curve is flat at 1, without tangents", [key.Value for key in slope_keys] == [1.0] * 4
+      and all(key.ArriveTangent == 0.0 and key.LeaveTangent == 0.0 for key in slope_keys))
+check("the speed curve is flat at its start value, without tangents", curve_values() == [1.1017] * 4
+      and all(key.ArriveTangent == 0.0 and key.LeaveTangent == 0.0 for key in keys))
+check("the game's values are kept to put back", ownership.original(P.DURATION_KEY) == 1.35
+      and ownership.original(P.SLOPE_CURVE_KEY).values == (0.5, 1.0, 2.0, 2.0)
+      and ownership.original(P.CURVE_KEY).values == (1.1017, 0.9728, 0.7737, 0.3722))
+check("the preparation is logged once", notes("slide physics on: duration 30 s") == 1)
+P.update(player, 1 * MS)
+check("an idle frame prepares nothing again", notes("slide physics on") == 1)
+
+data.ControlledMove = asset
+movement.Velocity = at(1130.0, 0.0)
+P.update(player, 1000 * MS)
+check("a slide starts at the slide speed", near(model(), 1130.0))
+frames(1050, 2000)
+check("on flat ground it slows by the friction", near(model(), 1130.0 - slowdown, 0.01))
+check("the shared speed curve is never rewritten during a slide", curve_values() == [1.1017] * 4)
+check("the slides hold the scale meanwhile, so the ground speed leaves it alone", speed_order.slide_holds_scale())
+
+movement.CurrentFloor.HitResult.ImpactNormal = at(0.25, 0.0, 0.968)
+speed = model()
+frames(2050, 3000)
+check("a steep slope ahead cancels the friction and speeds the slide up",
+      near(model(), speed + 2200.0 * 0.25 - slowdown, 0.01))
+# The top speed is ordered above the slide speed (speed_order.ordered, 2026-09-18): to see it cap a running slide at 700,
+# the slide speed and the speeds it is ordered above come down with it. A running slide keeps the start it was given.
+settings.slide_max_speed.value = 700
+settings.walk_speed.value, settings.sprint_speed.value, settings.slide_speed.value = 400, 400, 400
+P.update(player, 3050 * MS)
+check("the top speed caps it", near(model(), 700.0))
+settings.slide_max_speed.value = 2000
+settings.walk_speed.value, settings.sprint_speed.value, settings.slide_speed.value = 672, 960, 1130
+movement.CurrentFloor.HitResult.ImpactNormal = at(0.0, 0.0, 1.0)
+
+movement.MovementMode = sdk_stubs.Mode("MOVE_Falling")
+frames(3100, 3500)
+check("in the air, off a ramp, the speed is kept", near(model(), 700.0))
+movement.MovementMode = sdk_stubs.Mode("MOVE_Walking")
+P.update(player, 4600 * MS)
+check("a long frame counts as a tenth of a second", near(model(), 700.0 - slowdown * 0.1, 0.01))
+
+frames(4650, 5500)
+check("below the stop speed the mod ends the slide", player.calls.count(("SetWantsToSlide", False)) == 1
+      and model() <= M.STOP_SPEED)
+frames(5550, 5600)
+check("and asks only once", player.calls.count(("SetWantsToSlide", False)) == 1)
+
+data.ControlledMove = None
+movement.Velocity = at(300.0, 0.0)
+P.update(player, 5650 * MS)
+check("the slide's end gives the character the game's scale back", movement.MaxGroundSpeedScale.Value == 1.15
+      and not ownership.is_owned(speed_order.SCALE_KEY) and not speed_order.slide_holds_scale())
+check("the end is logged with the model and the game's speed", notes("slide physics end ms=4650 by=mod") == 1
+      and notes("game_speed=300") == 1)
+check("the end line says how the game's speed compared with the model", notes("game_to_model=") >= 1)
+
+data.ControlledMove = asset
+P.update(player, 6000 * MS)
+movement.MaxGroundSpeedScale.Value = 0.92
+P.update(player, 6010 * MS)
+check("a scale the game computes again mid-slide is written over", movement.MaxGroundSpeedScale.Value != 0.92)
+data.ControlledMove = None
+P.update(player, 6050 * MS)
+check("and becomes the one given back at the slide's end", movement.MaxGroundSpeedScale.Value == 0.92)
+movement.MaxGroundSpeedScale.Value = 1.15
+check("a slide ended by the game says so", notes("by=game") == 1)
+check("a normal slide's end says it had no Axle boost", notes("axle=1.00/1.00/1.00") == 2)
+
+
+def slide_distance(slope: float, start_ms: int) -> float:
+    """One straight slide on ground of this slope until the mod ends it: the distance its model speeds cover."""
+    movement.CurrentFloor.HitResult.ImpactNormal = at(slope, 0.0, (1.0 - slope ** 2) ** 0.5)
+    movement.Velocity = at(1000.0, 0.0)
+    ends = player.calls.count(("SetWantsToSlide", False))
+    data.ControlledMove = asset
+    now_ms, covered = start_ms, 0.0
+    P.update(player, now_ms * MS)
+    while player.calls.count(("SetWantsToSlide", False)) == ends and now_ms < start_ms + 60_000:
+        covered += model() * 0.01
+        now_ms += 10
+        P.update(player, now_ms * MS)
+    data.ControlledMove = None
+    P.update(player, (now_ms + 10) * MS)
+    movement.CurrentFloor.HitResult.ImpactNormal = at(0.0, 0.0, 1.0)
+    return covered
+
+
+flat, uphill, downhill = slide_distance(0.0, 10_000), slide_distance(-0.2, 80_000), slide_distance(0.14, 150_000)
+check("a normal flat slide goes the flat distance", abs(flat - 1300.0) < 15.0)
+settings.axle_slide.value = True
+axle_flat, axle_up, axle_down = slide_distance(0.0, 230_000), slide_distance(-0.2, 300_000), slide_distance(0.14, 370_000)
+check("an Axle slide goes 50 % further on flat ground", abs(axle_flat / flat - 1.5) < 0.02)
+check("25 % further uphill", abs(axle_up / uphill - 1.25) < 0.02)
+check("25 % further downhill", abs(axle_down / downhill - 1.25) < 0.02)
+check("its end says which boost it had", notes("axle=1.25/1.50/1.25") >= 3)
+
+movement.CurrentFloor.HitResult.ImpactNormal = at(0.5, 0.0, 0.866)
+data.ControlledMove = asset
+frames(440_000, 450_000)
+check("a steep slope takes an Axle slide up to a top speed 25 % higher", near(model(), 2500.0, 0.01))
+settings.axle_slide.value = False
+frames(450_050, 450_100)
+check("switched off mid-slide, the slide keeps the boost it started with",
+      near(model(), 2500.0, 0.01))
+data.ControlledMove = None
+P.update(player, 450_150 * MS)
+movement.CurrentFloor.HitResult.ImpactNormal = at(0.0, 0.0, 1.0)
+check("and says so at its end", notes("axle=1.25/1.50/1.25") >= 4)
+check("the next slide is a normal one", near(axle_slide.start_speed(), 1130.0))
+
+P.reset()
+P.update(player, 7000 * MS)
+check("after a level change the slide data is prepared again", notes("slide physics on") == 2
+      and ownership.original(P.DURATION_KEY) == 1.35 and ownership.original(P.CURVE_KEY).values[1] == 0.9728)
+
+speed_curve = asset.SpeedScaleCurve
+asset.SpeedScaleCurve = None
+stop_error = ""
+try:
+    P.stop(player)
+except RuntimeError as exc:
+    stop_error = str(exc)
+check("a speed curve that cannot be put back does not keep the timer and slope curve from it",
+      asset.Duration.constant == 1.35 and [key.Value for key in slope_keys] == [0.5, 1.0, 2.0, 2.0])
+check("its failure is raised for the frame loop to report", P.CURVE_KEY in stop_error)
+check("and the game's speed curve is kept to put back later", ownership.original(P.CURVE_KEY).values[1] == 0.9728)
+check("a stop that failed does not say the curves are back", notes("slide physics off") == 0)
+asset.SpeedScaleCurve = speed_curve
+
+P.stop(player)
+check("stop puts the game's timer, slope curve and speed curve back", asset.Duration.constant == 1.35
+      and [key.Value for key in slope_keys] == [0.5, 1.0, 2.0, 2.0] and slope_keys[1].LeaveTangent == 1.4
+      and curve_values() == [1.1017, 0.9728, 0.7737, 0.3722]
+      and [key.LeaveTangent for key in keys] == [-0.2, -0.3, -1.4, 0.0])
+check("the restore is logged", notes("slide physics off") == 1)
+P.stop(player)
+check("a stop with nothing written logs nothing", notes("slide physics off") == 1)
+
+# Slides switched off and on again during one slide: the frame loop calls stop, then update on the same slide.
+GAME_CURVE = [1.1017, 0.9728, 0.7737, 0.3722]
+P.update(player, 7100 * MS)
+data.ControlledMove = asset
+movement.Velocity = at(1130.0, 0.0)
+frames(7150, 7500)
+P.stop(player)
+frames(7550, 7700)
+check("switched off and on during one slide, that slide is left to the game's own timer and curve",
+      curve_values() == GAME_CURVE and asset.Duration.constant == 1.35 and not ownership.is_owned(P.CURVE_KEY))
+data.ControlledMove = None
+P.update(player, 7750 * MS)
+check("the slide data is prepared once that slide has ended", asset.Duration.constant == settings.LONGEST_SLIDE_S
+      and curve_values() == [1.1017] * 4)
+data.ControlledMove = asset
+movement.Velocity = at(1130.0, 0.0)
+frames(7800, 8300)
+check("the next slide gets the model from its start", near(model(), 1130.0 - slowdown * 0.5, 0.01))
+data.ControlledMove = None
+P.update(player, 8350 * MS)
+P.stop(player)
+
+# A top speed slider set under the slide speed is raised to it: the slide no longer drops to it on its first frame,
+# against the promise of its own description (review, 2026-09-18).
+settings.slide_max_speed.value = 700
+P.update(player, 8400 * MS)
+data.ControlledMove = asset
+movement.Velocity = at(1130.0, 0.0)
+frames(8450, 8500)
+check("a top speed set under the slide speed does not cut a slide at its start",
+      near(model(), 1130.0 - slowdown * 0.05, 0.01))
+data.ControlledMove = None
+P.update(player, 8550 * MS)
+P.stop(player)
+settings.slide_max_speed.value = 2000
+
+del state["objects"][("OakControlledMove", sdk_stubs.SLIDE_PATH)]
+game.forget()
+P.update(player, 8000 * MS)
+check("a slide asset not loaded yet is reported once and skipped", len(state["errors"]) == 1)
+
+print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
+sys.exit(1 if fails else 0)

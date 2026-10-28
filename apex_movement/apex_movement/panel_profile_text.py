@@ -1,0 +1,197 @@
+"""The camera profile window's and PROFILES page's words (decisions of 2026-10-12, mockup
+docs/mokup/menu_mods/profils/), copied into the other camera mods with them (sync_menu_sources.py). The words they share
+with the COMMANDS page, the devices and CHANGE, PRESS A KEY and NONE, and the page's name on its tab or sidebar button
+stay panel_i18n's.
+
+A refusal names its cause, says that nothing is saved when nothing is, and what to do next.
+"""
+
+EN = {
+    "profile_new": "NEW PROFILE",
+    "profile_edit": "EDIT PROFILE",
+    "profile_desc": "Tune while watching the game. CANCEL or SAVE brings the menu back; Escape closes it.",
+    "profile_name": "PROFILE NAME",
+    "profile_key": "PROFILE KEY",
+    # The distances' short names, so they fit beside the window's narrower sliders (mockup profils/6_coin.png).
+    "profile_close": "Distance: close",
+    "profile_far": "Distance: far",
+    # A new profile's name, numbered by the profiles (profiles.py, free_name).
+    "profile_word": "Profile",
+    "profile_cancel": "CANCEL",
+    "profile_save": "SAVE",
+    "name_invalid": "Name refused: 1 to 24 letters, digits, spaces, hyphens, apostrophes or underscores, "
+                    "with at least one letter or digit.",
+    "name_taken": "Another profile already has this name: choose another one.",
+    "key_taken": "Another profile already uses this key: choose another one.",
+    "key_command": "This key is already a camera command's (COMMANDS page): choose another one.",
+    # The COMMANDS page's answer, the other way round (panel_camera_commands.py).
+    "command_held": "The profile “{name}” already has this key: choose another one, or change the profile's key in "
+                    "PROFILES.",
+    "key_invalid": "This key cannot switch a profile: choose another one.",
+    "profiles_full": "You already have 10 profiles, the most there can be: this one is not saved.",
+    "profile_unknown": "This profile no longer exists: close the window with CANCEL.",
+    "save_failed": "The profiles' file could not be written: nothing is saved, your settings stay in this window.",
+    "profile_refused": "This profile could not be saved: your settings stay in this window.",
+    # The PROFILES page (mockup profils/3_page.png).
+    "profiles_desc": "One profile on at a time. Its key switches it on; a second press brings back your CAMERA VIEW "
+                     "and SHOULDER VIEW settings.",
+    "profile_on": "ON",
+    "profile_off": "OFF",
+    "profile_modify": "EDIT",
+    "profile_delete": "DELETE",
+    "profile_values": "FOV {fov} · close {close} · far {far} · spacing {spacing} · height {height}. "
+                      "Controller: {controller}.",
+    "profile_no_key": "none",
+    "toggle_failed": "The profiles' file could not be written: nothing changed.",
+    "delete_failed": "The profiles' file could not be written: the profile is not deleted.",
+    # DELETE's pop-up (profils/4_supprimer.png).
+    "profile_delete_title": "DELETE THE PROFILE",
+    "profile_delete_key": "The profile “{name}” and its key will be deleted.",
+    "profile_delete_keys": "The profile “{name}” and its keys will be deleted.",
+    "profile_delete_plain": "The profile “{name}” will be deleted.",
+    "profile_delete_on": "It is on: the camera goes back to your CAMERA VIEW and SHOULDER VIEW settings.",
+    "profile_delete_rest": "Your other profiles and your CAMERA VIEW and SHOULDER VIEW settings do not change.",
+    # Over the settings a profile switched on holds (profils/5_allume.png).
+    "profile_held_camera": "FOV and distances set by the profile “{name}”.",
+    "profile_held": "Set by the profile “{name}”.",
+    "profile_off_page": "Switch it off in PROFILES.",
+    "profile_off_key": "Switch it off in PROFILES or with its key.",
+}
+FR = {
+    "profile_new": "NOUVEAU PROFIL",
+    "profile_edit": "MODIFIER LE PROFIL",
+    "profile_desc": "Règle en regardant le jeu. ANNULER ou ENREGISTRER rouvre le menu ; Échap le ferme.",
+    "profile_name": "NOM DU PROFIL",
+    "profile_key": "TOUCHE DU PROFIL",
+    "profile_close": "Distance : proche",
+    "profile_far": "Distance : loin",
+    "profile_word": "Profil",
+    "profile_cancel": "ANNULER",
+    "profile_save": "ENREGISTRER",
+    "name_invalid": "Nom refusé : de 1 à 24 lettres, chiffres, espaces, traits d'union, apostrophes ou "
+                    "tirets bas, dont au moins une lettre ou un chiffre.",
+    "name_taken": "Un autre profil porte déjà ce nom : choisis-en un autre.",
+    "key_taken": "Un autre profil a déjà cette touche : choisis-en une autre.",
+    "key_command": "Cette touche sert déjà à une commande de caméra (page COMMANDES) : choisis-en une autre.",
+    "command_held": "Le profil « {name} » a déjà cette touche : choisis-en une autre, ou change celle du profil dans "
+                    "PROFILS.",
+    "key_invalid": "Cette touche ne peut pas allumer un profil : choisis-en une autre.",
+    "profiles_full": "Tu as déjà 10 profils, le maximum : celui-ci n'est pas enregistré.",
+    "profile_unknown": "Ce profil n'existe plus : ferme la fenêtre avec ANNULER.",
+    "save_failed": "Le fichier des profils n'a pas pu être écrit : rien n'est enregistré, tes réglages restent dans "
+                   "cette fenêtre.",
+    "profile_refused": "Ce profil n'a pas pu être enregistré : tes réglages restent dans cette fenêtre.",
+    "profiles_desc": "Un seul profil allumé à la fois. Sa touche l'allume ; un second appui revient à tes réglages de "
+                     "VUE CAMÉRA et VUE ÉPAULES.",
+    "profile_on": "ALLUMÉ",
+    "profile_off": "ÉTEINT",
+    "profile_modify": "MODIFIER",
+    "profile_delete": "SUPPRIMER",
+    "profile_values": "FOV {fov} · proche {close} · loin {far} · écart {spacing} · hauteur {height}. "
+                      "Manette : {controller}.",
+    "profile_no_key": "aucune",
+    "toggle_failed": "Le fichier des profils n'a pas pu être écrit : rien n'a changé.",
+    "delete_failed": "Le fichier des profils n'a pas pu être écrit : le profil n'est pas supprimé.",
+    "profile_delete_title": "SUPPRIMER LE PROFIL",
+    "profile_delete_key": "Le profil « {name} » et sa touche seront supprimés.",
+    "profile_delete_keys": "Le profil « {name} » et ses touches seront supprimés.",
+    "profile_delete_plain": "Le profil « {name} » sera supprimé.",
+    "profile_delete_on": "Il est allumé : la caméra reprend tes réglages de VUE CAMÉRA et VUE ÉPAULES.",
+    "profile_delete_rest": "Tes autres profils et tes réglages de VUE CAMÉRA et VUE ÉPAULES ne changent pas.",
+    "profile_held_camera": "FOV et distances réglés par le profil « {name} ».",
+    "profile_held": "Réglé par le profil « {name} ».",
+    "profile_off_page": "Éteins-le dans PROFILS.",
+    "profile_off_key": "Éteins-le dans PROFILS ou avec sa touche.",
+}
+ZH = {
+    "profile_new": "新建预设",
+    "profile_edit": "编辑预设",
+    "profile_desc": "边看游戏画面边调整。选择「取消」或「保存」返回菜单；按 Esc 关闭菜单。",
+    "profile_name": "预设名称",
+    "profile_key": "预设按键",
+    "profile_close": "距离：近",
+    "profile_far": "距离：远",
+    "profile_word": "预设",
+    "profile_cancel": "取消",
+    "profile_save": "保存",
+    "name_invalid": "名称无效：需为 1 到 24 个字符，可使用汉字、字母、数字、空格、连字符、撇号或下划线，"
+                    "且至少包含一个汉字、字母或数字。",
+    "name_taken": "已有其他预设使用此名称：请换一个。",
+    "key_taken": "已有其他预设使用此按键：请换一个。",
+    "key_command": "此按键已用于某项镜头按键功能（「按键」页面）：请换一个。",
+    "command_held": "预设“{name}”已使用此按键：请换一个，或在「预设」页面更改该预设的按键。",
+    "key_invalid": "此按键无法开启预设：请换一个。",
+    "profiles_full": "你已经有 10 个预设，已达上限：这个预设未保存。",
+    "profile_unknown": "此预设已不存在：请选择「取消」关闭窗口。",
+    "save_failed": "无法写入预设文件：未保存任何内容，你的设置仍保留在此窗口中。",
+    "profile_refused": "无法保存此预设：你的设置仍保留在此窗口中。",
+    "profiles_desc": "同一时间只能开启一个预设。按它的按键开启；再按一次，恢复你在「镜头视角」和「越肩视角」中的设置。",
+    "profile_on": "已开启",
+    "profile_off": "已关闭",
+    "profile_modify": "编辑",
+    "profile_delete": "删除",
+    "profile_values": "FOV {fov} · 近 {close} · 远 {far} · 间距 {spacing} · 高度 {height}。手柄：{controller}。",
+    "profile_no_key": "无",
+    "toggle_failed": "无法写入预设文件：未做任何更改。",
+    "delete_failed": "无法写入预设文件：预设未删除。",
+    "profile_delete_title": "删除预设",
+    "profile_delete_key": "预设“{name}”及其按键将被删除。",
+    "profile_delete_keys": "预设“{name}”及其按键将被删除。",
+    "profile_delete_plain": "预设“{name}”将被删除。",
+    "profile_delete_on": "该预设当前已开启：镜头将恢复你在「镜头视角」和「越肩视角」中的设置。",
+    "profile_delete_rest": "你的其他预设，以及「镜头视角」和「越肩视角」中的设置，都不会改变。",
+    "profile_held_camera": "FOV 和距离由预设“{name}”控制。",
+    "profile_held": "由预设“{name}”控制。",
+    "profile_off_page": "请在「预设」页面将它关闭。",
+    "profile_off_key": "请在「预设」页面或用它的按键将它关闭。",
+}
+JA = {
+    "profile_new": "新しいプロファイル",
+    "profile_edit": "プロファイルを編集",
+    "profile_desc": "ゲーム画面を見ながら調整します。「キャンセル」か「保存」でメニューに戻り、Escで閉じます。",
+    "profile_name": "プロファイル名",
+    "profile_key": "プロファイルのキー",
+    "profile_close": "距離：近い",
+    "profile_far": "距離：遠い",
+    "profile_word": "プロファイル",
+    "profile_cancel": "キャンセル",
+    "profile_save": "保存",
+    "name_invalid": "名前が無効です：1～24文字で、文字、数字、スペース、ハイフン、アポストロフィ、アンダースコアが"
+                    "使えます。文字か数字を1つ以上含めてください。",
+    "name_taken": "この名前はすでに別のプロファイルが使っています。別の名前を選んでください。",
+    "key_taken": "このキーはすでに別のプロファイルが使っています。別のキーを選んでください。",
+    "key_command": "このキーはすでにカメラ操作に使われています（「キー割り当て」ページ）。別のキーを選んでください。",
+    "command_held": "プロファイル「{name}」がすでにこのキーを使っています。別のキーを選ぶか、「プロファイル」ページで"
+                    "そのプロファイルのキーを変更してください。",
+    "key_invalid": "このキーではプロファイルを切り替えられません。別のキーを選んでください。",
+    "profiles_full": "プロファイルはすでに上限の10個あります。このプロファイルは保存されていません。",
+    "profile_unknown": "このプロファイルはもう存在しません。「キャンセル」でウィンドウを閉じてください。",
+    "save_failed": "プロファイルのファイルに書き込めませんでした。何も保存されていません。設定はこのウィンドウに残っています。",
+    "profile_refused": "このプロファイルを保存できませんでした。設定はこのウィンドウに残っています。",
+    "profiles_desc": "同時にオンにできるプロファイルは1つだけです。キーを押すとオンになり、もう一度押すと「カメラ視点」と"
+                     "「肩越し視点」の設定に戻ります。",
+    "profile_on": "オン",
+    "profile_off": "オフ",
+    "profile_modify": "編集",
+    "profile_delete": "削除",
+    "profile_values": "FOV {fov} · 近い {close} · 遠い {far} · 間隔 {spacing} · 高さ {height}。コントローラー：{controller}。",
+    "profile_no_key": "なし",
+    "toggle_failed": "プロファイルのファイルに書き込めませんでした。何も変更されていません。",
+    "delete_failed": "プロファイルのファイルに書き込めませんでした。プロファイルは削除されていません。",
+    "profile_delete_title": "プロファイルを削除",
+    "profile_delete_key": "プロファイル「{name}」とそのキーが削除されます。",
+    "profile_delete_keys": "プロファイル「{name}」とそのキーが削除されます。",
+    "profile_delete_plain": "プロファイル「{name}」が削除されます。",
+    "profile_delete_on": "このプロファイルはオンです。カメラは「カメラ視点」と「肩越し視点」の設定に戻ります。",
+    "profile_delete_rest": "ほかのプロファイルと、「カメラ視点」「肩越し視点」の設定は変わりません。",
+    "profile_held_camera": "FOVと距離はプロファイル「{name}」で設定されています。",
+    "profile_held": "プロファイル「{name}」で設定されています。",
+    "profile_off_page": "「プロファイル」ページでオフにしてください。",
+    "profile_off_key": "「プロファイル」ページか、そのキーでオフにしてください。",
+}
+# The store's refusals the window names (profile_store.py); any other reads as profile_refused.
+REFUSALS = ("name_invalid", "name_taken", "key_taken", "key_invalid", "profiles_full", "profile_unknown")
+
+
+def text(key, language):
+    return {"FR": FR, "ZH": ZH, "JA": JA}.get(language, EN)[key]

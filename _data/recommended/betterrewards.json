@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "name": "BetterRewards",
+  "creator": {
+    "name": "lczzz", "local_names": {"zh": "落椿", "ja": "落椿"},
+    "profile": "https://www.nexusmods.com/profile/lczzz?gameId=8148"
+  },
+  "category": "loot",
+  "described_version": "0.4.14",
+  "links": [
+    {"platform": "nexus", "url": "https://www.nexusmods.com/borderlands4/mods/381"}
+  ],
+  "card_image": {
+    "file": "card.jpg", "width": 960, "height": 538,
+    "alt": {
+      "en": "BetterRewards promotional artwork",
+      "fr": "Illustration promotionnelle de BetterRewards",
+      "zh": "BetterRewards 宣传图",
+      "ja": "BetterRewards のプロモーション画像"
+    }
+  },
+  "pitch": {
+    "en": "Better solo rewards in Hard and UVH, a choice of four loot presets, and an experimental level 100 cap.",
+    "fr": "De meilleures récompenses en solo en Difficile et en UVH, quatre réglages de butin au choix, et un niveau maximum porté à 100, encore expérimental.",
+    "zh": "提升单人困难与 UVH 模式的奖励，四档掉落可选，并提供实验性的 100 级上限。",
+    "ja": "ソロの困難と UVH で報酬が増え、4種類のドロップ設定から選べます。レベル上限 100 も試験的に導入。"
+  },
+  "news": [
+    {
+      "version": "0.4.14",
+      "date": "2026-10-25",
+      "text": {
+        "en": "Version 0.4.14 fixes Return to vanilla: a character that showed level 70 in game no longer stays at level 100 in its save or after reloading. The return now completes through normal game saving, and the mod disables itself once the saved files are verified.",
+        "fr": "La version 0.4.14 corrige le retour au jeu d'origine (Return to vanilla) : un personnage affiché au niveau 70 en jeu ne reste plus au niveau 100 dans sa sauvegarde ni après un rechargement. Le retour se termine désormais par une sauvegarde normale du jeu, et le mod se désactive de lui-même une fois les fichiers sauvegardés vérifiés.",
+        "zh": "0.4.14 版修复了返回原版的问题：返回后游戏内显示 70 级，但存档或重新读取后仍是 100 级。现在返回原版会通过游戏的正常保存完成，并在核对存档后自动停用本模组。",
+        "ja": "0.4.14 では、バニラへの復帰（Return to vanilla）が修正されました。ゲーム内でレベル70と表示されたキャラクターが、セーブデータや再読み込み後にレベル100のまま残ることはなくなりました。復帰はゲームの通常のセーブで完了し、保存されたファイルの確認後にMODが自動で無効になります。"
+      }
+    }
+  ]
+}

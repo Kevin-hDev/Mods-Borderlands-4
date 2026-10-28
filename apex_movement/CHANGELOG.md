@@ -1,0 +1,397 @@
+# Changelog
+
+## 2.0.0 - 2026-10-25
+
+- Wall climb: in third person, every hunter's body now climbs; before, only Vex's did and the others floated up the wall.
+- Fix: a rare error at the start of a climb no longer switches the wall climb off.
+- Reliability: small fixes in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
+## 1.2.34 - 2026-10-25
+
+- Fix: in third person, Loveless's pistol reloads now make their sound (the game leaves them silent).
+- This fix is in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
+## 1.2.33 - 2026-10-24
+
+- Fix: a loot container replaced at the same spot gets the longer pickup reach again.
+- Fix: after loading another save, the camera recognizes vehicles reliably.
+- Fix: in a rare case, a dash could keep the game's length for a few seconds.
+- These changes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
+## 1.2.32 - 2026-10-24
+
+- Performance: the mod does less work on the game's main thread each frame. In third person, the camera reads less from the game and hooks it in fewer places; on the test PC, 10 to 20 more frames per second at the same spots.
+- Performance: the longer pickup reach no longer goes through every object of the game every 2 seconds; it lists only the containers of the world around you. Opening from afar works as before.
+- Performance: the movements read less from the game each frame (keys, wall climb, slide, glide, dash); they feel the same.
+- These changes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
+## 1.2.31 - 2026-10-24
+
+- Fix: changing weapons while sprinting backward no longer freezes the body when it faces the camera (OMNI DIRECTION Angle at 180, or Body Orientation off), with every Vault Hunter.
+- This fix is in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
+## 1.2.30 - 2026-10-24
+
+- Fix: in third person, Amon, Harlow and C4sh no longer freeze stiff and glide when sprinting toward the camera or to the left.
+- Fix: changing weapons while sprinting to the left no longer freezes the body, with every Vault Hunter.
+- These fixes are in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.
+
+## 1.2.29 - 2026-10-23
+
+- Fix for the Epic Games version after the game's update of October 22, 2026: third person, aiming and the longer pickup reach work again.
+- If you use more than one of Third Person & FOV, Apex Movement and Omni Sprint, update them all: a camera mod left on an older version shows a message asking for its update.
+
+## 1.2.28 - 2026-10-22
+
+- Fix: third person, aiming and the longer pickup reach work again after the game's update of October 22, 2026. The previous version of the game stays supported.
+- If you use more than one of Third Person & FOV, Apex Movement and Omni Sprint, update them all: a camera mod left on an older version shows a message asking for its update.
+- Epic Games: the game's update of October 22 is not supported yet.
+
+## 1.2.27 - 2026-10-22
+
+- New: the mod's window is now also in Japanese. Choose 日本語 on the OPTIONS page.
+- Co-op with Apex Grapple: after a joining player's grapple, their movement is handed back to the game as it should be.
+- Fix: in third person, beam weapons such as the Ohm I Got hit where the crosshair points.
+- Fix: in third person, thrown knives and grenades leave your hand and fly to the crosshair, instead of appearing beside you.
+
+## 1.2.26 - 2026-10-18
+
+- New: F10 opens the mod's window in game, and closes it. Change the key at the top of the COMMANDS page.
+
+- Co-op: smoother movements for the players who join a game: no more jolts in slides, slide jumps and wall climbs, and jumping and double jumping off a wall now work.
+
+## 1.2.25 - 2026-10-17
+
+- Co-op: now works in co-op, Apex's movements also work for the players who join a game, not only for the host.
+
+## 1.2.24 - 2026-10-13
+
+- New: the settings window is now also in Simplified Chinese. Open the Options page with the gear at the top of the window, then choose 中文.
+
+## 1.2.23 - 2026-10-12
+
+- Fixed: with OMNI DIRECTION, walking diagonally forward-left in third person no longer crosses the hunter's legs or twists the ankle.
+
+- When a profile name is refused, the message now says it needs at least one letter or digit.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.22 - 2026-10-12
+
+- Fixed: a camera key you set to another command's default key (for example third person on 7) no longer goes back to its default when the game starts, and the other command no longer loses its own.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.21 - 2026-10-12
+
+- Fixed: at rest, your character keeps its direction and the camera turns around it, also after the orbit camera, first person, aiming or firing. Before, you had to walk to get this back.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.20 - 2026-10-12
+
+- New: camera profiles. The floppy disk at the top of the menu saves your FOV, camera distances, shoulder spacing and camera height as a profile, with a key or a controller button to switch it on in game. Up to 10 profiles, on the new PROFILES page.
+- Shoulder spacing and camera height now go much further, from the crosshair against your shoulder to twice the standard gap, and from your ankles to above your head. They are now on the SHOULDER VIEW page.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.19 - 2026-10-11
+
+- Fixed: when aiming over the shoulder, the reticle no longer disappears at the start of the zoom.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.18 - 2026-10-11
+
+- New: automatic camera distance. Under a low ceiling or in a narrow passage, the camera comes in to your close distance on its own, then goes back to your distance once you are out. Switch it off with "Automatic camera distance" on the CAMERA VIEW page.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.17 - 2026-10-11
+
+- Fixed: when aiming over the shoulder, the optic's zoom now follows the camera's move, both when you start and when you stop aiming, instead of jumping at once.
+- Fixed: with the close or far camera distance, the camera comes back to its place in a single move when you stop aiming.
+- With the close camera distance, aiming now moves in from your close camera: the zoom feels the same as at the other distances.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.16 - 2026-10-10
+
+- Auto sprint: a new In third person setting, off by default, to auto sprint in third person too.
+- Every weapon type now has its optic on the AIMING page: BDL4 keeps the game's first-person aim, zooms aim over the shoulder. Pistols x1 to x3, SMGs and assault rifles x1 to x4, shotguns and heavy weapons x1 and x2, sniper rifles x2 to x8. With several zooms ticked, the OPTIC ZOOM key switches from one to the next.
+- Heavy weapons can now aim over the shoulder.
+- x1 gives the same light zoom with every weapon.
+- SENSITIVITY page: a row for heavy weapons, and the speeds per zoom count for every weapon. They now turn on without the sensitivity per weapon type.
+- With OMNI DIRECTION, your character stays turned when you stop, instead of turning back to face forward.
+- Fixed: the first switch to third person after starting the game no longer takes 2 seconds.
+- The SETTINGS title above the menu's pages is gone.
+- The console no longer shows the camera's report every 30 seconds.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.15 - 2026-10-09
+
+- Fixed: the ground dash works again with sprint in all directions. Walking, crouching sideways or backwards always dashes; sprinting, it dashes or slides as chosen in Sides and Back.
+- With OMNI DIRECTION, slides now start the way you run, in every direction.
+- The OMNI DIRECTION page now says to turn on third person when it is off.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.14 - 2026-10-09
+
+- New OMNI DIRECTION tab in OPTIONS, for third person: your character turns toward where you run, all the way round (360°) or up to the sides (180°), and sprints in every direction. Each setting has a "?" help.
+- In third person, auto sprint is now off: sprint with your sprint key. First person is unchanged.
+- Sides and Back (dash or slide) is not active yet: crouching while sprinting sideways or backwards slides for now. It comes in a next update.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.13 - 2026-10-09
+
+- Sniper rifles now have a single aim speed in the SENSITIVITY tab, like the other weapon types. A "Sniper rifles per optic" switch, off by default, unfolds a speed for each zoom.
+- Speeds already set per zoom are kept: turn the switch on to use them again.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.12 - 2026-10-09
+
+- New in the AIMING tab of OPTIONS: in third person, sniper rifles can aim over the shoulder with a zoom of your choice, from x2 to x8. BDL4, the default, keeps the rifle's own scope, in first person.
+- With several zooms ticked, a key switches from one zoom to the next while aiming. It can be changed in the COMMANDS tab.
+- A "?" button beside the zooms explains how they work and shows your zoom key.
+- With sensitivity per weapon type on, each zoom has its own aim speed.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.11 - 2026-10-08
+
+Fixes
+- In third person, thrown grenades and knives now land where the crosshair points, no longer to the side of it.
+- In third person, the automatic shoulder switch no longer swaps the camera from one side to the other when your character walks through a doorway.
+
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.10 - 2026-10-08
+
+- In third person, the camera no longer jumps onto your character's head when getting into a vehicle.
+- In third person, the camera jumps less when your character passes behind a pillar, a pole or a wall.
+- In third person, the animation of your character climbing onto a ledge shows correctly again.
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.9 - 2026-10-08
+
+- New SENSITIVITY settings: the camera's speed in third person, without aiming and while aiming, with mouse and controller.
+- Sensitivity per weapon type, off by default: its own aim speed for pistols, SMGs, shotguns and assault rifles.
+- The over-the-shoulder camera sits a little further to the side: the reticle is a little further from your character, and very slightly higher.
+- The automatic shoulder switch no longer triggers on a pillar, a pole, a railing or a step, only on a real wall.
+- Free Look now has a switch on the CAMERA page to turn it off.
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+
+## 1.2.8 - 2026-10-07
+
+- Fixed third-person camera activation on the Epic Games version of Borderlands 4. Third-person view and aiming were tested on both Epic Games and Steam.
+- Camera compatibility is now checked against the installed game build before activation. Existing settings are preserved.
+- If you have more than one of Apex Movement, Omni Sprint and Third Person & FOV installed, update all of them together.
+- Known Epic Games limitation: extended loot reach is not supported yet. The custom climbing body animation is also not supported yet.
+
+## 1.2.7 - 2026-10-07
+
+- Camera distance in one key: in third person, the 8 key moves the camera from close to normal to far, with a glide. While aiming, the camera keeps its usual aiming distance. Your choice is saved.
+  - The close (1.80 m by default) and far (3.60 m) distances can be set to the centimetre in the options' CAMERA VIEW tab. Normal is the game's distance.
+  - The key can be changed or removed in COMMANDS.
+- Fix: after changing the hunter's look with Hunter Change, the camera no longer moved back while sprinting and its motion stopped. It now follows the new look.
+
+## 1.2.6 - 2026-10-07
+
+- Automatic shoulder switch: when a wall blocks the view ahead, the camera moves to your other shoulder, then comes back once the view is clear. On by default, never while aiming.
+  - The delay before switching (0.15 s by default) and before coming back (0.30 s) can be set.
+  - During an automatic switch, your shoulder key brings the camera back to your shoulder.
+- The options' CAMERA tab becomes two tabs: CAMERA VIEW and SHOULDER VIEW. The field of view now comes right after third person.
+- The "Shoulder" setting is now called "Shoulder switch".
+- Fix: on AZERTY keyboards, the default keys for switching shoulders and the orbit camera (6 and 7) did nothing. They now work on any keyboard, also for players who kept them since installing. A key you picked yourself does not change.
+
+## 1.2.5 - 2026-10-07
+
+- New Free Look: hold the key right of Tab (A on AZERTY, Q on QWERTY) or L3 to turn the camera while your character keeps going the same way.
+  - On foot: you keep your speed without holding a movement key, and left or right turns your run. Standing still, you stay in place. Let go and you stop, unless you hold a movement key.
+  - In first person, the view switches to third person while you hold it.
+  - In a vehicle: it keeps its speed and goes straight until you brake. Let go and the camera comes back behind it.
+  - Aiming ends Free Look.
+- Change the key in COMMANDS. The CAMERA tab sets: hold or press once (keyboard and controller) and the hold time, 0.20 s by default.
+
+## 1.2.4 - 2026-10-06
+
+- New DYNAMIC CAMERA tab in OPTIONS: the camera follows the action. Three effects, each with its own switch, on by default:
+  - Field of view: the view widens while sprinting or sliding, following your speed. Gain and transition time are adjustable.
+  - Framing: the camera moves back while running or in the air, closer when crouched, and back with your speed while driving. Strength from 25 to 200%.
+  - Motion: the camera follows your changes of speed softly, and drifts a little when you stand still. Strength from 25 to 200%.
+- With Vehicle Driving, the view you chose there stays the same, and the driving framing adds to it.
+- The menu now reopens where you left it: same page and same place in the page, even after restarting the game.
+
+## 1.2.3 - 2026-10-06
+
+- New WINDOW button at the top of the menu, beside THEME: three sizes, LARGE (default), FULL SCREEN and NORMAL (the previous size). More room, same text size. Each mod keeps its own.
+- The Orbit camera now opens from first person too. Leaving it brings back the view you had: in third person, the same shoulder and settings.
+- Smooth camera transitions: switching between first person, third person and the Orbit camera glides instead of jumping. On by default, with its own switch. Its duration, Transition animation, is shared with the shoulder switch.
+- Aiming in the Orbit camera follows your Aim View setting: over the shoulder or first person. Release to go back to Orbit.
+
+## 1.2.2 - 2026-10-06
+
+- The menu now opens from the console whatever your console key is, for example "+". With some keys, the console does not reopen by itself when the menu closes: just press your console key.
+
+## 1.2.1 - 2026-10-06
+
+- Fixed the switch to first person during native wall climbing and the camera jump when pulling over the ledge.
+- Added smooth shoulder switching, enabled by default, with an on/off option and a 0.05–1 second duration slider in Camera; default duration: 0.20 seconds.
+- Added smooth camera recentering during native climbing.
+- Reduced redundant game-code checks while aiming to avoid the severe FPS drop with additional aim zoom.
+- Organized Camera settings into four tabs and improved the menus: themes, Escape to close, retained focus and background blur.
+- Existing saved settings, weapon-specific zoom and the aim-view selection are preserved.
+
+## 1.2.0 - 2026-10-06
+
+- New Camera framing controls: Aim Zoom (Wide, Standard, Close), Shoulder Spacing (Tight, Standard, Open), and Camera Height (Standard, Higher, Lower), each with a custom slider.
+- Defaults: 15% additional aim zoom, 10% wider shoulder spacing, and standard height. Weapon-specific zoom is preserved; sniper rifles remain in first person.
+- Fixed: increasing zoom could shift the aimed point when entering aim. The reticle stays centered and framing preserves the aimed point when obstacles allow it.
+- Improved camera handling near walls, pillars, and tight spaces: smooth recovery when the view clears, with lateral centering when the shoulder side is obstructed.
+- Reduced work on the first aim to address the observed first-session stall.
+- Improved settings and menus: confirmation after saving, rollback on save failure, and clearer feedback.
+
+## 1.1.9 - 2026-10-04
+
+- Third-person aiming with native weapon zoom and a visible reticle.
+- Saved Camera setting to choose third-person or first-person aiming; third person is the default when enabled.
+- Crouch and switch shoulders while aiming. Sniper rifles stay in first person; heavy and unsupported weapons retain the native view.
+- Smooth aim-in and aim-out zoom, including quick repeated aiming.
+
+## 1.1.8 - 2026-10-02
+
+- Fixed: in third person, landing a ground slam switched the view to first person for a moment.
+
+## 1.1.7 - 2026-09-28
+
+- Fixed: holding crouch while sliding off a high ledge could still trigger the game's old held-crouch ground slam.
+  Ground slam continues to require jump and crouch together.
+
+## 1.1.6 - 2026-09-27
+
+- Shoulder switching: the third-person camera moves to the left or right shoulder. Key 6 by default.
+- Orbit camera: the camera turns freely around the character. Key 7 by default. Two more keys, none set by default,
+  move it closer or farther away.
+- New Commands page: every camera key, for keyboard and mouse and for controller, with PlayStation or Xbox icons.
+- Loot reach: pick up loot and open containers from farther away, from 1× to 3×, 2× by default.
+- Fixed: in third person, you had to aim next to an item to pick it up.
+- Fixed: when downed, the view switched to an offset first-person view; third person now stays in place.
+- Slow walk toggle, off by default: press once to walk slowly, press again to stop. The sprint key also ends the slow
+  walk, and going down cuts it.
+- Slow walk now wins over everything: it ends the sprint, the game's own included, with or without auto sprint. Its
+  settings move to the Movement page.
+- Slow walk is part of the full pack: the separate Apex Auto Sprint file no longer includes it.
+
+## 1.1.5 - 2026-09-25
+
+- Added slow walk: hold Caps Lock to walk slowly instead of sprinting while auto sprint is on, on the ground and in
+  the air. The key can be changed, or turned off, on the Auto Sprint page, like the third-person key.
+- Walking speed with the key from 150 to 540, 300 by default. It never goes faster than the walking speed set on
+  the Movement page.
+- The separate Apex Auto Sprint file has the key too, at the game's own walking speed.
+
+## 1.1.4 - 2026-09-25
+
+- New Options page, opened by the gear at the top of the settings window: third person, its key, custom field of
+  view and the menu language.
+- On-foot third-person mode with an over-the-shoulder camera, off by default. Aiming switches to the game's own
+  first-person view.
+- A key turns third person on and off: P by default, changed on the Options page with a keyboard key or a mouse
+  button other than the left one.
+- Custom field of view from 70 to 150, off by default.
+- Wall climb can lean up to 90 degrees, along the wall, with the same maximum distance in every direction.
+- In third person, the character is animated while climbing.
+- Fixed: calling a vehicle during a slide could make the slide resume when getting out of the vehicle.
+- The camera comes from the shared [camera runtime](../camera_runtime/), which Omni Sprint carries too. If both
+  mods are installed, Apex Movement's camera settings are the ones used. The separate one-move files do not carry it.
+
+## 1.1.3 - 2026-09-23
+
+- Add the same visual settings window as Apex Grapple, with English and French labels, controller navigation and saved section selection.
+- Keep the window responsive while the game is paused, including console handoff and Close.
+- Prevent the two Apex windows from taking input at the same time; if an old console page has changed, release it safely.
+- Shorter setting descriptions, in English and French: each one now says what you get in a single plain sentence.
+- Setting names, values, limits and gameplay behavior are unchanged.
+
+## 1.1.2
+
+Fixed: the dash kept the game's own length on C4SH and Loveless, the two characters the latest game update added.
+Each of them has a dash of its own, where the first four share one, and the mod only looked for the shared one. It
+now finds the dash of the character you play as soon as you load in, and every Dash distance setting gives the same
+dash on every character.
+
+The first four characters' dash is unchanged.
+
+Tested on game version 1.10.2-4845623, with Vex, C4SH and Loveless.
+
+## 1.1.1
+
+Fixed: after riding a vehicle, turning a move off, or the whole mod, left its values in the game. The walk speed,
+the air strafe and the heavier gravity stayed until the next launch, and the log said every value had been put
+back. Getting into a vehicle takes your character away from you and gives the same one back when you get out; the
+mod read that return as a new game, and forgot what it had borrowed.
+
+The mod now keeps what it holds even when it has nothing to write, and reads the value back before saying the game
+has it again.
+
+The moves themselves are unchanged.
+
+## 1.1.0
+
+Added: **Glide**, a new setting for the game's own glide — nothing new to learn, nothing new to press. Hold jump in
+the air as you already do, and the glide goes faster: sideways and backwards too, since the game's glide already
+allows every direction. Its line in the mod menu has its own switch and one setting, Glide speed, from 100 to
+250 % of the game's speed, 130 % by default.
+
+The game's glide tops out at 1200 in every direction; at 130 % it tops out at 1560, and the acceleration rises with
+it so a short glide gains as much as a long one. 250 % is 3000, the speed of the game's own extended glide.
+
+The descent is not touched: gravity and fall speed stay the game's. A faster glide therefore also covers more
+ground, from the same height.
+
+Tested on game version 1.10.2-4845623.
+
+## 1.0.2
+
+Fixed:
+
+- After getting out of a vehicle, the controller's crouch button could stay out of the mod's reach until the next
+  area: no landing slide and no ground slam from the controller. The mod now reads the game's key list again every
+  second and follows it.
+- Switching the mod off at the title screen could write into game objects the game had already removed, and wrote
+  errors in the log. It now leaves them alone: the game loads its own values again with your next game.
+- Settings are now held to their slider's range. A value typed out of range in the console mod menu, or edited by
+  hand in the settings file, is brought back within it, and a value that is not a number goes back to its default.
+  The log says so.
+- A move whose switch-off failed is now tried again, instead of staying half on while the menu shows it off. When a
+  game value cannot be restored, the log now says how many, instead of saying they all were.
+
+Changed, as asked in the comments:
+
+- Dash distance now goes up to 1000 % (was 300 %), and Extra jump height up to 1000 (was 100). The defaults stay
+  200 % and 20.
+- Past 300 %, the dash lasts as long as a 300 % dash, so the game's dash animation plays only once, and starts
+  faster instead: a strong push that slows down to the game's dash speed, then ends as the game's dash does.
+
+Also: unused code and outdated comments removed. The moves feel the same as in 1.0.1.
+
+## 1.0.1
+
+Fixed: the mod menu showed a move both on and off. Inside a move's line, the title said "(On)" and the line under
+it "(Off)" (or the reverse) as soon as its switch differed from its default. The move itself was running as the
+title said; only the second line was wrong.
+
+## 1.0.0 — first public release
+
+The moves, each with its own settings and, except the movement speeds, its own switch: movement speeds, auto sprint,
+omnidirectional slides with the Axle slide, a longer dash, the ground slam and landing slide, air/tap strafe, heavier
+falls and the wall climb.
+
+Ships as the full mod pack, `apex_movement.sdkmod`, and as one file per move, which can be installed side by side.
+
+Built and tested on game version 1.8.1-4709277, in the first area of the game, single player, with a controller and
+with mouse and keyboard.

@@ -1,0 +1,67 @@
+"""Tests the mod as mods_base builds it: name, settings, a fresh install, switching off and on, living beside Apex."""
+
+import pathlib
+import sys
+import types
+
+HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+import sdk_stubs  # noqa: E402
+
+fails: list[str] = []
+
+
+def check(label: str, condition: bool) -> None:
+    print(("OK   " if condition else "ECHEC") + " | " + label)
+    if not condition:
+        fails.append(label)
+
+
+state = sdk_stubs.install()
+state["settings_exists"] = False
+
+import vehicle_driving  # noqa: E402
+from vehicle_driving import frame, menu, panel_preferences, settings, view_key, wake  # noqa: E402
+
+mod = state["mods"][0]
+check("one mod, its settings as top-level keys, the camera ones after the driving ones, then the view key's",
+      len(state["mods"]) == 1 and mod.kwargs["name"] == "Vehicle Driving"
+      and mod.kwargs["options"] == [*settings.OPTIONS, *settings.CAMERA_OPTIONS, *view_key.OPTIONS,
+                                    vehicle_driving.updates.seen, *panel_preferences.ALL]
+      and [option for group in menu.MENU for option in group.children] == [*settings.OPTIONS, *settings.CAMERA_OPTIONS])
+check("a fresh install switches it on and says its version",
+      mod.is_enabled and f"[Vehicle Driving] enabled, version {vehicle_driving.__version__}" in state["misc"])
+check("its hooks are the frame, under the mod's own identifier: Apex Movement's is apex_movement:frame on the same "
+      "function, and two identifiers never replace each other (spec section 4); and the frame's wake-up signals",
+      mod.kwargs["hooks"] == [frame.tick, wake.woken] and frame.tick.identifier == "vehicle_driving:frame"
+      and frame.tick.enabled and wake.woken.enabled)
+check("one key and one button, the camera view's, the mod's only ones: Apex Movement binds crouch and jump",
+      [bind.identifier for bind in state["keybinds"]] == ["vehicle_view_key", "vehicle_view_button"]
+      and mod.kwargs["keybinds"] == state["keybinds"])
+source = pathlib.Path(vehicle_driving.__file__).parent
+text = "\n".join(path.read_text(encoding="utf-8") for path in sorted(source.glob("*.py")))
+check("nothing Apex Movement writes is named in the mod: the character's movement, the slide",
+      not any(word in text for word in ("CharacterMovement", "Move_Slide")))
+
+driver = sdk_stubs.Driver()
+car = sdk_stubs.Vehicle("OakVehicle_1", driver)
+hover = car.OakVehicleMovement.HoverSetup
+state["pc"] = types.SimpleNamespace(Pawn=car)
+frame.tick(object(), None, None, None)
+check("at the wheel the values are set", hover.PowerslideJumpHeight.constant == 330.0)
+mod.disable()
+check("switched off, the game's values are back and it says so",
+      hover.PowerslideJumpHeight.constant == 165.0
+      and driver.VehicleDriverComponent.VehicleAttributesState.MaxAccel.BaseValue == 1000.0
+      and state["misc"][-1] == "[Vehicle Driving] disabled, game values restored")
+check("its hooks stop", not frame.tick.enabled and not wake.woken.enabled)
+# As mods_base loads a file whose keybinds hold another key than the option: the bind keeps it until enabled.
+view_key.keyboard_bind.key = "J"
+mod.enable()
+frame.tick(object(), None, None, None)
+check("switched on again at the wheel, the values come back, once", hover.PowerslideJumpHeight.constant == 330.0)
+check("switched on, the view key's bind takes its option's key, the one authority", view_key.keyboard_bind.key == "L")
+
+print("RESULTAT:", "TOUS LES TESTS PASSENT" if not fails else f"{len(fails)} ECHEC(S)")
+sys.exit(1 if fails else 0)

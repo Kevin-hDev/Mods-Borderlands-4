@@ -1,0 +1,62 @@
+# Mods Borderlands 4
+
+Mods for Borderlands 4, on foot and at the wheel, written in Python on the Borderlands 4 SDK.
+
+| Mod | What it does | Version |
+|---|---|---|
+| [Apex Movement](apex_movement/) | Apex Legends style movement: auto sprint, momentum slides, air strafe, heavier falls, wall climbing, slow walk, plus an optional third-person and orbit camera, third-person aiming, field of view and loot reach | 2.0.0 |
+| [Apex Grapple](apex_grapple/) | Aim at a surface, grapple toward it, steer in the air and carry momentum when you let go | 1.0.13 |
+| [Vehicle Driving](vehicle_driving/) | Livelier vehicles: higher top speed, quicker acceleration and turns, higher jumps, grip in turns, faster reverse, a longer boost that pushes in the air, a tougher vehicle, stronger weapons and vehicle unlocks | 1.0.12 |
+| [Omni Sprint](omni_sprint/) | Sprint in every direction, with a backward run animation, an optional third-person and orbit camera, third-person aiming, FOV and loot reach | 1.2.17 |
+| [Third Person & FOV](third_person_fov/) | Standalone third-person and orbit camera, selectable third-person or first-person aiming, adjustable FOV and loot reach | 2.0.0 |
+| [Apex Heirloom](apex_heirloom/) | An Apex Legends style heirloom: the Jakobs knife or the axe in your hand when your weapon is put away, and a key to put it away | 1.0.6 |
+| [Hunter Change](hunter_change/) | Become another Vault Hunter in your game, keeping its level, backpack and story, each hunter with their own skill tree; or only wear another hunter's look | 1.0.7 |
+| [Benefix Ohm Attack](benefix_ohm_attack/) | Fire an attack beam from your hand that locks onto enemies, with six elements to choose from, its own energy bar and damage that scales with your level | 1.0.4 |
+| [It Follows](it_follows/) | Two modes to make the game harder: the enemies of your normal game reworked, more numerous, faster and tougher, with a Hardcore option that strengthens them as you kill; and a Horde mode (beta) where every enemy around you follows you without end; and a team of companions to fight at your side | 1.0.14 |
+| [Companions](companions/) | A team of up to 8 companions, among the 6 Vault Hunters and 7 allies, who follow you and fight at your side, without It Follows | 1.0.3 |
+| [Co-op Duel](coop_duel/) | Fight your teammates in co-op, 2 to 4 players, each for themselves or in teams, anywhere in the world: endless rounds, then back up on the spot; only the host needs the mod | 1.0.1 |
+| [Mod Settings](mod_settings/) | A MODS menu in the pause menu and the main menu, in the style of the game's options, to see and set every SDK mod (ALPHA; under MPL-2.0, see below) | 1.0.0 |
+
+[camera_runtime](camera_runtime/) is not a mod of its own: it is the camera, field of view and loot reach that Apex
+Movement, Omni Sprint and Third Person & FOV carry inside their `.sdkmod`, with the C++ source of its small native
+libraries.
+
+[characters](characters/) is not a mod of its own either: it is the companions' team that It Follows and Companions
+carry inside their `.sdkmod`, so that only one team runs when both are installed.
+
+## Installing a mod
+
+1. Install the [Borderlands 4 Python SDK](https://github.com/bl-sdk/oak2-mod-manager/releases/latest). No mod here loads without it.
+2. Put the mod's `.sdkmod` file into `...\Borderlands 4\sdk_mods\`
+3. Launch the game, open the console with `~`, type `mods`.
+
+See each mod's README for distribution and build instructions. A `.sdkmod` is a zip archive of the mod's package folder with its extension changed, so you can also build one yourself from the sources here.
+
+## Reporting a problem
+
+Open an issue, and say what you were doing when it happened, where you were, and which version of the game and of the mod you are on. A movement bug that only happens on one surface is almost impossible to find without those.
+
+## Running the tests
+
+Tests are provided alongside each mod. Most replace the game's SDK with stand-in objects and run with Python alone. Apex Grapple also has two optional integration tests that read an installed console menu; see its README for setup.
+
+```
+cd apex_movement
+python test_wall_climb.py
+```
+
+Run each test script separately. A failing test exits with a non-zero code; optional integration tests print `SKIP` when their SDK input is not configured.
+
+## License
+
+The original code in this repository is licensed under the [Apache License 2.0](LICENSE). Copyright 2026 Kevin-hDev.
+
+Mod Settings is the exception: everything in [mod_settings](mod_settings/) is under the Mozilla Public License 2.0,
+in [its own LICENSE](mod_settings/LICENSE). Keep the copyright and license notice at the top of each of its files.
+
+The Anton and Barlow Condensed fonts bundled with each mod's settings window retain their SIL Open Font License 1.1; their license files are included in each mod's `assets` directory. Apex Movement, Omni Sprint, Third Person & FOV, Apex Grapple, Vehicle Driving, Hunter Change, Co-op Duel, It Follows and Companions also bundle a subset of Noto Sans SC for their Chinese window, under the same license (`OFL-NotoSansSC.txt` in their `assets` directory). Apex Movement, Third Person & FOV, Apex Grapple, It Follows and Companions also bundle a subset of Noto Sans JP for their Japanese window, under the same license (`OFL-NotoSansJP.txt`). Game assets and the Borderlands 4 SDK are not relicensed by this repository. Apex Heirloom's models and animations, Benefix Ohm Attack's hand poses and energy bar, and Apex Grapple's grapple gun gestures are built from the game's own files: they are not in this repository, only in each mod's Nexus archive.
+
+## Credits
+
+- The [Borderlands 4 Python SDK](https://github.com/bl-sdk/oak2-mod-manager) team, without whom none of this would exist.
+- Respawn, for the Apex Legends movement Apex Movement is built after.

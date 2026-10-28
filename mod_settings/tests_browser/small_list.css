@@ -1,0 +1,13 @@
+/* Copyright (c) 2026 kevin-hDev
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+/* The browser test only: a list area lower than the game's (menu_options.css, 82rem), so the test mod's page runs
+   past it and scrolls (trial 8: a long page ran off the screen). Sizes are in rem, which follows the window's height
+   (gbx.css): a smaller window would not make a page any longer than its area. */
+.ms_root .menu_options_entry_wrapper,
+.ms_root .menu_options_details_container {
+    height: 36rem;
+}

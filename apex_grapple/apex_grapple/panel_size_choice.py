@@ -1,0 +1,26 @@
+"""The header's WINDOW button: each click saves the following size, then the window is drawn again at that size.
+
+It works as the THEME button beside it (Kevin, 2026-10-06: « comme le bouton des thèmes »).
+"""
+
+from . import panel_buttons as b, panel_i18n as i18n, panel_theme as t
+
+
+def following(size):
+    return t.SIZES[(t.SIZES.index(size) + 1) % len(t.SIZES)] if size in t.SIZES else t.SIZES[0]
+
+
+def choose(form, widgets):
+    """Ignored during a key capture, which a new window would drop; control_window_redraw draws the new one."""
+    if form.selecting():
+        return
+    if form.flush(widgets) and form.model.change_window_size(following(form.model.window_size)):
+        form.redraw, form.redraw_notice = True, "window_size_later"
+    else:
+        form.report(widgets, "failed")
+
+
+def paint(widgets, size, language):
+    widgets["window_size_label"].SetText(
+        f"{i18n.text('window_size', language)} {i18n.text(f'window_size:{size}', language)}")
+    b.paint(widgets, "window_size", "lang_off")

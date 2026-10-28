@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "companions": [
+    "Lemmy",
+    "Decrepit Frame",
+    "Crankus",
+    "Brine Type M",
+    "Abomination"
+  ],
+  "files": {
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/de/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/en/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/es-419/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/es-ES/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/fr/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/it/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/ja/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/ko/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/pl/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/pt-BR/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/ru/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/th/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/zh-Hans/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Harmonica/Localization/Harmonica/zh-Hant/Harmonica.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/de/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/en/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/es-419/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/es-ES/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/fr/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/it/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/ja/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/ko/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/pl/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/pt-BR/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/ru/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/th/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/zh-Hans/Tuba.locres": 23,
+    "OakGame/Content/DLC/Tuba/Localization/Tuba/zh-Hant/Tuba.locres": 23,
+    "OakGame/Content/Localization/Game/de/Game.locres": 23,
+    "OakGame/Content/Localization/Game/en/Game.locres": 23,
+    "OakGame/Content/Localization/Game/es-419/Game.locres": 23,
+    "OakGame/Content/Localization/Game/es-ES/Game.locres": 23,
+    "OakGame/Content/Localization/Game/fr/Game.locres": 23,
+    "OakGame/Content/Localization/Game/it/Game.locres": 23,
+    "OakGame/Content/Localization/Game/ja/Game.locres": 23,
+    "OakGame/Content/Localization/Game/ko/Game.locres": 23,
+    "OakGame/Content/Localization/Game/pl/Game.locres": 23,
+    "OakGame/Content/Localization/Game/pt-BR/Game.locres": 23,
+    "OakGame/Content/Localization/Game/ru/Game.locres": 23,
+    "OakGame/Content/Localization/Game/th/Game.locres": 23,
+    "OakGame/Content/Localization/Game/zh-Hans/Game.locres": 23,
+    "OakGame/Content/Localization/Game/zh-Hant/Game.locres": 23
+  },
+  "names": {
+    "de": {
+      "Decrepit Frame": "Klappriger Frame",
+      "Brine Type M": "Salzwasser-Typ M",
+      "Abomination": "Abscheulichkeit"
+    },
+    "en": {
+      "Lemmy": "Lemmy",
+      "Decrepit Frame": "Decrepit Frame",
+      "Crankus": "Crankus",
+      "Brine Type M": "Brine Type M",
+      "Abomination": "Abomination"
+    },
+    "es-419": {
+      "Decrepit Frame": "Armazón decrépito",
+      "Brine Type M": "Salmuera tipo M",
+      "Abomination": "Abominación"
+    },
+    "es-ES": {
+      "Decrepit Frame": "Armadura decrépita",
+      "Crankus": "Manivelo",
+      "Brine Type M": "Marino tipo M",
+      "Abomination": "Abominación"
+    },
+    "fr": {
+      "Decrepit Frame": "Châssis vétuste",
+      "Brine Type M": "Saumure type M"
+    },
+    "it": {
+      "Decrepit Frame": "Frame decrepito",
+      "Brine Type M": "Cefalo tipo M",
+      "Abomination": "Abominio"
+    },
+    "ja": {
+      "Lemmy": "レミー",
+      "Decrepit Frame": "デクレピット・フレーム",
+      "Crankus": "クランクス",
+      "Brine Type M": "ブライン・タイプ M",
+      "Abomination": "異形"
+    },
+    "ko": {
+      "Lemmy": "레미",
+      "Decrepit Frame": "노후한 프레임",
+      "Crankus": "크랭커스",
+      "Brine Type M": "브라인 타입 M",
+      "Abomination": "어보미네이션"
+    },
+    "pl": {
+      "Decrepit Frame": "Rozpadająca się rama",
+      "Crankus": "Korbus",
+      "Brine Type M": "Słony typ M",
+      "Abomination": "Odraza"
+    },
+    "pt-BR": {
+      "Decrepit Frame": "Armadura Decrépita",
+      "Brine Type M": "Salmoura Tipo M",
+      "Abomination": "Abominação"
+    },
+    "ru": {
+      "Lemmy": "Лемми",
+      "Decrepit Frame": "Дряхлая станина",
+      "Crankus": "Чудакус",
+      "Brine Type M": "Океанский типа M",
+      "Abomination": "Чудовище"
+    },
+    "zh-Hans": {
+      "Lemmy": "莱米",
+      "Decrepit Frame": "破旧机体",
+      "Crankus": "克兰库斯",
+      "Brine Type M": "盐水M型",
+      "Abomination": "憎恶"
+    },
+    "zh-Hant": {
+      "Lemmy": "萊米",
+      "Decrepit Frame": "破舊裝甲",
+      "Crankus": "克蘭克斯",
+      "Brine Type M": "鹽水M型",
+      "Abomination": "惡煞"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{%- comment -%}
+French puts a space before ; : ? ! » and after «. A space that never breaks keeps the sign on the line of its word,
+instead of alone at the start of the next one. The French pages' code samples have none of these, checked on
+2026-10-27: a code sample written with one would be changed too.
+{%- endcomment -%}
+{%- if include.lang == "fr" -%}
+{{ include.text | replace: " ;", "&#160;;" | replace: " :", "&#160;:" | replace: " ?", "&#160;?" | replace: " !", "&#160;!" | replace: "« ", "«&#160;" | replace: " »", "&#160;»" }}
+{%- else -%}
+{{ include.text }}
+{%- endif -%}

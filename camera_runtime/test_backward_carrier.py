@@ -1,0 +1,235 @@
+"""The backward carrier belongs to one body and is restored on every context change; which frames feed it
+is omni_direction's part (test_omni_direction.py)."""
+
+import sys
+import types
+import unittest
+
+from apex_camera_runtime import backward_carrier as animation
+
+
+def obj(address, **values):
+    return types.SimpleNamespace(_get_address=lambda: address, **values)
+
+
+class AnimationTests(unittest.TestCase):
+    def setUp(self):
+        self.notes = []
+        self.builds = []
+        self.sources = []
+        self.targets = []
+
+        def make_source(address):
+            source = obj(address, Class=types.SimpleNamespace(Name='BlendSpace'))
+            self.sources.append(source)
+            return source
+
+        self.source = make_source(20)
+        self.make_source = make_source
+        self.forward = obj(30, _type=types.SimpleNamespace(Name='GbxAnimNode_BlendSpacePlayer'),
+                           AnimAssetKey=obj(31, _type=types.SimpleNamespace(Name='GameplayTag'),
+                                            TagName='AnimSet.Player.3rd.BS_Sprint'), BlendSpace=self.source)
+        self.backward = obj(40, _type=types.SimpleNamespace(Name='GbxAnimNode_BlendSpacePlayer'),
+                            AnimAssetKey=obj(41, _type=types.SimpleNamespace(Name='GameplayTag'),
+                                             TagName='AnimSet.Player.3rd.Run_B'), BlendSpace=None)
+        self.node = obj(50, _type=types.SimpleNamespace(Name='GbxAnimNode_Locomotion'),
+                        BlendSpacePlayers=[self.forward, self.backward])
+        self.anim = obj(10, Class=types.SimpleNamespace(Name='BPAnim_Player_3rd_C'),
+                        GbxAnimGraphNode_Locomotion_2=self.node, bIsSprinting=True, bIsBackward=True)
+        self.movement = obj(60, bIsSprinting=True, MovementMode=1)
+        self.character = obj(70, CharacterMovement=self.movement,
+                             Mesh=types.SimpleNamespace(GetAnimInstance=lambda: self.anim))
+
+        def build(source, owner):
+            self.builds.append(source)
+            target = obj(100 + len(self.builds), Class=types.SimpleNamespace(Name='BlendSpace'))
+            self.targets.append(target)
+            return target
+
+        self.runtime = animation.BackwardCarrier(lambda value: lambda: value, build, self.notes.append)
+
+    def test_apply_and_keep_original_source(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.runtime.update(self.character, self.anim, 1)
+        self.assertIs(self.backward.BlendSpace, self.targets[0])
+        self.assertIs(self.forward.BlendSpace, self.source)
+        self.assertEqual(self.builds, [self.source])
+
+    def test_a_held_run_reads_the_backward_slot_once_a_frame(self):
+        self.runtime.update(self.character, self.anim, 0)
+        reads = []
+
+        class CountedSlot(types.SimpleNamespace):
+            @property
+            def BlendSpace(slot):
+                reads.append(1)
+                return slot.held
+
+        slot = CountedSlot(_get_address=self.backward._get_address, _type=self.backward._type,
+                           AnimAssetKey=self.backward.AnimAssetKey, held=self.backward.BlendSpace)
+        self.node.BlendSpacePlayers = [self.forward, slot]
+        self.runtime.update(self.character, self.anim, 1)
+        self.assertEqual(len(reads), 1)
+        self.assertIs(slot.held, self.targets[0])
+
+    def test_disable_restores_empty_target(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.runtime.stop()
+        self.assertIsNone(self.backward.BlendSpace)
+        self.assertIs(self.forward.BlendSpace, self.source)
+
+    def test_leaving_sprint_restores_normal_backward_walk(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.movement.bIsSprinting = False
+        self.anim.bIsSprinting = False
+        self.runtime.update(self.character, self.anim, 1)
+        self.assertIsNone(self.backward.BlendSpace)
+
+    def test_weapon_change_restores_then_rebuilds(self):
+        self.runtime.update(self.character, self.anim, 0)
+        second = self.make_source(21)
+        self.forward.BlendSpace = second
+        self.runtime.update(self.character, self.anim, 1)
+        self.assertIs(self.backward.BlendSpace, self.targets[-1])
+        self.assertEqual(self.builds, [self.source, second])
+
+    def test_other_mod_replacement_is_not_overwritten(self):
+        self.runtime.update(self.character, self.anim, 0)
+        foreign = obj(999)
+        self.backward.BlendSpace = foreign
+        self.runtime.update(self.character, self.anim, 1)
+        self.runtime.stop()
+        self.assertIs(self.backward.BlendSpace, foreign)
+        self.assertEqual(self.builds, [self.source])
+
+    def test_foreign_slot_on_old_body_does_not_block_new_body(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.backward.BlendSpace = obj(999)
+        self.runtime.update(self.character, self.anim, 1)
+        new_back = obj(140, _type=self.backward._type,
+                       AnimAssetKey=self.backward.AnimAssetKey, BlendSpace=None)
+        new_node = obj(150, _type=self.node._type, BlendSpacePlayers=[self.forward, new_back])
+        new_anim = obj(110, Class=self.anim.Class, GbxAnimGraphNode_Locomotion_2=new_node,
+                       bIsSprinting=True, bIsBackward=True)
+        self.runtime.update(self.character, new_anim, 2)
+        self.assertIs(new_back.BlendSpace, self.targets[-1])
+        self.assertEqual(len(self.builds), 2)
+
+    def empty_both(self):
+        # A weapon change (watch of 2026-10-24): the game empties both players and, sprinting backward, fills only
+        # the backward one it plays, with nothing.
+        self.forward.BlendSpace = self.backward.BlendSpace = None
+
+    def test_weapon_change_while_sprinting_backward_keeps_the_run(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.empty_both()
+        self.runtime.update(self.character, self.anim, 1)
+        self.runtime.update(self.character, self.anim, 2)
+        self.assertIs(self.backward.BlendSpace, self.targets[0])
+        self.assertEqual(self.builds, [self.source])
+
+    def test_new_weapon_sprint_rebuilds_the_run(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.empty_both()
+        self.runtime.update(self.character, self.anim, 1)
+        second = self.make_source(21)
+        self.forward.BlendSpace = second
+        self.runtime.update(self.character, self.anim, 2)
+        self.assertIs(self.backward.BlendSpace, self.targets[-1])
+        self.assertEqual(self.builds, [self.source, second])
+
+    def test_weapon_changed_between_two_sprints_still_runs(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.movement.bIsSprinting = self.anim.bIsSprinting = False
+        self.runtime.update(self.character, self.anim, 1)
+        self.empty_both()
+        self.movement.bIsSprinting = self.anim.bIsSprinting = True
+        self.runtime.update(self.character, self.anim, 2)
+        self.assertIs(self.backward.BlendSpace, self.targets[-1])
+        self.assertEqual(self.builds, [self.source, self.source])
+
+    def test_a_new_body_never_gets_the_old_body_sprint(self):
+        self.runtime.update(self.character, self.anim, 0)
+        new_forward = obj(130, _type=self.forward._type, AnimAssetKey=self.forward.AnimAssetKey, BlendSpace=None)
+        new_back = obj(140, _type=self.backward._type, AnimAssetKey=self.backward.AnimAssetKey, BlendSpace=None)
+        new_node = obj(150, _type=self.node._type, BlendSpacePlayers=[new_forward, new_back])
+        new_anim = obj(110, Class=self.anim.Class, GbxAnimGraphNode_Locomotion_2=new_node,
+                       bIsSprinting=True, bIsBackward=True)
+        self.runtime.update(self.character, new_anim, 1)
+        self.assertIsNone(new_back.BlendSpace)
+        self.assertEqual(self.builds, [self.source])
+
+    def test_character_change_clears_previous_body(self):
+        self.runtime.update(self.character, self.anim, 0)
+        self.runtime.update(None, None, 1)
+        self.assertIsNone(self.backward.BlendSpace)
+
+    def test_not_eligible_does_not_build(self):
+        self.anim.bIsBackward = False
+        self.runtime.update(self.character, self.anim, 0)
+        self.assertFalse(self.builds)
+
+    def test_unsupported_layout_fails_closed(self):
+        self.backward.AnimAssetKey.TagName = 'unexpected'
+        self.runtime.update(self.character, self.anim, 0)
+        self.assertFalse(self.builds)
+        self.assertIsNone(self.backward.BlendSpace)
+
+    def test_hunters_with_their_own_body_class_are_carried(self):
+        # Read in game on 2026-10-24: Harlow and Amon (C4sh shares Amon's) have their own body class.
+        for name in ('BPAnim_Player_3rd_Grav_C', 'BPAnim_Player_3rd_Paladin_C'):
+            self.anim.Class.Name = name
+            self.assertEqual(animation.players(self.anim), [self.forward, self.backward])
+
+    def test_other_body_classes_are_refused_by_name(self):
+        for name in ('BPAnim_Player_1st_C', 'BPAnim_Player_3rd_Grav', 'ABP_Layer_C', 'BPAnim_Player_3rd__C'):
+            self.anim.Class.Name = name
+            with self.assertRaisesRegex(ValueError, name):
+                animation.players(self.anim)
+
+    def test_missing_resource_is_retried_after_delay(self):
+        def unavailable(source, owner):
+            self.builds.append(source)
+            raise ValueError('unavailable')
+        self.runtime.build = unavailable
+        self.runtime.update(self.character, self.anim, 0)
+        self.runtime.update(self.character, self.anim, 1)
+        self.assertEqual(len(self.builds), 1)
+        self.runtime.update(self.character, self.anim, animation.RETRY_NS)
+        self.assertEqual(len(self.builds), 2)
+        self.assertIsNone(self.backward.BlendSpace)
+
+    def test_failed_removal_keeps_state_for_retry(self):
+        class UnreliablePlayer:
+            def __init__(self, previous):
+                self._type = previous._type
+                self.AnimAssetKey = previous.AnimAssetKey
+                self._asset = previous.BlendSpace
+                self.reject_once = True
+
+            @property
+            def BlendSpace(self):
+                return self._asset
+
+            @BlendSpace.setter
+            def BlendSpace(self, value):
+                if value is None and self.reject_once:
+                    self.reject_once = False
+                    raise RuntimeError('temporary native setter error')
+                self._asset = value
+
+        self.backward = UnreliablePlayer(self.backward)
+        self.node.BlendSpacePlayers[1] = self.backward
+        self.runtime.update(self.character, self.anim, 0)
+        with self.assertRaises(RuntimeError):
+            self.runtime.stop()
+        self.assertIsNotNone(self.runtime.owner)
+        self.assertIs(self.backward.BlendSpace, self.targets[0])
+        self.runtime.stop()
+        self.assertIsNone(self.backward.BlendSpace)
+
+
+if __name__ == '__main__':
+    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromTestCase(AnimationTests))
+    print('RESULTAT:', 'OK' if result.wasSuccessful() else 'ECHEC')
+    sys.exit(not result.wasSuccessful())

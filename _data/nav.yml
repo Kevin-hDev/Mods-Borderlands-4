@@ -1,0 +1,146 @@
+# The words of the site around the pages, in each language. A page in English is X.md; in another language, X.<code>.md.
+# When a page does not exist in a language yet, its link leads to the English page. In the texts, [creator], [mod] and
+# [version] are replaced by the page model.
+languages: [en, fr, zh, ja]
+mod_settings_pages: [README, HOW_IT_WORKS, TROUBLESHOOTING, FAQ, MOD_AUTHORS, CHANGELOG]
+# The menu at the top of every page: each part's folder, and the word that names it.
+menu:
+  - {folder: mod_settings, label: menu_mod_settings}
+  - {folder: recommendations, label: menu_recommended}
+  - {folder: news, label: menu_news}
+
+en:
+  lang: en
+  label: EN
+  README: Home
+  HOW_IT_WORKS: How it works
+  TROUBLESHOOTING: Troubleshooting
+  FAQ: FAQ
+  MOD_AUTHORS: For mod authors
+  CHANGELOG: Changelog
+  download: Download on Nexus
+  code: Source code
+  skip: Skip to the text
+  pages_label: Pages
+  languages_label: Languages
+  menu_label: Site
+  menu_mod_settings: Mod Settings
+  menu_recommended: Recommended mods
+  menu_news: Updates
+  card_mod_settings: "A MODS menu in the pause menu and the main menu, to see and set every mod of the Python SDK."
+  card_recommended: "Mods by other creators, chosen for their quality and shown with their creators' permission."
+  latest_news: Latest updates
+  all_news: All updates
+  categories_label: Categories
+  by: "by [creator]"
+  described: "Page up to date for version [version]"
+  latest_version: "Latest version: [version]"
+  permission: "With the creator's permission"
+  thanks: "Thanks to [creator] for letting us feature [mod]."
+  mod_news: Updates of this mod
+  empty_catalog: No recommended mod yet.
+  empty_news: No update yet.
+  footer_mod_settings: Mod Settings is under the Mozilla Public License 2.0. Not affiliated with Gearbox Software or 2K.
+  footer_site: Fan-made site. Not affiliated with Gearbox Software or 2K.
+
+fr:
+  lang: fr
+  label: FR
+  README: Accueil
+  HOW_IT_WORKS: Comment ça marche
+  TROUBLESHOOTING: Dépannage
+  FAQ: Questions fréquentes
+  MOD_AUTHORS: Créateurs de mods
+  CHANGELOG: Nouveautés
+  download: Télécharger sur Nexus
+  code: Code source
+  skip: Aller au texte
+  pages_label: Pages
+  languages_label: Langues
+  menu_label: Site
+  menu_mod_settings: Mod Settings
+  menu_recommended: Mods recommandés
+  menu_news: Mises à jour
+  card_mod_settings: "Un menu MODS dans le menu pause et le menu principal, pour voir et régler tous les mods du SDK Python."
+  card_recommended: "Des mods d'autres créateurs, choisis pour leur qualité et présentés avec leur accord."
+  latest_news: Dernières mises à jour
+  all_news: Toutes les mises à jour
+  categories_label: Catégories
+  by: "par [creator]"
+  described: "Fiche à jour pour la version [version]"
+  latest_version: "Dernière version : [version]"
+  permission: "Avec l'accord du créateur"
+  thanks: "Merci à [creator] de nous laisser présenter [mod]."
+  mod_news: Mises à jour de ce mod
+  empty_catalog: Aucun mod recommandé pour l'instant.
+  empty_news: Aucune mise à jour pour l'instant.
+  footer_mod_settings: Mod Settings est sous licence Mozilla Public License 2.0. Sans lien avec Gearbox Software ni 2K.
+  footer_site: Site de fan. Sans lien avec Gearbox Software ni 2K.
+
+zh:
+  lang: zh-Hans
+  label: 中文
+  README: 首页
+  HOW_IT_WORKS: 工作原理
+  TROUBLESHOOTING: 故障排除
+  FAQ: 常见问题
+  MOD_AUTHORS: 模组作者指南
+  CHANGELOG: 更新日志
+  download: 在 Nexus 下载
+  code: 源代码
+  skip: 跳到正文
+  pages_label: 页面
+  languages_label: 语言
+  menu_label: 网站
+  menu_mod_settings: Mod Settings
+  menu_recommended: 推荐模组
+  menu_news: 模组动态
+  card_mod_settings: "暂停菜单和主菜单中的「模组」菜单，用来查看和修改 Python SDK 的所有模组。"
+  card_recommended: "其他作者的模组，因其品质而入选，经作者同意后介绍。"
+  latest_news: 最新动态
+  all_news: 全部动态
+  categories_label: 分类
+  by: "作者：[creator]"
+  described: "本页内容更新至 [version] 版"
+  latest_version: "最新版本：[version]"
+  permission: "经作者同意"
+  thanks: "感谢 [creator] 允许我们介绍 [mod]。"
+  mod_news: 本模组的动态
+  empty_catalog: 暂无推荐模组。
+  empty_news: 暂无动态。
+  footer_mod_settings: Mod Settings 采用 Mozilla Public License 2.0 许可。与 Gearbox Software 和 2K 无关。
+  footer_site: 粉丝制作的网站。与 Gearbox Software 和 2K 无关。
+
+ja:
+  lang: ja
+  label: 日本語
+  README: ホーム
+  HOW_IT_WORKS: しくみ
+  TROUBLESHOOTING: トラブルシューティング
+  FAQ: よくある質問
+  MOD_AUTHORS: MOD制作者向け
+  CHANGELOG: 更新履歴
+  download: Nexusでダウンロード
+  code: ソースコード
+  skip: 本文へ移動
+  pages_label: ページ
+  languages_label: 言語
+  menu_label: サイト
+  menu_mod_settings: Mod Settings
+  menu_recommended: おすすめMOD
+  menu_news: MODの更新情報
+  card_mod_settings: "ポーズメニューとメインメニューのMODSメニューで、Python SDKのMODをすべて表示・設定できます。"
+  card_recommended: "品質で選んだ、ほかの制作者のMODです。制作者の許可を得て紹介しています。"
+  latest_news: 最新の更新情報
+  all_news: すべての更新情報
+  categories_label: カテゴリー
+  by: "制作者：[creator]"
+  described: "このページは [version] 版に基づいています"
+  latest_version: "最新版：[version]"
+  permission: "制作者の許可を得て掲載"
+  thanks: "[mod] の掲載を許可してくださった [creator] さんに感謝します。"
+  mod_news: このMODの更新情報
+  empty_catalog: おすすめMODはまだありません。
+  empty_news: 更新情報はまだありません。
+  footer_mod_settings: Mod SettingsはMozilla Public License 2.0で公開されています。Gearbox Software および 2K とは関係ありません。
+  footer_site: ファンが制作したサイトです。Gearbox Software および 2K とは関係ありません。

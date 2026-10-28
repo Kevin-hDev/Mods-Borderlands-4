@@ -1,0 +1,42 @@
+"""Third Person & FOV: the game's native third-person view and a wider field of view."""
+
+from mods_base import build_mod
+from .settings_persistence import AtomicMod
+
+from . import camera, frame, panel_open, panel_preferences, report, settings
+
+__version__ = "2.0.0"
+__author__ = "kevin-hDev"
+
+
+def _on_enable() -> None:
+    report.reset()
+    frame.reset()
+    settings.commands.align()
+    settings.open_key.align()
+    camera.start()
+    report.note(f"enabled, version {__version__}")
+
+
+def _on_disable() -> None:
+    try:
+        camera.stop()
+    except Exception:
+        report.error_once("camera_restore", "camera restoration failed")
+    frame.reset()
+    report.note("disabled")
+
+
+mod = build_mod(
+    cls=AtomicMod,
+    name="Third Person & FOV",
+    hooks=[frame.tick],
+    keybinds=[*settings.commands.binds, settings.open_key.bind],
+    options=[*settings.OPTIONS, settings.open_key.option, *panel_preferences.ALL],
+    on_enable=_on_enable,
+    on_disable=_on_disable,
+)
+panel_open.install(mod)
+
+if mod.settings_file is not None and not mod.settings_file.exists():
+    mod.enable()

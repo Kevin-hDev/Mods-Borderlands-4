@@ -1,0 +1,53 @@
+{
+    "options": {
+        "shot_menu": {
+            "grapple_range": 6600,
+            "hook_speed": 5000,
+            "stamina_cost": 0,
+            "melee_wins": true,
+            "punch_range": 200,
+            "keep_game_grapple": false,
+            "show_rope": false
+        },
+        "pull_menu": {
+            "pull_strength": 1.7,
+            "pull_speed_cap": 4000,
+            "rope_carry": 100,
+            "steer_strength": 2.0,
+            "steer_speed_cap": 1000
+        },
+        "release_menu": {
+            "release_on_key_up": true,
+            "arrival_distance": 600,
+            "longest_pull": 4.0,
+            "takeoff_lift": 250,
+            "ground_grace": 0.35,
+            "release_on_landing": true,
+            "block_jump": true
+        },
+        "hold_menu": {
+            "keyboard_hold": false,
+            "controller_hold": false,
+            "hold_time": 0.4
+        },
+        "controls_menu": {
+            "keyboard_controls": {
+                "keyboard_mode": "Game controls",
+                "keyboard_first": null,
+                "keyboard_second": null
+            },
+            "gamepad_controls": {
+                "gamepad_mode": "Game controls",
+                "gamepad_first": null,
+                "gamepad_second": null
+            }
+        },
+        "menu_language": "ZH",
+        "controller_icons": "PS5",
+        "menu_last_page": "controls",
+        "menu_theme": "BL4",
+        "menu_window_size": "LARGE",
+        "menu_last_scroll": 312
+    },
+    "enabled": true
+}

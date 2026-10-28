@@ -1,0 +1,37 @@
+{%- comment -%}
+All the recommended mods in one grid, with a filter per category (Kevin, 2026-10-27): several filters can be on at
+once, a second click turns one off, and with none on every mod shows. The filters are checkboxes and the hiding is
+done by recommended.css and catalog_filters.css, as the site runs no script. A category without any mod has no filter.
+{%- endcomment -%}
+{%- assign shown = "" | split: "" -%}
+{%- for category in site.data.categories -%}
+  {%- for entry in site.data.recommended -%}
+    {%- if entry[1].category == category.id -%}{%- assign shown = shown | push: category -%}{%- break -%}{%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+{%- if shown.size == 0 %}
+<p class="empty">{{ words.empty_catalog }}</p>
+{%- else %}
+<div class="catalog">
+<ul class="filters" role="group" aria-label="{{ words.categories_label }}">
+  {%- for category in shown %}
+  <li><input class="filter-box" type="checkbox" id="filter-{{ category.id }}"><label for="filter-{{ category.id }}">{{ category.name[code] | escape }}</label></li>
+  {%- endfor %}
+</ul>
+<div class="cards">
+  {%- for entry in site.data.recommended -%}
+  {%- assign data = entry[1] %}
+  <a class="card category-{{ data.category }}" href="{% assign mod_id = entry[0] %}{% include mod_url.html id=mod_id %}">
+    <img src="{{ '/recommendations/images/' | append: entry[0] | append: '/' | append: data.card_image.file | relative_url }}" width="{{ data.card_image.width }}" height="{{ data.card_image.height }}" alt="{{ data.card_image.alt[code] | escape }}" loading="lazy">
+    <span class="card-text">
+      <span class="card-title">{{ data.name | escape }}</span>
+      {%- assign creator = data.creator -%}
+      {%- capture creator_name %}{% include creator_name.html creator=creator %}{% endcapture %}
+      <span class="card-by">{{ words.by | replace: "[creator]", creator_name | escape }}</span>
+      <span class="card-pitch">{{ data.pitch[code] | escape }}</span>
+    </span>
+  </a>
+  {%- endfor %}
+</div>
+</div>
+{%- endif %}

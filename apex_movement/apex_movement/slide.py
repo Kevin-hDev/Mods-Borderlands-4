@@ -1,0 +1,150 @@
+"""Fast slides: a slide starts at the set speed, boosted by the Axle slide, and a jump early in the slide keeps that speed.
+
+Ported from Auto Sprint 1.5.0, verified in game on 2026-09-15. The start speed comes from Move_Slide's speed
+constant, which applies to every slide, landing slides included. Velocity written during a slide is overwritten by the
+game on the ground, but a jump launches from it (about 1.05 times the written speed): that is the slide jump.
+"""
+
+from typing import Any
+
+from . import axle_slide, game, guest_trust, ownership, report
+
+SPEED_KEY = "Move_Slide.speed.constant"
+# Auto Sprint 1.5.0's window, whose feel Kevin approved: a jump later in the slide launches at the slowed slide speed.
+BOOST_NS = 700_000_000
+# The real divisor is the curve's start, 1.1017: one this small means the curve reads zero, and dividing by it would
+# write a constant a hundred times too large or more.
+MIN_DIVISOR = 0.01
+# A slide less than this below its target is left alone: a raise that small shows in no jump, and would only add a
+# velocity write every frame.
+TARGET_MARGIN = 1.0
+# Every module of the slides needs Move_Slide, so one line, under one key, says it is missing for all of them.
+MISSING_ASSET = "Move_Slide not found yet; slides stay the game's own meanwhile"
+# A co-op guest's slide as the host follows it: absent until a frame without a slide, then None, then the slide's start.
+GUEST_MEMO = "slide boost"
+TRUST_MEMO = "slide trust"
+
+_started_ns: int | None = None
+_target = 0.0
+_top_speed = 0.0
+# Set by a frame without a slide: only a slide begun after it is raised.
+_armed = False
+
+
+def reset() -> None:
+    global _started_ns, _armed
+    _started_ns, _armed = None, False
+
+
+def find_asset() -> Any:
+    """Move_Slide, or None after reporting once, for every module of the slides, that the game has not loaded it."""
+    asset = game.slide_asset()
+    if asset is None:
+        report.error_once("slide_asset", MISSING_ASSET)
+    return asset
+
+
+def _speed_constant() -> float:
+    return float(ownership.loaded(game.slide_asset()).speed.constant)
+
+
+def _put_constant(value: float) -> None:
+    asset = ownership.loaded(game.slide_asset())
+    speed = asset.speed
+    speed.constant = value
+    # Assigned back whole: the SDK may hand out a copy of the struct, and a field written on a copy changes nothing.
+    asset.speed = speed
+
+
+def _set_start_speed(target: float) -> None:
+    """Called on the ground, standing, not aiming, not sliding, like the game reading the constant at a slide's start.
+
+    Walking counts too, so a landing slide after a walking jump starts at the set speed even before the first sprint.
+    The constant is the slide speed at a speed scale of 1, the same for every character of every machine: the game
+    multiplies it by the sliding character's own scale, which slide_physics.py writes every frame of the slide. Divided
+    by the player's scale as it was until 2026-10-16, a co-op host computed a guest whose scale was 1.42 against its own
+    1.18 at 1705 instead of 1412 (docs/coop/2026-10-16-essai-recopie-dans-apex.md, verified in the logs).
+    """
+    asset = game.slide_asset()
+    keys = asset.SpeedScaleCurve.EditorCurveData.keys
+    divisor = float(keys[0].Value) if len(keys) > 0 else 1.0
+    if divisor < MIN_DIVISOR:
+        return
+    # Start speed = constant x the character's scale x curve at time 0 (720 x 1.15 x 1.1017 = 912, verified in game).
+    wanted = target / divisor
+    if abs(float(asset.speed.constant) - wanted) <= ownership.SPEED_TOLERANCE:
+        ownership.claim(SPEED_KEY, ownership.ASSET, _speed_constant, _put_constant)
+        return
+    ownership.write(SPEED_KEY, ownership.ASSET, _speed_constant, _put_constant, wanted)
+    report.note(f"slide start speed {target:.0f} (constant {wanted:.0f})")
+
+
+def _track(movement: Any, now_ns: int, target: float, sliding: bool) -> None:
+    global _started_ns, _target, _top_speed, _armed
+    speed = game.horizontal_speed(movement)
+    if not sliding:
+        _armed = True
+        if _started_ns is not None:
+            ended = "ground" if game.is_on_ground(movement) else "air"
+            report.note(f"slide end on={ended} ms={(now_ns - _started_ns) // 1_000_000} "
+                        f"top_speed={_top_speed:.0f} speed_now={speed:.0f}")
+        _started_ns = None
+        return
+    if _started_ns is None:
+        if not _armed:
+            # Begun before this module ran, such as with Slides switched off and on mid-slide: raised now, the slowed
+            # slide would jump back to its start speed.
+            return
+        # Kept for the whole slide, as slide_physics keeps its boost: an Axle slide switched on mid-slide would
+        # otherwise be raised to the boosted speed while its model stays at the normal one.
+        _started_ns, _target, _top_speed = now_ns, target, 0.0
+    # Read before this frame's write: the speed the game itself gave the slide.
+    _top_speed = max(_top_speed, speed)
+    if now_ns - _started_ns <= BOOST_NS and speed < _target - TARGET_MARGIN:
+        game.set_horizontal_speed(movement, _target)
+
+
+def update(character: Any, now_ns: int) -> None:
+    if find_asset() is None:
+        return
+    movement = character.CharacterMovement
+    target = axle_slide.start_speed()
+    # Asked once a frame: writing the start speed does not change it, and the game's answer is a call (2026-10-24).
+    sliding = game.is_sliding(movement)
+    # Not during a slide: the game reads the constant only when a slide starts, and meanwhile the speed curve belongs to
+    # slide_physics, so the constant followed it every frame (610 rewrites in three slides, 2026-09-17, 03:11-03:13).
+    if game.is_on_ground(movement) and not character.bIsCrouched and not game.is_aiming(character) and not sliding:
+        _set_start_speed(target)
+    _track(movement, now_ns, target, sliding)
+
+
+def for_guest(guest: Any) -> dict[str, Any]:
+    """On a co-op host, the slide jump for each guest: the host computes the guest's jump itself, and launched it from
+    the slowed slide while the guest's own game launched it from the start speed, 90 to 200 faster, then pulled the
+    guest back to its own speed (docs/coop/2026-10-17-saccades-restantes.md, trial 2, verified in both copies). The
+    speed is written straight into the guest's character, like the player's. The host sees a slide some 40 ms after the
+    guest: a few frames off a 700 ms window. From the slide to the landing after it, the host takes the guest's place
+    (guest_trust)."""
+    movement = guest.character.CharacterMovement
+    if game.slide_asset() is None:
+        return {}
+    sliding = game.is_sliding(movement)
+    trust = guest_trust.until_landing(guest, TRUST_MEMO, sliding)
+    if not sliding:
+        guest.memo[GUEST_MEMO] = None
+        return trust
+    if GUEST_MEMO not in guest.memo:
+        # Begun before the host followed this guest: raised now, the slowed slide would jump back to its start speed.
+        return trust
+    started = guest.memo[GUEST_MEMO]
+    if started is None:
+        started = guest.memo[GUEST_MEMO] = guest.now_ns
+    target = axle_slide.start_speed()
+    if guest.now_ns - started <= BOOST_NS and game.horizontal_speed(movement) < target - TARGET_MARGIN:
+        game.set_horizontal_speed(movement, target)
+    return trust
+
+
+def stop(character: Any) -> None:
+    reset()
+    ownership.restore(SPEED_KEY)

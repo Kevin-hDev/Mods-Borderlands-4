@@ -1,0 +1,126 @@
+{%- comment -%}
+The only page model of the site. Its language comes from the file name: X.md is English, X.<code>.md is <code>. Its
+part of the site comes from its folder: the root (home page), mod_settings, recommendations or news.
+{%- endcomment -%}
+{%- assign file = page.path | split: "/" | last -%}
+{%- assign parts = file | split: "." -%}
+{%- assign base = parts.first -%}
+{%- assign code = "en" -%}
+{%- if parts.size == 3 -%}{%- assign code = parts[1] -%}{%- endif -%}
+{%- unless site.data.nav.languages contains code -%}{%- assign code = "en" -%}{%- endunless -%}
+{%- assign words = site.data.nav[code] -%}
+{%- assign suffix = "" -%}
+{%- if code != "en" -%}{%- assign suffix = "." | append: code -%}{%- endif -%}
+{%- assign folder = page.path | split: "/" | pop | join: "/" | append: "/" -%}
+{%- if folder == "/" -%}{%- assign folder = "" -%}{%- endif -%}
+{%- assign section = folder | remove: "/" -%}
+{%- assign site_home = false -%}
+{%- if section == "" and base == "index" -%}{%- assign site_home = true -%}{%- endif -%}
+{%- assign mod_settings_home = false -%}
+{%- if section == "mod_settings" and base == "README" -%}{%- assign mod_settings_home = true -%}{%- endif -%}
+{%- assign mod = nil -%}
+{%- if section == "recommendations" and base != "README" -%}{%- assign mod = site.data.recommended[base] -%}{%- endif -%}
+<!doctype html>
+<html lang="{{ words.lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{%- comment -%} No script, no outside file: the site is only text, pictures and its own style sheets. {%- endcomment %}
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<title>{% if site_home %}{{ site.title }}{% else %}{{ page.title }} · {{ site.title }}{% endif %}</title>
+<link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
+<link rel="stylesheet" href="{{ '/assets/recommended.css' | relative_url }}">
+<link rel="stylesheet" href="{{ '/assets/catalog_filters.css' | relative_url }}">
+{%- for l in site.data.nav.languages %}
+{%- capture path -%}{{ folder }}{{ base }}{% if l != "en" %}.{{ l }}{% endif %}.md{%- endcapture -%}
+{%- assign other = site.pages | where: "path", path | first -%}
+{%- if other %}
+<link rel="alternate" hreflang="{{ site.data.nav[l].lang }}" href="{{ other.url | absolute_url }}">
+{%- endif -%}
+{%- endfor %}
+</head>
+<body>
+{%- capture page_body %}
+<a class="skip" href="#content">{{ words.skip }}</a>
+<header class="hero{% if mod_settings_home %} hero-home{% endif %}">
+  <div class="top">
+    {%- capture path -%}index{{ suffix }}.md{%- endcapture -%}
+    {%- assign start = site.pages | where: "path", path | first -%}
+    {%- unless start -%}{%- assign start = site.pages | where: "path", "index.md" | first -%}{%- endunless %}
+    <a class="logo" href="{{ start.url | relative_url }}">{{ site.title }}</a>
+    <nav class="menu" aria-label="{{ words.menu_label }}">
+      <ul>
+      {%- for entry in site.data.nav.menu -%}
+        {%- capture path -%}{{ entry.folder }}/README{{ suffix }}.md{%- endcapture -%}
+        {%- assign target = site.pages | where: "path", path | first -%}
+        {%- unless target -%}{%- capture path -%}{{ entry.folder }}/README.md{%- endcapture -%}{%- assign target = site.pages | where: "path", path | first -%}{%- endunless -%}
+        {%- if target %}
+        <li><a href="{{ target.url | relative_url }}"{% if section == entry.folder %} aria-current="true"{% endif %}>{{ words[entry.label] }}</a></li>
+        {%- endif -%}
+      {%- endfor %}
+      </ul>
+    </nav>
+    <nav class="langs" aria-label="{{ words.languages_label }}">
+      <ul>
+      {%- for l in site.data.nav.languages -%}
+        {%- capture path -%}{{ folder }}{{ base }}{% if l != "en" %}.{{ l }}{% endif %}.md{%- endcapture -%}
+        {%- assign other = site.pages | where: "path", path | first -%}
+        {%- if other %}
+        <li><a href="{{ other.url | relative_url }}" hreflang="{{ site.data.nav[l].lang }}" lang="{{ site.data.nav[l].lang }}"{% if l == code %} aria-current="page"{% endif %}>{{ site.data.nav[l].label }}</a></li>
+        {%- endif -%}
+      {%- endfor %}
+      </ul>
+    </nav>
+  </div>
+  <div class="hero-text">
+    <h1>{% include french_spaces.html lang=code text=page.title %}</h1>
+    {%- if mod_settings_home %}
+    <p class="buttons"><a class="button" href="{{ site.nexus_url }}"><img class="icon" src="{{ '/assets/icons/' | append: site.data.platforms.nexus.icon | relative_url }}" width="18" height="18" alt="">{{ words.download }}</a><a class="button ghost" href="{{ site.code_url }}">{{ words.code }}</a></p>
+    {%- endif %}
+    {%- if mod %}
+    {%- capture header %}{% include mod_header.html %}{% endcapture %}
+    {% include french_spaces.html lang=code text=header %}
+    {%- endif %}
+  </div>
+</header>
+<div class="doc{% unless section == 'mod_settings' %} single{% endunless %}">
+  {%- if section == "mod_settings" %}
+  <nav class="pages" aria-label="{{ words.pages_label }}">
+    <ul>
+    {%- for p in site.data.nav.mod_settings_pages -%}
+      {%- capture path -%}{{ folder }}{{ p }}{{ suffix }}.md{%- endcapture -%}
+      {%- assign target = site.pages | where: "path", path | first -%}
+      {%- assign fallback = false -%}
+      {%- unless target -%}
+        {%- assign path = folder | append: p | append: ".md" -%}
+        {%- assign target = site.pages | where: "path", path | first -%}
+        {%- assign fallback = true -%}
+      {%- endunless -%}
+      {%- if target %}
+      <li><a href="{{ target.url | relative_url }}"{% if fallback %} hreflang="en"{% endif %}{% if p == base %} aria-current="page"{% endif %}>{{ words[p] }}</a></li>
+      {%- endif -%}
+    {%- endfor %}
+    </ul>
+  </nav>
+  {%- endif -%}
+  {%- comment -%}
+  The licence is not published on the site (a file without an extension may be downloaded instead of shown): the
+  pages' link to it opens it on GitHub.
+  {%- endcomment -%}
+  {%- assign license_github = site.license_url | prepend: 'href="' | append: '"' -%}
+  {%- capture text -%}
+  {{ content | replace: 'href="LICENSE"', license_github }}
+  {%- if site_home %}{% include home.html %}{% endif -%}
+  {%- if section == "recommendations" and base == "README" %}{% include catalog.html %}{% endif -%}
+  {%- if mod %}<h2>{{ words.mod_news }}</h2>{% include news_list.html mod=base %}{% endif -%}
+  {%- if section == "news" %}{% include news_list.html %}{% endif -%}
+  {%- endcapture %}
+  <main id="content">
+{% include french_spaces.html lang=code text=text %}
+  </main>
+</div>
+<footer>{% if section == "mod_settings" %}{{ words.footer_mod_settings }}{% else %}{{ words.footer_site }}{% endif %}</footer>
+{%- endcapture %}
+{% include outside_links.html text=page_body %}
+</body>
+</html>

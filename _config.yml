@@ -1,0 +1,53 @@
+# The site, built by GitHub Pages: its home page (index*.md), mod_settings/, recommendations/, news/ and assets/. Only
+# these are published: every other file and folder at the root is excluded below, because GitHub Pages builds from the
+# root of the repository and Jekyll has no "only these folders" option. A new folder at the root must be added here.
+title: Mod Settings
+nexus_url: https://www.nexusmods.com/borderlands4/mods/388
+code_url: https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/mod_settings
+license_url: https://github.com/Kevin-hDev/Mods-Borderlands-4/blob/main/mod_settings/LICENSE
+
+# GitHub Pages applies a theme when none is set; the site has its own layout and style sheet.
+theme: null
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+
+# Without this, each page's Markdown file is published beside it too.
+optional_front_matter:
+  remove_originals: true
+readme_index:
+  remove_originals: true
+
+# The first heading of each page becomes its title, shown at the top of the page instead of in the text.
+titles_from_headings:
+  strip_title: true
+
+exclude:
+  - AGENTS.md
+  - CLAUDE.md
+  - LICENSE
+  - README.md
+  - apex_grapple
+  - apex_heirloom
+  - apex_movement
+  - benefix_ohm_attack
+  - camera_runtime
+  - characters
+  - companions
+  - coop_duel
+  - hunter_change
+  - it_follows
+  - maxunit
+  - omni_sprint
+  - third_person_fov
+  - vehicle_driving
+  - vehicle_unlocks
+  # Mod Settings' code stays on GitHub only, and so does its licence, which the pages link to there.
+  - mod_settings/LICENSE
+  - mod_settings/*.py
+  - mod_settings/*.js
+  - mod_settings/mod_settings
+  - mod_settings/page
+  - mod_settings/tests_browser

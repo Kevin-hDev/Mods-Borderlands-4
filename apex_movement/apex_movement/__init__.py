@@ -1,0 +1,131 @@
+"""Apex Movement: brings Apex Legends style movement to Borderlands 4.
+
+The same code builds the full pack and each separate file: pack.py says which movements this one carries, and every
+registration below is skipped when it does not. The order stays as written, so a file carrying two movements runs
+them in the same order the full pack does.
+"""
+
+import sys
+from typing import Any
+
+from mods_base import build_mod
+
+from . import pack
+from . import (
+    air_crouch, air_strafe, dash, family, frame, glide, ground_speed, heavier_fall, jump_report, menu, move_watch,
+    ownership, panel_open, panel_preferences, report, settings, settings_upgrade, slide, slide_direction,
+    slide_physics, slide_steering, sprint, walk_key, wall_climb,
+)
+
+camera_adapter = None
+camera_options = []
+camera_keybinds = []
+if pack.is_full():
+    from . import camera as camera_adapter
+    from . import camera_settings
+    camera_options = camera_settings.ALL
+    camera_keybinds = [*camera_settings.commands.binds, camera_settings.open_key.bind]
+    frame.set_camera(camera_adapter)
+    sprint.set_view(camera_adapter.in_third_person)
+update_options = []
+if pack.is_full():
+    from . import updates
+    update_options = [updates.seen]
+# The slow walk ships in the full pack only (Kevin, 2026-09-26): a separate file holds no key for it.
+walk_keybinds = []
+if pack.is_full():
+    from . import slow_walk
+    walk_keybinds = [walk_key.bind]
+
+__version__ = "2.0.0"
+__author__ = "kevin-hDev"
+
+
+def _register(name: str, module: Any, *switches: Any) -> None:
+    if pack.carries_module(module.__name__.rsplit(".", 1)[-1]):
+        frame.register(name, module, *switches)
+
+
+# Which module belongs to which movement is stated in movements.py, and test_movement_rules.py checks this list
+# against it: every movement takes its own switch, and no module rides on a neighbour's.
+# No switch: a walking speed has no off state, and the game's own values are named in the sliders.
+_register("ground_speed", ground_speed)
+_register("auto_sprint", sprint, settings.auto_sprint)
+# After the auto sprint, which already refrains while the key walks: this one ends the game's own sprint too. No
+# switch of its own: the key's switch is read inside, and the ground speed it slows has no off state either.
+if pack.is_full():
+    _register("slow_walk", slow_walk)
+# Before the slide speed: at a slide's end it puts the speed curve back first, and the slide speed reads that curve.
+_register("slide_physics", slide_physics, settings.slides)
+_register("slide", slide, settings.slides)
+_register("momentum_slides", slide_direction, settings.slides, settings.momentum_slides)
+# The Axle slide's switch: off, the normal slide keeps the game's steering. Its boosts are read by slide and slide_physics.
+_register("slide_steering", slide_steering, settings.slides, settings.axle_slide)
+_register("dash", dash, settings.dash)
+_register("glide", glide, settings.glide)
+_register("air_crouch", air_crouch, settings.air_crouch)
+_register("air_strafe", air_strafe, settings.air_strafe)
+_register("heavier_fall", heavier_fall, settings.heavier_fall)
+# Last: it writes the velocity in the air, and no movement registered before it does.
+_register("wall_climb", wall_climb, settings.wall_climb)
+# Diagnostic of the wall climb: writes the game's controlled move each time it changes (séance 2, 2026-09-18).
+_register("move_watch", move_watch, settings.wall_climb)
+# After every movement: it reports the jump that just left the ground, once the others have written their speeds.
+_register("jump_report", jump_report, settings.heavier_fall)
+
+
+def _on_enable() -> None:
+    report.reset()
+    # Tested with no other movement mod; Auto Sprint writes the same ground speed, so the last writer would win.
+    if "auto_sprint" in sys.modules:
+        report.warning("the Auto Sprint mod is also loaded; both set the ground speed, disable one of them")
+    for line in settings.keep_in_bounds(walk_key.speed):
+        report.warning(line)
+    if camera_adapter is not None:
+        camera_settings.commands.align()
+        camera_settings.open_key.align()
+        camera_adapter.start()
+    if pack.is_full():
+        report.note(walk_key.state_line())
+    report.note(f"enabled, version {__version__}")
+
+
+def _on_disable() -> None:
+    if camera_adapter is not None:
+        try:
+            camera_adapter.stop()
+        except Exception as exc:
+            report.error_once("camera_restore", f"camera give back failed: {exc!r}")
+    failures = frame.stop_all()
+    for failure in failures:
+        report.error_once(failure, failure)
+    # Said only when true: after a failure, "restored" read as if every value were back (review, 2026-09-19).
+    if failures:
+        plural = "s" if len(failures) > 1 else ""
+        report.note(f"disabled, {len(failures)} game value{plural} could not be restored")
+    else:
+        report.note("disabled, game values restored")
+    unloaded = ownership.unloaded_count()
+    if unloaded:
+        report.note(f"{unloaded} of them left to the game, which had unloaded their asset and loads it with its own")
+
+
+# FamilyMod refuses to switch on while another installed file of this pack already runs one of these movements.
+mod = build_mod(
+    cls=family.FamilyMod,
+    name=pack.NAME,
+    options=[*menu.MENU, *camera_options, *update_options, *panel_preferences.ALL],
+    keybinds=[*camera_keybinds, *walk_keybinds],
+    hooks=[frame.tick],
+    on_enable=_on_enable,
+    on_disable=_on_disable,
+)
+panel_open.install(mod)
+if pack.is_full():
+    settings_upgrade.apply(mod.settings_file, settings.auto_sprint_third_person)
+
+# mods_base only enables a mod whose settings file says so; a fresh install has none and would stay off.
+if mod.settings_file is not None and not mod.settings_file.exists():
+    mod.enable()
+    if pack.is_full():
+        updates.new_player(mod, __version__)

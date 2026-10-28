@@ -1,0 +1,157 @@
+#include "ads_view.h"
+#include "ads_native_test_fixture.h"
+#include <cassert>
+#include <cmath>
+#include <cstring>
+#include <iostream>
+#include <limits>
+#include "ads_test_assert.h"
+
+using namespace apex_ads;
+namespace {
+NativeFixture fixture;
+State state;
+enum class Scenario { stable, default_mode, slide, ground_slam, transition, invalid, generation };
+Scenario scenario{};
+int originals{}, zoom_calls{};
+float factor = 0.5f;
+enum class ZoomFault { none, access_violation, game_failure };
+ZoomFault fault{};
+struct GameFailure {};
+float zoom(void*, void*, void*) {
+    ++zoom_calls;
+    if (fault == ZoomFault::access_violation) RaiseException(EXCEPTION_ACCESS_VIOLATION, 0, 0, nullptr);
+    if (fault == ZoomFault::game_failure) throw GameFailure{};
+    return factor;
+}
+void original(void*, void* view, float) {
+    ++originals;
+    const float fov = scenario == Scenario::stable ? 110.0f : 70.0f;
+    std::memcpy(static_cast<unsigned char*>(view) + FOV_OFFSET, &fov, sizeof(fov));
+    if (scenario == Scenario::default_mode) fixture.put(2, MANAGER_MODE_OFFSET, uint64_t{10});
+    if (scenario == Scenario::slide) fixture.put(2, MANAGER_MODE_OFFSET, uint64_t{11});
+    if (scenario == Scenario::ground_slam) fixture.put(2, MANAGER_MODE_OFFSET, uint64_t{12});
+    if (scenario == Scenario::transition) NativeFixture::store(fixture.mode, MODE_BLEND_REMAINING_OFFSET, 0.2f);
+    if (scenario == Scenario::invalid) fixture.put(2, MANAGER_MODE_OBJECT_OFFSET, uintptr_t{1});
+    if (scenario == Scenario::generation) state.clear(state.statistics().generation);
+}
+void reset_mode() {
+    fixture.put(2, MANAGER_MODE_OFFSET, NativeFixture::third);
+    fixture.put(2, MANAGER_MODE_OBJECT_OFFSET, reinterpret_cast<uintptr_t>(fixture.mode));
+    NativeFixture::store(fixture.mode, MODE_BLEND_REMAINING_OFFSET, 0.0f);
+}
+float aim_progress = 1.0f;
+bool aim_known = true;
+void* aim_actor{};
+bool progress(void*, void* actor, float& output) {
+    aim_actor = actor;
+    output = aim_progress;
+    return aim_known;
+}
+float read_fov(const unsigned char* view) {
+    float result{};
+    std::memcpy(&result, view + FOV_OFFSET, sizeof(result));
+    return result;
+}
+}
+int main() {
+    assert(std::abs(zoom_fov(110.0f, 0.5f) - 71.05929f) < 0.001f);
+    assert(std::abs(zoom_fov(110.0f, 0.75f) - 93.93292f) < 0.001f);
+    assert(state.configure(fixture.table_address(), NativeFixture::third, &zoom));
+    state.set_installed(true);
+    uint64_t generation{};
+    alignas(16) unsigned char view[80]{};
+    for (auto next : {Scenario::stable, Scenario::default_mode, Scenario::slide,
+            Scenario::ground_slam, Scenario::transition, Scenario::invalid, Scenario::generation}) {
+        reset_mode();
+        scenario = next;
+        assert(state.publish(fixture.context(++generation)) == 0);
+        const auto before = state.statistics().fov_writes;
+        const int calls = originals;
+        const bool changed = update_view(state, fixture.manager(), view, 0.016f, &original);
+        assert(originals == calls + 1);
+        assert(changed == (next == Scenario::stable));
+        assert(state.statistics().fov_writes == before + (changed ? 1 : 0));
+        assert(std::abs(read_fov(view) - (changed ? 71.05929f : 70.0f)) < 0.001f);
+        state.clear(generation);
+    }
+    reset_mode(); scenario = Scenario::stable;
+    assert(state.publish(fixture.context(++generation)) == 0);
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+    const float first = read_fov(view);
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+    assert(read_fov(view) == first); // Each original supplies a new unzoomed view.
+    assert(state.release(generation) == 0);
+    for (float tail : {0.5f, 0.75f, 1.0f}) {
+        factor = tail;
+        assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+        const float expected = tail == 0.5f ? 71.05929f : tail == 0.75f ? 93.93292f : 110.0f;
+        assert(std::abs(read_fov(view) - expected) < 0.001f);
+    }
+    state.clear(generation);
+    assert(!update_view(state, fixture.manager(), view, 0.016f, &original));
+    for (float invalid : {0.0f, -1.0f, 3.0f, std::numeric_limits<float>::infinity(),
+                          std::numeric_limits<float>::quiet_NaN()}) {
+        state.clear(generation);
+        assert(state.publish(fixture.context(++generation)) == 0);
+        factor = invalid;
+        assert(!update_view(state, fixture.manager(), view, 0.016f, &original));
+        assert(read_fov(view) == 110.0f);
+    }
+    assert(zoom_calls > 0);
+    factor = .5f;
+    state.clear(generation);
+    assert(state.publish(fixture.context(++generation)) == 0);
+    assert(state.set_optic(generation, 0.125f) == 0);
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+    assert(std::abs(read_fov(view) - zoom_fov(110.0f, 0.125f)) < 0.001f && state.statistics().zoom_scale == 0.125f);
+    assert(state.set_optic(generation, 1.0f) == 0); // Let go: the view without zoom at once.
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+    assert(std::abs(read_fov(view) - 110.0f) < 0.001f && state.statistics().zoom_scale == 1.0f);
+    assert(state.set_optic(generation, 0.0f) == 0);
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original));
+    assert(std::abs(read_fov(view) - 71.05929f) < 0.001f && state.statistics().zoom_scale == 0.5f);
+    // An optic follows the game's aim progress in and out, and ends exactly at 1 for the release.
+    assert(state.set_optic(generation, 0.5f) == 0);
+    for (float step : {0.0f, 0.5f, 1.0f, 0.0005f}) {
+        aim_progress = step;
+        assert(update_view(state, fixture.manager(), view, 0.016f, &original, &progress));
+        const float expected = step == 0.5f ? 0.75f : step == 1.0f ? 0.5f : 1.0f;
+        assert(state.statistics().zoom_scale == expected);
+        assert(std::abs(read_fov(view) - zoom_fov(110.0f, expected)) < 0.001f);
+    }
+    assert(aim_actor == reinterpret_cast<void*>(fixture.context(generation).references[1].address));
+    // Without a readable progress, the optic is set at once as before.
+    aim_known = false;
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original, &progress));
+    assert(state.statistics().zoom_scale == 0.5f);
+    aim_known = true;
+    for (float invalid : {-0.1f, 1.5f, std::numeric_limits<float>::quiet_NaN()}) {
+        aim_progress = invalid;
+        assert(update_view(state, fixture.manager(), view, 0.016f, &original, &progress));
+        assert(state.statistics().zoom_scale == 0.5f);
+    }
+    aim_progress = 1.0f;
+    // The weapon's own zoom never reads the progress.
+    assert(state.set_optic(generation, 0.0f) == 0);
+    aim_actor = nullptr;
+    assert(update_view(state, fixture.manager(), view, 0.016f, &original, &progress));
+    assert(aim_actor == nullptr && state.statistics().zoom_scale == 0.5f);
+    state.clear(generation);
+    assert(state.publish(fixture.context(++generation)) == 0);
+    const auto writes = state.statistics().fov_writes;
+    const int fault_calls = zoom_calls;
+    fault = ZoomFault::access_violation;
+    assert(!update_view(state, fixture.manager(), view, .016f, &original));
+    assert(read_fov(view) == 110.0f && state.statistics().fov_writes == writes);
+    assert(zoom_calls == fault_calls + 1);
+    assert(state.publish(fixture.context(++generation)) == 0);
+    fault = ZoomFault::game_failure;
+    bool propagated = false;
+    try { update_view(state, fixture.manager(), view, .016f, &original); }
+    catch (const GameFailure&) { propagated = true; }
+    assert(propagated && read_fov(view) == 110.0f);
+    assert(zoom_calls == fault_calls + 2);
+    assert(state.statistics().fov_writes == writes);
+    std::cout << "RESULTAT: OK (real ADS wrapper; no double or cumulative zoom)\n";
+}

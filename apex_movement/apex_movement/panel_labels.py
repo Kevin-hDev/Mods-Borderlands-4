@@ -1,0 +1,73 @@
+"""Refresh the same button colours and text roles used by Grapple's window."""
+
+from . import panel_buttons as b, panel_i18n as i18n, panel_shortcut as sc, panel_slider as s, panel_theme as t
+from . import panel_options_tabs as tabs, panel_theme_choice
+from . import panel_size_choice
+from .panel_preferences import LANGUAGES
+
+
+def apply(form, widgets):
+    from . import __version__
+    language = form.model.language
+    for name in ("close", "restore", "undo"):
+        widgets[f"{name}_label"].SetText(i18n.text(name, language))
+    widgets["undo"].SetIsEnabled(form.model.can_undo)
+    b.paint(widgets, "undo", "secondary" if form.model.can_undo else "disabled")
+    panel_size_choice.paint(widgets, form.model.window_size, language)
+    panel_theme_choice.paint(widgets, form.model.theme, language)
+    for lang in LANGUAGES:
+        # Each language is named in its own words, so a player lost in the other one still finds theirs.
+        name = f"language:{lang}"
+        widgets[f"{name}_label"].SetText(i18n.text("language_name", lang))
+        b.paint(widgets, name, "on" if lang == language else "off")
+    for index, key in enumerate(form.model.pages):
+        widgets[f"nav:{key}_label"].SetText(i18n.text(key, language))
+        active = not form.options_open and form.page == index
+        b.paint(widgets, f"nav:{key}", "nav_on" if active else "nav_off")
+    enabled = form.model.mod.is_enabled
+    widgets["enabled_label"].SetText(i18n.text("enabled" if enabled else "disabled", language))
+    b.paint(widgets, "enabled", "on" if enabled else "off")
+    widgets["tag"].SetText(f"{i18n.text('by', language)} {t.AUTHOR}")
+    widgets["meta"].SetText(f"{i18n.text('version', language)} {__version__} · "
+                            f"{i18n.text('by', language)} {t.AUTHOR}")
+    tabs.refresh(form, widgets, language)
+    for group, key in zip(form.model.groups, form.model.pages):
+        widgets[f"heading:{key}"].SetText(i18n.text(key, language))
+        widgets[f"group:{key}"].SetText(i18n.group_text(group, key, language))
+    if "heading:command_external" in widgets:
+        widgets["heading:command_external"].SetText(i18n.text("commands", language))
+        widgets["group:command_external"].SetText(i18n.text("camera_elsewhere", language))
+    for key, option in form.model.options.items():
+        if sc.is_shortcut(option):
+            sc.texts(widgets, key, language)
+            continue
+        title, description = i18n.option_text(option, language)
+        widgets[f"label:{key}"].SetText(title.upper())
+        widgets[f"description:{key}"].SetText(description)
+    widgets["notice"].SetText(i18n.text(form.notice, language))
+
+
+def value(widgets, option, current, language):
+    key = option.identifier
+    if sc.is_shortcut(option):
+        sc.show_key(widgets[f"key:{key}"], current)
+    elif key == "third_person_ads":
+        label = (i18n.text("aim_third" if current else "aim_first", language) if language in i18n.TABLES
+                 else option.true_text if current else option.false_text)
+        widgets[f"setting:{key}_label"].SetText(label)
+        b.paint(widgets, f"setting:{key}", "on" if current else "off")
+    elif f"optic:{key}:bdl4" in widgets:
+        # An optic row, drawn as boxes (panel_optics.py).
+        from . import panel_optics
+        panel_optics.paint(widgets, key, current)
+    elif key in ("omni_body", "omni_angle", "omni_direction_sprint", "omni_crouch"):
+        from . import panel_omni_direction
+        panel_omni_direction.paint(widgets, option, current, language)
+    elif key == "shoulder_left":
+        widgets[f"setting:{key}_label"].SetText(i18n.text("left" if current else "right", language))
+        b.paint(widgets, f"setting:{key}", "on" if current else "off")
+    elif type(option.default_value) is bool:
+        widgets[f"setting:{key}_label"].SetText(i18n.text("on" if current else "off", language))
+        b.paint(widgets, f"setting:{key}", "on" if current else "off")
+    else:
+        s.show(widgets, option, current)

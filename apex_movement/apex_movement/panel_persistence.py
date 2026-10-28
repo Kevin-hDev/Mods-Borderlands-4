@@ -1,0 +1,26 @@
+"""Observe persistence without assuming the SDK's direct JSON write is atomic."""
+import hashlib
+import hmac
+
+from .panel_transaction_config import MAX_SETTINGS_BYTES
+
+
+def fingerprint(mod, report=None):
+    path = getattr(mod, "settings_file", None)
+    if path is None:
+        return None  # An unknown custom persistence method cannot prove an unchanged file.
+    try:
+        with path.open("rb") as source:
+            data = source.read(MAX_SETTINGS_BYTES + 1)
+        return hashlib.sha256(data).digest() if len(data) <= MAX_SETTINGS_BYTES else None
+    except FileNotFoundError:
+        return b"missing"
+    except Exception as error:
+        if report is not None:
+            report("panel:persistence_read", f"Settings read failed: {type(error).__name__}")
+        return None
+
+
+def unchanged(mod, before, report=None):
+    after = fingerprint(mod, report)
+    return before is not None and after is not None and hmac.compare_digest(before, after)

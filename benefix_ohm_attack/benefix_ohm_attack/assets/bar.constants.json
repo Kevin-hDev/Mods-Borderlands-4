@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "host": "127.0.0.1",
+  "port": 38751,
+  "path": "/beam-attack/v1/energy",
+  "pollMs": 100,
+  "retryMaxMs": 5000,
+  "idleMs": 500,
+  "timeoutMs": 1000,
+  "maxResponseBytes": 256,
+  "carryMs": 400,
+  "staleMs": 1000,
+  "holdMs": 1200,
+  "fadeMs": 250,
+  "lowShare": 0.25
+}

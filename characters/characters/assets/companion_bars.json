@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "host": "127.0.0.1",
+  "port": 38761,
+  "path": "/renforts/v1/companions",
+  "pollMs": 250,
+  "retryMaxMs": 5000,
+  "idleMs": 500,
+  "timeoutMs": 1000,
+  "maxResponseBytes": 2048,
+  "staleMs": 1500,
+  "most": 8,
+  "nameMost": 32,
+  "barsPak": "it-follows-companion-bars_999_P.pak",
+  "namesPak": "it-follows-hunter-names_999_P.pak"
+}

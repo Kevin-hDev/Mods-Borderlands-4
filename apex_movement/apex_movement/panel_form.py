@@ -1,0 +1,248 @@
+"""Poll Movement's menu controls and save validated option changes."""
+
+import time
+
+from . import panel_i18n as i18n, panel_labels as labels, panel_shortcut as sc, panel_theme as t
+from . import panel_options_tabs as tabs, panel_theme_choice
+from . import panel_language_choice, panel_size_choice
+from .panel_form_lifecycle import Lifecycle
+
+# A setting that changes nothing while its switch is off: FOV under Custom FOV, the walk key's toggle and speed under
+# the walk key, loot reach under its switch and the shoulder outside third person. Orbit and the common camera
+# animation remain available in first person; Orbit returns to its entry view (Kevin, 2026-10-06).
+DEPENDS_ON = {"fov": "custom_fov", "walk_toggle": "walk", "walk_key_speed": "walk", "loot_reach": "extended_loot",
+              "auto_sprint_third_person": "auto_sprint",
+              "shoulder_left": "third_person", "sensitivity_look": "third_person", "sensitivity_aim": "third_person", "sensitivity_weapons": "third_person", "sensitivity_weapon_sniper_optics": "third_person", "shoulder_auto": "third_person", "shoulder_auto_swap": "shoulder_auto", "shoulder_auto_return": "shoulder_auto", "free_look_keyboard_hold": "free_look", "free_look_controller_hold": "free_look", "free_look_hold_time": "free_look", "camera_distance_close": "third_person", "camera_distance_far": "third_person", "camera_distance_auto": "third_person", "shoulder_smooth": "third_person", "orbit_smooth": None, "shoulder_seconds": "shoulder_smooth", "orbit": None, "third_person_ads": "third_person",
+              "speed_fov_gain": "speed_fov", "speed_fov_seconds": "speed_fov",
+              "action_framing_strength": "action_framing", "camera_motion_strength": "camera_motion"}
+
+
+class PanelForm(Lifecycle):
+    keep_when_disabled = True
+
+    def __init__(self, widgets, model):
+        self.widgets, self.model = widgets, model
+        saved_page = model.page
+        self.options_open = saved_page == "options"
+        self.page = 0 if self.options_open else model.pages.index(saved_page)
+        self.notice = "ready"
+        self.pending, self.shown = {}, {}
+        self.changed_at = 0
+        self.redraw = False  # set by a theme change; the window's session then draws it again
+        self.focus = widgets["focus"]
+        self.command_form = self.command_catalogue = None
+        if model.command_actions is not None:
+            from .camera_control_config import OPEN_KEY
+            from .camera_control_form import Form
+            from .panel_glyphs import Catalogue
+            from .panel_profile_form import ProfileForm
+            self.open_key = OPEN_KEY
+            self.command_form, self.command_catalogue = Form(widgets, model, OPEN_KEY), Catalogue()
+            self.profile_form = ProfileForm(self)
+        self.sync(self.resolve())
+        self.open_updates(self.resolve())
+
+    def sync(self, widgets):
+        self.pending.clear()
+        if hasattr(self, "framing_form"):
+            self.framing_form.reset(widgets)
+        active_page = len(self.model.pages) if self.options_open else self.page
+        widgets["pages"].SetActiveWidgetIndex(active_page)
+        for key, option in self.model.options.items():
+            self.shown[key] = option.value
+            widget = widgets[f"setting:{key}"]
+            if sc.is_shortcut(option):
+                continue  # The labels show its key; its Change button keeps its own word.
+            if type(option.default_value) is bool:
+                widget.SetIsChecked(False)
+            else:
+                widget.SetValue(float(option.value))
+        self.refresh_dependency(widgets)
+        self.refresh_labels(widgets)
+        if self.command_form is not None:
+            self.command_form.set_enabled(not self.model.transaction.pending)
+
+    def refresh_dependency(self, widgets):
+        if 'third_person' in self.model.options:
+            widgets['setting:third_person'].SetIsEnabled(not self.model.options['third_person'].locked)
+        for name, switch in DEPENDS_ON.items():
+            if name not in self.model.options:
+                continue
+            active = switch is None or self.shown[switch] is True
+            if name == 'shoulder_seconds':
+                active = (active and self.shown.get('third_person') is True) or self.shown.get('orbit_smooth') is True
+            widgets[f"setting:{name}"].SetIsEnabled(active)
+            # The whole row fades, label and value included, as the mockup's .row.muted does.
+            for part in ("row", "description"):
+                widgets[f"{part}:{name}"].SetRenderOpacity(1.0 if active else t.OPACITY_DISABLED)
+        if "omni_body" in self.model.options:
+            from . import panel_omni_direction
+            panel_omni_direction.grey(self, widgets)
+        if self.profile_form is not None:
+            self.profile_form.grey(widgets)
+
+    def refresh_labels(self, widgets):
+        labels.apply(self, widgets)
+        for key, option in self.model.options.items():
+            labels.value(widgets, option, self.shown[key], self.model.language)
+        if self.command_form is not None:
+            from . import panel_camera_commands
+            panel_camera_commands.refresh(self, widgets, self.command_catalogue)
+        self.refresh_aim(widgets)
+
+    def refresh_aim(self, widgets):
+        if "third_person_ads" in self.model.options:
+            from . import panel_ads
+            panel_ads.refresh(self, widgets)
+
+    @staticmethod
+    def take(widget):
+        if not widget.IsChecked():
+            return False
+        widget.SetIsChecked(False)
+        return True
+
+    def report(self, widgets, key):
+        self.notice = key
+        widgets["notice"].SetText(i18n.text(key, self.model.language))
+
+    def flush(self, widgets):
+        if self.model.transaction.pending:
+            return False
+        if hasattr(self, "framing_form") and not self.framing_form.flush(widgets):
+            return False
+        if not self.pending:
+            return True
+        success = self.model.write(self.pending)
+        waiting = success is None and not self.model.transaction.rolling_back
+        self.notice = "saved" if success else "ready" if waiting else self.failure_notice()
+        self.sync(widgets)
+        return success is True
+
+    def read_changes(self, widgets, now):
+        for key, option in self.model.options.items():
+            widget = widgets[f"setting:{key}"]
+            if self.model.camera_elsewhere and key in self.model.camera_options:
+                continue
+            if key == 'third_person' and option.locked:
+                widget.SetIsChecked(False)
+                continue
+            if key == "third_person_ads" and getattr(self, "ads_blocked", False):
+                widget.SetIsChecked(False)
+                continue
+            if sc.is_shortcut(option):
+                raw = sc.take_key(widget)
+                if raw is None:
+                    continue
+                try:
+                    value = self.model.normalize(option, raw)
+                except (TypeError, ValueError):
+                    self.report(widgets, "failed")
+                    continue
+                if value == self.shown[key]:
+                    continue
+            elif type(option.default_value) is bool:
+                if not self.take(widget):
+                    continue
+                value = not self.shown[key]
+            else:
+                raw = widget.GetValue()
+                if abs(raw - self.shown[key]) < max(1e-6, option.step * 0.01):
+                    continue
+                try:
+                    value = self.model.normalize(option, raw)
+                except (TypeError, ValueError, OverflowError):
+                    self.report(widgets, "failed")
+                    self.sync(widgets)
+                    return
+                if value == self.shown[key]:
+                    continue
+            self.shown[key] = value
+            if value == option.value:
+                self.pending.pop(key, None)
+            else:
+                self.pending[key] = value
+            self.changed_at = now
+            labels.value(widgets, option, value, self.model.language)
+        self.refresh_dependency(widgets)
+
+        self.refresh_aim(widgets)
+
+    def poll(self):
+        widgets, now = self.resolve(), time.perf_counter_ns()
+        self.refresh_aim(widgets)
+        if "sensitivity_weapons" in self.model.options:
+            from . import panel_weapon_sensitivity
+            panel_weapon_sensitivity.poll(self, widgets, now)
+        if "omni_body" in self.model.options:
+            from . import panel_omni_direction
+            panel_omni_direction.refresh(self, widgets)
+        if self.open_key_closes(widgets):
+            return self.flush(widgets)
+        outcome = self.model.advance()
+        if outcome is not None:
+            self.notice = self.failure_notice() if outcome == "failed" else outcome
+            self.sync(widgets)
+        if self.poll_popup(widgets):
+            return False
+        self.read_changes(widgets, now)
+        if self.take(widgets["close"]):
+            return self.flush(widgets)
+        if self.take(widgets["theme"]):
+            panel_theme_choice.choose(self, widgets)
+            return False
+        if self.take(widgets["window_size"]):
+            panel_size_choice.choose(self, widgets)
+            return False
+        if tabs.poll(self, widgets):
+            return False
+        if panel_language_choice.choose(self, widgets, "language:"):
+            return False
+        for family in ("PS5", "XSX"):
+            if self.command_form is not None and self.take(widgets[f"icons:{family}"]):
+                if self.model.change_controller_icons(family):
+                    self.refresh_labels(widgets)
+                else:
+                    self.report(widgets, "failed")
+                return False
+        for index, key in enumerate(self.model.pages):
+            if self.take(widgets[f"nav:{key}"]):
+                if self.flush(widgets) and self.model.change_page(key):
+                    self.page = index
+                    self.options_open = False
+                    widgets["pages"].SetActiveWidgetIndex(index)
+                    self.refresh_labels(widgets)
+                else:
+                    self.report(widgets, "failed")
+                return False
+        for name in ("restore", "undo", "enabled"):
+            if self.take(widgets[name]):
+                if not self.flush(widgets):
+                    return False
+                success = (self.model.toggle_enabled if name == "enabled"
+                           else getattr(self.model, name))()
+                self.notice = ({"restore": self.model.success_notice, "undo": self.model.success_notice,
+                                "enabled": "saved"}[name] if success else
+                               "ready" if success is None else
+                               self.model.toggle_notice if name == "enabled" else self.failure_notice())
+                self.sync(widgets)
+                return False
+        if self.pending and now - self.changed_at >= t.SAVE_DELAY_NS:
+            self.flush(widgets)
+        if self.poll_open_key(widgets):
+            return False
+        if (not self.model.camera_elsewhere and self.command_form is not None and not self.model.transaction.pending
+                and self.model.pages[self.page] == "commands"):
+            self.command_form.poll()
+            if self.command_form.changed:
+                self.refresh_labels(widgets)
+        return False
+
+    def selecting(self):
+        widgets = self.resolve()
+        settings_selecting = any(sc.is_shortcut(option) and widgets[f"setting:{key}"].GetIsSelectingKey()
+                                 for key, option in self.model.options.items())
+        commands_selecting = (self.command_form is not None and self.model.pages[self.page] == "commands"
+                              and self.command_form.selecting())
+        return (settings_selecting or commands_selecting or self.selecting_open_key(widgets)
+                or bool(self.profile_form and self.profile_form.selecting()))

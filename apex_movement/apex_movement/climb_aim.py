@@ -1,0 +1,102 @@
+"""Aiming a wall climb: the wall the trace found, the angles to it, and the direction a climb goes in.
+
+Split out of climb_rules on 2026-09-17, when refusals had to be told apart in the log: the rules grew a reason for
+every way a climb can fail to start, and the geometry they lean on belongs to itself. No SDK import, so every angle is
+tested without the game.
+
+A Wall is whatever the trace touched, floor or ceiling included: how upright it stands is `flat`, and deciding what is
+climbable is a rule, not a measure (climb_rules). Before that, wall_sense threw a slope away and the log could not say
+a climb was refused because the surface leaned.
+"""
+
+import math
+from dataclasses import dataclass
+
+# Where a climb looks for its wall, in shares of the character's half height from its centre: from just under the feet
+# to over the head. One height alone slipped through the gaps of an uneven face (Kevin, séance O), and three starting
+# at -0.7 still missed what blocked the player: the probe's profile found an upright face right at the feet, at -1.2,
+# on all three zones that refused to be climbed (séance R). The log counts how many of these met anything, so "no wall"
+# tells a structure the traces go through from a wall the rules turned down.
+TRACE_HEIGHTS = (-1.2, -0.6, 0.0, 0.6, 1.2)
+# From this height up, a hit means a wall the character's own body would meet, not a step it can be lifted over.
+HIGH_FROM = 0.0
+# A climb gets a forgiving start angle and a little more room once active, but never beyond tangent: past 90 degrees
+# the stick points away from the wall.
+MIN_START_DEG = 45.0
+START_VIEW_DEG = 45.0
+KEEP_MARGIN_DEG = 15.0
+
+
+@dataclass(frozen=True)
+class Wall:
+    distance: float
+    # The way into the wall, flat and one unit long; both zero when the surface faces straight up or down.
+    into_x: float
+    into_y: float
+    # How much of the surface's normal is horizontal: 1 for a wall standing straight, 0 for a floor or a ceiling.
+    flat: float
+    # The way up along the surface, one unit long. Straight up by default, which is what a wall standing straight
+    # gives: a leaning wall tips it into itself, so climbing follows the face instead of drifting away from it.
+    up_x: float = 0.0
+    up_y: float = 0.0
+    up_z: float = 1.0
+
+
+def angle_to_wall(x: float, y: float, wall: Wall) -> float:
+    """Degrees between a flat direction and the way into the wall; no direction at all counts as turned away."""
+    length = math.hypot(x, y)
+    if length < 1e-6:
+        return 180.0
+    cosine = (x * wall.into_x + y * wall.into_y) / length
+    return math.degrees(math.acos(max(-1.0, min(1.0, cosine))))
+
+
+def view_angle(yaw: float | None, wall: Wall) -> float:
+    if yaw is None:
+        return 180.0
+    angle = math.radians(yaw)
+    return angle_to_wall(math.cos(angle), math.sin(angle), wall)
+
+
+def start_angle(lean_deg: float) -> float:
+    return min(90.0, max(MIN_START_DEG, lean_deg))
+
+
+def view_angle_allowed(lean_deg: float) -> float:
+    return min(90.0, max(START_VIEW_DEG, lean_deg))
+
+
+def keep_angle(lean_deg: float) -> float:
+    return min(90.0, start_angle(lean_deg) + KEEP_MARGIN_DEG)
+
+
+def lean_degrees(x: float, y: float, wall: Wall, limit_deg: float) -> float:
+    """How far the stick leans along the wall: 0 straight up, negative on one side and positive on the other.
+
+    Bounded by the limit, so that between it and the end angle a climb keeps its fullest diagonal instead of ending.
+    A stick pointing no way into the wall asks for no side: pulled straight back, it gave an angle near 180 whose side,
+    and so the side of the fullest diagonal, a hair of noise decided.
+    """
+    if math.hypot(x, y) < 1e-6:
+        return 0.0
+    into = x * wall.into_x + y * wall.into_y
+    along = x * -wall.into_y + y * wall.into_x
+    # A tangent command must stay lateral. A tiny outward component may be analog noise around that tangent, so keep
+    # its side during the rules' grace instead of dropping abruptly to a vertical climb. Directly away stays vertical
+    # until the rules end the climb because its side has no stable sign.
+    if into < 0.0:
+        return 0.0 if abs(along) < 1e-6 else math.copysign(limit_deg, along)
+    return max(-limit_deg, min(limit_deg, math.degrees(math.atan2(along, max(0.0, into)))))
+
+
+def climb_direction(lean_deg: float, wall: Wall) -> tuple[float, float, float]:
+    """A unit direction to climb in: up along the wall's own face, tipped by lean_deg to one side of it.
+
+    Following the face matters on a wall that leans back: séance U measured one at 72 degrees, where climbing straight
+    up moved the character 30 further from it every 100 risen, until the wall was out of reach and the climb died.
+    """
+    lean = math.radians(lean_deg)
+    rise, sideways = math.cos(lean), math.sin(lean)
+    return (wall.up_x * rise - wall.into_y * sideways,
+            wall.up_y * rise + wall.into_x * sideways,
+            wall.up_z * rise)

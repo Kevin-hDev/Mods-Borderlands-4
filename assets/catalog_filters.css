@@ -1,0 +1,7 @@
+---
+---
+/* Made by Jekyll from _data/categories.json: once a filter is on, the cards of each category whose filter is on show
+   again (recommended.css hides the others). */
+{% for category in site.data.categories %}
+.catalog:has(#filter-{{ category.id }}:checked) .card.category-{{ category.id }} { display: flex; }
+{%- endfor %}

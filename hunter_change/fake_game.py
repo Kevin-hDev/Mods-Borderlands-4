@@ -1,0 +1,186 @@
+"""A fake game for Hunter Change's tests, built on what the game showed (docs/reverse-and-change-hunters, essais 22 to
+31): each hunter's body and head pickers live the whole session and are shared by every game of that hunter; a
+character holds one choice per selection, a chosen part (kind def) or Default, which names the picker's current
+default; the part setter takes a text, chooses what it names and leaves every other selection Default, then builds the
+body from the chosen body part or else the body picker's default; a character has its hunter's own size, which the
+game puts back when it stands up (stand_up)."""
+
+import enum
+import types
+from typing import Any
+
+from hunter_change import hunters
+from sdk_stubs import FakeDefPtr
+
+GESTALT = types.SimpleNamespace(_path_name=lambda: "/Script/GbxGame.GbxActorPartDef_Gestalt")
+COLOUR = "Cosmetics_Colorization_Primary"
+rule = {"refuse": None, "ignore": None, "setter_refused": False, "size_refused": False, "offset_refused": False}
+
+
+class EGbxActorPartChoiceType(enum.IntEnum):
+    """As the SDK hands the game's enum: str() gives the number; the names are the field map's."""
+    Default = 0
+    def_ = 1
+    Param = 2
+
+
+EGbxActorPartChoiceType.def_._name_ = "def"
+
+
+class Picker:
+    def __init__(self, name: str, default: str) -> None:
+        self._name, self.PickableParts = name, [FakeDefPtr(f"{name}01_Prison", GESTALT)]
+        self.writes: list[str] = []
+        object.__setattr__(self, "DefaultPart", FakeDefPtr(default, GESTALT))
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == "DefaultPart":
+            if rule["refuse"] == value._name:
+                raise RuntimeError("Ref type does not inherit")
+            self.writes.append(value._name)
+            if rule["ignore"] == value._name:
+                return
+        object.__setattr__(self, name, value)
+
+
+class Choice:
+    def __init__(self, picker: Picker, part: str | None = None) -> None:
+        self.picker, self.part = picker, part
+        self.type = EGbxActorPartChoiceType.Default if part is None else EGbxActorPartChoiceType.def_
+
+    @property
+    def ChosenDef(self) -> FakeDefPtr:
+        return self.picker.DefaultPart if self.part is None else FakeDefPtr(self.part)
+
+
+class Capsule:
+    def __init__(self, half: float) -> None:
+        self.CapsuleRadius, self.CapsuleHalfHeight = 40.0, half
+
+    def SetCapsuleSize(self, radius: float, half: float, _update: bool) -> None:
+        if rule["size_refused"]:
+            raise RuntimeError("no")
+        self.CapsuleRadius, self.CapsuleHalfHeight = radius, half
+
+
+class Character:
+    """A class instance, as the game's are, so that WeakPointer can follow it; standing at height 1000."""
+
+    def __init__(self, selections: list, own: Any) -> None:
+        self.own, self.bIsCrouched = own, False
+        self.GbxActorPartOwnerState = types.SimpleNamespace(ReplicatedSelections=selections)
+        self.Mesh = types.SimpleNamespace(GestaltMeshParts=[], RelativeLocation=vec(0.0, 0.0, own.mesh_z))
+        self.Mesh.K2_SetRelativeLocation = lambda at, _s, _h, _t: setattr(self.Mesh, "RelativeLocation", at)
+        self.BaseTranslationOffset = vec(0.0, 0.0, own.mesh_z)
+        self.CapsuleComponent = Capsule(own.half)
+        self.CharacterMovement = types.SimpleNamespace(CrouchedHalfHeight=60.5)
+        self.CharacterMovement.SetCrouchedHalfHeight = lambda half: setattr(self.CharacterMovement,
+                                                                            "CrouchedHalfHeight", half)
+        self.BaseEyeHeight, self.CrouchedEyeHeight = own.eye, own.crouched_eye
+        self.location = vec(0.0, 0.0, 1000.0)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == "BaseTranslationOffset" and rule["offset_refused"]:
+            raise RuntimeError("no")
+        object.__setattr__(self, name, value)
+
+    def K2_GetActorLocation(self) -> Any:
+        return self.location
+
+    def K2_SetActorLocation(self, at: Any, _sweep: bool, _hit: Any, _teleport: bool) -> None:
+        self.location = at
+
+
+def vec(x: float, y: float, z: float) -> types.SimpleNamespace:
+    return types.SimpleNamespace(X=x, Y=y, Z=z)
+
+
+_pickers: dict[str, tuple[Picker, Picker, Picker]] = {}
+colour_picker = Picker(COLOUR, "None")
+handed: list[str] = []
+
+
+def pickers_of(code: str) -> tuple[Picker, Picker, Picker]:
+    """The body, head and skin pickers of a hunter, made once for the session."""
+    if code not in _pickers:
+        # The game spells two picker names differently from their parts (read in essai 24).
+        spelled = {"CorpoHacker": "Corpohacker", "RoboDealer": "Robodealer"}.get(code, code)
+        _pickers[code] = (Picker(f"Cosmetics_{spelled}_Body", f"Cosmetics_{code}_Body00_Default"),
+                          Picker(f"Cosmetics_{spelled}_Head", f"Cosmetics_{code}_Head00_Default"),
+                          Picker(f"Cosmetics_{spelled}_Skin", f"Cosmetics_{code}_SkinFilter00_Default"))
+    return _pickers[code]
+
+
+def id_words(game: str) -> types.SimpleNamespace:
+    words = [int(game[index:index + 8], 16) for index in range(0, 32, 8)]
+    return types.SimpleNamespace(**{name: word - (1 << 32) if word >= 1 << 31 else word
+                                    for name, word in zip("ABCD", words)})
+
+
+def load(state: dict, code: str, game: str, outfit: str = "gap,") -> Character:
+    """A game of `code` loaded with the outfit its save holds: a new character, the session's pickers."""
+    selections = [types.SimpleNamespace(SelectorDef=picker, choices=[Choice(picker)])
+                  for picker in (*pickers_of(code), colour_picker)]
+    character = Character(selections, hunters.by_code(code).stature)
+    player_state = types.SimpleNamespace(ReplicatedCharacterDef=f"Char_{code}", ActiveCharGuid=id_words(game))
+
+    def setter(_actor_type: str, text: str) -> None:
+        if rule["setter_refused"]:
+            raise RuntimeError("no")
+        handed.append(text)
+        named = dict(item[:-1].split("[", 1) for item in text.removeprefix("gap,").split(",") if item)
+        for selection in selections:
+            selection.choices = [Choice(selection.SelectorDef, named.get(selection.SelectorDef._name))]
+        body = selections[0].SelectorDef
+        character.Mesh.GestaltMeshParts = [types.SimpleNamespace(Name=named.get(body._name, body.DefaultPart._name))]
+
+    player_state.ServerSetGbxActorParts = setter
+    setter("character", outfit)
+    handed.clear()
+    state["pc"] = types.SimpleNamespace(OakCharacter=character, Pawn=character, PlayerState=player_state)
+    return character
+
+
+def body_drawn(character: Character) -> str:
+    return character.Mesh.GestaltMeshParts[0].Name
+
+
+def size(character: Character) -> tuple[float, float, float, float]:
+    """Half height, eye height, crouched eye height and body height, as the character holds them now."""
+    return (character.CapsuleComponent.CapsuleHalfHeight, character.BaseEyeHeight, character.CrouchedEyeHeight,
+            character.Mesh.RelativeLocation.Z)
+
+
+def own_size(code: str) -> tuple[float, float, float, float]:
+    stature = hunters.by_code(code).stature
+    return stature.half, stature.eye, stature.crouched_eye, stature.mesh_z
+
+
+def _resize(character: Character, half: float, moved: float) -> None:
+    """The capsule to `half`, the body and its offset moved by `moved`, as the game does (watched on 2026-10-13)."""
+    character.CapsuleComponent.CapsuleHalfHeight = half
+    character.Mesh.RelativeLocation = vec(0.0, 0.0, character.Mesh.RelativeLocation.Z + moved)
+    character.BaseTranslationOffset = vec(0.0, 0.0, character.BaseTranslationOffset.Z + moved)
+
+
+def stand_up(character: Character) -> None:
+    """What the game does when the character stands up from a crouch, a slide or a Fight For Your Life (2026-10-08,
+    2026-10-13): its own capsule half height and eye height back, the body and its offset moved by the capsule's
+    change (100 to 93 moved both up by 7, 60.5 to 93 down by 32.5)."""
+    _resize(character, character.own.half, character.CapsuleComponent.CapsuleHalfHeight - character.own.half)
+    character.BaseEyeHeight, character.bIsCrouched = character.own.eye, False
+
+
+def crouch(character: Character) -> None:
+    """What the game does when the character crouches (2026-10-13): the crouched capsule, the body and its offset
+    moved up by its own hunter's change, whatever the capsule was (100 to 60.5 moved both by 93 - 60.5)."""
+    _resize(character, 60.5, character.own.half - 60.5)
+    character.bIsCrouched = True
+
+
+def outfit_worn(character: Character) -> str:
+    """The text a save would write now (essai 30): the chosen parts in order."""
+    entries = [f"{selection.SelectorDef._name}[{selection.choices[0].part}]"
+               for selection in character.GbxActorPartOwnerState.ReplicatedSelections
+               if selection.choices[0].part is not None]
+    return "gap," + ",".join(entries)

@@ -1,0 +1,73 @@
+/* The cards of the home page and of the recommended mods, the top of a mod's page, and the list of updates. The
+   colours and sizes come from site.css's tokens. */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+  margin: 0 0 1.6em;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--tip-bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text-body);
+  text-decoration: none;
+}
+.card:hover { border-color: var(--blue); color: var(--text-body); }
+main .card img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; margin: 0; border: 0; border-radius: 0; }
+.card-text { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 16px; }
+.card-title { font: 600 20px/1.25 var(--font-title); color: var(--title); }
+.card-by { font-size: 14px; color: var(--text-dim); }
+.card-pitch { font-size: 15px; }
+.home-cards { margin-top: 1.4em; }
+/* The recommended mods' card shows up to three of their pictures, side by side, in the same 16:9 frame. */
+.card-thumbs { display: flex; aspect-ratio: 16 / 9; }
+.card-thumbs:empty { display: none; }
+main .card-thumbs img { flex: 1 1 0; min-width: 0; height: 100%; aspect-ratio: auto; }
+
+/* The catalog's filters: a checkbox kept for the keyboard and screen readers, shown as the chip of its label. */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 1.2em; padding: 0; list-style: none; }
+.filters li { position: relative; margin: 0; }
+.filter-box { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.filters label {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid var(--ghost-line);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+}
+.filter-box:hover + label { border-color: var(--blue); color: var(--title); }
+.filter-box:checked + label { background: var(--orange); border-color: var(--orange); color: var(--on-orange); }
+.filter-box:focus-visible + label { outline: 2px solid var(--orange); outline-offset: 2px; }
+/* Once a filter is on, every card hides but those of the categories turned on (catalog_filters.css). */
+.catalog:has(.filter-box:checked) .card { display: none; }
+
+/* The top of a mod's page, in the header under its name. */
+.mod-by { margin: 6px 0 0; color: var(--text); font-size: 17px; }
+.mod-versions { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 4px 0 0; color: var(--text-dim); font-size: 14px; }
+.button .icon { width: 18px; height: 18px; margin-right: 8px; vertical-align: -3px; }
+.permission, .thanks { margin: 0; padding: 8px 12px; border-left: 3px solid var(--orange); background: var(--tip-bg); }
+.permission { margin-top: 18px; color: var(--title); font-weight: 600; }
+.thanks { color: var(--text); }
+
+.news { margin: 0 0 1.4em; padding: 0; list-style: none; }
+.note { margin: 0 0 14px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--tip-bg); }
+.note p { margin: 0; }
+.note-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 6px !important; }
+.note-head time { color: var(--text-dim); font-size: 14px; font-variant-numeric: tabular-nums; }
+.note-head a { font-weight: 600; }
+.note-version { padding: 1px 8px; border: 1px solid var(--ghost-line); border-radius: 999px; font-size: 13px; color: var(--text); }
+.note img { margin: 10px 0 0; }
+.empty { color: var(--text-dim); }
+.button.platform-discord, .button.platform-youtube, .button.platform-discord:hover, .button.platform-youtube:hover {
+  color: var(--on-platform);
+}
+.button.platform-discord { background: var(--discord); border-color: var(--discord); }
+.button.platform-youtube { background: var(--youtube); border-color: var(--youtube); }
+.button.platform-discord:hover, .button.platform-youtube:hover { filter: brightness(1.12); }

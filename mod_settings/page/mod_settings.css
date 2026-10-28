@@ -1,0 +1,154 @@
+/* Copyright (c) 2026 kevin-hDev
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+/* The page's own look, the little the game's stylesheets do not give (OPTI.md, rule 11): its layer over the
+   menu, the tabs set in that layer, the path above them, the corner with Python's state and CLOSE, and a few lines
+   the drawings needed (maquettes/page_mods.css). Rows, tabs and details are the game's (menu_options.css,
+   navigationbar.css, the pieces' own). */
+
+/* A full-screen layer inside the menu, as the HUD Editor's panel, proven to take the mouse in game. */
+.ms_root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 50000;
+    pointer-events: auto;
+}
+
+.ms_root.ms_closed,
+.ms_hidden {
+    display: none;
+}
+
+.ms_text {
+    color: white;
+    margin: 0;
+}
+
+/* The game's tab bar is a layer of its own, fixed to the screen (navigationbar.css): here it sits in the page's
+   layer, above the rows. Each bar keeps its own row: without it, the top bar's boundaries take the whole header. */
+.ms_header {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 2;
+}
+
+.ms_header .top_navbar_wrapper {
+    position: relative;
+}
+
+/* A bar wider than the screen scrolls sideways to its selected tab (tabs.js), as the game's bar does on a
+   vertically split screen; its tabs keep one line, as the options screen's own bar (#def_menu_options_nav_bar). */
+.ms_header .top_nav_cntr,
+.ms_header .sub_nav_cntr {
+    min-width: 0;
+    flex: 0 1 auto;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.ms_header .top_nav_inner_wrapper,
+.ms_header .sub_nav_inner_wrapper,
+.ms_header .top_nav_trigger,
+.ms_header .sub_nav_trigger {
+    flex: 0 0 auto;
+}
+
+.ms_header .top_nav_inner_wrapper,
+.ms_header .sub_nav_inner_wrapper {
+    height: 100%;
+    display: flex;
+}
+
+.ms_header .top_nav_item_cntr {
+    max-width: 100rem;
+}
+
+.ms_header .top_nav_item_txt,
+.ms_header .sub_nav_item_txt {
+    white-space: nowrap;
+}
+
+/* The path to the screen shown, above the tabs on the left (drawing A2). */
+.ms_crumb {
+    position: absolute;
+    left: 2.2rem;
+    top: 1.5rem;
+    z-index: 1;
+    font-family: Industry-Medium;
+    font-size: 1.7rem;
+    color: #3f769d;
+}
+
+/* Python's state and CLOSE or BACK, between the tabs and the details panel, right-aligned with the panel
+   (menu_options.css: main padding and panel margin, 4.2rem each), where no tab reaches. */
+.ms_corner {
+    position: absolute;
+    right: 8.4rem;
+    top: 14.6rem;
+    z-index: 3;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.ms_status {
+    font-size: 1.6rem;
+    color: #a0aeb1;
+}
+
+.ms_close {
+    font-size: 2rem;
+    margin-left: 3rem;
+}
+
+/* The rows scroll as the options screen's list (menu_options.css, .menu_options_entry_list); the right padding keeps
+   them clear of the game's bar, laid at the list's right edge (oakscroll.css). */
+.ms_screens {
+    padding-right: 3rem;
+}
+
+.ms_rows {
+    width: 100%;
+}
+
+.ms_empty {
+    margin: 2rem 0 0 2rem;
+    font-size: 2.2rem;
+    color: #a0aeb1;
+}
+
+/* A description's lines, and a mod's version and author under them (drawing A1). */
+.ms_line {
+    display: flex;
+}
+
+.ms_gap {
+    height: 2.2rem;
+}
+
+.ms_meta {
+    margin-top: 2.4rem;
+    font-family: Industry-Medium;
+    font-size: 1.8rem;
+    color: #3f769d;
+}
+
+/* The rebind entry's second slot: an SDK key option holds one key. The game shows it for every keyboard binding
+   (rebind_entry.js, RefreshData); the gamepad steps over it (pieces.js). */
+.ms_root .rebind_entry_glyph_secondary {
+    display: none;
+}
+
+/* A row of a mod the page may not change (Mod Settings itself): its value shows, the mouse cannot move it (pieces.js). */
+.ms_locked .menu_options_entry_component {
+    pointer-events: none;
+    opacity: 0.45;
+}

@@ -1,0 +1,160 @@
+"""The window tree follows the approved mockup: every control attached, mockup sizes, states and figures only."""
+
+import sys
+from types import SimpleNamespace as NS
+import panel_render_fixture as fixture
+from apex_grapple import (panel_buttons as b, panel_model, panel_view, panel_form, panel_factory, panel_theme as t,
+                          panel_fonts, panel_text as tx, panel_widgets as w)
+
+failures = []
+
+
+def check(condition, message):
+    if not condition:
+        failures.append(message)
+
+
+fixture.install()
+model = panel_model.Model(fixture.pf.f.mod)
+title_font, body_font = object(), object()
+panel_fonts.build = lambda outer: {"title": title_font, "body": body_font}
+root, widgets = panel_view.build_view(NS(), model)
+attached = set()
+
+
+def visit(node):
+    check(id(node) not in attached, "A widget belongs to two parents")
+    attached.add(id(node))
+    for child in node.children:
+        visit(child)
+
+
+# The garbage collector removed a bare ScaleBox 35 to 50 s after opening: a UserWidget must hold the window.
+screen = root.WidgetTree.RootWidget
+check(root.kind == "UserWidget" and screen.kind == "CanvasPanel"
+      and [child.kind for child in screen.children] == ["BackgroundBlur", "ScaleBox"],
+      "A UserWidget holds the window, over the blurring layer of panel_modal (test_panel_modal.py)")
+visit(screen)
+icon_overlays = [node for node in fixture.created if node.kind == "Overlay" and node.children
+                and node.children[0].kind == "InputKeySelector"]
+check(len(icon_overlays) == 2, "One controller icon overlay per native selector")
+# A pop-up's card sits in the middle of the window (panel_popup.py): its slot alone is centred.
+popup_cards = [widgets[name] for name in widgets if name.startswith("popup:") and name.count(":") == 1]
+overlay_slots = [slot for node in fixture.created if node.kind == "Overlay" and node not in icon_overlays
+                 for slot in (node.slots[:1] if node in popup_cards else node.slots)]
+check(overlay_slots and all(slot.attributes.get("SetHorizontalAlignment") == ("EHorizontalAlignment.HAlign_Fill",)
+                            for slot in overlay_slots),
+      "Every overlay layer fills its width: sliders, shadows and the header row shrank without it")
+scrolls = [node for node in fixture.created if node.kind == "ScrollBox"]
+check(all(node.slots[0].attributes["SetPadding"][0] == w.pad(t.SPACE_7, t.SPACE_8, t.SPACE_9) for node in scrolls),
+      "The page padding sits inside the scroll area, as in the mockup")
+check(all(id(widget) in attached for widget in widgets.values()), "A registered widget is not in the tree")
+check(set(widgets) == fixture.pf.names(model), "Registered names differ from the form fixture's")
+check(len(widgets["pages"].children) == 5 and t.PAGES == ("shot", "pull", "release", "look", "controls"),
+      "Five pages expected, LOOK between LETTING GO and CONTROLS (Kevin, 2026-10-14, sketch A)")
+check(all(f"setting:{key}" in widgets for key in model.options), "Every setting has a control")
+# 379 since the LOOK page (2026-10-14): its seventeen choice buttons register five names each; 444 since its
+# colours, the same day: two rows of arrows, and the glow's face, three buttons.
+check(len(widgets) < 480, "Widget count stays bounded: all of them are resolved at every poll")
+# Mockup sizes: CSS pixels times 0.75, because Unreal draws font points at 96 DPI.
+check(widgets["label:grapple_range"].Font.Size == t.TEXT_MD * 0.75, "Setting labels are 20 px as in the mockup")
+check(widgets["label:grapple_range"].Font.FontObject is body_font, "Labels use Barlow Condensed")
+check(widgets["label:grapple_range"].Font.TypefaceFontName == "SemiBold", "Labels use the 600 weight")
+check(widgets["heading:shot"].Font.FontObject is title_font, "Plates use Anton")
+texts = [node for node in fixture.created if node.kind == "TextBlock"]
+shadowed = [node for node in texts if "SetShadowOffset" in node.attributes]
+check(len(shadowed) == 1 and shadowed[0].Font.OutlineSettings.OutlineSize == 4,
+      "Only the logo title carries the ink outline and shadow; plain texts stay sharp")
+check(not any(node.attributes.get("SetAutoWrapText") == (True,) for node in
+              (widgets["value:grapple_range"], widgets["close_label"], widgets["EN_label"])),
+      "Values and button labels never wrap")
+heights = [node.attributes["SetHeightOverride"][0] for node in fixture.created if "SetHeightOverride" in node.attributes]
+check(t.HEADER_HEIGHT in heights and 78.0 not in heights and 48.0 not in heights,
+      "No fixed height smaller than its buttons (footer and header clipped them)")
+check(any(node.kind == "ProgressBar" for node in fixture.created), "Sliders are filled by a progress bar")
+check(sum(node.kind == "Image" for node in fixture.created) == 4,
+      "Four controller images; no avatar without its file")
+count = fixture.pf.f.mod.saved
+refs = {name: lambda widget=widget: widget for name, widget in widgets.items()}
+form = panel_form.PanelForm(refs, panel_factory.PanelBindings(), model)
+check(fixture.pf.f.mod.saved == count, "Opening writes nothing")
+check(widgets["value:grapple_range"].text == "3000", "Values are figures only, without units")
+check(widgets["value:pull_strength"].text == "1.7", "Decimal values keep their step's precision")
+check(widgets["fill:grapple_range"].percent == (3000 - 500) / (10000 - 500), "Gold fill follows the value")
+check(widgets["nav:shot_label"].text == "THE SHOT" and widgets["EN_label"].text == "EN", "No '> ' or '[EN]' marks")
+gold, clear = w.linear(t.COLOR_GOLD), w.linear(t.COLOR_INK, 0.0)
+check(widgets["nav:shot_fill"].brush == gold, "The open page is a gold plate")
+check(widgets["nav:pull_fill"].brush == clear, "Other pages stay transparent")
+check(widgets["setting:show_rope_label"].text == "ON", "Switches read ON / OFF")
+widgets["FR"].checked = True
+form.poll()
+check(widgets["close_label"].text == "FERMER" and widgets["setting:show_rope_label"].text == "OUI", "French texts")
+check(widgets["FR_fill"].brush == gold, "The active language is the gold one")
+check(widgets["first"].placeholder == "1. CHOISIR UNE TOUCHE" and not widgets["second"].enabled, "Key capture")
+check(t.rgba("000000") == (0.0, 0.0, 0.0, 1.0) and t.rgba("ffffff") == (1.0, 1.0, 1.0, 1.0), "sRGB conversion")
+check("settings window: fonts=body+title, avatar=hidden" in " ".join(fixture.pf.f.state["misc"]), "Load report line")
+w.cosmetic("probe", lambda: (_ for _ in ()).throw(AttributeError("missing")))
+w.cosmetic("probe", lambda: (_ for _ in ()).throw(AttributeError("missing")))
+check(sum("'probe'" in line for line in fixture.pf.f.state["errors"]) == 1, "A missing style is reported once")
+try:
+    w.cosmetic("fault", lambda: 1 / 0)
+    failures.append("A real fault must not be hidden as a style problem")
+except ZeroDivisionError:
+    pass
+
+check(model.change_page("release"), "The last page can be saved")
+reopened, next_widgets = panel_view.build_view(NS(), model)
+next_refs = {name: lambda widget=widget: widget for name, widget in next_widgets.items()}
+next_form = panel_form.PanelForm(next_refs, panel_factory.PanelBindings(), model)
+check(next_widgets["pages"].index == 2 and next_form.page == 2, "The saved tab's content is reopened")
+check(next_widgets["focus"] is next_widgets["nav:release"], "Controller focus follows the saved tab")
+check(next_widgets["nav:release_fill"].brush == gold, "The saved tab is visibly selected")
+
+# Grapple owns these visual primitives for generated Movement even though its own pages do not display them.
+shared = {}
+template = w.new("InputKeySelector", root.WidgetTree.RootWidget).WidgetStyle.Normal
+tx.use({"title": title_font, "body": body_font})
+shared_gear = b.gear(root.WidgetTree.RootWidget, shared, template)
+shared_hero = tx.text(root.WidgetTree.RootWidget, "OPTIONS", "hero")
+tx.use({})
+check(shared_gear is not None and shared_hero.Font.FontObject is title_font,
+      "Movement-only shared visual primitives construct from Grapple's authority")
+round_parts = [shared[f"options_icon:{index}"].icon_brush for index in (4, 5)]
+check(all(brush is not None and brush.DrawAs == "ESlateBrushDrawType.RoundedBox"
+          and brush.OutlineSettings.RoundingType == "ESlateBrushRoundingType.HalfHeightRadius"
+          for brush in round_parts), "The gear's ring and hole are discs, as in the mockup")
+check("choice" not in b.KINDS, "Language choices reuse the ON/OFF switch, as in the mockup")
+
+
+def inside(node, widget):
+    return node is widget or any(inside(child, widget) for child in node.children)
+
+
+slanted = [node for node in fixture.created if node.attributes.get("SetRenderShear") == (w.vector(t.SLANT, 0.0),)]
+check(any(inside(node, shared["options"]) for node in slanted),
+      "The gear is slanted as every other button, its icon with it (2026-10-06)")
+# Kevin, 2026-10-06: the room right of a card's plate was empty and its sentence took a line of its own under it.
+heads = [node for node in fixture.created if node.kind == "HorizontalBox" and widgets["group:shot"] in node.children]
+check(len(heads) == 1 and heads[0].children.index(widgets["group:shot"]) == 1
+      and inside(heads[0].children[0], widgets["heading:shot"]) and heads[0].children[0] in slanted,
+      "A card's sentence sits right of its slanted title plate, on the same line")
+check(len(heads) == 1 and "SetSize" in heads[0].slots[1].attributes
+      and widgets["group:shot"].attributes.get("SetAutoWrapText") == (True,),
+      "The sentence takes the rest of the line and wraps there")
+
+# Kevin, 2026-10-06: the hold mode is a key setting, shown on the CONTROLS page under the controller icons.
+pages = widgets["pages"].children
+controls = pages[t.PAGES.index("controls")]
+check(all(inside(controls, widgets[f"setting:{name}"]) and not inside(pages[0], widgets[f"setting:{name}"])
+          for name in ("keyboard_hold", "controller_hold", "hold_time")),
+      "The hold mode's rows are on the CONTROLS page, not THE SHOT")
+# Kevin, 2026-10-14: "Show the rope" leads the LOOK page, above the grapple gun's look.
+look = pages[t.PAGES.index("look")]
+check(inside(look, widgets["setting:show_rope"]) and not inside(pages[0], widgets["setting:show_rope"])
+      and all(inside(look, widgets[f"row:{option.identifier}"]) for option in model.groups[3].children),
+      "The LOOK page holds Show the rope and the look's rows")
+
+for message in failures:
+    print("FAILED |", message)
+print(f"RESULTAT: {'OK' if not failures else 'ECHEC'} | mockup window tree, sizes, states, figures only, FR")
+sys.exit(1 if failures else 0)

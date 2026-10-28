@@ -1,0 +1,102 @@
+"""A visible bool whose live value is committed only by the camera runtime."""
+
+from typing import Any, Callable
+
+from mods_base import BoolOption
+
+
+class BaseViewOption(BoolOption):
+    """Keep the entry view stable while Orbit owns the camera (Kevin, 2026-10-06)."""
+
+    def __init__(self, identifier, value, *, locked, **kwargs):
+        if type(value) is not bool or not callable(locked):
+            raise ValueError('invalid base view option')
+        super().__init__(identifier, value, **kwargs)
+        self._base_locked = locked
+        self._base_commit = False
+
+    @property
+    def locked(self):
+        return self._base_locked() is True
+
+    def __setattr__(self, name, value):
+        if name == 'value' and hasattr(self, '_base_locked'):
+            if type(value) is not bool:
+                raise ValueError('invalid base view value')
+            if (not self._base_commit and getattr(getattr(self, 'mod', None), 'is_enabled', False)
+                    and value is not self.value and self.locked):
+                raise ValueError('camera change unavailable')
+        super().__setattr__(name, value)
+
+    def commit(self, value):
+        self._base_commit = True
+        try:
+            self.value = value
+        finally:
+            self._base_commit = False
+
+
+class CameraBoolOption(BoolOption):
+    def __init__(self, identifier: str, value: bool, *, route: Callable[[bool], Any],
+                 ready: Callable[[], bool] = lambda: True,
+                 cancel: Callable[[], bool] = lambda: False,
+                 **kwargs: Any) -> None:
+        if (type(value) is not bool or not callable(route) or not callable(ready)
+                or not callable(cancel)):
+            raise ValueError("invalid camera option")
+        super().__init__(identifier, value, **kwargs)
+        self._camera_route = route
+        self._camera_ready = ready
+        self._camera_cancel = cancel
+        self._camera_commit = False
+        self._camera_status = "confirmed"
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if (name == "value" and hasattr(self, "_camera_route")
+                and not getattr(self, "_camera_commit", False)
+                and bool(getattr(getattr(self, "mod", None), "is_enabled", False))):
+            if type(value) is bool:
+                if getattr(self, "value", None) is value:
+                    self._camera_status = "confirmed"
+                    return
+                if not self._camera_ready():
+                    self._camera_status = "waiting"
+                    return
+                accepted = self._camera_route(value)
+                if getattr(self, "value", None) is value:
+                    self._camera_status = "confirmed"
+                else:
+                    self._camera_status = "pending" if accepted is True else "refused"
+            return
+        super().__setattr__(name, value)
+
+    @property
+    def camera_status(self) -> str:
+        return self._camera_status
+
+    def commit(self, value: bool) -> None:
+        if type(value) is not bool:
+            raise ValueError("invalid camera option value")
+        self._camera_commit = True
+        try:
+            self.value = value
+            self._camera_status = "confirmed"
+        finally:
+            self._camera_commit = False
+
+    def reject(self) -> None:
+        self._camera_status = "refused"
+
+    def cancel_pending(self, *, restore: bool = True) -> bool:
+        if self._camera_status == "waiting":
+            self._camera_status = "refused"
+            return True
+        if self._camera_status != "pending":
+            return False
+        try:
+            accepted = (self._camera_cancel() if restore else self._camera_cancel(restore=False)) is True
+        except Exception:
+            accepted = False
+        if accepted:
+            self._camera_status = "refused"
+        return accepted

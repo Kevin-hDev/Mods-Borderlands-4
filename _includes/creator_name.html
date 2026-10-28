@@ -1,0 +1,7 @@
+{%- comment -%}
+A recommended mod's creator name in the page's language: the name it uses there if it gave one, else its usual name.
+{%- endcomment -%}
+{%- assign creator_name = include.creator.name -%}
+{%- assign local_name = include.creator.local_names[code] -%}
+{%- if local_name -%}{%- assign creator_name = local_name -%}{%- endif -%}
+{{- creator_name -}}

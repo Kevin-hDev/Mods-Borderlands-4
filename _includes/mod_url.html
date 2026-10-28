@@ -1,0 +1,7 @@
+{%- comment -%}
+The address of a recommended mod's page (include.id) in the page's language, or in English if it has none.
+{%- endcomment -%}
+{%- capture mod_path -%}recommendations/{{ include.id }}{{ suffix }}.md{%- endcapture -%}
+{%- assign mod_page = site.pages | where: "path", mod_path | first -%}
+{%- unless mod_page -%}{%- capture mod_path -%}recommendations/{{ include.id }}.md{%- endcapture -%}{%- assign mod_page = site.pages | where: "path", mod_path | first -%}{%- endunless -%}
+{{- mod_page.url | relative_url -}}
