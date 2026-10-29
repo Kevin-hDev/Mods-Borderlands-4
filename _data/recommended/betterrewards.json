@@ -6,7 +6,7 @@
     "profile": "https://www.nexusmods.com/profile/lczzz?gameId=8148"
   },
   "category": "loot",
-  "described_version": "0.4.14",
+  "described_version": "0.4.18",
   "links": [
     {"platform": "nexus", "url": "https://www.nexusmods.com/borderlands4/mods/381"}
   ],
@@ -20,6 +20,16 @@
     "ja": "ソロの困難と UVH で報酬が増え、4種類のドロップ設定から選べます。レベル上限 100 も試験的に導入。"
   },
   "news": [
+    {
+      "version": "0.4.18",
+      "date": "2026-10-29",
+      "text": {
+        "en": "Version 0.4.18 works with Mod Settings, if you install it: its page shows the installed preset and the reward multipliers. Return to vanilla and disable now uses a single button pressed twice: once to prepare, then again at least 1 second and at most 10 seconds later to confirm. Some solo Easy and Normal characters could not start the return: this is fixed, and a failed return now gives a clearer error message.",
+        "fr": "La version 0.4.18 fonctionne avec Mod Settings, si tu l'installes : sa page montre le réglage de butin installé et les multiplicateurs de récompenses. Le retour au jeu d'origine (Return to vanilla and disable) se fait maintenant avec un seul bouton, pressé deux fois : une première fois pour préparer, puis une seconde fois au moins 1 seconde et au plus 10 secondes plus tard pour confirmer. Certains personnages en solo en Facile ou en Normal ne pouvaient pas lancer le retour : c'est corrigé, et un retour qui échoue affiche désormais un message d'erreur plus clair.",
+        "zh": "0.4.18 版新增对 Mod Settings 的支持（需另装）：在其页面中可查看当前档位和奖励倍率。“返回原版并停用”改为同一个按钮点击两次：首次点击准备请求，间隔至少 1 秒、在首次点击后 10 秒内再次点击确认。修复部分单人简单／普通角色的返回入口被错误拦截的问题，返回失败时的提示也更加清楚。",
+        "ja": "0.4.18 では、Mod Settings（別途インストール）に対応しました。そのページで、インストールしたドロップ設定と報酬の倍率を確認できます。バニラへの復帰（Return to vanilla and disable）は、同じボタンを2回押す方式になりました。1回目で準備し、1秒以上あけて、1回目から10秒以内にもう一度押すと確定します。一部のソロの簡単またはノーマルのキャラクターで復帰を開始できなかった問題が修正され、復帰に失敗したときのエラーメッセージもわかりやすくなりました。"
+      }
+    },
     {
       "version": "0.4.14",
       "date": "2026-10-25",
