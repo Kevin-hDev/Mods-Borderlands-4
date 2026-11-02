@@ -84,9 +84,9 @@ a:hover { color: var(--blue-hover); }
   background: linear-gradient(180deg, var(--bg-hero) 0%, var(--bg) 100%);
   border-bottom: 1px solid var(--line);
 }
-/* The picture's WebP copy (site_picture_sizes.py): a phone's screen has about as many pixels as a computer's, so
-   one width serves both. */
-.hero-home {
+/* Mod Settings' home page only: the other tools' pages keep the plain top. The picture's WebP copy
+   (site_picture_sizes.py): a phone's screen has about as many pixels as a computer's, so one width serves both. */
+.hero-mod_settings {
   min-height: clamp(300px, 34vw, 440px);
   background:
     linear-gradient(180deg, rgb(var(--veil) / .35) 0%, var(--bg) 100%),
@@ -189,7 +189,7 @@ footer { padding: 18px max(var(--gutter), calc((100% - var(--page-width)) / 2 + 
   /* Logo and languages share the first line, the menu takes the second: two lines instead of three. */
   .langs { order: 1; }
   .menu { order: 2; flex-basis: 100%; }
-  .hero-home { min-height: 300px; background-position: 0 0, 0 0, 78% 20%, 0 0; }
+  .hero-mod_settings { min-height: 300px; background-position: 0 0, 0 0, 78% 20%, 0 0; }
   .doc { grid-template-columns: minmax(0, 1fr); }
   .pages { padding: 12px var(--gutter); border-right: 0; border-bottom: 1px solid var(--line); }
   .pages ul { position: static; display: flex; flex-wrap: wrap; gap: 4px 18px; }

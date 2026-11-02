@@ -1,6 +1,22 @@
 {
  "format": 1,
  "pictures": {
+  "logs_conflicts/site/images/conflicts.jpg": {
+   "sha256": "8b08794077faacdb3eb292151e8556df25643ffcef68042fe9038068b340a0a6",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
+  "logs_conflicts/site/images/logs.jpg": {
+   "sha256": "4ab702fb01d82c17c8b061f3a0b9b342d3272f8f06663e2b9c2ca6e1671971c7",
+   "widths": [
+    480,
+    960,
+    1600
+   ]
+  },
   "mod_settings/site/images/home.jpg": {
    "sha256": "679dc8e8d79e64d71abc35fd9511872b6ea71b3bbff0bf01ed9d025f87ddbefc",
    "widths": [

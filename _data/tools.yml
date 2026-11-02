@@ -1,0 +1,10 @@
+# Kevin's tools that have their own part of the site, by the folder of their pages: their Nexus page, their code and
+# their licence. The page model shows the first two as buttons on the tool's home page and opens the licence on GitHub.
+mod_settings:
+  nexus: https://www.nexusmods.com/borderlands4/mods/388
+  code: https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/mod_settings
+  license: https://github.com/Kevin-hDev/Mods-Borderlands-4/blob/main/mod_settings/LICENSE
+logs_conflicts:
+  nexus: https://www.nexusmods.com/borderlands4/mods/403
+  code: https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/logs_conflicts
+  license: https://github.com/Kevin-hDev/Mods-Borderlands-4/blob/main/logs_conflicts/LICENSE

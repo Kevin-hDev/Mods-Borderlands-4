@@ -1,15 +1,20 @@
 {%- comment -%}
-The home page under its text: Mod Settings' card on its own, the recommended mods' card, and the latest updates.
-Mod Settings' card stands alone, under no plural heading (Kevin, 2026-10-27). The two cards show at the first look,
-so their pictures load at once instead of waiting to be scrolled to (audit of 2026-10-28).
+The home page under its text: the cards of Kevin's tools, Mod Settings and Logs & Conflicts, the recommended mods'
+card, and the latest updates. The tools' cards stand alone, under no plural heading (Kevin, 2026-10-27). The cards
+show at the first look, so their pictures load at once instead of waiting to be scrolled to (audit of 2026-10-28).
 {%- endcomment -%}
 {%- include page_in_language.html base="mod_settings/README" -%}{%- assign mod_settings_page = found_page -%}
+{%- include page_in_language.html base="logs_conflicts/README" -%}{%- assign logs_conflicts_page = found_page -%}
 {%- include page_in_language.html base="recommendations/README" -%}{%- assign catalog_page = found_page -%}
 {%- include page_in_language.html base="news/README" -%}{%- assign news_page = found_page %}
 <div class="cards home-cards">
   <a class="card" href="{{ mod_settings_page.url | relative_url }}">
     <img src="{{ '/mod_settings/site/images/home.jpg' | relative_url }}" width="1600" height="1231" alt=""{% include picture_sizes.html file="mod_settings/site/images/home.jpg" place="card" %}>
     <span class="card-text"><span class="card-title">{{ words.menu_mod_settings }}</span><span class="card-pitch">{{ words.card_mod_settings }}</span></span>
+  </a>
+  <a class="card" href="{{ logs_conflicts_page.url | relative_url }}">
+    <img src="{{ '/logs_conflicts/site/images/conflicts.jpg' | relative_url }}" width="1600" height="843" alt=""{% include picture_sizes.html file="logs_conflicts/site/images/conflicts.jpg" place="card" %}>
+    <span class="card-text"><span class="card-title">{{ words.menu_logs_conflicts }}</span><span class="card-pitch">{{ words.card_logs_conflicts }}</span></span>
   </a>
   <a class="card" href="{{ catalog_page.url | relative_url }}">
     <span class="card-thumbs">

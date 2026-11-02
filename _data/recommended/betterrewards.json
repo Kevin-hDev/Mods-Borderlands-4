@@ -6,7 +6,7 @@
     "profile": "https://www.nexusmods.com/profile/lczzz?gameId=8148"
   },
   "category": "loot",
-  "described_version": "0.4.18",
+  "described_version": "0.4.19",
   "links": [
     {"platform": "nexus", "url": "https://www.nexusmods.com/borderlands4/mods/381"}
   ],
@@ -20,6 +20,16 @@
     "ja": "ソロの困難と UVH で報酬が増え、4種類のドロップ設定から選べます。レベル上限 100 も試験的に導入。"
   },
   "news": [
+    {
+      "version": "0.4.19",
+      "date": "2026-11-02",
+      "text": {
+        "en": "Version 0.4.19 fixes some minor bugs. When you reloaded a level-70 character registered for the level-100 cap, the XP already earned between levels 70 and 71 could reset to an empty bar: this is fixed.",
+        "fr": "La version 0.4.19 corrige quelques petits bugs. Quand tu rechargeais un personnage de niveau 70 inscrit pour le niveau maximum 100, l'expérience déjà gagnée entre les niveaux 70 et 71 pouvait repartir d'une barre vide : c'est corrigé.",
+        "zh": "0.4.19 版修复了一些小问题。重新读取已登记 100 级上限资格的 70 级角色时，70～71 级之间已获得的经验进度可能被重置为空的经验条：此问题已修复。",
+        "ja": "0.4.19 では、いくつかの小さな不具合が修正されました。レベル上限 100 に登録されたレベル70のキャラクターを読み込み直すと、レベル70〜71の間で獲得済みの経験値が空のバーに戻ることがある問題が修正されています。"
+      }
+    },
     {
       "version": "0.4.18",
       "date": "2026-10-29",

@@ -1,10 +1,8 @@
-# The site, built by GitHub Pages: its home page (index*.md), mod_settings/, recommendations/, news/ and assets/. Only
-# these are published: every other file and folder at the root is excluded below, because GitHub Pages builds from the
-# root of the repository and Jekyll has no "only these folders" option. A new folder at the root must be added here.
+# The site, built by GitHub Pages: its home page (index*.md), mod_settings/, logs_conflicts/, recommendations/, news/
+# and assets/. Only these are published: every other file and folder at the root is excluded below, because GitHub
+# Pages builds from the root of the repository and Jekyll has no "only these folders" option. A new folder at the root
+# must be added here. Each tool's Nexus page, code and licence are in _data/tools.yml.
 title: Mod Settings
-nexus_url: https://www.nexusmods.com/borderlands4/mods/388
-code_url: https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/mod_settings
-license_url: https://github.com/Kevin-hDev/Mods-Borderlands-4/blob/main/mod_settings/LICENSE
 
 # GitHub Pages applies a theme when none is set; the site has its own layout and style sheet.
 theme: null
@@ -40,6 +38,7 @@ exclude:
   - hunter_change
   - it_follows
   - maxunit
+  - menu_entries
   - omni_sprint
   - third_person_fov
   - vehicle_driving
@@ -51,3 +50,10 @@ exclude:
   - mod_settings/mod_settings
   - mod_settings/page
   - mod_settings/tests_browser
+  # Logs & Conflicts too: only its README pages and their pictures are on the site. Its changelog is in English only.
+  - logs_conflicts/LICENSE
+  - logs_conflicts/CHANGELOG.md
+  - logs_conflicts/*.py
+  - logs_conflicts/*.js
+  - logs_conflicts/logs_conflicts
+  - logs_conflicts/page

@@ -1,6 +1,7 @@
 {%- comment -%}
 The only page model of the site. Its language comes from the file name: X.md is English, X.<code>.md is <code>. Its
-part of the site comes from its folder: the root (home page), mod_settings, recommendations or news.
+part of the site comes from its folder: the root (home page), a tool's folder (_data/tools.yml), recommendations or
+news.
 {%- endcomment -%}
 {%- assign file = page.path | split: "/" | last -%}
 {%- assign parts = file | split: "." -%}
@@ -16,8 +17,9 @@ part of the site comes from its folder: the root (home page), mod_settings, reco
 {%- assign section = folder | remove: "/" -%}
 {%- assign site_home = false -%}
 {%- if section == "" and base == "index" -%}{%- assign site_home = true -%}{%- endif -%}
-{%- assign mod_settings_home = false -%}
-{%- if section == "mod_settings" and base == "README" -%}{%- assign mod_settings_home = true -%}{%- endif -%}
+{%- assign tool = site.data.tools[section] -%}
+{%- assign tool_home = false -%}
+{%- if tool and base == "README" -%}{%- assign tool_home = true -%}{%- endif -%}
 {%- assign mod = nil -%}
 {%- if section == "recommendations" and base != "README" -%}{%- assign mod = site.data.recommended[base] -%}{%- endif -%}
 {%- comment -%} This page in each language it exists in, for the language menu and the search engines. {%- endcomment -%}
@@ -58,7 +60,7 @@ its address, apart from their cache: raise v whenever the picture changes, or vi
 <body>
 {%- capture page_body %}
 <a class="skip" href="#content">{{ words.skip }}</a>
-<header class="hero{% if mod_settings_home %} hero-home{% endif %}">
+<header class="hero{% if tool_home %} hero-{{ section }}{% endif %}">
   <div class="top">
     {%- include page_in_language.html base="index" %}
     {%- comment -%} The logo bears the site's name, as does the menu's first part: its own name tells them apart for a
@@ -86,8 +88,8 @@ its address, apart from their cache: raise v whenever the picture changes, or vi
   </div>
   <div class="hero-text">
     <h1>{% include french_spaces.html lang=code text=page.title %}</h1>
-    {%- if mod_settings_home %}
-    <p class="buttons"><a class="button" href="{{ site.nexus_url }}"><img class="icon" src="{{ '/assets/icons/' | append: site.data.platforms.nexus.icon | relative_url }}" width="18" height="18" alt="">{{ words.download }}</a><a class="button ghost" href="{{ site.code_url }}">{{ words.code }}</a></p>
+    {%- if tool_home %}
+    <p class="buttons"><a class="button" href="{{ tool.nexus }}"><img class="icon" src="{{ '/assets/icons/' | append: site.data.platforms.nexus.icon | relative_url }}" width="18" height="18" alt="">{{ words.download }}</a><a class="button ghost" href="{{ tool.code }}">{{ words.code }}</a></p>
     {%- endif %}
     {%- if mod %}
     {%- capture header %}{% include mod_header.html %}{% endcapture %}
@@ -111,9 +113,9 @@ its address, apart from their cache: raise v whenever the picture changes, or vi
   {%- endif -%}
   {%- comment -%}
   The licence is not published on the site (a file without an extension may be downloaded instead of shown): the
-  pages' link to it opens it on GitHub.
+  pages' link to it opens it on GitHub. Only a tool's pages link to their licence.
   {%- endcomment -%}
-  {%- assign license_github = site.license_url | prepend: 'href="' | append: '"' -%}
+  {%- assign license_github = tool.license | prepend: 'href="' | append: '"' -%}
   {%- assign picture_place = "text" -%}
   {%- if section == "mod_settings" -%}{%- assign picture_place = "beside-pages" -%}{%- endif -%}
   {%- capture page_text %}{% include picture_srcsets.html text=content folder=folder place=picture_place %}{% endcapture -%}
@@ -130,7 +132,8 @@ its address, apart from their cache: raise v whenever the picture changes, or vi
 {% include french_spaces.html lang=code text=text %}
   </main>
 </div>
-<footer>{% if section == "mod_settings" %}{{ words.footer_mod_settings }}{% else %}{{ words.footer_site }}{% endif %}</footer>
+{%- capture footer_key %}footer_{{ section }}{% endcapture %}
+<footer>{% if tool %}{{ words[footer_key] }}{% else %}{{ words.footer_site }}{% endif %}</footer>
 {%- endcapture %}
 {% include outside_links.html text=page_body %}
 </body>

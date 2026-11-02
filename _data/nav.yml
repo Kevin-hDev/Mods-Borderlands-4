@@ -6,6 +6,7 @@ mod_settings_pages: [README, HOW_IT_WORKS, TROUBLESHOOTING, FAQ, MOD_AUTHORS, CH
 # The menu at the top of every page: each part's folder, and the word that names it.
 menu:
   - {folder: mod_settings, label: menu_mod_settings}
+  - {folder: logs_conflicts, label: menu_logs_conflicts}
   - {folder: recommendations, label: menu_recommended}
   - {folder: news, label: menu_news}
 
@@ -26,9 +27,11 @@ en:
   menu_label: Site
   logo_label: Mod Settings, site home
   menu_mod_settings: Mod Settings
+  menu_logs_conflicts: Logs &amp; Conflicts
   menu_recommended: Recommended mods
   menu_news: Updates
   card_mod_settings: "A MODS menu in the pause menu and the main menu, to see and set every mod of the Python SDK."
+  card_logs_conflicts: "A LOGS &amp; CONFLICTS page in the pause menu and the main menu: the SDK's log to copy in one click, and the conflicts between your mods."
   card_recommended: "Mods by other creators, chosen for their quality and shown with their creators' permission."
   latest_news: Latest updates
   all_news: All updates
@@ -43,6 +46,7 @@ en:
   empty_news: No update yet.
   older_news: Older updates are on each mod's page.
   footer_mod_settings: Mod Settings is under the Mozilla Public License 2.0. Not affiliated with Gearbox Software or 2K.
+  footer_logs_conflicts: Logs &amp; Conflicts is under the Mozilla Public License 2.0. Not affiliated with Gearbox Software or 2K.
   footer_site: Fan-made site. Not affiliated with Gearbox Software or 2K.
 
 fr:
@@ -62,9 +66,11 @@ fr:
   menu_label: Site
   logo_label: Mod Settings, accueil du site
   menu_mod_settings: Mod Settings
+  menu_logs_conflicts: Logs &amp; Conflicts
   menu_recommended: Mods recommandés
   menu_news: Mises à jour
   card_mod_settings: "Un menu MODS dans le menu pause et le menu principal, pour voir et régler tous les mods du SDK Python."
+  card_logs_conflicts: "Une page JOURNAUX ET CONFLITS dans le menu pause et le menu principal : le journal du SDK à copier en un clic, et les conflits entre tes mods."
   card_recommended: "Des mods d'autres créateurs, choisis pour leur qualité et présentés avec leur accord."
   latest_news: Dernières mises à jour
   all_news: Toutes les mises à jour
@@ -79,6 +85,7 @@ fr:
   empty_news: Aucune mise à jour pour l'instant.
   older_news: Les mises à jour plus anciennes sont sur la page de chaque mod.
   footer_mod_settings: Mod Settings est sous licence Mozilla Public License 2.0. Sans lien avec Gearbox Software ni 2K.
+  footer_logs_conflicts: Logs &amp; Conflicts est sous licence Mozilla Public License 2.0. Sans lien avec Gearbox Software ni 2K.
   footer_site: Site de fan. Sans lien avec Gearbox Software ni 2K.
 
 zh:
@@ -98,9 +105,11 @@ zh:
   menu_label: 网站
   logo_label: Mod Settings 网站首页
   menu_mod_settings: Mod Settings
+  menu_logs_conflicts: Logs &amp; Conflicts
   menu_recommended: 推荐模组
   menu_news: 模组动态
   card_mod_settings: "暂停菜单和主菜单中的「模组」菜单，用来查看和修改 Python SDK 的所有模组。"
+  card_logs_conflicts: "暂停菜单和主菜单中的「日志与冲突」页面：一键复制 SDK 日志，并查看你的模组之间的冲突。"
   card_recommended: "其他作者的模组，因其品质而入选，经作者同意后介绍。"
   latest_news: 最新动态
   all_news: 全部动态
@@ -115,6 +124,7 @@ zh:
   empty_news: 暂无动态。
   older_news: 更早的动态见各模组的页面。
   footer_mod_settings: Mod Settings 采用 Mozilla Public License 2.0 许可。与 Gearbox Software 和 2K 无关。
+  footer_logs_conflicts: Logs &amp; Conflicts 采用 Mozilla Public License 2.0 许可。与 Gearbox Software 和 2K 无关。
   footer_site: 粉丝制作的网站。与 Gearbox Software 和 2K 无关。
 
 ja:
@@ -134,9 +144,11 @@ ja:
   menu_label: サイト
   logo_label: Mod Settings サイトのトップページ
   menu_mod_settings: Mod Settings
+  menu_logs_conflicts: Logs &amp; Conflicts
   menu_recommended: おすすめMOD
   menu_news: MODの更新情報
   card_mod_settings: "ポーズメニューとメインメニューのMODSメニューで、Python SDKのMODをすべて表示・設定できます。"
+  card_logs_conflicts: "ポーズメニューとメインメニューのLOGS &amp; CONFLICTSページで、SDKのログをワンクリックでコピーし、MOD同士の競合を確認できます。"
   card_recommended: "品質で選んだ、ほかの制作者のMODです。制作者の許可を得て紹介しています。"
   latest_news: 最新の更新情報
   all_news: すべての更新情報
@@ -151,4 +163,5 @@ ja:
   empty_news: 更新情報はまだありません。
   older_news: それより前の更新情報は、各MODのページにあります。
   footer_mod_settings: Mod SettingsはMozilla Public License 2.0で公開されています。Gearbox Software および 2K とは関係ありません。
+  footer_logs_conflicts: Logs &amp; ConflictsはMozilla Public License 2.0で公開されています。Gearbox Software および 2K とは関係ありません。
   footer_site: ファンが制作したサイトです。Gearbox Software および 2K とは関係ありません。

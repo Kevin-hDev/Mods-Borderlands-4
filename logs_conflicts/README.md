@@ -11,10 +11,13 @@ unlike the rest of this repository: see [LICENSE](LICENSE).
 
 The log
 - The SDK's log of your current game shows in the page.
-- Your Windows user name is replaced by `<user>` in the paths of your folders.
+- Your Windows user name is replaced by `<user>` in the path of your user folder (`C:\Users\...`).
 - COPY puts the log in the clipboard, ready to paste into a bug report.
 - OPEN FOLDER opens the log's folder.
-- A very long log shows in two parts, its start and its end.
+- A very long log shows in two parts, its start and its end; COPY copies these two parts, with a line that says how
+  many bytes were cut in the middle.
+
+<img src="site/images/logs.jpg" width="1600" height="848" alt="The LOGS view of the LOGS & CONFLICTS page: the SDK's log, with the COPY and OPEN FOLDER buttons">
 
 The conflicts
 - The page shows what keeps your mods from working, or from working together, and says what to do for each kind of
@@ -30,6 +33,8 @@ The conflicts
 - COPY copies this list in English, with the SDK's key names, to send to a mod's author.
 - Two mods may use the same key at different moments: the page lists them anyway.
 - A list too long is cut, and the page says so.
+
+<img src="site/images/conflicts.jpg" width="1600" height="843" alt="The CONFLICTS view: mods the SDK could not load, a mod installed twice, and game files replaced by several mods">
 
 The page's texts follow the game's language: English, French or Simplified Chinese, and English for the others. The
 names of the mods and of their actions stay the ones each mod gives.
@@ -48,8 +53,8 @@ names of the mods and of their actions stay the ones each mod gives.
 
 ## Privacy
 
-- The mod reads only the SDK's log, the list of your mods with their keys and their commands, and the mod packages
-  in the Paks folder.
+- The mod reads only the SDK's log, the list of your mods with their keys, their commands and their settings
+  files, and the mod packages in the Paks folder.
 - Nothing leaves your PC: the mod sends nothing to the Internet.
 - The clipboard is touched only when you click COPY.
 
@@ -78,7 +83,7 @@ updated.
 - On the main menu, Escape closing the page also opens the game's window to quit. The game handles Escape itself
   there. Click Cancel to stay in the game. In the pause menu, Escape works normally.
 - The text cannot be selected with the mouse: use COPY.
-- Your user name is replaced only in folder paths: read the log before you share it.
+- Your user name is replaced only in the path of your user folder: read the log before you share it.
 - Another mod that replaces the game's pause menu or main menu may conflict.
 
 ## Files
@@ -89,8 +94,8 @@ updated.
 - `build_pak.py`, `pak_recipe.py`, `install_pak.py`, `game_tools.py`: build the package from the game's newest menus
   and install it. They need the workshop's pak tools, which are not in this repository; the Nexus file holds the
   built package.
-- [`../menu_entries/`](../menu_entries/): the shared menu file the package carries, which places the entries in the
-  game's menus, under the same licence.
+- [`../menu_entries/`](https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/menu_entries): the shared menu
+  file the package carries, which places the entries in the game's menus, under the same licence.
 
 ## Tests
 

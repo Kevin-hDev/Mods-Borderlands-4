@@ -1,7 +1,7 @@
 # Logs & Conflicts
 
-Une page LOGS & CONFLICTS dans le menu pause et le menu principal de Borderlands 4 : le journal du SDK à copier en un
-clic, et les conflits entre tes mods.
+Une page JOURNAUX ET CONFLITS (LOGS & CONFLICTS en anglais) dans le menu pause et le menu principal de
+Borderlands 4 : le journal du SDK à copier en un clic, et les conflits entre tes mods.
 
 Testé sur la version du jeu **1.11.0-4906557** (mise à jour du 22 octobre 2026), version Steam, sous Windows, au
 clavier, à la souris et à la manette, avec 17 à 26 mods activés. En solo uniquement : jamais essayé en coopération.
@@ -11,10 +11,14 @@ Sous licence Mozilla Public License 2.0, contrairement au reste de ce dépôt : 
 
 Le journal
 - Le journal du SDK de ta partie en cours s'affiche dans la page.
-- Ton nom d'utilisateur Windows y est remplacé par `<user>` dans les chemins de tes dossiers.
+- Ton nom d'utilisateur Windows y est remplacé par `<user>` dans le chemin de ton dossier utilisateur
+  (`C:\Users\...`).
 - COPIER met le journal dans le presse-papiers, prêt à coller dans un signalement de bug.
 - OUVRIR LE DOSSIER ouvre le dossier du journal.
-- Un journal très long s'affiche en deux morceaux, le début et la fin.
+- Un journal très long s'affiche en deux morceaux, le début et la fin ; COPIER copie ces deux morceaux, avec une ligne
+  qui dit combien d'octets ont été coupés au milieu.
+
+<img src="site/images/logs.jpg" width="1600" height="848" alt="La vue LOGS de la page LOGS & CONFLICTS : le journal du SDK, avec les boutons COPY et OPEN FOLDER">
 
 Les conflits
 - La page montre ce qui empêche tes mods de marcher, ou de marcher ensemble, et dit quoi faire pour chaque sorte de
@@ -31,26 +35,28 @@ Les conflits
 - Deux mods peuvent utiliser la même touche à des moments différents : la page les liste quand même.
 - Une liste trop longue est coupée, et la page le dit.
 
+<img src="site/images/conflicts.jpg" width="1600" height="843" alt="La vue CONFLICTS : des mods que le SDK n'a pas pu charger, un mod installé deux fois, et des fichiers du jeu remplacés par plusieurs mods">
+
 Les textes de la page suivent la langue du jeu : anglais, français ou chinois simplifié, et anglais pour les autres.
 Les noms des mods et de leurs actions restent ceux que chaque mod donne.
 
 ## Ouvrir et fermer la page
 
-- Ouvre le menu pause, ou va au menu principal, puis choisis LOGS & CONFLICTS.
+- Ouvre le menu pause, ou va au menu principal, puis choisis JOURNAUX ET CONFLITS.
 - JOURNAL et CONFLITS passent d'une vue à l'autre ; LB et RB aussi, à la manette.
 - Échap, ou B à la manette, ferme la page.
 
 ## Avec Mod Settings
 
 - Logs & Conflicts marche seul, sans Mod Settings.
-- Avec Mod Settings, les deux entrées apparaissent dans le menu : MODS et LOGS & CONFLICTS.
+- Avec Mod Settings, les deux entrées apparaissent dans le menu : MODS et JOURNAUX ET CONFLITS.
 - Tu peux éteindre Logs & Conflicts dans MODS : son entrée disparaît du menu tout de suite, et revient quand tu le
   rallumes.
 
 ## Vie privée
 
-- Le mod lit seulement le journal du SDK, la liste de tes mods avec leurs touches et leurs commandes, et les paquets
-  de mods du dossier Paks.
+- Le mod lit seulement le journal du SDK, la liste de tes mods avec leurs touches, leurs commandes et leurs fichiers
+  de réglages, et les paquets de mods du dossier Paks.
 - Rien ne quitte ton PC : le mod n'envoie rien sur Internet.
 - Le presse-papiers n'est touché que quand tu cliques sur COPIER.
 
@@ -78,7 +84,8 @@ attendant une mise à jour de Logs & Conflicts.
 - Au menu principal, Échap qui ferme la page ouvre aussi la fenêtre pour quitter le jeu. Le jeu gère Échap lui-même à
   cet endroit. Clique Annuler pour rester dans le jeu. Dans le menu pause, Échap marche normalement.
 - Le texte ne se sélectionne pas à la souris : utilise COPIER.
-- Ton nom d'utilisateur n'est remplacé que dans les chemins de dossiers : relis le journal avant de le partager.
+- Ton nom d'utilisateur n'est remplacé que dans le chemin de ton dossier utilisateur : relis le journal avant de le
+  partager.
 - Un autre mod qui remplace le menu pause ou le menu principal du jeu peut être en conflit.
 
 ## Fichiers
@@ -89,8 +96,8 @@ attendant une mise à jour de Logs & Conflicts.
 - `build_pak.py`, `pak_recipe.py`, `install_pak.py`, `game_tools.py` : fabriquent le paquet à partir des menus les
   plus récents du jeu, et l'installent. Ils demandent les outils de paquets de l'atelier, qui ne sont pas dans ce
   dépôt ; le fichier Nexus contient le paquet fabriqué.
-- [`../menu_entries/`](../menu_entries/) : le fichier de menu partagé que porte le paquet, qui place les entrées dans
-  les menus du jeu, sous la même licence.
+- [`../menu_entries/`](https://github.com/Kevin-hDev/Mods-Borderlands-4/tree/main/menu_entries) : le fichier de
+  menu partagé que porte le paquet, qui place les entrées dans les menus du jeu, sous la même licence.
 
 ## Tests
 
