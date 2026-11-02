@@ -1,0 +1,187 @@
+/* Copyright (c) 2026 kevin-hDev
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+/* Only what the game's stylesheets do not give: the layout of layout B, and the pause menu's list text rules
+   (list_menu.css, menu_pause.css), scoped to the page so the main menu, which lacks them, gets them too without
+   anything else of the menu changing. Colours and fonts are the game's. */
+
+/* Mod Settings' recipe, proven in game: a full-screen layer at 50000 that takes the mouse. At 10000, without
+   pointer-events, something of the pause menu above the page took the clicks, the wheel and the pointer (trial 1,
+   1 November 2026), and a button another mod puts at 50000 showed over the page. */
+.lc_root {
+    position: absolute;
+    left: 0rem;
+    top: 0rem;
+    width: 100vw;
+    height: 100vh;
+    z-index: 50000;
+    pointer-events: auto;
+}
+
+/* The game's colours, each written once: the rules further down set none. No CSS variables: nothing shows that the
+   game's UI engine reads them. Same selectors as the rules below, so no rule of the game gains or loses ground. */
+.lc_title,
+.lc_notice,
+.lc_section,
+.lc_key {
+    color: #e4d9ce;
+}
+
+.lc_root .button_txt,
+.lc_status,
+.lc_log,
+.lc_help,
+.lc_use {
+    color: #a0aeb1;
+}
+
+.lc_notice.lc_error {
+    color: #f29a38;
+}
+
+.lc_panel.lc_focused {
+    border-color: #00c6ff;
+}
+
+/* Stronger inside the page than a rule that sets display, as .lc_nav_entry's. */
+.lc_hidden,
+.lc_root .lc_hidden {
+    display: none;
+}
+
+.lc_title {
+    position: absolute;
+    left: 8rem;
+    top: 6rem;
+    font-family: Industry-DemiBold;
+    font-size: 3.4rem;
+}
+
+.lc_main {
+    position: absolute;
+    left: 8rem;
+    right: 8rem;
+    top: 13rem;
+    bottom: 10rem;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.lc_column {
+    width: 34rem;
+    flex: 0 0 34rem;
+    margin-right: 4.2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.lc_nav_entry {
+    position: relative;
+    height: 5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.lc_gap {
+    height: 3rem;
+}
+
+.lc_root .button_inner {
+    z-index: 2;
+}
+
+.lc_root .button_txt {
+    font-family: Industry-Medium;
+    font-size: 2.6rem;
+    transition: color 0.2s ease;
+    text-align: left;
+    position: relative;
+    top: -0.1rem;
+}
+
+.lc_root .lc_panel.menu_options_details_container {
+    flex: 1 1 auto;
+    width: auto;
+    height: 100%;
+    margin: 0rem;
+}
+
+.lc_panel_inner {
+    position: absolute;
+    left: 2rem;
+    right: 1.5rem;
+    top: 1.25rem;
+    bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.lc_status,
+.lc_notice {
+    font-family: Industry-Normal;
+    font-size: 2rem;
+}
+
+.lc_notice {
+    min-height: 2.6rem;
+    margin: 0.6rem 0rem 1rem 0rem;
+}
+
+.lc_scroll_box {
+    position: relative;
+    flex: 1 1 auto;
+}
+
+.lc_scroll {
+    position: absolute;
+    left: 0rem;
+    top: 0rem;
+    right: 2.5rem;
+    bottom: 0rem;
+    overflow-y: scroll;
+}
+
+/* The game's licence screen text (eula_screen.css): line breaks kept, long lines wrapped. Not selectable: Gameface
+   turns text selection off, and turning it on takes a page that draws the selection itself and a game that gives
+   Ctrl+C to Windows (trial 1: nothing selected); COPY does that job. */
+.lc_log {
+    font-family: Industry-Normal;
+    font-size: 2rem;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    margin: 0rem;
+}
+
+/* A section's title stands above its entries' titles: larger, with more room above. The first one sits at the top. */
+.lc_section {
+    font-family: Industry-DemiBold;
+    font-size: 2.8rem;
+    margin: 3rem 0rem 0.6rem 0rem;
+}
+
+.lc_section:first-child {
+    margin-top: 0rem;
+}
+
+.lc_help {
+    font-family: Industry-Normal;
+    font-size: 2rem;
+    margin-bottom: 0.4rem;
+}
+
+.lc_key {
+    font-family: Industry-DemiBold;
+    font-size: 2.4rem;
+    margin: 1.6rem 0rem 0.4rem 0rem;
+}
+
+.lc_use {
+    font-family: Industry-Normal;
+    font-size: 2rem;
+    padding-left: 1.5rem;
+}

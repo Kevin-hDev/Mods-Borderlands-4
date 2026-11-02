@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "versionToken": "@MENU_ENTRIES_VERSION@",
+  "scriptPath": "OakGame/Content/uiresources/menu_entries/js/menu_entries.js",
+  "modScripts": [
+    {"mod": "mod_settings", "path": "OakGame/Content/uiresources/mod_settings/js/mod_settings.js"},
+    {"mod": "logs_conflicts", "path": "OakGame/Content/uiresources/logs_conflicts/js/logs_conflicts.js"}
+  ],
+  "menus": [
+    {
+      "path": "OakGame/Content/uiresources/menu_pause/menu_pause.html",
+      "entries": ["mod_settings_pause.html.inc", "logs_conflicts_pause.html.inc"],
+      "entryNeedle": "<!-- Shift -->",
+      "scriptNeedle": "<script src=\"coui://uiresources/menu_pause/js/menu_pause.js\"></script>"
+    },
+    {
+      "path": "OakGame/Content/uiresources/menu_main/menu_main.html",
+      "entries": ["mod_settings_main.html.inc", "logs_conflicts_main.html.inc"],
+      "entryNeedle": "<!-- Shift -->",
+      "scriptNeedle": "<script src=\"coui://uiresources/menu_main/js/menu_main.js\"></script>"
+    }
+  ],
+  "pakBase": 999
+}
