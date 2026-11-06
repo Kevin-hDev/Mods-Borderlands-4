@@ -76,11 +76,14 @@ When reporting a problem, include your mod and game versions, other active mods,
 
 ## License and credits
 
-Original code: [Apache License 2.0](../LICENSE), copyright 2026 Kevin-hDev.
+Original code and models: [Mozilla Public License 2.0](LICENSE) from 6 November 2026 on, copyright 2026 Kevin-hDev.
+Versions released before that date stay under the [Apache License 2.0](../LICENSE).
 
 - [Borderlands 4 Python SDK](https://github.com/bl-sdk/oak2-mod-manager) by the SDK team.
 - Grapple movement inspired by Apex Legends, by Respawn.
-- The grapple gun's models, rope, hook and gestures are not in this repository, only in the mod's Nexus archive.
+- The grapple gun's models, rope, hook and gestures are not in this repository, only in the mod's Nexus archive. The
+  grapple gun, holsters, hook and ropes are our own models, under the same license; the gestures are built from the
+  game's own files and are not relicensed.
 - Anton and Barlow Condensed retain their bundled [Anton license](apex_grapple/assets/OFL-Anton.txt) and [Barlow Condensed license](apex_grapple/assets/OFL-BarlowCondensed.txt), both SIL OFL 1.1.
 
 See [CHANGELOG.md](CHANGELOG.md) for changes.

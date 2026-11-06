@@ -5,8 +5,8 @@ the mod placed, with its own rope?
 
 Why this and not another copy of the rope: the game's grapple draws its rope, plays its hand and
 hooks on only to a grapple point. Its settings cannot be changed from here (verified on 2026-09-21:
-`NexusConfigStoreGrapple` exposes no field), but it can be started: GrappleAnywhere calls
-`ServerStartGrapple()` on the character once its own point is ready (its code; not run by us). This
+`NexusConfigStoreGrapple` exposes no field), but it can be started by calling
+`ServerStartGrapple()` on the character once a grapple point is ready (seen in published code; not run by us). This
 prototype does not do that yet — it leaves the press to the game's own targeting.
 
 The deferred spawn calls return (actor, transform), per the SDK and the log of 2026-09-21.
