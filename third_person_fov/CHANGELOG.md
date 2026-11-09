@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1 - 2026-11-09
+
+- The settings window is now in Russian too, translated by [vQooQv](https://www.nexusmods.com/profile/vQooQv/mods): РУС button at the top of the window.
+
 ## 2.0.0 - 2026-10-25
 
 - Reliability: small fixes in the camera part shared by Third Person & FOV, Apex Movement and Omni Sprint: if you use more than one of them, update them all.

@@ -157,7 +157,7 @@ assert widgets["restore"].calls["SetIsEnabled"] == (False,), "Restore must be di
 assert f.click(elsewhere, widgets, "close")
 
 # Chinese, the third language (2026-10-12): its button named in its own words, kept at the next opening.
-assert prefs.LANGUAGES == ("EN", "FR", "ZH", "JA")
+assert prefs.LANGUAGES == ("EN", "FR", "ZH", "JA", "RU")
 root, widgets, form = f.build()
 assert widgets["ZH_label"].calls["SetText"][-1] == "中文" and widgets["EN_label"].calls["SetText"][-1] == "EN"
 f.click(form, widgets, "ZH")
@@ -184,6 +184,19 @@ root, widgets, form = f.build()
 assert form.model.language == "JA" and panel_fonts._script == "JA", "the next opening draws from the Japanese faces"
 f.click(form, widgets, "EN")
 assert panel_fonts.script(form.model.language) == "ZH"
+# Russian, the fifth (a player's translation, 2026-11-05): its Cyrillic is in the Chinese faces, so no new window.
+assert widgets["RU_label"].calls["SetText"][-1] == "РУС"
+form.redraw = False
+f.click(form, widgets, "RU")
+assert form.model.language == "RU" and widgets["close_label"].calls["SetText"][-1] == "ЗАКРЫТЬ"
+assert not form.redraw and panel_fonts.script("RU") == "ZH"
+from third_person_fov import panel_framing_text, panel_profile_text, panel_ru_texts
+from third_person_fov.panel_camera_text import FR as CAMERA_FR, FR_OPTIONS
+assert set(panel_ru_texts.CAMERA) == set(CAMERA_FR) and set(panel_ru_texts.CAMERA_OPTIONS) == set(FR_OPTIONS)
+assert set(panel_ru_texts.FRAMING) == set(panel_framing_text.FR)
+assert set(panel_ru_texts.PROFILE) == set(panel_profile_text.FR)
+assert panel_framing_text.TRANSLATED["RU"] is panel_ru_texts.FRAMING
+assert all(panel_profile_text.text(key, "RU") == value for key, value in panel_ru_texts.PROFILE.items())
 assert f.click(form, widgets, "close")
 shared.reset_for_tests()
 print("RESULTAT: TOUS LES TESTS PASSENT")

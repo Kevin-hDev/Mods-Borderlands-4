@@ -8,7 +8,7 @@ from .panel_scroll import last_scroll
 from .panel_theme import SIZES, THEMES
 
 # A language only in a window whose every text exists in it, as outils/menu_languages.py decides.
-LANGUAGES = ("EN", "FR", "ZH", "JA")
+LANGUAGES = ("EN", "FR", "ZH", "JA", "RU")
 _COMMANDS = ("commands",)
 # Saved by index: a page added later goes last, wherever the sidebar shows it (OMNI DIRECTION, 2026-10-09).
 _LATER = ("omni_direction",)

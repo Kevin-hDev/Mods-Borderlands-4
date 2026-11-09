@@ -35,7 +35,9 @@ JA = {
     "zoom_unavailable": "照準の追加ズームを表示できません。カメラの位置を表示しています。",
     "position_unavailable": "カメラの位置を表示できません。照準の追加ズームを表示しています。",
 }
-TRANSLATED = {"FR": FR, "ZH": ZH, "JA": JA}
+from .panel_ru_texts import FRAMING as RU
+
+TRANSLATED = {"FR": FR, "ZH": ZH, "JA": JA, "RU": RU}
 EN = {
     "zoom": "Additional magnification over each weapon's native zoom.",
     "horizontal": "Character-to-crosshair spacing. The crosshair stays centered.",

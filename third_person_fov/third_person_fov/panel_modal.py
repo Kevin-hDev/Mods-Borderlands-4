@@ -16,7 +16,7 @@ def held(pc, window):
     """Wraps the window in a UserWidget, which Slate keeps alive for as long as it is on screen.
 
     Nothing held the bare ScaleBox: the garbage collector removed the window 35 and 50 s after it opened, twice
-    without a click on Close (journal of 2026-09-21, "window_gone"). Matt's BL4 Mods Menu builds its window the same
+    without a click on Close (journal of 2026-09-21, "window_gone"). Another mod menu builds its window the same
     way (single source).
     """
     holder = w.new("UserWidget", pc)

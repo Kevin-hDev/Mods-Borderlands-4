@@ -193,6 +193,8 @@ JA = {
 # The store's refusals the window names (profile_store.py); any other reads as profile_refused.
 REFUSALS = ("name_invalid", "name_taken", "key_taken", "key_invalid", "profiles_full", "profile_unknown")
 
+from .panel_ru_texts import PROFILE as RU
+
 
 def text(key, language):
-    return {"FR": FR, "ZH": ZH, "JA": JA}.get(language, EN)[key]
+    return {"FR": FR, "ZH": ZH, "JA": JA, "RU": RU}.get(language, EN)[key]
